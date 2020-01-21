@@ -1,0 +1,141 @@
+//
+//  KeyPath+helper.swift
+//  Crush
+//
+//  Created by ezou on 2019/9/20.
+//  Copyright © 2019 ezou. All rights reserved.
+//
+
+import Foundation
+
+extension PartialKeyPath {
+    var rootClass: String {
+        return String(reflecting: Root.self)
+    }
+}
+
+extension KeyPath {
+    var valueClass: String {
+        return String(reflecting: Value.self)
+    }
+}
+
+extension AnyKeyPath {
+    var stringValue: String? {
+        return _kvcKeyPathString
+    }
+}
+
+public protocol TracableProtocol {
+    var rootType: EntityProtocol.Type { get }
+    var expression: Any { get }
+}
+
+public protocol RootTracableKeyPathProtocol: TracableProtocol {
+    var keyPath: AnyKeyPath { get }
+    var fullPath: String { get }
+}
+
+public protocol PartailTracableKeyPathProtocol: RootTracableKeyPathProtocol {
+    associatedtype Root: EntityProtocol
+    var root: PartialKeyPath<Root> { get }
+    var allPaths: [RootTracableKeyPathProtocol] { get }
+}
+
+public protocol TracableKeyPathProtocol: PartailTracableKeyPathProtocol {
+    associatedtype Value: NullablePropertyProtocol
+}
+
+extension PartailTracableKeyPathProtocol {
+    public var expression: Any {
+        return fullPath
+    }
+    
+    public var fullPath: String {
+        let path = allPaths.compactMap{ keyPath -> String? in
+            let runtimeObject = keyPath.rootType.dummy()
+            return ((runtimeObject[keyPath: keyPath.keyPath] as? PropertyProtocol)?.description)?.name
+        }.joined(separator: ".")
+        return path
+    }
+}
+
+public class PartialTracableKeyPath<Root: EntityProtocol>: PartailTracableKeyPathProtocol {
+    
+    public let root: PartialKeyPath<Root>
+    
+    var subpaths: [RootTracableKeyPathProtocol] = []
+    
+    public var keyPath: AnyKeyPath {
+        return root
+    }
+    
+    public var rootType: EntityProtocol.Type {
+        return Root.self
+    }
+    
+    public var allPaths: [RootTracableKeyPathProtocol] {
+        return [PartialTracableKeyPath<Root>(root)] + subpaths
+    }
+    
+    init(_ keyPath: PartialKeyPath<Root>, subpaths: [RootTracableKeyPathProtocol] = []) {
+        self.root = keyPath
+        self.subpaths = subpaths
+    }
+}
+
+public class TracableKeyPath<Root: EntityProtocol, Value: NullablePropertyProtocol>: PartialTracableKeyPath<Root>, TracableKeyPathProtocol {
+    
+    public override var allPaths: [RootTracableKeyPathProtocol] {
+        return [TracableKeyPath<Root, Value>(root)] + subpaths
+    }
+}
+
+extension PartialKeyPath: TracableProtocol where Root: EntityProtocol {
+    public var rootType: EntityProtocol.Type {
+        return Root.self
+    }
+}
+
+extension PartialKeyPath: RootTracableKeyPathProtocol where Root: EntityProtocol {
+    public var keyPath: AnyKeyPath {
+        return self
+    }
+}
+
+extension PartialKeyPath: PartailTracableKeyPathProtocol where Root: EntityProtocol {
+    public var root: PartialKeyPath<Root> {
+        self
+    }
+    
+    public var allPaths: [RootTracableKeyPathProtocol] {
+        return [self]
+    }
+}
+
+extension KeyPath: TracableKeyPathProtocol where Root: EntityProtocol, Value: NullablePropertyProtocol {}
+
+extension TracableKeyPathProtocol where Root: EntityProtocol, Value: NullablePropertyProtocol {
+    static public func + <ExtendedValue: EntityProtocol>(
+        lhs: Self,
+        keyPath: KeyPath<Value.OptionalType.FieldType.RuntimeObjectValue, ExtendedValue>
+    )
+        -> TracableKeyPath<Root, ExtendedValue>
+        where Value.OptionalType.FieldType.RuntimeObjectValue: EntityProtocol
+    {
+        return TracableKeyPath<Root, ExtendedValue>(lhs.root, subpaths: [
+            TracableKeyPath<Value.OptionalType.FieldType.RuntimeObjectValue, ExtendedValue>(keyPath)
+        ])
+    }
+    
+    static public func + <ExtendedValue: AttributeProtocol>(
+        lhs: Self,
+        keyPath: KeyPath<Value.OptionalType.FieldType.RuntimeObjectValue, ExtendedValue>
+    ) -> TracableKeyPath<Root, ExtendedValue>
+        where Value.OptionalType.FieldType.RuntimeObjectValue: EntityProtocol
+    {
+        return TracableKeyPath<Root, ExtendedValue>(lhs.root, subpaths: [
+            TracableKeyPath<Value.OptionalType.FieldType.RuntimeObjectValue, ExtendedValue>(keyPath)
+        ])
+    }
+}
