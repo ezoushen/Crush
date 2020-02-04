@@ -46,7 +46,7 @@ public struct FirstVersion: SchemaProtocol {
     public init() { }
 }
 
-fileprivate func findTypeNames(type: RuntimeObjectProtocol.Type) -> [String] {
+fileprivate func findTypeNames(type: RuntimeObject.Type) -> [String] {
     let string = String(reflecting: type)
     let types = string.split(separator: ".")
     let packageName = String(types.first!)
@@ -76,7 +76,7 @@ fileprivate var allClasses: [String: [NeutralEntityObject.Type]] = {
     let classListBuffer = UnsafeBufferPointer(start: classListPtr, count: Int(count))
     var entitiesWithNames: [String: [NeutralEntityObject.Type]] = [:]
     classListBuffer.forEach {
-        if ($0 is RuntimeObjectProtocol.Type && $0 != EntityObject.self && $0 != AbstractEntityObject.self && $0 != NeutralEntityObject.self), let type = $0 as? NeutralEntityObject.Type,
+        if ($0 is RuntimeObject.Type && $0 != EntityObject.self && $0 != AbstractEntityObject.self && $0 != NeutralEntityObject.self), let type = $0 as? NeutralEntityObject.Type,
             let version = findEntityVersion(type: type) {
             entitiesWithNames[String(reflecting: version)] = (entitiesWithNames[String(reflecting: version)] ?? []) + [type]
         }

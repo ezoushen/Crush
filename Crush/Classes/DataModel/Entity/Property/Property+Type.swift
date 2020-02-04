@@ -10,7 +10,7 @@ import Foundation
 
 public typealias Value = Required.Value
 public typealias Relation = Required.Relation
-public typealias HashableRuntimeObjectProtocol = Hashable & RuntimeObjectProtocol
+public typealias HashableRuntimeObjectProtocol = Hashable & RuntimeObject
 
 public enum Optional {
     public struct Relation {

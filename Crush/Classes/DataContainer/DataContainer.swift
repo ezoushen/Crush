@@ -8,7 +8,6 @@
 
 import CoreData
 
-class Test: EntityObject { }
 public class DataContainer {
     private(set) public var context: ReadOnlyTransactionContext!
     

@@ -8,14 +8,14 @@
 
 import CoreData
 
-protocol IndexSetProtocol: NSObject { }
+public protocol IndexSetProtocol: NSObject { }
 
 protocol IndexProtocol {
-    func fetchIndexDescription<R: RuntimeObjectProtocol>(name: String, in object: R) -> NSFetchIndexDescription
+    func fetchIndexDescription<R: RuntimeObject>(name: String, in object: R) -> NSFetchIndexDescription
 }
 
 protocol TargetedIndexProtocol: IndexProtocol {
-    associatedtype Target: RuntimeObjectProtocol
+    associatedtype Target: RuntimeObject
 
     var indexes: [IndexElement<Target>] { get }
 }
@@ -31,7 +31,7 @@ fileprivate let DEFAULT_KEY = "defaultKey"
 
 extension IndexSetProtocol {
     static func setDefaultKeys(mirror: Mirror?) {
-        guard let mirror = mirror, let type = mirror.subjectType as? EntityProtocol.Type else { return }
+        guard let mirror = mirror, let type = mirror.subjectType as? Entity.Type else { return }
                 
         mirror.children.forEach { label, value in
             guard var value = value as? PropertyProtocol else { return }
@@ -50,7 +50,7 @@ extension IndexElementProtocol {
     }
 }
 
-public class IndexElement<Target: RuntimeObjectProtocol>: IndexElementProtocol {
+public class IndexElement<Target: RuntimeObject>: IndexElementProtocol {
     public var isAscending: Bool {
         fatalError("Do not use abstract directly")
     }
@@ -65,16 +65,16 @@ public class IndexElement<Target: RuntimeObjectProtocol>: IndexElementProtocol {
     }
 }
 
-public class AscendingIndex<Target: RuntimeObjectProtocol>: IndexElement<Target> {
+public class AscendingIndex<Target: RuntimeObject>: IndexElement<Target> {
     public override var isAscending: Bool { true }
 }
 
-public class DescendingIndex<Target: RuntimeObjectProtocol>: IndexElement<Target> {
+public class DescendingIndex<Target: RuntimeObject>: IndexElement<Target> {
     public override var isAscending: Bool { false }
 }
 
 @propertyWrapper
-public struct CompositeFetchIndex<Target: RuntimeObjectProtocol>: TargetedIndexProtocol {
+public struct CompositeFetchIndex<Target: RuntimeObject>: TargetedIndexProtocol {
     private let _indexes: [IndexElement<Target>]
     
     public var indexes: [IndexElement<Target>] {
@@ -91,7 +91,7 @@ public struct CompositeFetchIndex<Target: RuntimeObjectProtocol>: TargetedIndexP
 }
 
 @propertyWrapper
-public struct FetchIndex<Target: RuntimeObjectProtocol>: TargetedIndexProtocol {
+public struct FetchIndex<Target: RuntimeObject>: TargetedIndexProtocol {
     
     private let _index: IndexElement<Target>
     
@@ -109,7 +109,7 @@ public struct FetchIndex<Target: RuntimeObjectProtocol>: TargetedIndexProtocol {
 }
 
 extension TargetedIndexProtocol {
-    func fetchIndexDescription<R: RuntimeObjectProtocol>(name: String, in object: R) -> NSFetchIndexDescription {
+    func fetchIndexDescription<R: RuntimeObject>(name: String, in object: R) -> NSFetchIndexDescription {
         let indcies = indexes.compactMap{ index -> (IndexElementProtocol, AnyKeyPath)? in
             guard let keyPath = index.keyPath else { return nil }
             return (index, keyPath)

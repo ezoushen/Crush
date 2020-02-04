@@ -42,7 +42,7 @@ public class DataModel: DataModelProtocol {
         migration = nil
     }
     
-    public init<VersionedSchema: VersionedSchemaProtocol>(version: VersionedSchema.Type, entities: [EntityProtocol.Type]) {
+    public init<VersionedSchema: VersionedSchemaProtocol>(version: VersionedSchema.Type, entities: [Entity.Type]) {
         let sorted = entities.sorted { !$1.isAbstract }
         let entities = sorted.map { $0.entityDescription() }
         let hashValue = NSString(string: String(reflecting: version.self))

@@ -8,7 +8,7 @@
 
 import CoreData
 
-extension TracableKeyPathProtocol where Root: EntityProtocol, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable {
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable {
     public static func == (lhs: Self, rhs: Value.EntityType) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) == %@", rhs.predicateValue)
     }
@@ -24,7 +24,7 @@ infix operator ~|
 infix operator |~|
 infix operator |*|
 
-extension TracableKeyPathProtocol where Root: EntityProtocol, Value: NullablePropertyProtocol, Value.EntityType: PredicateComparable & Comparable {
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType: PredicateComparable & Comparable {
     public static func > (lhs: Self, rhs: Value.EntityType) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) > %@", rhs.predicateValue)
     }
@@ -46,7 +46,7 @@ extension TracableKeyPathProtocol where Root: EntityProtocol, Value: NullablePro
     }
 }
 
-extension TracableKeyPathProtocol where Root: EntityProtocol, Value: NullablePropertyProtocol, Value.EntityType == String {
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType == String {
     public static func |~ (lhs: Self, rhs: String) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH %@", rhs)
     }
@@ -106,7 +106,7 @@ public enum QuerySorterOption {
     }
 }
 
-internal struct QueryConfig<T: EntityProtocol> {
+internal struct QueryConfig<T: Entity> {
     private(set) var predicate: NSPredicate?
     private(set) var sorters: [NSSortDescriptor]?
     private(set) var resultType: NSFetchRequestResultType
@@ -160,7 +160,7 @@ internal struct QueryConfig<T: EntityProtocol> {
     }
 }
 
-public class PartialQueryBuilder<Target: EntityProtocol, Received, Result> {
+public class PartialQueryBuilder<Target: Entity, Received, Result> {
     internal var _config: QueryConfig<Target>
     
     internal let _context: ReadOnlyTransactionContext & RawContextProviderProtocol
@@ -223,7 +223,7 @@ public class PartialQueryBuilder<Target: EntityProtocol, Received, Result> {
         
         if Result.self == Dictionary<String, Any>.self {
             return results as! [Result]
-        } else if let runtimeObject = Result.self as? RuntimeObjectProtocol.Type {
+        } else if let runtimeObject = Result.self as? RuntimeObject.Type {
             return results.compactMap{ runtimeObject.init($0 as! NSManagedObject, proxyType: _context.proxyType) as? Result }
         } else {
             return (results as! [Dictionary<String, Any>]).flatMap{ $0.values }.compactMap{ $0 as? Result }
@@ -237,7 +237,7 @@ public class PartialQueryBuilder<Target: EntityProtocol, Received, Result> {
     }
 }
 
-public class QueryBuilder<Target: EntityProtocol, Received, Result>: PartialQueryBuilder<Target, Received, Result> {
+public class QueryBuilder<Target: Entity, Received, Result>: PartialQueryBuilder<Target, Received, Result> {
     open func count() -> Int {
         let newConfig = _config.updated(\.resultType, value: .countResultType)
         let request = newConfig.createFetchRequest()
@@ -246,10 +246,10 @@ public class QueryBuilder<Target: EntityProtocol, Received, Result>: PartialQuer
 }
 
 
-fileprivate class _TracableExpression<T: EntityProtocol>: TracableProtocol {
+fileprivate class _TracableExpression<T: Entity>: TracableProtocol {
     let expression: Any
     
-    var rootType: EntityProtocol.Type { T.self }
+    var rootType: Entity.Type { T.self }
     
     init(descriptor: NSExpressionDescription) {
         self.expression = descriptor

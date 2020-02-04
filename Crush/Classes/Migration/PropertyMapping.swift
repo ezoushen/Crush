@@ -82,7 +82,7 @@ struct AnyPropertyMapping: PropertyMappingProtocol {
     }
 }
 
-struct AttributeMapping<T: RuntimeObjectProtocol, S: RuntimeObjectProtocol>: PropertyMappingProtocol {
+struct AttributeMapping<T: RuntimeObject, S: RuntimeObject>: PropertyMappingProtocol {
     
     var destinationKeyPath: String
     
@@ -110,7 +110,7 @@ struct AttributeMapping<T: RuntimeObjectProtocol, S: RuntimeObjectProtocol>: Pro
 
 // MARK: - Relationship Mapping
 
-struct RelationshipMapping<T: RuntimeObjectProtocol, S: RuntimeObjectProtocol>: PropertyMappingProtocol {
+struct RelationshipMapping<T: RuntimeObject, S: RuntimeObject>: PropertyMappingProtocol {
     var valueExpression: NSExpression {
         let selector = sourceKeyPath.contains(".") ? "valueForKeyPath" : "valueForKey"
         return NSExpression(format: "FUNCTION($manager, 'destinationInstancesForSourceRelationshipNamed:sourceInstances:' , '\(destinationKeyPath)', FUNCTION($source, '\(selector):' , '\(sourceKeyPath)'))")

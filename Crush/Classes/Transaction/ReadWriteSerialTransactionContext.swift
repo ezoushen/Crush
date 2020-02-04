@@ -36,7 +36,7 @@ internal struct _ReadWriteAsyncTransactionContext: ReadWriteAsyncTransactionCont
 }
 
 extension ReadWriteTransactionContext where Self: RawContextProviderProtocol{
-    public func create<T: EntityProtocol>(entiy: T.Type) -> T {
+    public func create<T: Entity>(entiy: T.Type) -> T {
         var object: T!
         
         context.performAndWait {
@@ -46,7 +46,7 @@ extension ReadWriteTransactionContext where Self: RawContextProviderProtocol{
         return object
     }
     
-    public func delete<T: EntityProtocol>(_ object: T) {
+    public func delete<T: Entity>(_ object: T) {
         context.performAndWait {
             context.delete(object.rawObject)
         }

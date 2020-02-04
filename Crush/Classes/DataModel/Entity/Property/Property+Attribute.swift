@@ -148,7 +148,7 @@ public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O
         options.forEach{ $0.updatePropertyDescription(description) }
     }
     
-    public init(_ defaultValue: String?, options: [PropertyOptionProtocol] = []) {
+    public init(_ defaultValue: String? = nil, options: [PropertyOptionProtocol] = []) {
         self.defaultValue = defaultValue
         self.updateProperty()
         options.forEach{ $0.updatePropertyDescription(description) }
