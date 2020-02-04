@@ -56,7 +56,7 @@ class TodoViewController: UIViewController {
     
     func setupUI(by todo: Todo?) {
         guard let todo = todo else { return }
-        titleTextField.text = todo.title
+        titleTextField.text = todo.content
         memoTextView.text = todo.memo ?? ""
         datePicker.date = todo.dueDate
         dueDateLabel.text = Self._dateFormatter.string(from: todo.dueDate)
@@ -80,14 +80,14 @@ class TodoViewController: UIViewController {
     }
     
     @objc func titleChanged(_ sender: UITextField?) {
-        let title = sender?.text ?? todo.title
+        let title = sender?.text ?? todo.content
         container?.startAsyncTransaction(todo) { context, todo in
-            todo.title = title
+            todo.content = title
         }
     }
     
     @IBAction func didPressSaveButton() {
-        container?.store()
+        container?.save()
         delegate?.didSaveModification(type: mode, todo: todo)
         dismiss(animated: true, completion: nil)
     }
