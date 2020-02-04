@@ -33,7 +33,7 @@ public protocol ReadOnlyTransactionContext: TransactionContextProtocol {
     func fetch<T: Entity>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T]
     func fetch<T: TracableKeyPathProtocol>(property: T, predicate: NSPredicate?) -> [T.Value.EntityType?]
     func fetch<T: TracableKeyPathProtocol>(properties: [T], predicate: NSPredicate?) -> [[String: Any]]
-    func query<T: RuntimeObject>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T>
+    func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T>
 }
 
 extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
@@ -75,7 +75,7 @@ extension ReadOnlyTransactionContext {
 }
 
 extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
-    public func query<T: RuntimeObject>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
+    public func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
         return QueryBuilder<T, NSManagedObject, T>(config: .init(), context: self)
     }
 }

@@ -35,8 +35,7 @@ open class Schema<LastVersion: SchemaProtocol>: VersionedSchemaProtocol {
 
 public struct FirstVersion: SchemaProtocol {
     public static var model: DataModel {
-        assertionFailure("Should not call model of FirstVersion directly")
-        return DataModel()
+        fatalError("Should not call model of FirstVersion directly")
     }
     
     public static var lastVersion: SchemaProtocol.Type? {

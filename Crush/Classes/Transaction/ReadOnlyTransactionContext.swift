@@ -83,7 +83,7 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
         return results
     }
     
-    public func fetch<T: RuntimeObject>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T] {
+    public func fetch<T: Entity>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T] {
         writerContext.processPendingChanges()
 
         var results: [NSManagedObject] = []

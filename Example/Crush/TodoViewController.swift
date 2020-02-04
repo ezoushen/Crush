@@ -101,7 +101,7 @@ class TodoViewController: UIViewController {
 
 extension TodoViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
-        let memo = textView.text ?? todo.memo
+        let memo = textView.text ?? ""
         container?.startAsyncTransaction(todo) { context, todo in
             todo.memo = memo
         }

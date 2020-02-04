@@ -136,7 +136,7 @@ public struct AnyEntityMapping: EntityMapping, MappingModelMergeDelegate {
 
 // MARK: Add Entity Mapping
 
-public struct AddEntityMapping<T: RuntimeObject>: EntityMapping, MappingModelMergeDelegate {
+public struct AddEntityMapping<T: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = T
     
@@ -163,7 +163,7 @@ public struct AddEntityMapping<T: RuntimeObject>: EntityMapping, MappingModelMer
 
 // MARK: - Remove Entity Mapping
 
-public struct RemoveEntityMapping<T: RuntimeObject>: EntityMapping, MappingModelMergeDelegate {
+public struct RemoveEntityMapping<T: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = T
     
@@ -190,7 +190,7 @@ public struct RemoveEntityMapping<T: RuntimeObject>: EntityMapping, MappingModel
 
 // MARK: - Transform Entity Mapping
 
-public struct TransformEntityMapping<T: RuntimeObject, S: RuntimeObject>: EntityMapping, MappingModelMergeDelegate {
+public struct TransformEntityMapping<T: Entity, S: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = S
     
@@ -238,7 +238,7 @@ public struct TransformEntityMapping<T: RuntimeObject, S: RuntimeObject>: Entity
 
 // MARK: - Custom Entity Mapping
 
-public struct CustomEntityMapping<T: RuntimeObject, S: RuntimeObject>: EntityMapping, MappingModelMergeDelegate {
+public struct CustomEntityMapping<T: Entity, S: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = S
     
@@ -261,7 +261,7 @@ public struct CustomEntityMapping<T: RuntimeObject, S: RuntimeObject>: EntityMap
 
 // MARK: - Copy Entity Mapping
 
-public struct CopyEntityMapping<T: RuntimeObject, S: RuntimeObject>: EntityMapping, MappingModelMergeDelegate {
+public struct CopyEntityMapping<T: Entity, S: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = S
     
