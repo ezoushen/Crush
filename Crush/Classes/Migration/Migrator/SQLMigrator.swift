@@ -27,8 +27,6 @@ final public class SQLMigrator: DataMigrator {
     }
     
     public func processStore(at url: URL) throws {
-        forceWALCheckpointingForStore(at: url)
-
         let models = versions.compactMap{ type(of: $0).model.objectModel }
         let index = try indexOfCompatibleMom(at: url, models: models)
         let remaining = models.suffix(from: (index + 1))
@@ -36,6 +34,8 @@ final public class SQLMigrator: DataMigrator {
         guard remaining.count > 0 else {
             return
         }
+        
+        forceWALCheckpointingForStore(at: url)
         
         _ = try remaining.reduce(models[index]) { source, destination in
             try migrateStore(at: url, from: source, to: destination)
