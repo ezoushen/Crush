@@ -26,6 +26,13 @@ public enum PersistentStoreType {
         }
     }
     
+    var migrator: DataMigrator.Type? {
+        switch self {
+        case .sql: return SQLMigrator.self
+        default: return nil
+        }
+    }
+    
     func createURL(_ documentDirectory: URL?, with name: String) -> URL? {
         switch self {
         case .sql: return documentDirectory?.appendingPathComponent("\(name).sqlite")

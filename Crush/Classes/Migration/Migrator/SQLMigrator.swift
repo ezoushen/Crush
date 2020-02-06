@@ -14,20 +14,20 @@ final public class SQLMigrator: DataMigrator {
     
     public let activeVersion: SchemaProtocol
     
-    public init<LastVersion: SchemaProtocol>(activeVersion: Schema<LastVersion>) {
+    public init(activeVersion: SchemaProtocol) {
         self.activeVersion = activeVersion
         
         func createVersionChain(version: SchemaProtocol?) -> [SchemaProtocol] {
-            guard let version = version, !(version is FirstVersion) else { return [] }
-            return [version] + createVersionChain(version: type(of: version).lastVersion?.init())
+            guard let version = version else { return [] }
+            return [version] + createVersionChain(version: version.lastVersion)
         }
         
         versions = createVersionChain(version: activeVersion).reversed()
-        migrations = versions.compactMap{ type(of: $0).model.migration }
+        migrations = versions.compactMap{ $0.model.migration }
     }
     
     public func processStore(at url: URL) throws {
-        let models = versions.compactMap{ type(of: $0).model.objectModel }
+        let models = versions.compactMap{ $0.model.rawModel }
         let index = try indexOfCompatibleMom(at: url, models: models)
         let remaining = models.suffix(from: (index + 1))
         
@@ -82,7 +82,7 @@ final public class SQLMigrator: DataMigrator {
             at: storeURL, options: nil
         ),
             let currentModel = versions
-                .compactMap({ type(of: $0).model.objectModel })
+                .compactMap({ $0.model.rawModel })
                 .first(where: {
                     $0.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata)
                 })

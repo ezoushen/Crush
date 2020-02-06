@@ -1,7 +1,7 @@
 import XCTest
 import Crush
 
-class V1: Schema<FirstVersion> {
+class V1: SchemaOrigin {
     class Animal: AbstractEntityObject {
         class Index: NSObject, IndexSetProtocol {
             @FetchIndex<Animal>
@@ -76,18 +76,18 @@ class V2: Schema<V1> {
 }
 
 class SchemaTests: XCTestCase {
-    let v1Model = V1.model
-    let v2Model = V2.model
+    let v1Model = V1().model
+    let v2Model = V2().model
     
     func test_Schema_DataModel() {
         XCTAssert(v1Model.previousModel == nil, "Previous model should be nil")
         XCTAssert(v1Model.migration == nil, "Migration should be nil")
-        XCTAssert(v1Model.objectModel != nil, "MOM should not be nil")
+        XCTAssert(v1Model.rawModel != nil, "MOM should not be nil")
     }
     
     func test_Schema_DataModel_NSManagedObjectModel() {
-        XCTAssert(v1Model.objectModel.entities.count == 4, "expected \(4), received \(v1Model.objectModel.entities.count)")
-        XCTAssert(v1Model.objectModel.versionIdentifiers == [String(reflecting: V1.self)])
+        XCTAssert(v1Model.rawModel.entities.count == 4, "expected \(4), received \(v1Model.rawModel.entities.count)")
+        XCTAssert(v1Model.rawModel.versionIdentifiers == [String(reflecting: V1.self)])
     }
     
 }

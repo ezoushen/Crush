@@ -8,7 +8,7 @@
 
 import Crush
 
-class V1: Schema<FirstVersion> {
+class V1: SchemaOrigin {
     class Todo: EntityObject {
         @Value.String
         var title: String = ""

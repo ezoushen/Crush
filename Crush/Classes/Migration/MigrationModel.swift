@@ -20,22 +20,11 @@ public protocol Migration {
 }
 
 protocol MigrationModel: Migration, MappingModelMerger {
-    associatedtype FromVersion: SchemaProtocol
-    associatedtype ToVersion: SchemaProtocol
-    
     func createMappingModel() throws -> NSMappingModel
     func fullMappingModel() throws -> NSMappingModel
 }
 
 extension MigrationModel {
-    var sourceModel: NSManagedObjectModel {
-        FromVersion.model.objectModel
-    }
-
-    var destinationModel: NSManagedObjectModel {
-        ToVersion.model.objectModel
-    }
-    
     var inferredMappingModelAutomatically: Bool {
         return true
     }
@@ -71,17 +60,37 @@ extension MigrationModel {
     }
 }
 
-struct VersionMigration<FromVersion: SchemaProtocol, ToVersion: SchemaProtocol>: MigrationModel {
+struct VersionMigration: MigrationModel {
+    let sourceModel: NSManagedObjectModel
+    
+    let destinationModel: NSManagedObjectModel
     
     let entityMappings: [NSEntityMapping]
     
-    init(from: FromVersion, to: ToVersion, mappings: [NSEntityMapping]) {
+    init(from: SchemaProtocol, to: SchemaProtocol, mappings: [NSEntityMapping]) {
         self.entityMappings = mappings
+        self.sourceModel = from.model.rawModel
+        self.destinationModel = to.model.rawModel
     }
     
     func createMappingModel() throws -> NSMappingModel {
         let mappingModel = NSMappingModel()
         mappingModel.entityMappings = entityMappings
         return mappingModel
+    }
+}
+
+struct CoreDataMigration: Migration {
+    var sourceModel: NSManagedObjectModel
+    
+    var destinationModel: NSManagedObjectModel
+    
+    var inferredMappingModelAutomatically: Bool = true
+    
+    func mappingModel() throws -> NSMappingModel {
+        if let model = NSMappingModel(from: Bundle.allBundles, forSourceModel: sourceModel, destinationModel: destinationModel) {
+            return model
+        }
+        return try NSMappingModel.inferredMappingModel(forSourceModel: sourceModel, destinationModel: destinationModel)
     }
 }
