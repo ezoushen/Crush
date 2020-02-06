@@ -37,11 +37,6 @@ public class DataModel: DataModelProtocol {
     public let migration: Migration?
     public var previousModel: DataModel?
     
-    internal init() {
-        objectModel = nil
-        migration = nil
-    }
-    
     public init<VersionedSchema: VersionedSchemaProtocol>(version: VersionedSchema.Type, entities: [Entity.Type]) {
         let sorted = entities.sorted { !$1.isAbstract }
         let entities = sorted.map { $0.entityDescription() }
@@ -61,23 +56,24 @@ public class DataModel: DataModelProtocol {
         DataModel.modelCache.setObject(model, forKey: hashValue)
         
         objectModel = model
-        
-        if VersionedSchema.LastVersion.self != FirstVersion.self {
-            let entityMappings = sorted.compactMap {
-                return try? $0.createEntityMapping(sourceModel: VersionedSchema.LastVersion.model.objectModel,
-                                                   destinationModel: model)
-            }
-            let mapping = VersionMigration(from: VersionedSchema.LastVersion.init(), to: version.init(), mappings: entityMappings)
-            
-            DataModel.mappingCache.setObject(_MigrationContainerObject(migration: mapping), forKey: hashValue)
-            
-            previousModel = VersionedSchema.LastVersion.model
-            migration = mapping
-        } else {
-            previousModel = nil
+        previousModel = VersionedSchema.LastVersion.concreteVersion?.model
+
+        guard  VersionedSchema.LastVersion.self != FirstVersion.self else {
             migration = nil
+            return
         }
         
+        let entityMappings = sorted.compactMap {
+            try? $0.createEntityMapping(sourceModel: VersionedSchema.LastVersion.model.objectModel,
+                                        destinationModel: model)
+        }
+        let mapping = VersionMigration(from: VersionedSchema.LastVersion.init(),
+                                       to: version.init(),
+                                       mappings: entityMappings)
+        
+        DataModel.mappingCache.setObject(_MigrationContainerObject(migration: mapping), forKey: hashValue)
+        
+        migration = mapping
     }
 }
 

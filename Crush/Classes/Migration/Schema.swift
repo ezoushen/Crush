@@ -12,6 +12,7 @@ public protocol SchemaProtocol {
     init()
     static var model: DataModel { get }
     static var lastVersion: SchemaProtocol.Type? { get }
+    static var concreteVersion: SchemaProtocol.Type? { get }
 }
 
 public extension Schema {
@@ -30,15 +31,24 @@ open class Schema<LastVersion: SchemaProtocol>: VersionedSchemaProtocol {
         return LastVersion.self
     }
     
+    public static var concreteVersion: SchemaProtocol.Type? {
+        return Self.self
+    }
+    
     required public init() { }
 }
 
+/// Abstract struct for the first version of the schema.
 public struct FirstVersion: SchemaProtocol {
     public static var model: DataModel {
         fatalError("Should not call model of FirstVersion directly")
     }
     
     public static var lastVersion: SchemaProtocol.Type? {
+        return nil
+    }
+    
+    public static var concreteVersion: SchemaProtocol.Type? {
         return nil
     }
     
