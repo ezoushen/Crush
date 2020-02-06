@@ -11,6 +11,8 @@ import UIKit
 
 public protocol SavableTypeProtocol {
     static var nativeType: NSAttributeType { get }
+    static var nativeTypeName: String { get }
+    var presentedAsString: String { get }
 }
 
 public protocol PredicateEquatable {
@@ -25,6 +27,11 @@ extension SavableTypeProtocol where Self: FieldTypeProtocol {
 }
 
 public protocol FieldAttributeType: SavableTypeProtocol, FieldTypeProtocol where Self == RuntimeObjectValue, Self == ManagedObjectValue { }
+
+extension SavableTypeProtocol {
+    public static var nativeTypeName: String { String(describing: Self.self) }
+    public var presentedAsString: String { "\(self)" }
+}
 
 extension Int64: FieldAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .integer64AttributeType }
@@ -42,8 +49,10 @@ extension Int16: FieldAttributeType, PredicateComparable {
 }
 
 extension NSDecimalNumber: FieldAttributeType, PredicateComparable {
+    public static var nativeTypeName: String { "DenimalNumber" }
     public static var nativeType: NSAttributeType { .decimalAttributeType }
     public var predicateValue: NSObject { self }
+    public var presentedAsString: String { "NSDecimalNumber(decimal: \(self.decimalValue)" }
 }
 
 extension Double: FieldAttributeType, PredicateComparable {
@@ -59,6 +68,7 @@ extension Float: FieldAttributeType, PredicateComparable {
 extension String: FieldAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .stringAttributeType }
     public var predicateValue: NSObject { NSString(string: self) }
+    public var presentedAsString: String { "\\\"\(self)\\\"" }
 }
 
 extension Bool: FieldAttributeType, PredicateEquatable {
@@ -69,16 +79,19 @@ extension Bool: FieldAttributeType, PredicateEquatable {
 extension Date: FieldAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .dateAttributeType }
     public var predicateValue: NSObject { self as NSDate }
+    public var presentedAsString: String { "Date(timeIntervalSince1970: \(timeIntervalSince1970))" }
 }
 
 extension Data: FieldAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .binaryDataAttributeType }
     public var predicateValue: NSObject { self as NSData }
+    public var presentedAsString: String { "Data(base64Encoded: \\\"\(base64EncodedString())\\\")" }
 }
 
 extension UUID: FieldAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .UUIDAttributeType }
     public var predicateValue: NSObject { self as NSUUID }
+    public var presentedAsString: String { "UUID()" }
 }
 
 extension NSCoding where Self: FieldAttributeType {
@@ -92,9 +105,21 @@ extension UIImage: FieldAttributeType, PredicateEquatable {
     public var predicateValue: NSObject { self }
 }
 
-extension Swift.Optional: SavableTypeProtocol where Wrapped: FieldAttributeType {
+extension Swift.Optional: FieldTypeProtocol where Wrapped: FieldTypeProtocol { }
+
+extension Swift.Optional: SavableTypeProtocol where Wrapped: SavableTypeProtocol {
     public static var nativeType: NSAttributeType {
         return Wrapped.nativeType
+    }
+    public var presentedAsString: String {
+        guard case let .some(wrapped) = self else { return "nil" }
+        return wrapped.presentedAsString
+    }
+}
+
+extension Swift.Optional: FieldAttributeType where Wrapped: FieldAttributeType {
+    public static var nativeTypeName: String {
+        return Wrapped.nativeTypeName
     }
 }
 

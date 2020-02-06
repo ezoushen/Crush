@@ -12,7 +12,6 @@ import CoreData
 @propertyWrapper
 public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProtocol {
     
-    
     case transient(Property)
     
     public typealias PropertyValue = Property.PropertyValue
@@ -126,6 +125,12 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
 extension Temporary where Property: AttributeProtocol {
     public init(wrappedValue: PropertyValue, options: PropertyOptionProtocol...) {
         self.init(Property.init(wrappedValue: wrappedValue, options: options))
+    }
+}
+
+extension Temporary: TypeStringConvertible where Property: TypeStringConvertible {
+    public static var typedef: String {
+        "@Transient." + Property.typedef.dropFirst()
     }
 }
 
