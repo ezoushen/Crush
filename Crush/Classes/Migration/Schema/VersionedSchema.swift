@@ -1,58 +1,37 @@
 //
-//  Schema.swift
+//  VersionedSchema.swift
 //  Crush
 //
-//  Created by ezou on 2019/10/22.
-//  Copyright © 2019 ezou. All rights reserved.
+//  Created by 沈昱佐 on 2020/2/6.
 //
 
-import CoreData
+import Foundation
 
-public protocol SchemaProtocol {
-    init()
-    static var model: DataModel { get }
-    static var lastVersion: SchemaProtocol.Type? { get }
-    static var concreteVersion: SchemaProtocol.Type? { get }
-}
+public protocol DataSchemaProtocol: SchemaProtocol { }
 
-public extension Schema {
-    static var model: DataModel {
-        return DataModel(version: Self.self,
-                         entities: allClasses[String(reflecting: Self.self)] ?? [])
-    }
-}
-
-public protocol VersionedSchemaProtocol: SchemaProtocol {
-    associatedtype LastVersion: SchemaProtocol
-}
-
-open class Schema<LastVersion: SchemaProtocol>: VersionedSchemaProtocol {
-    public static var lastVersion: SchemaProtocol.Type? {
-        return LastVersion.self
-    }
+open class Schema<Version: SchemaProtocol>: DataSchemaProtocol {
+    public typealias LastVersion = Version
     
-    public static var concreteVersion: SchemaProtocol.Type? {
-        return Self.self
+    public var lastVersion: SchemaProtocol? {
+        return LastVersion.init()
     }
     
     required public init() { }
 }
 
-/// Abstract struct for the first version of the schema.
-public struct FirstVersion: SchemaProtocol {
-    public static var model: DataModel {
-        fatalError("Should not call model of FirstVersion directly")
-    }
-    
-    public static var lastVersion: SchemaProtocol.Type? {
+open class SchemaOrigin: DataSchemaProtocol {
+    public var lastVersion: SchemaProtocol? {
         return nil
     }
     
-    public static var concreteVersion: SchemaProtocol.Type? {
-        return nil
+    required public init() { }
+}
+
+public extension DataSchemaProtocol {
+    var model: ObjectModel {
+        DataModel(version: self,
+                  entities: allClasses[String(reflecting: Self.self)] ?? [])
     }
-    
-    public init() { }
 }
 
 fileprivate func findTypeNames(type: RuntimeObject.Type) -> [String] {
@@ -71,9 +50,9 @@ fileprivate func findTypeNames(type: RuntimeObject.Type) -> [String] {
     }
 }
 
-fileprivate func findEntityVersion(type: NeutralEntityObject.Type) -> SchemaProtocol.Type? {
+fileprivate func findEntityVersion(type: NeutralEntityObject.Type) -> SchemaProtocol? {
     let types = findTypeNames(type: type)
-    return types.reversed().compactMap{ NSClassFromString($0) as? SchemaProtocol.Type }.first
+    return types.reversed().compactMap{ NSClassFromString($0) as? SchemaProtocol.Type }.first?.init()
 }
 
 fileprivate var allClasses: [String: [NeutralEntityObject.Type]] = {

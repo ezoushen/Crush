@@ -23,15 +23,16 @@ public class DataContainer {
         completion: @escaping () -> Void = {}
     ) throws {
         self.connection = connection
-        try self.connect(completion: completion)
-    }
-    
-    private func connect(completion: @escaping () -> Void) throws {
-        try connection.connect { [weak self] in
+        
+        let block = { [weak self] in
             guard let `self` = self else { return }
             self.initializeAllContext()
             DispatchQueue.main.async(execute: completion)
         }
+        
+        connection.isConnected
+            ? block()
+            : try connection.connect(completion: block)
     }
     
     private func initializeAllContext() {

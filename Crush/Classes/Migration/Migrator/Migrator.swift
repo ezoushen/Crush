@@ -9,6 +9,7 @@
 import CoreData
 
 public protocol DataMigrator {
+    init(activeVersion: SchemaProtocol)
     var activeVersion: SchemaProtocol { get }
     func processStore(at url: URL) throws
 }

@@ -31,7 +31,7 @@ extension AttributeOption: MutablePropertyOptionProtocol {
     }
 }
 
-public protocol AttributeProtocol: NullablePropertyProtocol {
+public protocol AttributeProtocol: NullablePropertyProtocol where PropertyValue: FieldAttributeType {
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
     var allowsExternalBinaryDataStorage: Bool { get }
@@ -60,7 +60,6 @@ extension AttributeProtocol where PropertyValue: NSCoding {
 }
 
 extension AttributeProtocol {
-    public var attributeValueClassName: String? { nil }
     public var defaultValue: Any? { nil }
     public var valueTransformerName: String? { nil }
     public var allowsExternalBinaryDataStorage: Bool { false }
@@ -95,7 +94,7 @@ extension AttributeProtocol {
 
 // MARK: - EntityAttributeType
 @propertyWrapper
-public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType, O.PropertyValue: SavableTypeProtocol {
+public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType, O.PropertyValue: FieldAttributeType {
     
     public typealias PropertyValue = O.PropertyValue
     public typealias OptionalType = O

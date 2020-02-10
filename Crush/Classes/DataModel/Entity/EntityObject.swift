@@ -95,7 +95,6 @@ extension Entity {
     @discardableResult func setupProperties(mirror: Mirror?, recursive: Bool) -> [NSPropertyDescription] {
         guard let mirror = mirror, let objectType = mirror.subjectType as? Entity.Type else { return [] }
         let coordinator = DescriptionCacheCoordinator.shared
-
         let properties = mirror.children
         .compactMap { (label, value) -> NSPropertyDescription? in
             let defaultKey = "\(objectType.entityCacheKey).\(label!)"

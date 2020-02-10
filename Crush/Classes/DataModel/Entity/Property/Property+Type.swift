@@ -12,10 +12,6 @@ public typealias Value = Required.Value
 public typealias Relation = Required.Relation
 public typealias HashableEntity = Hashable & Entity
 
-public protocol TypeStringConvertible {
-    static var typedef: String { get }
-}
-
 public enum Optional {
     public struct Relation {
         public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>

@@ -18,10 +18,15 @@ extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyPro
     }
 }
 
+// CONTAINS, BETWEEN operator
 infix operator <>
+// BEGINSWITH operator
 infix operator |~
+// ENDSWITH operator
 infix operator ~|
+// LINE operator
 infix operator |~|
+// MATCHES operator
 infix operator |*|
 
 extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType: PredicateComparable & Comparable {

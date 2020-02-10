@@ -8,42 +8,49 @@
 
 import CoreData
 
-public protocol DataModelProtocol {
-    var objectModel: NSManagedObjectModel! { get }
+public protocol ObjectModel {
+    var rawModel: NSManagedObjectModel! { get }
+    var migration: Migration? { get }
+    var previousModel: ObjectModel? { get }
 }
 
-public class CoreDataModel: DataModelProtocol {
-    public private(set) var objectModel: NSManagedObjectModel! = nil
+public class CoreDataModel: ObjectModel {
+    public private(set) var rawModel: NSManagedObjectModel! = nil
+    public var previousModel: ObjectModel? { nil }
+    public var migration: Migration? {
+        guard let previousModel = previousModel else { return nil }
+        return CoreDataMigration(sourceModel: rawModel, destinationModel: previousModel.rawModel)
+    }
     
-    public convenience init(modelName: String) {
+    public convenience init(modelName: String, previousModel: ObjectModel? = nil) {
         let url = Bundle.main.url(forResource: modelName, withExtension: "momd")
         
         precondition(url != nil, "xcdatamodel not found")
         
-        self.init(url: url!)
+        self.init(url: url!, previousModel: previousModel)
     }
     
-    public init(url: URL) {
-        objectModel = NSManagedObjectModel(contentsOf: url)
-        precondition(objectModel != nil, "NSManagedObjectModel not found")
+    public init(url: URL, previousModel: ObjectModel? = nil) {
+        rawModel = NSManagedObjectModel(contentsOf: url)
+        precondition(rawModel != nil, "NSManagedObjectModel not found")
     }
 }
 
-public class DataModel: DataModelProtocol {
+public class DataModel: ObjectModel {
     static private var modelCache: NSCache<NSString, NSManagedObjectModel> = .init()
     static private var mappingCache: NSCache<NSString, _MigrationContainerObject> = .init()
     
-    public let objectModel: NSManagedObjectModel!
+    public let rawModel: NSManagedObjectModel!
     public let migration: Migration?
-    public var previousModel: DataModel?
+    public var previousModel: ObjectModel?
     
-    public init<VersionedSchema: VersionedSchemaProtocol>(version: VersionedSchema.Type, entities: [Entity.Type]) {
+    public init(version: SchemaProtocol, entities: [Entity.Type]) {
         let sorted = entities.sorted { !$1.isAbstract }
         let entities = sorted.map { $0.entityDescription() }
         let hashValue = NSString(string: String(reflecting: version.self))
 
         if let model = DataModel.modelCache.object(forKey: hashValue) {
-            objectModel = model
+            rawModel = model
             migration = DataModel.mappingCache.object(forKey: hashValue)?.migration
             return
         }
@@ -55,20 +62,21 @@ public class DataModel: DataModelProtocol {
         
         DataModel.modelCache.setObject(model, forKey: hashValue)
         
-        objectModel = model
-        previousModel = VersionedSchema.LastVersion.concreteVersion?.model
+        rawModel = model
+        previousModel = version.lastVersion?.model
 
-        guard  VersionedSchema.LastVersion.self != FirstVersion.self else {
+        guard let lastVersion = version.lastVersion,
+              let previousModel = self.previousModel else {
             migration = nil
             return
         }
         
         let entityMappings = sorted.compactMap {
-            try? $0.createEntityMapping(sourceModel: VersionedSchema.LastVersion.model.objectModel,
+            try? $0.createEntityMapping(sourceModel: previousModel.rawModel,
                                         destinationModel: model)
         }
-        let mapping = VersionMigration(from: VersionedSchema.LastVersion.init(),
-                                       to: version.init(),
+        let mapping = VersionMigration(from: lastVersion,
+                                       to: version,
                                        mappings: entityMappings)
         
         DataModel.mappingCache.setObject(_MigrationContainerObject(migration: mapping), forKey: hashValue)
