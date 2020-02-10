@@ -26,7 +26,9 @@ class V1: SchemaOrigin {
 
 class V2: Schema<V1> {
     class Todo: EntityObject {
-        @Value.String(options: [PropertyOption.mapping(\V1.Todo.$title)])
+        @Value.String(options: [
+            PropertyOption.mapping(\V1.Todo.$title)
+        ])
         var content: String = ""
         
         @Value.Date

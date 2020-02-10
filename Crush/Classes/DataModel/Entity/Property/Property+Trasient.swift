@@ -128,12 +128,6 @@ extension Temporary where Property: AttributeProtocol {
     }
 }
 
-extension Temporary: TypeStringConvertible where Property: TypeStringConvertible {
-    public static var typedef: String {
-        "@Transient." + Property.typedef.dropFirst()
-    }
-}
-
 extension Temporary where Property: RelationshipProtocol {
     public init<R: RelationshipProtocol>(_ name: String? = nil, inverse: KeyPath<Property.DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == Property.SourceEntity, R.SourceEntity == Property.DestinationEntity, R.RelationshipType == Property.InverseType, R.InverseType == Property.RelationshipType {
         self.init(Property.init(name, inverse: inverse, options: options))

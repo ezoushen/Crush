@@ -32,13 +32,13 @@ public final class Connection {
     
     var isConnected: Bool { _coordinator != nil }
     
-    let type: PersistentStoreType
+    let type: DataContainer.StoreType
     let name: String
     let migrator: DataMigrator?
     
     private var _schema: SchemaProtocol
     
-    public init(type: PersistentStoreType, name: String, version: SchemaProtocol) {
+    public init(type: DataContainer.StoreType, name: String, version: SchemaProtocol) {
         self.type = type
         self.name = name
         self.migrator = type.migrator?.init(activeVersion: version)
@@ -63,7 +63,7 @@ public final class Connection {
             throw ConnectionError.databaseUrlNotFound
         }
         
-        try persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: type.type, options: nil)
+        try persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: type.raw, options: nil)
         try FileManager.default.removeItem(atPath: url.path)
         try FileManager.default.removeItem(atPath: url.path + "-shm")
         try FileManager.default.removeItem(atPath: url.path + "-wal")
@@ -80,7 +80,7 @@ public final class Connection {
     
     private func addPersistentStore(_ completion: @escaping () -> Void) {
         let description = NSPersistentStoreDescription()
-        description.type = type.type
+        description.type = type.raw
         description.url = currentUrl
         description.shouldMigrateStoreAutomatically = false
         description.shouldInferMappingModelAutomatically = false

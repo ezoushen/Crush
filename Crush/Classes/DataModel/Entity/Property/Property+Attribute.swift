@@ -59,12 +59,6 @@ extension AttributeProtocol where PropertyValue: NSCoding {
     }
 }
 
-extension AttributeProtocol where Self: TypeStringConvertible {
-    public static var typedef: String {
-        return "@\(OptionalType.isOptional ? "Optional" : "Required").Value.\(PropertyValue.nativeTypeName)"
-    }
-}
-
 extension AttributeProtocol {
     public var defaultValue: Any? { nil }
     public var valueTransformerName: String? { nil }
@@ -100,7 +94,7 @@ extension AttributeProtocol {
 
 // MARK: - EntityAttributeType
 @propertyWrapper
-public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol, TypeStringConvertible where O.FieldType: FieldAttributeType, O.PropertyValue: FieldAttributeType {
+public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType, O.PropertyValue: FieldAttributeType {
     
     public typealias PropertyValue = O.PropertyValue
     public typealias OptionalType = O

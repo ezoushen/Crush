@@ -53,12 +53,6 @@ extension RuntimeObject {
     }
 }
 
-class M1: AggressiveMigration {
-    func migrate() {
-        createProperty(name: "title", type: Optional.Value.String.self, defaultValue: "TITLE", options: [])
-    }
-}
-
 extension Entity {
     init(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) {
         self.init()
@@ -101,7 +95,6 @@ extension Entity {
     @discardableResult func setupProperties(mirror: Mirror?, recursive: Bool) -> [NSPropertyDescription] {
         guard let mirror = mirror, let objectType = mirror.subjectType as? Entity.Type else { return [] }
         let coordinator = DescriptionCacheCoordinator.shared
-        M1().migrate()
         let properties = mirror.children
         .compactMap { (label, value) -> NSPropertyDescription? in
             let defaultKey = "\(objectType.entityCacheKey).\(label!)"

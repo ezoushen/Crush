@@ -78,7 +78,7 @@ final public class SQLMigrator: DataMigrator {
     
     private func forceWALCheckpointingForStore(at storeURL: URL) {
         guard let metadata = try? NSPersistentStoreCoordinator.metadataForPersistentStore(
-            ofType: PersistentStoreType.sql.type,
+            ofType: DataContainer.StoreType.sql.raw,
             at: storeURL, options: nil
         ),
             let currentModel = versions
@@ -94,7 +94,7 @@ final public class SQLMigrator: DataMigrator {
             let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: currentModel)
 
             let options = [NSSQLitePragmasOption: ["journal_mode": "DELETE"]]
-            let store = try persistentStoreCoordinator.addPersistentStore(ofType: PersistentStoreType.sql.type, configurationName: nil, at: storeURL, options: options)
+            let store = try persistentStoreCoordinator.addPersistentStore(ofType: DataContainer.StoreType.sql.raw, configurationName: nil, at: storeURL, options: options)
             try persistentStoreCoordinator.remove(store)
         } catch let error {
             fatalError("failed to force WAL checkpointing, error: \(error)")
