@@ -22,7 +22,7 @@ pod 'Crush'
 
 ## Author
 
-mill010363, jack98526@gmail.com
+ezoushen, ytshen@seekrtech.com
 
 ## License
 
