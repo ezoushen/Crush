@@ -27,7 +27,7 @@ public final class Connection {
     private var _coordinator: NSPersistentStoreCoordinator?
     
     internal var persistentStoreCoordinator: NSPersistentStoreCoordinator {
-        _coordinator ?? createPersistenStoreCoordinator(model: _schema.model as! DataModel)
+        _coordinator ?? createPersistenStoreCoordinator(model: _schema.model)
     }
     
     var isConnected: Bool { _coordinator != nil }
@@ -73,7 +73,7 @@ public final class Connection {
         return type.createURL(docomentDirectoryUrl, with: name)
     }
     
-    private func createPersistenStoreCoordinator(model: DataModel) -> NSPersistentStoreCoordinator {
+    private func createPersistenStoreCoordinator(model: ObjectModel) -> NSPersistentStoreCoordinator {
         let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: model.rawModel)
         return persistentStoreCoordinator
     }
