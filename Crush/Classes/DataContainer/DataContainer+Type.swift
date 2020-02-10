@@ -12,7 +12,7 @@ public extension DataContainer {
     enum StoreType {
         case sql, binary, inMemory
         
-        #if !os(iOS)
+        #if os(macOS)
         case xml
         #endif
         
@@ -21,7 +21,7 @@ public extension DataContainer {
             case .sql: return NSSQLiteStoreType
             case .binary: return NSBinaryStoreType
             case .inMemory: return NSInMemoryStoreType
-            #if !os(iOS)
+            #if os(macOS)
             case .xml: return NSXMLStoreType
             #endif
             }
@@ -39,7 +39,7 @@ public extension DataContainer {
             case .sql: return documentDirectory?.appendingPathComponent("\(name).sqlite")
             case .binary: return documentDirectory?.appendingPathComponent(name)
             case .inMemory: return nil
-            #if !os(iOS)
+            #if os(macOS)
             case .xml: return documentDirectory?.appendingPathComponent(name)
             #endif
             }

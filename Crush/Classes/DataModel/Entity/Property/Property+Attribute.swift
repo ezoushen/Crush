@@ -24,7 +24,7 @@ extension AttributeOption: MutablePropertyOptionProtocol {
         switch self {
         case .allowsExternalBinaryDataStorage(let flag): description.allowsExternalBinaryDataStorage = flag
         case .preservesValueInHistoryOnDeletion(let flag):
-            if #available(iOS 13.0, *) {
+            if #available(iOS 13.0, watchOS 6.0, *) {
                 description.preservesValueInHistoryOnDeletion = flag
             }
         }
@@ -84,7 +84,7 @@ extension AttributeProtocol {
             description.attributeValueClassName = className
         }
         
-        if #available(iOS 13.0, *) {
+        if #available(iOS 13.0, watchOS 6.0, *) {
             description.preservesValueInHistoryOnDeletion = preservesValueInHistoryOnDeletion
         }
         
