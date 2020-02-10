@@ -8,7 +8,7 @@
 
 import CoreData
 
-public protocol RuntimeObjectProtocol: AnyObject {
+public protocol RuntimeObject: AnyObject {
     typealias Proxy = ReadOnlyValueMapperProtocol & ValueProviderProtocol
 
     init()
@@ -17,7 +17,7 @@ public protocol RuntimeObjectProtocol: AnyObject {
     static func entity() -> NSEntityDescription
 }
 
-public protocol EntityProtocol: RuntimeObjectProtocol {
+public protocol Entity: RuntimeObject {
     static func entityDescription() -> NSEntityDescription
     static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping?
     static func entity() -> NSEntityDescription
@@ -27,9 +27,9 @@ public protocol EntityProtocol: RuntimeObjectProtocol {
     var entity: NSEntityDescription { get }
 }
 
-fileprivate var dummyObjects: [String: RuntimeObjectProtocol] = [:]
+fileprivate var dummyObjects: [String: RuntimeObject] = [:]
 
-extension RuntimeObjectProtocol {
+extension RuntimeObject {
     static var fetchKey: String {
         return String(describing: Self.self)
     }
@@ -53,7 +53,7 @@ extension RuntimeObjectProtocol {
     }
 }
 
-extension EntityProtocol {
+extension Entity {
     init(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) {
         self.init()
         self.proxyType = proxyType
@@ -93,9 +93,8 @@ extension EntityProtocol {
     }
     
     @discardableResult func setupProperties(mirror: Mirror?, recursive: Bool) -> [NSPropertyDescription] {
-        guard let mirror = mirror, let objectType = mirror.subjectType as? EntityProtocol.Type else { return [] }
+        guard let mirror = mirror, let objectType = mirror.subjectType as? Entity.Type else { return [] }
         let coordinator = DescriptionCacheCoordinator.shared
-
         let properties = mirror.children
         .compactMap { (label, value) -> NSPropertyDescription? in
             let defaultKey = "\(objectType.entityCacheKey).\(label!)"
@@ -138,9 +137,9 @@ extension EntityProtocol {
     }
 }
 
-open class NeutralEntityObject: NSObject, EntityProtocol {
+open class NeutralEntityObject: NSObject, Entity {
     public static var renamingIdentifier: String? { renamingClass?.fetchKey }
-    public class var renamingClass: EntityProtocol.Type? { nil}
+    public class var renamingClass: Entity.Type? { nil}
 
     public class var isAbstract: Bool {
         assertionFailure("Should not call isAbstract variale directly")
@@ -156,8 +155,8 @@ open class NeutralEntityObject: NSObject, EntityProtocol {
         let attributeMappings = try entityDescription().properties
             .filter { $0 is NSAttributeDescription }
             .compactMap { property -> PropertyMappingProtocol? in
-            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObjectProtocol.Type,
-                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObjectProtocol.Type,
+            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
+                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObject.Type,
                   let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
                   let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
                 else { return nil }
@@ -174,8 +173,8 @@ open class NeutralEntityObject: NSObject, EntityProtocol {
         let relationshipMappings = try entityDescription().properties
             .filter { $0 is NSRelationshipDescription }
             .compactMap { property -> PropertyMappingProtocol? in
-            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObjectProtocol.Type,
-                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObjectProtocol.Type,
+            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
+                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObject.Type,
                   let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
                   let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
                 else { return nil }
@@ -254,7 +253,7 @@ open class NeutralEntityObject: NSObject, EntityProtocol {
         
         // Setup parent entity
         if let superMirror = mirror.superclassMirror,
-            superMirror.subjectType is EntityProtocol.Type,
+            superMirror.subjectType is Entity.Type,
             superMirror.subjectType != NeutralEntityObject.self,
             superMirror.subjectType != EntityObject.self,
             superMirror.subjectType != AbstractEntityObject.self {
@@ -333,7 +332,7 @@ open class EntityObject: NeutralEntityObject {
     }
 }
 
-extension NSManagedObject: EntityProtocol {
+extension NSManagedObject: Entity {
     public static var renamingIdentifier: String? {
         return entity().renamingIdentifier
     }

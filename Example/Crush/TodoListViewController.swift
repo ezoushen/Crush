@@ -18,8 +18,8 @@ class TodoListViewController: UIViewController {
     lazy var container: DataContainer! = {
         let connection = Connection(type: .sql,
                                     name: "Crush-Example",
-                                    migrator: SQLMigrator(activeVersion: CurrentSchema()))
-        return try? DataContainer(connection: connection)
+                                    version: CurrentSchema())
+        return try! DataContainer(connection: connection)
     }()
 
     var todos: [Todo] = [] {

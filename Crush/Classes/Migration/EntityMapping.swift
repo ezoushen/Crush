@@ -136,7 +136,7 @@ public struct AnyEntityMapping: EntityMapping, MappingModelMergeDelegate {
 
 // MARK: Add Entity Mapping
 
-public struct AddEntityMapping<T: RuntimeObjectProtocol>: EntityMapping, MappingModelMergeDelegate {
+public struct AddEntityMapping<T: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = T
     
@@ -163,7 +163,7 @@ public struct AddEntityMapping<T: RuntimeObjectProtocol>: EntityMapping, Mapping
 
 // MARK: - Remove Entity Mapping
 
-public struct RemoveEntityMapping<T: RuntimeObjectProtocol>: EntityMapping, MappingModelMergeDelegate {
+public struct RemoveEntityMapping<T: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = T
     
@@ -190,7 +190,7 @@ public struct RemoveEntityMapping<T: RuntimeObjectProtocol>: EntityMapping, Mapp
 
 // MARK: - Transform Entity Mapping
 
-public struct TransformEntityMapping<T: RuntimeObjectProtocol, S: RuntimeObjectProtocol>: EntityMapping, MappingModelMergeDelegate {
+public struct TransformEntityMapping<T: Entity, S: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = S
     
@@ -238,7 +238,7 @@ public struct TransformEntityMapping<T: RuntimeObjectProtocol, S: RuntimeObjectP
 
 // MARK: - Custom Entity Mapping
 
-public struct CustomEntityMapping<T: RuntimeObjectProtocol, S: RuntimeObjectProtocol>: EntityMapping, MappingModelMergeDelegate {
+public struct CustomEntityMapping<T: Entity, S: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = S
     
@@ -261,7 +261,7 @@ public struct CustomEntityMapping<T: RuntimeObjectProtocol, S: RuntimeObjectProt
 
 // MARK: - Copy Entity Mapping
 
-public struct CopyEntityMapping<T: RuntimeObjectProtocol, S: RuntimeObjectProtocol>: EntityMapping, MappingModelMergeDelegate {
+public struct CopyEntityMapping<T: Entity, S: Entity>: EntityMapping, MappingModelMergeDelegate {
     typealias FromType = T
     typealias ToType = S
     

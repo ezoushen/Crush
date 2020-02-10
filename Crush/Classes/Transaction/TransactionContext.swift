@@ -11,7 +11,7 @@ import CoreData
 public protocol AsynchronousContextProtocol { }
 
 public protocol RawContextProviderProtocol {
-    typealias Proxy = RuntimeObjectProtocol.Proxy
+    typealias Proxy = RuntimeObject.Proxy
     
     var proxyType: Proxy.Type { get }
     var context: NSManagedObjectContext { get }
@@ -22,18 +22,18 @@ public protocol RawContextProviderProtocol {
 public protocol TransactionContextProtocol { }
 
 internal extension TransactionContextProtocol where Self: RawContextProviderProtocol {
-    func receive<T: EntityProtocol>(_ object: T) -> T {
+    func receive<T: Entity>(_ object: T) -> T {
         let newObject = context.receive(runtimeObject: object)
         return T.init(newObject, proxyType: proxyType)
     }
 }
 
 public protocol ReadOnlyTransactionContext: TransactionContextProtocol {
-    func count<T: EntityProtocol>(type: T.Type, predicate: NSPredicate?) -> Int
-    func fetch<T: EntityProtocol>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T]
+    func count<T: Entity>(type: T.Type, predicate: NSPredicate?) -> Int
+    func fetch<T: Entity>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T]
     func fetch<T: TracableKeyPathProtocol>(property: T, predicate: NSPredicate?) -> [T.Value.EntityType?]
     func fetch<T: TracableKeyPathProtocol>(properties: [T], predicate: NSPredicate?) -> [[String: Any]]
-    func query<T: RuntimeObjectProtocol>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T>
+    func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T>
 }
 
 extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
@@ -43,7 +43,7 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
 }
 
 extension ReadOnlyTransactionContext {
-    public func count<T: EntityProtocol>(type: T.Type) -> Int {
+    public func count<T: Entity>(type: T.Type) -> Int {
         count(type: type, predicate: nil)
     }
     
@@ -55,7 +55,7 @@ extension ReadOnlyTransactionContext {
         fetch(properties: properties, predicate: predicate)
     }
     
-    public func fetch<T: EntityProtocol>(_ type: T.Type,
+    public func fetch<T: Entity>(_ type: T.Type,
                                          fetchLimit: Int? = nil,
                                          fetchOffset: Int = 0,
                                          returnsAsFaults: Bool = true,
@@ -75,14 +75,14 @@ extension ReadOnlyTransactionContext {
 }
 
 extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
-    public func query<T: RuntimeObjectProtocol>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
+    public func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
         return QueryBuilder<T, NSManagedObject, T>(config: .init(), context: self)
     }
 }
 
 public protocol ReadWriteTransactionContext: ReadOnlyTransactionContext {
-    func create<T: EntityProtocol>(entiy: T.Type) -> T
-    func delete<T: EntityProtocol>(_ object: T)
+    func create<T: Entity>(entiy: T.Type) -> T
+    func delete<T: Entity>(_ object: T)
     
     func commit()
     func stash()

@@ -10,14 +10,14 @@ import Foundation
 
 public typealias Value = Required.Value
 public typealias Relation = Required.Relation
-public typealias HashableRuntimeObjectProtocol = Hashable & RuntimeObjectProtocol
+public typealias HashableEntity = Hashable & Entity
 
 public enum Optional {
     public struct Relation {
-        public typealias ManyToOne<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Relationship<Nullable<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>
-        public typealias ManyToMany<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Relationship<Nullable<ToManyRelationshipType<D>>, ToManyRelationshipType<S>>
-        public typealias OneToOne<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Relationship<Nullable<ToOneRelationshipType<D>>, ToOneRelationshipType<S>>
-        public typealias OneToMany<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Relationship<Nullable<ToManyRelationshipType<D>>, ToOneRelationshipType<S>>
+        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>
+        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable<ToManyRelationshipType<D>>, ToManyRelationshipType<S>>
+        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable<ToOneRelationshipType<D>>, ToOneRelationshipType<S>>
+        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable<ToManyRelationshipType<D>>, ToOneRelationshipType<S>>
     }
     
     public struct Value {
@@ -38,10 +38,10 @@ public enum Optional {
 
 public enum Required {
     public struct Relation {
-        public typealias ManyToOne<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Relationship<NotNull<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>
-        public typealias ManyToMany<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Relationship<NotNull<ToManyRelationshipType<D>>, ToManyRelationshipType<S>>
-        public typealias OneToOne<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Relationship<NotNull<ToOneRelationshipType<D>>, ToOneRelationshipType<S>>
-        public typealias OneToMany<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Relationship<NotNull<ToManyRelationshipType<D>>, ToOneRelationshipType<S>>
+        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>
+        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull<ToManyRelationshipType<D>>, ToManyRelationshipType<S>>
+        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull<ToOneRelationshipType<D>>, ToOneRelationshipType<S>>
+        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull<ToManyRelationshipType<D>>, ToOneRelationshipType<S>>
     }
 
     public struct Value {
@@ -66,10 +66,10 @@ enum Transient {
     
     public enum Optional {
         public struct Relation {
-            public typealias ManyToOne<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Temporary<Relationship<Nullable<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>>
-            public typealias ManyToMany<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Temporary<Relationship<Nullable<ToManyRelationshipType<D>>, ToManyRelationshipType<S>>>
-            public typealias OneToOne<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Temporary<Relationship<Nullable<ToOneRelationshipType<D>>, ToOneRelationshipType<S>>>
-            public typealias OneToMany<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Temporary<Relationship<Nullable<ToManyRelationshipType<D>>, ToOneRelationshipType<S>>>
+            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>>
+            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable<ToManyRelationshipType<D>>, ToManyRelationshipType<S>>>
+            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable<ToOneRelationshipType<D>>, ToOneRelationshipType<S>>>
+            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable<ToManyRelationshipType<D>>, ToOneRelationshipType<S>>>
         }
         
         public struct Value {
@@ -90,10 +90,10 @@ enum Transient {
 
     public enum Required {
         public struct Relation {
-            public typealias ManyToOne<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Temporary<Relationship<NotNull<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>>
-            public typealias ManyToMany<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Temporary<Relationship<NotNull<ToManyRelationshipType<D>>, ToManyRelationshipType<S>>>
-            public typealias OneToOne<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Temporary<Relationship<NotNull<ToOneRelationshipType<D>>, ToOneRelationshipType<S>>>
-            public typealias OneToMany<S: HashableRuntimeObjectProtocol, D: HashableRuntimeObjectProtocol> = Temporary<Relationship<NotNull<ToManyRelationshipType<D>>, ToOneRelationshipType<S>>>
+            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull<ToOneRelationshipType<D>>, ToManyRelationshipType<S>>>
+            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull<ToManyRelationshipType<D>>, ToManyRelationshipType<S>>>
+            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull<ToOneRelationshipType<D>>, ToOneRelationshipType<S>>>
+            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull<ToManyRelationshipType<D>>, ToOneRelationshipType<S>>>
         }
 
         public struct Value {

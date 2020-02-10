@@ -24,7 +24,7 @@ class TodoTableViewCell: UITableViewCell {
     }
     
     func setup(by todo: Todo) {
-        titleLabel.text = todo.title
+        titleLabel.text = todo.content
         dateLabel.text = Self._dateFormatter.string(from: todo.dueDate)
         statusIndicatorView.backgroundColor = todo.isFinished ? .green : .red
     }

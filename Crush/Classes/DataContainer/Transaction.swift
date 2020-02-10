@@ -13,27 +13,25 @@ internal protocol TransactionContextProviderProtocol {
     var asyncContext: _ReadWriteAsyncTransactionContext { get }
 }
 
-public protocol TransactionProtocol {
-    typealias Context = ReadWriteTransactionContext
-}
+public protocol TransactionProtocol { }
 
 public protocol AsyncTransactionProtocol: TransactionProtocol {
-    func startAsyncTransaction(_ block: @escaping (Context) -> Void)
-    func startAsyncTransaction<T: EntityProtocol>(_ object: T, block: @escaping (Context, T) -> Void)
-    func startAsyncTransaction<T: EntityProtocol>(_ objects: T... , block: @escaping (Context, [T]) -> Void)
+    func startAsyncTransaction(_ block: @escaping (ReadWriteTransactionContext) -> Void)
+    func startAsyncTransaction<T: Entity>(_ object: T, block: @escaping (ReadWriteTransactionContext, T) -> Void)
+    func startAsyncTransaction<T: Entity>(_ objects: T... , block: @escaping (ReadWriteTransactionContext, [T]) -> Void)
 }
 
 public protocol SerialTransactionProtocol: TransactionProtocol {
-    func startSerialTransaction<T>(_ block: @escaping (Context) -> T) -> T
-    func startSerialTransaction<T: EntityProtocol>(_ block: @escaping (Context) -> T) -> T
-    func startSerialTransaction<T: EntityProtocol, O>(_ object: T, block: @escaping (Context, T) -> O) -> O
-    func startSerialTransaction<T: EntityProtocol, O>(_ objects: T... , block: @escaping (Context, [T]) -> O) -> O
-    func startSerialTransaction<T: EntityProtocol>(_ object: T, block: @escaping (Context, T) -> Void)
-    func startSerialTransaction<T: EntityProtocol>(_ objects: T... , block: @escaping (Context, [T]) -> Void)
+    func startSerialTransaction<T>(_ block: @escaping (ReadWriteTransactionContext) -> T) -> T
+    func startSerialTransaction<T: Entity>(_ block: @escaping (ReadWriteTransactionContext) -> T) -> T
+    func startSerialTransaction<T: Entity, O>(_ object: T, block: @escaping (ReadWriteTransactionContext, T) -> O) -> O
+    func startSerialTransaction<T: Entity, O>(_ objects: T... , block: @escaping (ReadWriteTransactionContext, [T]) -> O) -> O
+    func startSerialTransaction<T: Entity>(_ object: T, block: @escaping (ReadWriteTransactionContext, T) -> Void)
+    func startSerialTransaction<T: Entity>(_ objects: T... , block: @escaping (ReadWriteTransactionContext, [T]) -> Void)
 }
 
 extension DataContainer: AsyncTransactionProtocol {
-    public func store() {
+    public func save() {
         asyncContext.save()
         serialContext.save()
     }
@@ -43,7 +41,7 @@ extension DataContainer: AsyncTransactionProtocol {
         serialContext.abort()
     }
     
-    public func startAsyncTransaction(_ block: @escaping (Context) -> Void) {
+    public func startAsyncTransaction(_ block: @escaping (ReadWriteTransactionContext) -> Void) {
         let transactionContext = self.asyncContext
         
         transactionContext.context.perform {
@@ -52,7 +50,7 @@ extension DataContainer: AsyncTransactionProtocol {
         }
     }
     
-    public func startAsyncTransaction<T: EntityProtocol>(_ object: T, block: @escaping (Context, T) -> Void) {
+    public func startAsyncTransaction<T: Entity>(_ object: T, block: @escaping (ReadWriteTransactionContext, T) -> Void) {
         let transactionContext = self.asyncContext
 
         transactionContext.context.perform {
@@ -62,7 +60,7 @@ extension DataContainer: AsyncTransactionProtocol {
         }
     }
     
-    public func startAsyncTransaction<T: EntityProtocol>(_ objects: T... , block: @escaping (Context, [T]) -> Void) {
+    public func startAsyncTransaction<T: Entity>(_ objects: T... , block: @escaping (ReadWriteTransactionContext, [T]) -> Void) {
         let transactionContext = self.asyncContext
 
         transactionContext.context.perform {
@@ -74,7 +72,7 @@ extension DataContainer: AsyncTransactionProtocol {
 }
 
 extension DataContainer: SerialTransactionProtocol {
-    public func startSerialTransaction<T>(_ block: @escaping (Context) -> T) -> T {
+    public func startSerialTransaction<T>(_ block: @escaping (ReadWriteTransactionContext) -> T) -> T {
         let transactionContext = self.serialContext
         
         var result: T!
@@ -87,7 +85,7 @@ extension DataContainer: SerialTransactionProtocol {
         return result
     }
     
-    public func startSerialTransaction<T: EntityProtocol>(_ block: @escaping (Context) -> T) -> T {
+    public func startSerialTransaction<T: Entity>(_ block: @escaping (ReadWriteTransactionContext) -> T) -> T {
         let transactionContext = self.serialContext
         
         var result: T!
@@ -102,7 +100,7 @@ extension DataContainer: SerialTransactionProtocol {
         return T.init(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
     }
     
-    public func startSerialTransaction<T: EntityProtocol, S: Sequence>(_ block: @escaping (Context) -> S) -> S where S.Element == T {
+    public func startSerialTransaction<T: Entity, S: Sequence>(_ block: @escaping (ReadWriteTransactionContext) -> S) -> S where S.Element == T {
         let transactionContext = self.serialContext
 
         var result: S!
@@ -118,7 +116,7 @@ extension DataContainer: SerialTransactionProtocol {
         } as! S
     }
     
-    public func startSerialTransaction<T: EntityProtocol>(_ objects: T... , block: @escaping (Context, [T]) -> Void) {
+    public func startSerialTransaction<T: Entity>(_ objects: T... , block: @escaping (ReadWriteTransactionContext, [T]) -> Void) {
         let transactionContext = self.serialContext
 
         transactionContext.context.performAndWait {
@@ -128,7 +126,7 @@ extension DataContainer: SerialTransactionProtocol {
         }
     }
     
-    public func startSerialTransaction<T: EntityProtocol>(_ object: T, block: @escaping (Context, T) -> Void) {
+    public func startSerialTransaction<T: Entity>(_ object: T, block: @escaping (ReadWriteTransactionContext, T) -> Void) {
         let transactionContext = self.serialContext
 
         transactionContext.context.performAndWait {
@@ -138,7 +136,7 @@ extension DataContainer: SerialTransactionProtocol {
         }
     }
     
-    public func startSerialTransaction<T: EntityProtocol, O>(_ objects: T... , block: @escaping (Context, [T]) -> O) -> O {
+    public func startSerialTransaction<T: Entity, O>(_ objects: T... , block: @escaping (ReadWriteTransactionContext, [T]) -> O) -> O {
         let transactionContext = self.serialContext
 
         var result: O!
@@ -152,7 +150,7 @@ extension DataContainer: SerialTransactionProtocol {
         return result
     }
     
-    public func startSerialTransaction<T: EntityProtocol, O>(_ object: T, block: @escaping (Context, T) -> O) -> O {
+    public func startSerialTransaction<T: Entity, O>(_ object: T, block: @escaping (ReadWriteTransactionContext, T) -> O) -> O {
         let transactionContext = self.serialContext
 
         var result: O!
@@ -166,7 +164,7 @@ extension DataContainer: SerialTransactionProtocol {
         return result
     }
     
-    public func startSerialTransaction<T: EntityProtocol, O: EntityProtocol>(_ objects: T... , block: @escaping (Context, [T]) -> O) -> O {
+    public func startSerialTransaction<T: Entity, O: Entity>(_ objects: T... , block: @escaping (ReadWriteTransactionContext, [T]) -> O) -> O {
         let transactionContext = self.serialContext
 
         var result: O!
@@ -180,7 +178,7 @@ extension DataContainer: SerialTransactionProtocol {
         return O.init(result, proxyType: ReadOnlyValueMapper.self)
     }
     
-    public func startSerialTransaction<T: EntityProtocol, S: Sequence, O: EntityProtocol>(_ object: T, block: @escaping (Context, T) -> S) -> S where S.Element == O {
+    public func startSerialTransaction<T: Entity, S: Sequence, O: Entity>(_ object: T, block: @escaping (ReadWriteTransactionContext, T) -> S) -> S where S.Element == O {
         let transactionContext = self.serialContext
 
         var result: S!

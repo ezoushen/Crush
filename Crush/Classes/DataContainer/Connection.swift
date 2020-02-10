@@ -10,6 +10,7 @@ import CoreData
 
 enum ConnectionError: Error {
     case databaseUrlNotFound
+    case alreadyExist
 }
 
 public final class Connection {
@@ -26,22 +27,23 @@ public final class Connection {
     private var _coordinator: NSPersistentStoreCoordinator?
     
     internal var persistentStoreCoordinator: NSPersistentStoreCoordinator {
-        _coordinator ?? createPersistenStoreCoordinator(model: schema.model)
+        _coordinator ?? createPersistenStoreCoordinator(model: _schema.model as! DataModel)
     }
     
-    let type: PersistentStoreType
+    var isConnected: Bool { _coordinator != nil }
+    
+    let type: DataContainer.StoreType
     let name: String
-    let migrator: DataMigrator
+    let migrator: DataMigrator?
     
-    private var schema: SchemaProtocol.Type {
-        Swift.type(of: migrator.activeVersion)
-    }
+    private var _schema: SchemaProtocol
     
-    public init(type: PersistentStoreType, name: String, migrator: DataMigrator) {
+    public init(type: DataContainer.StoreType, name: String, version: SchemaProtocol) {
         self.type = type
         self.name = name
-        self.migrator = migrator
-        
+        self.migrator = type.migrator?.init(activeVersion: version)
+
+        _schema = version
         _coordinator = Connection.connected["\(type)\(name)"]
     }
     
@@ -50,7 +52,7 @@ public final class Connection {
             return completion()
         }
         if let url = currentUrl, FileManager.default.fileExists(atPath: url.path) {
-            try migrator.processStore(at: url)
+            try migrator?.processStore(at: url)
         }
         
         addPersistentStore(completion)
@@ -61,7 +63,7 @@ public final class Connection {
             throw ConnectionError.databaseUrlNotFound
         }
         
-        try persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: type.type, options: nil)
+        try persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: type.raw, options: nil)
         try FileManager.default.removeItem(atPath: url.path)
         try FileManager.default.removeItem(atPath: url.path + "-shm")
         try FileManager.default.removeItem(atPath: url.path + "-wal")
@@ -72,13 +74,13 @@ public final class Connection {
     }
     
     private func createPersistenStoreCoordinator(model: DataModel) -> NSPersistentStoreCoordinator {
-        let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: model.objectModel)
+        let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: model.rawModel)
         return persistentStoreCoordinator
     }
     
     private func addPersistentStore(_ completion: @escaping () -> Void) {
         let description = NSPersistentStoreDescription()
-        description.type = type.type
+        description.type = type.raw
         description.url = currentUrl
         description.shouldMigrateStoreAutomatically = false
         description.shouldInferMappingModelAutomatically = false

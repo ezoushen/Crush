@@ -25,7 +25,7 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
         return context.object(with: object.objectID) as! T
     }
     
-    public func count<T: EntityProtocol>(type: T.Type, predicate: NSPredicate? = nil) -> Int {
+    public func count<T: Entity>(type: T.Type, predicate: NSPredicate? = nil) -> Int {
         let request = T.fetchRequest()
         request.resultType = .countResultType
         request.predicate = predicate
@@ -83,7 +83,7 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
         return results
     }
     
-    public func fetch<T: RuntimeObjectProtocol>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T] {
+    public func fetch<T: Entity>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T] {
         writerContext.processPendingChanges()
 
         var results: [NSManagedObject] = []

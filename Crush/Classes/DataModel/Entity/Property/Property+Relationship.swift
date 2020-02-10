@@ -36,8 +36,8 @@ extension RelationshipOption: MutablePropertyOptionProtocol {
 }
 
 public protocol RelationshipProtocol: NullablePropertyProtocol {
-    associatedtype DestinationEntity: RuntimeObjectProtocol
-    associatedtype SourceEntity: RuntimeObjectProtocol
+    associatedtype DestinationEntity: Entity
+    associatedtype SourceEntity: Entity
     associatedtype RelationshipType: RelationshipTypeProtocol
     associatedtype InverseType: RelationshipTypeProtocol
     
@@ -94,17 +94,17 @@ public protocol FieldTypeProtocol {
 }
 
 public protocol RelationshipTypeProtocol: FieldTypeProtocol {
-    associatedtype EntityType: RuntimeObjectProtocol
-    
+    associatedtype EntityType: Entity
+        
     static func resolveMaxCount(_ amount: Int) -> Int
     static func convert(value: ManagedObjectValue) -> RuntimeObjectValue
     static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
 }
 
-public struct ToOneRelationshipType<EntityType: RuntimeObjectProtocol>: RelationshipTypeProtocol, FieldTypeProtocol {
+public struct ToOneRelationshipType<EntityType: Entity>: RelationshipTypeProtocol, FieldTypeProtocol {
     public typealias RuntimeObjectValue = EntityType
     public typealias ManagedObjectValue = NSManagedObject
-
+    
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return 1
     }
@@ -120,7 +120,7 @@ public struct ToOneRelationshipType<EntityType: RuntimeObjectProtocol>: Relation
     }
 }
 
-public struct ToManyRelationshipType<EntityType: Hashable & RuntimeObjectProtocol>: RelationshipTypeProtocol, FieldTypeProtocol {
+public struct ToManyRelationshipType<EntityType: Hashable & Entity>: RelationshipTypeProtocol, FieldTypeProtocol {
     public typealias RuntimeObjectValue = Set<EntityType>
     public typealias ManagedObjectValue = NSSet
     

@@ -12,7 +12,6 @@ import CoreData
 @propertyWrapper
 public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProtocol {
     
-    
     case transient(Property)
     
     public typealias PropertyValue = Property.PropertyValue

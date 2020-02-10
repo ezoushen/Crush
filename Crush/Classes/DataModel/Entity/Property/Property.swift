@@ -109,7 +109,7 @@ public protocol MutablePropertyProtocol: PropertyProtocol {
     associatedtype Option: MutablePropertyOptionProtocol
     associatedtype PropertyValue
     associatedtype EntityType
-    
+        
     var wrappedValue: PropertyValue { get set }
     init(wrappedValue: PropertyValue)
     func updateProperty()
