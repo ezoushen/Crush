@@ -222,6 +222,16 @@ public class PartialQueryBuilder<Target: Entity, Received, Result> {
         return PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>>(config: newConfig, context: _context)
     }
     
+    open func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPath: KeyPath<E, T>) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T> {
+        let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
+        return PartialQueryBuilder<Target, Dictionary<String, Any>, T>(config: newConfig, context: _context)
+    }
+    
+    open func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPaths: [KeyPath<E, T>]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
+        let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
+        return PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>>(config: newConfig, context: _context)
+    }
+    
     open func exec() -> [Result] {
         let request = _config.createFetchRequest()
         let results: [Received] = _context.execute(request: request)
