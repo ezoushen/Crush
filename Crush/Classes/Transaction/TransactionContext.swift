@@ -15,8 +15,7 @@ public protocol RawContextProviderProtocol {
     
     var proxyType: Proxy.Type { get }
     var context: NSManagedObjectContext { get }
-    var readerContext: NSManagedObjectContext { get }
-    var writerContext: NSManagedObjectContext { get }
+    var targetContext: NSManagedObjectContext { get }
 }
 
 public protocol TransactionContextProtocol { }
@@ -86,103 +85,10 @@ public protocol ReadWriteTransactionContext: ReadOnlyTransactionContext {
     
     func commit()
     func stash()
-    func abort()
 }
 
 extension ReadWriteTransactionContext where Self: RawContextProviderProtocol {
     public var proxyType: Proxy.Type {
         return ReadWriteValueMapper.self
-    }
-    
-    internal func save() {
-        guard writerContext.hasChanges else {
-            return
-        }
-        
-        withExtendedLifetime(self) { object in
-            object.writerContext.perform {
-                try? object.writerContext.save()
-            }
-        }
-    }
-    
-    public func commit() {
-        guard context.hasChanges else {
-            return
-        }
-        
-        withExtendedLifetime(self) { object in
-            object.context.performAndWait {
-                try? object.context.save()
-                
-                object.writerContext.perform {
-                    try? object.writerContext.save()
-                }
-                
-                object.readerContext.performAndWait {
-                    object.readerContext.refreshAllObjects()
-                }
-            }
-        }
-    }
-    
-    public func stash() {
-        guard context.hasChanges else {
-            return
-        }
-        
-        withExtendedLifetime(self) { object in
-            object.context.performAndWait {
-                try? object.context.save()
-                
-                object.readerContext.performAndWait {
-                    object.readerContext.refreshAllObjects()
-                }
-            }
-        }
-    }
-    
-    public func abort() {
-        context.rollback()
-        writerContext.rollback()
-        readerContext.refreshAllObjects()
-    }
-}
-
-extension ReadWriteTransactionContext where Self: RawContextProviderProtocol & AsynchronousContextProtocol {
-    public func stash() {
-        guard context.hasChanges else {
-            return
-        }
-        
-        withExtendedLifetime(self) { object in
-            object.context.perform {
-                try? object.context.save()
-                
-                object.readerContext.perform {
-                    object.readerContext.refreshAllObjects()
-                }
-            }
-        }
-    }
-    
-    public func commit() {
-        guard context.hasChanges else {
-            return
-        }
-        
-        withExtendedLifetime(self) { object in
-            object.context.perform {
-                try? object.context.save()
-
-                object.writerContext.perform {
-                    try? object.writerContext.save()
-                }
-                
-                object.readerContext.perform {
-                    object.readerContext.refreshAllObjects()
-                }
-            }
-        }
     }
 }

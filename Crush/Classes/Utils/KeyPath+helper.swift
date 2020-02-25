@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreData
 
 extension PartialKeyPath {
     var rootClass: String {
@@ -57,6 +58,12 @@ extension PartailTracableKeyPathProtocol {
             return ((runtimeObject[keyPath: keyPath.keyPath] as? PropertyProtocol)?.description)?.name
         }.joined(separator: ".")
         return path
+    }
+}
+
+extension PartailTracableKeyPathProtocol where Root: NSManagedObject {
+    public var fullPath: String {
+        return allPaths.compactMap{ $0.keyPath.stringValue }.joined(separator: ".")
     }
 }
 

@@ -9,12 +9,9 @@
 import CoreData
 
 public class DataContainer {
-    private(set) public var context: ReadOnlyTransactionContext!
-    
-    private var _defaultSerialBackgroundContext: _ReadWriteSerialTransactionContext!
-    private var _defaultAsyncBackgroundContext: _ReadWriteAsyncTransactionContext!
-    private var _writerContext: NSManagedObjectContext!
-    private var _readOnlyContext: NSManagedObjectContext! = nil
+    internal var writerContext: NSManagedObjectContext!
+    internal var readOnlyContext: NSManagedObjectContext!
+    internal var readerContext: _ReadOnlyTransactionContext!
     
     let connection: Connection
         
@@ -38,21 +35,10 @@ public class DataContainer {
     private func initializeAllContext() {
         let writerContext = createWriterContext()
         let readOnlyContext = createReadOnlyContext(parent: writerContext)
-        let privateContext = createBackgroundContext(parent: writerContext)
         
-        context = _ReadOnlyTransactionContext(context: readOnlyContext,
-                                            readOnlyContext: readOnlyContext,
-                                            writerContext: writerContext)
-        _defaultSerialBackgroundContext = _ReadWriteSerialTransactionContext(context: privateContext,
-                                                                            readOnlyContext: readOnlyContext,
-                                                                            writerContext: writerContext)
-        
-        _defaultAsyncBackgroundContext = _ReadWriteAsyncTransactionContext(context: privateContext,
-                                                                          readOnlyContext: readOnlyContext,
-                                                                          writerContext: writerContext)
-        
-        _writerContext = writerContext
-        _readOnlyContext = readOnlyContext
+        self.writerContext = writerContext
+        self.readOnlyContext = readOnlyContext
+        self.readerContext = .init(context: writerContext, targetContext: readOnlyContext)
     }
     
     private func createWriterContext() -> NSManagedObjectContext {
@@ -81,14 +67,58 @@ public class DataContainer {
     }
 }
 
-extension DataContainer: TransactionContextProviderProtocol {
-    @inline(__always)
+extension DataContainer {
     internal var serialContext: _ReadWriteSerialTransactionContext {
-        return _defaultSerialBackgroundContext
+        _ReadWriteSerialTransactionContext(context: createBackgroundContext(parent: writerContext),
+                                           targetContext: writerContext,
+                                           readOnlyContext: readOnlyContext)
     }
     
-    @inline(__always)
     internal var asyncContext: _ReadWriteAsyncTransactionContext {
-        return _defaultAsyncBackgroundContext
+        _ReadWriteAsyncTransactionContext(context: createBackgroundContext(parent: writerContext),
+                                          targetContext: writerContext,
+                                          readOnlyContext: readOnlyContext)
+    }
+}
+
+extension DataContainer {
+    public func save() {
+        guard writerContext.hasChanges else {
+            return
+        }
+        
+        withExtendedLifetime(self) { object in
+            object.writerContext.perform {
+                try? object.writerContext.save()
+            }
+        }
+    }
+    
+    public func rollback() {
+        writerContext.rollback()
+        readOnlyContext.refreshAllObjects()
+    }
+}
+
+extension DataContainer {
+    
+    public func edit<T: Entity>(_ entity: T) -> Transaction.SingularEditor<T> {
+        .init(entity, container: self)
+    }
+    
+    public func edit<T: Entity>(_ entities: [T]) -> Transaction.PluralEditor<T> {
+        .init(entities, container: self)
+    }
+    
+    public func edit<T: Entity>(_ entities: T...) -> Transaction.PluralEditor<T> {
+        .init(entities, container: self)
+    }
+    
+    public func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
+        return QueryBuilder<T, NSManagedObject, T>(config: .init(), context: readerContext)
+    }
+    
+    public var transaction: Transaction {
+        Transaction(readOnlyContext: readOnlyContext, asyncContext: asyncContext, serialContext: serialContext)
     }
 }

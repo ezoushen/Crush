@@ -145,9 +145,7 @@ open class NeutralEntityObject: NSObject, Entity {
         assertionFailure("Should not call isAbstract variale directly")
         return false
     }
-    
-    public typealias ElementType = Self
-    
+        
     public class func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping? {
         var fromEntityTypeName: String? = nil
         var toEntityTypeName: String? = nil
@@ -344,9 +342,7 @@ extension NSManagedObject: Entity {
     public static var isAbstract: Bool {
         return entity().isAbstract
     }
-    
-    public typealias ElementType = Self
-    
+        
     public static func entityDescription() -> NSEntityDescription {
         return Self.entity()
     }
