@@ -32,14 +32,14 @@ class TodoListViewController: UIViewController {
         super.viewDidLoad()
         
         // Load all tasks
-        todos = container.context.fetch(Todo.self)
+        todos = container.query(for: Todo.self).exec()
         
         // Reload table view
         tableView.reloadData()
     }
     
     @IBAction func didPressCreateButton() {
-        let todo = container.startSerialTransaction { context -> Todo in
+        let todo = container.transaction.sync { context -> Todo in
             let todo = context.create(entiy: Todo.self)
             context.commit()
             return todo
@@ -82,8 +82,8 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (action, view, completion) in
             let todo = self.todos.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .automatic)
-
-            self.container.startAsyncTransaction(todo){ context, todo in
+            
+            self.container.edit(todo).async{ context, todo in
                 context.delete(todo)
                 context.commit()
             }
@@ -91,7 +91,7 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let doneAction = UIContextualAction(style: .normal, title: "Done") { (action, view, completion) in
-            self.container.startSerialTransaction(todo) { context, todo in
+            self.container.edit(todo).sync { context, todo in
                 todo.isFinished = true
                 context.commit()
             }
@@ -103,7 +103,7 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let undoneAction = UIContextualAction(style: .normal, title: "Undone") { (action, view, completion) in
-            self.container.startSerialTransaction(todo) { context, todo in
+            self.container.edit(todo).sync { context, todo in
                 todo.isFinished = false
                 context.commit()
             }
@@ -145,7 +145,7 @@ extension TodoListViewController: TodoViewDelegate {
     func didCancelModification(type: TodoEditMode, todo: Todo) {
         switch type {
         case .create:
-            container.startSerialTransaction(todo) { context, todo in
+            container.edit(todo).sync { context, todo in
                 context.delete(todo)
                 context.commit()
             }

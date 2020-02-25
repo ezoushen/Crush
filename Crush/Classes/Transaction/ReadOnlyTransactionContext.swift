@@ -10,13 +10,11 @@ import CoreData
 
 internal struct _ReadOnlyTransactionContext: ReadOnlyTransactionContext, RawContextProviderProtocol {
     internal let context: NSManagedObjectContext
-    internal let writerContext: NSManagedObjectContext
-    internal let readerContext: NSManagedObjectContext
+    internal let targetContext: NSManagedObjectContext
     
-    internal init(context: NSManagedObjectContext, readOnlyContext: NSManagedObjectContext, writerContext: NSManagedObjectContext) {
+    internal init(context: NSManagedObjectContext, targetContext: NSManagedObjectContext) {
         self.context = context
-        self.readerContext = readOnlyContext
-        self.writerContext = writerContext
+        self.targetContext = targetContext
     }
 }
 
@@ -32,9 +30,9 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
         
         var result: Int? = nil
         
-        writerContext.performAndWait {
+        targetContext.performAndWait {
             do {
-                result = try writerContext.count(for: request)
+                result = try targetContext.count(for: request)
             } catch {
                 print("Unabled to count the records, error:", error.localizedDescription)
             }
@@ -52,9 +50,9 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
         
         var results: [[String: Any]] = []
         
-        writerContext.performAndWait {
+        targetContext.performAndWait {
             do {
-                results = try writerContext.fetch(request) as! [[String: Any]]
+                results = try targetContext.fetch(request) as! [[String: Any]]
             } catch {
                 print("Unabled to fetch property of records, error:", error.localizedDescription)
             }
@@ -62,7 +60,7 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
         
         return results.flatMap{$0.values}.map{$0 as? T.Value.EntityType}
     }
-    
+
     public func fetch<T: TracableKeyPathProtocol>(properties: [T], predicate: NSPredicate?) -> [[String: Any]] {
         let request = NSFetchRequest<NSDictionary>.init(entityName: T.Root.entityCacheKey)
         request.predicate = predicate
@@ -72,25 +70,25 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
         
         var results: [[String: Any]] = []
         
-        writerContext.performAndWait {
+        targetContext.performAndWait {
             do {
-                results = try writerContext.fetch(request) as! [[String: Any]]
+                results = try targetContext.fetch(request) as! [[String: Any]]
             } catch {
                 print("Unabled to fetch properties of records, error:", error.localizedDescription)
             }
         }
         
-        return results
+        return results 
     }
     
     public func fetch<T: Entity>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T] {
-        writerContext.processPendingChanges()
+        targetContext.processPendingChanges()
 
         var results: [NSManagedObject] = []
         
-        writerContext.performAndWait {
+        targetContext.performAndWait {
             do{
-                results = try writerContext.fetch(request) as! [NSManagedObject]
+                results = try targetContext.fetch(request) as! [NSManagedObject]
             } catch {
                 print("Unable to fetch data in private context, error:",
                       error.localizedDescription)
@@ -107,9 +105,9 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
     func count(request: NSFetchRequest<NSFetchRequestResult>) -> Int {
         var result: Int? = nil
         
-        writerContext.performAndWait {
+        targetContext.performAndWait {
             do {
-                result = try writerContext.count(for: request)
+                result = try targetContext.count(for: request)
             } catch {
                 print("Unabled to count the records, error:", error.localizedDescription)
             }
@@ -119,13 +117,13 @@ extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
     }
     
     func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) -> [T] {
-        writerContext.processPendingChanges()
+        targetContext.processPendingChanges()
 
         var results: [T] = []
         
-        writerContext.performAndWait {
+        targetContext.performAndWait {
             do{
-                results = try writerContext.fetch(request) as! [T]
+                results = try targetContext.fetch(request) as! [T]
             } catch {
                 print("Unable to fetch data in private context, error:",
                       error.localizedDescription)

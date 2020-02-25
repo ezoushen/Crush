@@ -13,25 +13,98 @@ public typealias ReadWriteAsyncTransactionContext = ReadWriteSerialTransactionCo
 
 internal struct _ReadWriteSerialTransactionContext: ReadWriteSerialTransactionContext {
     internal let context: NSManagedObjectContext
-    internal let writerContext: NSManagedObjectContext
-    internal let readerContext: NSManagedObjectContext
+    internal let targetContext: NSManagedObjectContext
+    internal let readOnlyContext: NSManagedObjectContext
     
-    internal init(context: NSManagedObjectContext, readOnlyContext readerContext: NSManagedObjectContext, writerContext: NSManagedObjectContext) {
+    internal init(context: NSManagedObjectContext, targetContext: NSManagedObjectContext, readOnlyContext: NSManagedObjectContext) {
         self.context = context
-        self.writerContext = writerContext
-        self.readerContext = readerContext
+        self.targetContext = targetContext
+        self.readOnlyContext = readOnlyContext
+    }
+    
+    
+    public func stash() {
+        guard context.hasChanges else {
+            return
+        }
+        
+        withExtendedLifetime(self) { object in
+            object.context.performAndWait {
+                try? object.context.save()
+                
+                object.readOnlyContext.performAndWait {
+                    object.readOnlyContext.refreshAllObjects()
+                }
+            }
+        }
+    }
+    
+    public func commit() {
+        guard context.hasChanges else {
+            return
+        }
+        
+        withExtendedLifetime(self) { object in
+            object.context.performAndWait {
+                try? object.context.save()
+                
+                object.targetContext.perform {
+                    try? object.targetContext.save()
+                }
+                
+                object.readOnlyContext.performAndWait {
+                    object.readOnlyContext.refreshAllObjects()
+                }
+            }
+        }
     }
 }
 
 internal struct _ReadWriteAsyncTransactionContext: ReadWriteAsyncTransactionContext {
     internal let context: NSManagedObjectContext
-    internal let writerContext: NSManagedObjectContext
-    internal let readerContext: NSManagedObjectContext
-
-    internal init(context: NSManagedObjectContext, readOnlyContext readerContext: NSManagedObjectContext, writerContext: NSManagedObjectContext) {
+    internal let targetContext: NSManagedObjectContext
+    internal let readOnlyContext: NSManagedObjectContext
+    
+    internal init(context: NSManagedObjectContext, targetContext: NSManagedObjectContext, readOnlyContext: NSManagedObjectContext) {
         self.context = context
-        self.writerContext = writerContext
-        self.readerContext = readerContext
+        self.targetContext = targetContext
+        self.readOnlyContext = readOnlyContext
+    }
+    
+    public func stash() {
+        guard context.hasChanges else {
+            return
+        }
+        
+        withExtendedLifetime(self) { object in
+            object.context.perform {
+                try? object.context.save()
+                
+                object.readOnlyContext.perform {
+                    object.readOnlyContext.refreshAllObjects()
+                }
+            }
+        }
+    }
+    
+    public func commit() {
+        guard context.hasChanges else {
+            return
+        }
+        
+        withExtendedLifetime(self) { object in
+            object.context.perform {
+                try? object.context.save()
+
+                object.readOnlyContext.perform {
+                    try? object.readOnlyContext.save()
+                }
+                
+                object.readOnlyContext.perform {
+                    object.readOnlyContext.refreshAllObjects()
+                }
+            }
+        }
     }
 }
 

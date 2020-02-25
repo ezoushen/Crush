@@ -74,14 +74,14 @@ class TodoViewController: UIViewController {
     @objc func dueDateValueChanged(_ sender: UIDatePicker?) {
         let date = sender?.date ?? todo.dueDate
         dueDateLabel.text = Self._dateFormatter.string(from: date)
-        container?.startAsyncTransaction(todo) { context, todo in
+        container?.edit(todo).async { context, todo in
             todo.dueDate = date
         }
     }
     
     @objc func titleChanged(_ sender: UITextField?) {
         let title = sender?.text ?? todo.content
-        container?.startAsyncTransaction(todo) { context, todo in
+        container?.edit(todo).async { context, todo in
             todo.content = title
         }
     }
@@ -102,7 +102,7 @@ class TodoViewController: UIViewController {
 extension TodoViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         let memo = textView.text ?? ""
-        container?.startAsyncTransaction(todo) { context, todo in
+        container?.edit(todo).async { context, todo in
             todo.memo = memo
         }
     }

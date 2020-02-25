@@ -174,7 +174,9 @@ public class PartialQueryBuilder<Target: Entity, Received, Result> {
         self._config = config
         self._context = context
     }
-    
+}
+
+extension PartialQueryBuilder {
     open func limit(_ size: Int) -> PartialQueryBuilder<Target, Received, Result> {
         let newConfig = _config.updated(\.limit, value: size)
         return PartialQueryBuilder(config: newConfig, context: _context)
