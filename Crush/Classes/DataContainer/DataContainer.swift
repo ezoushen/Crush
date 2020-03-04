@@ -100,22 +100,24 @@ extension DataContainer {
     }
 }
 
+extension DataContainer: QueryerProtocol {
+    public func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
+        return QueryBuilder<T, NSManagedObject, T>(config: .init(), context: readerContext)
+    }
+}
+
 extension DataContainer {
     
     public func edit<T: Entity>(_ entity: T) -> Transaction.SingularEditor<T> {
-        .init(entity, container: self)
+        .init(entity, transaction: transaction)
     }
     
     public func edit<T: Entity>(_ entities: [T]) -> Transaction.PluralEditor<T> {
-        .init(entities, container: self)
+        .init(entities, transaction: transaction)
     }
     
     public func edit<T: Entity>(_ entities: T...) -> Transaction.PluralEditor<T> {
-        .init(entities, container: self)
-    }
-    
-    public func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
-        return QueryBuilder<T, NSManagedObject, T>(config: .init(), context: readerContext)
+        .init(entities, transaction: transaction)
     }
     
     public var transaction: Transaction {

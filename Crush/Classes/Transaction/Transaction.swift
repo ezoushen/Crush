@@ -76,18 +76,18 @@ extension Transaction {
         
         private let _value: T
         
-        let container: DataContainer
+        let transaction: Transaction
         
-        init(_ value: T, container: DataContainer) {
+        init(_ value: T, transaction: Transaction) {
             self._value = value
-            self.container = container
+            self.transaction = transaction
         }
     }
 }
     
 extension Transaction.SingularEditor {
     public func async(_ block: @escaping (Transaction.ReadWriteContext, T) -> Void) {
-        let context = container.asyncContext
+        let context = transaction.asyncContext
 
         context.context.perform {
             let value = context.receive(self._value)
@@ -97,7 +97,7 @@ extension Transaction.SingularEditor {
     }
     
     public func sync(_ block: @escaping (Transaction.ReadWriteContext, T) -> Void) {
-        let context = container.serialContext
+        let context = transaction.serialContext
         
         context.context.performAndWait {
             let value = context.receive(self._value)
@@ -107,7 +107,7 @@ extension Transaction.SingularEditor {
     }
     
     public func sync<V>(_ block: @escaping (Transaction.ReadWriteContext, T) -> V) -> V {
-        let context = container.serialContext
+        let context = transaction.serialContext
         var result: V!
         context.context.performAndWait {
             let value = context.receive(self._value)
@@ -118,19 +118,19 @@ extension Transaction.SingularEditor {
     }
     
     public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, T) -> V) -> V {
-        let context = container.serialContext
+        let context = transaction.serialContext
         var result: V!
         context.context.performAndWait {
             let value = context.receive(self._value)
             result = block(context, value)
             context.stash()
         }
-        return V.init(container.readOnlyContext.receive(runtimeObject: result),
+        return V.init(transaction.readOnlyContext.receive(runtimeObject: result),
                       proxyType: ReadOnlyValueMapper.self)
     }
     
     public func sync<V: Entity, S: Sequence>(_ block: @escaping (Transaction.ReadWriteContext, T) -> S) -> S where S.Element == V {
-        let context = container.serialContext
+        let context = transaction.serialContext
         var result: S!
         context.context.performAndWait {
             let value = context.receive(self._value)
@@ -138,7 +138,7 @@ extension Transaction.SingularEditor {
             context.stash()
         }
         return result.compactMap {
-            V.init(container.readOnlyContext.receive(runtimeObject: $0),
+            V.init(transaction.readOnlyContext.receive(runtimeObject: $0),
                    proxyType: ReadOnlyValueMapper.self)
         } as! S
     }
@@ -149,18 +149,18 @@ extension Transaction {
     
         private let _values: [T]
         
-        let container: DataContainer
+        let transaction: Transaction
         
-        init(_ values: [T], container: DataContainer) {
+        init(_ values: [T], transaction: Transaction) {
             self._values = values
-            self.container = container
+            self.transaction = transaction
         }
     }
 }
     
 extension Transaction.PluralEditor {
     public func async(_ block: @escaping (ReadWriteAsyncTransactionContext, [T]) -> Void) {
-        let context = container.asyncContext
+        let context = transaction.asyncContext
         
         context.context.perform {
             let values = self._values.map(context.receive(_:))
@@ -170,7 +170,7 @@ extension Transaction.PluralEditor {
     }
     
     public func sync(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> Void) {
-        let context = container.serialContext
+        let context = transaction.serialContext
         
         context.context.performAndWait {
             let values = self._values.map(context.receive(_:))
@@ -180,7 +180,7 @@ extension Transaction.PluralEditor {
     }
     
     public func sync<V>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> V) -> V {
-        let context = container.serialContext
+        let context = transaction.serialContext
         var result: V!
         context.context.performAndWait {
             let values = self._values.map(context.receive(_:))
@@ -191,19 +191,19 @@ extension Transaction.PluralEditor {
     }
     
     public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> V) -> V {
-        let context = container.serialContext
+        let context = transaction.serialContext
         var result: V!
         context.context.performAndWait {
             let values = self._values.map(context.receive(_:))
             result = block(context, values)
             context.stash()
         }
-        return V.init(container.readOnlyContext.receive(runtimeObject: result),
+        return V.init(transaction.readOnlyContext.receive(runtimeObject: result),
                       proxyType: ReadOnlyValueMapper.self)
     }
     
     public func sync<V: Entity, S: Sequence>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> S) -> S where S.Element == V {
-        let context = container.serialContext
+        let context = transaction.serialContext
         var result: S!
         context.context.performAndWait {
             let values = self._values.map(context.receive(_:))
@@ -211,7 +211,7 @@ extension Transaction.PluralEditor {
             context.stash()
         }
         return result.compactMap {
-            V.init(container.readOnlyContext.receive(runtimeObject: $0),
+            V.init(transaction.readOnlyContext.receive(runtimeObject: $0),
                    proxyType: ReadOnlyValueMapper.self)
         } as! S
     }
