@@ -331,6 +331,16 @@ open class EntityObject: NeutralEntityObject {
 }
 
 extension NSManagedObject: Entity {
+    public convenience init(context: Transaction.ReadWriteContext) {
+        precondition(context is _ReadWriteAsyncTransactionContext || context is _ReadWriteSerialTransactionContext)
+        if let transactionContext = context as? _ReadWriteSerialTransactionContext {
+            self.init(context: transactionContext.context)
+        } else if let transactionContext = context as? _ReadWriteAsyncTransactionContext {
+            self.init(context: transactionContext.context)
+        }
+        fatalError()
+    }
+    
     public static var renamingIdentifier: String? {
         return entity().renamingIdentifier
     }

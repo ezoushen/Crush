@@ -27,12 +27,15 @@ internal extension TransactionContextProtocol where Self: RawContextProviderProt
     }
 }
 
-public protocol ReadOnlyTransactionContext: TransactionContextProtocol {
+public protocol QueryerProtocol {
+    func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T>
+}
+
+public protocol ReadOnlyTransactionContext: TransactionContextProtocol, QueryerProtocol {
     func count<T: Entity>(type: T.Type, predicate: NSPredicate?) -> Int
     func fetch<T: Entity>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T]
     func fetch<T: TracableKeyPathProtocol>(property: T, predicate: NSPredicate?) -> [T.Value.EntityType?]
     func fetch<T: TracableKeyPathProtocol>(properties: [T], predicate: NSPredicate?) -> [[String: Any]]
-    func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T>
 }
 
 extension ReadOnlyTransactionContext where Self: RawContextProviderProtocol {
