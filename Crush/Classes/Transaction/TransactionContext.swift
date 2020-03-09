@@ -94,4 +94,8 @@ extension ReadWriteTransactionContext where Self: RawContextProviderProtocol {
     public var proxyType: Proxy.Type {
         return ReadWriteValueMapper.self
     }
+    
+    public func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
+        return QueryBuilder<T, NSManagedObject, T>(config: .init(), context: self)
+    }
 }

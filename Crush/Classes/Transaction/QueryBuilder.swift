@@ -407,7 +407,10 @@ extension PartialQueryBuilder {
         if Result.self == Dictionary<String, Any>.self {
             return results as! [Result]
         } else if let runtimeObject = Result.self as? RuntimeObject.Type {
-            return results.compactMap{ runtimeObject.init($0 as! NSManagedObject, proxyType: _context.proxyType) as? Result }
+            return results.compactMap{
+                let object = $0 as! NSManagedObject
+                return runtimeObject.init(objectID: object.objectID, in: _context.context, proxyType: _context.proxyType) as? Result
+            }
         } else {
             return (results as! [Dictionary<String, Any>]).flatMap{ $0.values }.compactMap{ $0 as? Result }
         }

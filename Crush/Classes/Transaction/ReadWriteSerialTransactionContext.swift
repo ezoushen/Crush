@@ -47,7 +47,7 @@ internal struct _ReadWriteSerialTransactionContext: ReadWriteSerialTransactionCo
         withExtendedLifetime(self) { object in
             object.context.performAndWait {
                 try? object.context.save()
-                
+
                 object.targetContext.perform {
                     try? object.targetContext.save()
                 }
