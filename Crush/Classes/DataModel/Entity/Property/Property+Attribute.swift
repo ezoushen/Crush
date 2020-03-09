@@ -88,7 +88,7 @@ extension AttributeProtocol where EntityType: SavableTypeProtocol {
 
 // MARK: - EntityAttributeType
 @propertyWrapper
-public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType, O.PropertyValue: FieldAttributeType, O.FieldType.RuntimeObjectValue: SavableTypeProtocol {
+public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType, O.PropertyValue: FieldAttributeType {
     
     public typealias PropertyValue = O.PropertyValue
     public typealias OptionalType = O
