@@ -27,7 +27,12 @@ public protocol Entity: RuntimeObject {
     var entity: NSEntityDescription { get }
 }
 
-fileprivate var dummyObjects: [String: RuntimeObject] = [:]
+fileprivate var _dummyObjects: [String: RuntimeObject] = [:]
+fileprivate var _dummyObjectsQueue = DispatchQueue(label: "Crush._dummyObjectsQueue")
+fileprivate var dummyObjects: [String: RuntimeObject] {
+    get { _dummyObjects }
+    set { _dummyObjectsQueue.sync { _dummyObjects = newValue}}
+}
 
 extension RuntimeObject {
     static var fetchKey: String {
