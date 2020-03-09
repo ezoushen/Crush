@@ -202,6 +202,11 @@ extension Enumerator {
     public var predicateValue: NSObject { NSNumber(value: self.rawValue) }
 }
 
+extension RawRepresentable where Self: FieldAttributeType {
+    public typealias ManagedObjectValue = Int16
+    public typealias RuntimeObjectValue = Self
+}
+
 @objc(DefaultTransformer)
 class DefaultTransformer: ValueTransformer {
     override class func transformedValueClass() -> AnyClass {
