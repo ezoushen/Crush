@@ -39,29 +39,23 @@ public protocol AttributeProtocol: NullablePropertyProtocol where PropertyValue:
     init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol])
 }
 
-extension AttributeProtocol where PropertyValue: SavableTypeProtocol {
+extension AttributeProtocol where EntityType: SavableTypeProtocol {
     public var attributeType: NSAttributeType {
-        return PropertyValue.nativeType
+        PropertyValue.nativeType
     }
     
     public var attributeValueClassName: String? {
-        return nil
-    }
-}
-
-extension AttributeProtocol where PropertyValue: NSCoding {
-    public var attributeType: NSAttributeType {
-        return .transformableAttributeType
+        EntityType.self is NSCoding.Type ? String(describing: Self.self) : nil
     }
     
-    public var attributeValueClassName: String? {
-        return String(reflecting: PropertyValue.self)
+    public var valueTransformerName: String? {
+        EntityType.self is NSCoding.Type ? String(describing: DefaultTransformer.self) : nil
     }
+
 }
 
-extension AttributeProtocol {
+extension AttributeProtocol where EntityType: SavableTypeProtocol {
     public var defaultValue: Any? { nil }
-    public var valueTransformerName: String? { nil }
     public var allowsExternalBinaryDataStorage: Bool { false }
     public var preservesValueInHistoryOnDeletion: Bool { false }
     
@@ -94,7 +88,7 @@ extension AttributeProtocol {
 
 // MARK: - EntityAttributeType
 @propertyWrapper
-public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType, O.PropertyValue: FieldAttributeType {
+public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType, O.PropertyValue: FieldAttributeType, O.FieldType.RuntimeObjectValue: SavableTypeProtocol {
     
     public typealias PropertyValue = O.PropertyValue
     public typealias OptionalType = O
@@ -103,13 +97,15 @@ public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O
     
     public var wrappedValue: PropertyValue {
         get {
-            valueMappingProxy!.getValue(property: self)
+            let value: PropertyValue.ManagedObjectValue = valueMappingProxy!.getValue(property: self)
+            return PropertyValue.convert(value: value)
         }
         set {
             guard let proxy = valueMappingProxy as? ReadWriteValueMapperProtocol else {
                 return assertionFailure("value should not be modified with read only value mapper")
             }
-            proxy.setValue(newValue, property: self)
+            let value: PropertyValue.ManagedObjectValue = PropertyValue.convert(value: newValue)
+            proxy.setValue(value, property: self)
         }
     }
     

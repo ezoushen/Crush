@@ -33,6 +33,7 @@ public enum Optional {
         public typealias Date = Attribute<Nullable<Foundation.Date>>
         public typealias Data = Attribute<Nullable<Foundation.Data>>
         public typealias UUID = Attribute<Nullable<Foundation.UUID>>
+        public typealias Enum<E: Enumerator> = Attribute<Nullable<E>>
     }
 }
 
@@ -57,6 +58,7 @@ public enum Required {
         public typealias Date = Attribute<NotNull<Foundation.Date>>
         public typealias Data = Attribute<NotNull<Foundation.Data>>
         public typealias UUID = Attribute<NotNull<Foundation.UUID>>
+        public typealias Enum<E: Enumerator> = Attribute<NotNull<E>>
     }
 }
 
@@ -85,6 +87,8 @@ enum Transient {
             public typealias Date = Temporary<Attribute<Nullable<Foundation.Date>>>
             public typealias Data = Temporary<Attribute<Nullable<Foundation.Data>>>
             public typealias UUID = Temporary<Attribute<Nullable<Foundation.UUID>>>
+            public typealias Enum<E: Enumerator> = Temporary<Attribute<Nullable<E>>>
+
         }
     }
 
@@ -109,6 +113,7 @@ enum Transient {
             public typealias Date = Temporary<Attribute<NotNull<Foundation.Date>>>
             public typealias Data = Temporary<Attribute<NotNull<Foundation.Data>>>
             public typealias UUID = Temporary<Attribute<NotNull<Foundation.UUID>>>
+            public typealias Enum<E: Enumerator> = Temporary<Attribute<NotNull<E>>>
         }
     }
 }

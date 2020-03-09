@@ -91,14 +91,15 @@ public extension RelationshipProtocol {
 public protocol FieldTypeProtocol {
     associatedtype RuntimeObjectValue
     associatedtype ManagedObjectValue
+    
+    static func convert(value: ManagedObjectValue) -> RuntimeObjectValue
+    static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
 }
 
 public protocol RelationshipTypeProtocol: FieldTypeProtocol {
     associatedtype EntityType: Entity
         
     static func resolveMaxCount(_ amount: Int) -> Int
-    static func convert(value: ManagedObjectValue) -> RuntimeObjectValue
-    static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
 }
 
 public struct ToOneRelationshipType<EntityType: Entity>: RelationshipTypeProtocol, FieldTypeProtocol {
