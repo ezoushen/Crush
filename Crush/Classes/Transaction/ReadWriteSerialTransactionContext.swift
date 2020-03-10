@@ -96,8 +96,8 @@ internal struct _ReadWriteAsyncTransactionContext: ReadWriteAsyncTransactionCont
             object.context.perform {
                 try? object.context.save()
 
-                object.readOnlyContext.perform {
-                    try? object.readOnlyContext.save()
+                object.targetContext.perform {
+                    try? object.targetContext.save()
                 }
                 
                 object.readOnlyContext.perform {
