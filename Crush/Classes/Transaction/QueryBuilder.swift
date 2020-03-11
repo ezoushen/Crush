@@ -8,6 +8,12 @@
 
 import CoreData
 
+extension NSPredicate {
+    public static prefix func ! (_ predicate: NSPredicate) -> NSPredicate {
+        NSCompoundPredicate(notPredicateWithSubpredicate: predicate)
+    }
+}
+
 public typealias Query<T: Entity> = QueryBuilder<T, NSManagedObject, T>
 
 extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable {
