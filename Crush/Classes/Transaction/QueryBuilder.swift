@@ -88,24 +88,46 @@ extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyPro
 }
 
 extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType == String {
-    public static func |~ (lhs: Self, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH %@", rhs)
+    public static func |~ (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func ~| (lhs: Self, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) ENDSWITH %@", rhs)
+    public static func ~| (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func <> (lhs: Self, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) CONTAINS %@", rhs)
+    public static func <> (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) CONTAINS\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func |~| (lhs: Self, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) LIKE %@", rhs)
+    public static func |~| (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) LIKE\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func |*| (lhs: Self, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) MATCHES %@", rhs)
+    public static func |*| (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) MATCHES\(rhs.type.modifier) %@", rhs.string)
+    }
+}
+
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol {
+    public static func |~ (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
+    }
+    
+    public static func ~| (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue ENDSWITH\(rhs.type.modifier) %@", rhs.string)
+    }
+    
+    public static func <> (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue CONTAINS\(rhs.type.modifier) %@", rhs.string)
+    }
+    
+    public static func |~| (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue LIKE\(rhs.type.modifier) %@", rhs.string)
+    }
+    
+    public static func |*| (lhs: Self, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue MATCHES\(rhs.type.modifier) %@", rhs.string)
     }
 }
 
@@ -156,24 +178,24 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateComparable & Comp
 }
 
 extension KeyPath where Root: NSManagedObject, Value == String {
-    public static func |~ (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH %@", rhs)
+    public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func ~| (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) ENDSWITH %@", rhs)
+    public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func <> (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) CONTAINS %@", rhs)
+    public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) CONTAINS\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func |~| (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) LIKE %@", rhs)
+    public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) LIKE\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func |*| (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) MATCHES %@", rhs)
+    public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) MATCHES\(rhs.type.modifier) %@", rhs.string)
     }
 }
 
@@ -212,37 +234,86 @@ extension KeyPath where Root: NSManagedObject {
 }
 
 extension KeyPath where Root: NSManagedObject, Value == Swift.Optional<String> {
-    public static func |~ (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH %@", rhs)
+    public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func ~| (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) ENDSWITH %@", rhs)
+    public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func <> (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) CONTAINS %@", rhs)
+    public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) CONTAINS\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func |~| (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) LIKE %@", rhs)
+    public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) LIKE\(rhs.type.modifier) %@", rhs.string)
     }
     
-    public static func |*| (lhs: KeyPath, rhs: String) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) MATCHES %@", rhs)
+    public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) MATCHES\(rhs.type.modifier) %@", rhs.string)
     }
 }
 
-public func CASE_INSENSITIVE(_ string: String) -> String {
-    return "[c] \(string)"
+extension KeyPath where Root: NSManagedObject {
+    public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
+    }
+    
+    public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue ENDSWITH\(rhs.type.modifier) %@", rhs.string)
+    }
+    
+    public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue CONTAINS\(rhs.type.modifier) %@", rhs.string)
+    }
+    
+    public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue LIKE\(rhs.type.modifier) %@", rhs.string)
+    }
+    
+    public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath).stringValue MATCHES\(rhs.type.modifier) %@", rhs.string)
+    }
 }
 
-public func DIACRITIC_INSENSITIVE(_ string: String) -> String {
-    return "[d] \(string)"
+public struct SearchString {
+    enum Category {
+        case caseInsensitive, diacriticInsensitive, caseDiacriticInsensitive, plain
+        
+        var modifier: String {
+            switch self {
+            case .plain: return ""
+            case .caseDiacriticInsensitive: return "[cd]"
+            case .caseInsensitive: return "[c]"
+            case .diacriticInsensitive: return "[d]"
+            }
+        }
+    }
+    
+    let type: Category
+    let string: String
 }
 
-public func CASE_DIACRITIC_INSENSITIVE(_ string: String) -> String {
-    return "[cd] \(string)"
+extension SearchString: ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+    
+    public init(stringLiteral value: String) {
+        self.string = value
+        self.type = .plain
+    }
+}
+
+public func CASE_INSENSITIVE(_ string: String) -> SearchString {
+    return .init(type: .caseInsensitive, string: string)
+}
+
+public func DIACRITIC_INSENSITIVE(_ string: String) -> SearchString {
+    return .init(type: .diacriticInsensitive, string: string)
+}
+
+public func CASE_DIACRITIC_INSENSITIVE(_ string: String) -> SearchString {
+    return .init(type: .caseDiacriticInsensitive, string: string)
 }
 
 public func && (lhs: NSPredicate, rhs: NSPredicate) -> NSPredicate {
@@ -546,7 +617,10 @@ public struct QueryBuilder<Target: Entity, Received, Result> {
         if Result.self == Dictionary<String, Any>.self {
             return results as! [Result]
         } else if let runtimeObject = Result.self as? RuntimeObject.Type {
-            return results.compactMap{ runtimeObject.init($0 as! NSManagedObject, proxyType: _context.proxyType) as? Result }
+            return results.compactMap{
+                let object = $0 as! NSManagedObject
+                return runtimeObject.init(objectID: object.objectID, in: _context.context, proxyType: _context.proxyType) as? Result
+            }
         } else {
             return (results as! [Dictionary<String, Any>]).flatMap{ $0.values }.compactMap{ $0 as? Result }
         }
