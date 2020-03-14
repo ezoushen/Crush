@@ -187,7 +187,7 @@ extension Swift.Optional: PredicateComparable where Wrapped: PredicateComparable
     }
 }
 
-public protocol Enumerator: RawRepresentable, FieldAttributeType, PredicateComparable where RawValue: SavableTypeProtocol & PredicateEquatable, ManagedObjectValue: SavableTypeProtocol & PredicateEquatable { }
+public protocol Enumerator: RawRepresentable, FieldAttributeType, PredicateComparable where RawValue: SavableTypeProtocol & PredicateEquatable, ManagedObjectValue: PredicateEquatable { }
 
 extension Enumerator {
     public static func convert(value: RawValue) -> Self {
