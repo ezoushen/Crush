@@ -80,159 +80,36 @@ internal struct QueryConfig<T: Entity> {
     }
 }
 
-public struct PartialQueryBuilder<Target: Entity, Received, Result> {
+public class PartialQueryBuilder<Target: Entity, Received, Result> {
     internal var _config: QueryConfig<Target>
     
     internal let _context: ReadOnlyTransactionContext & RawContextProviderProtocol
 
-    internal init(config: QueryConfig<Target>, context: ReadOnlyTransactionContext & RawContextProviderProtocol) {
+    internal required init(config: QueryConfig<Target>, context: ReadOnlyTransactionContext & RawContextProviderProtocol) {
         self._config = config
         self._context = context
     }
 }
 
-extension PartialQueryBuilder {
-    public func limit(_ size: Int) -> PartialQueryBuilder<Target, Received, Result> {
-        let newConfig = _config.updated(\.limit, value: size)
-        return PartialQueryBuilder(config: newConfig, context: _context)
-    }
+public class QueryBuilder<Target: Entity, Received, Result>: PartialQueryBuilder<Target, Received, Result> { }
 
-    public func offset(_ step: Int) -> PartialQueryBuilder<Target, Received, Result> {
-        let newConfig = _config.updated(\.offset, value: step)
-        return PartialQueryBuilder<Target, Received, Result>(config: newConfig, context: _context)
-    }
-    
-    public func groupAndCount<T>(col name: T) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> where T : TracableKeyPathProtocol, T.Root == Target {
-        let keypathExp = NSExpression(forKeyPath: name.fullPath)
-        let countDesc = NSExpressionDescription()
-        countDesc.name = "count"
-        countDesc.expressionResultType = .integer64AttributeType
-        countDesc.expression = NSExpression(forFunction: "count:",
-                                            arguments: [keypathExp])
-        let expression = _TracableExpression<Target>(descriptor: countDesc)
-        let newConfig = _config
-            .updated(\.groupBy, value: (_config.groupBy ?? []) + [name])
-            .updated(\.mapTo, value: [name, expression])
-            .updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>>(config: newConfig, context: _context)
-    }
-    
-    public func ascendingSort<T>(_ keyPath: T, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
-        let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: true, selector: type.selector)
-        let newConfig = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return PartialQueryBuilder(config: newConfig, context: _context)
-    }
-    
-    public func descendingSort<T>(_ keyPath: T, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
-        let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: false, selector: type.selector)
-        let newConfig = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return PartialQueryBuilder(config: newConfig, context: _context)
-    }
-    
-    public func ascendingSort(_ keyPath: PartialKeyPath<Target>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: true, selector: type.selector)
-        let newConfig = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return PartialQueryBuilder(config: newConfig, context: _context)
-    }
-    
-    public func descendingSort(_ keyPath: PartialKeyPath<Target>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: false, selector: type.selector)
-        let newConfig = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return PartialQueryBuilder(config: newConfig, context: _context)
-    }
-    
-    public func map<T: TracableKeyPathProtocol>(_ keyPath: T) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T.Value.PropertyValue> {
-        let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, T.Value.PropertyValue>(config: newConfig, context: _context)
-    }
-    
-    public func map<T: TracableKeyPathProtocol>(_ keyPaths: [T]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
-        let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>>(config: newConfig, context: _context)
-    }
-    
-    public func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPath: KeyPath<E, T>) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T> {
-        let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, T>(config: newConfig, context: _context)
-    }
-    
-    public func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPaths: [KeyPath<E, T>]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
-        let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>>(config: newConfig, context: _context)
-    }
-    
-    public func exec() -> [Result] {
-        let request = _config.createFetchRequest()
-        let results: [Received] = _context.execute(request: request)
-        
-        if Result.self == Dictionary<String, Any>.self {
-            return results as! [Result]
-        } else if let runtimeObject = Result.self as? RuntimeObject.Type {
-            return results.compactMap{
-                let object = $0 as! NSManagedObject
-                return runtimeObject.init(objectID: object.objectID, in: _context.context, proxyType: _context.proxyType) as? Result
-            }
-        } else {
-            return (results as! [Dictionary<String, Any>]).flatMap{ $0.values }.compactMap{ $0 as? Result }
-        }
-    }
-    
-    public func findOne() -> Result? {
-        limit(1).exec().first
-    }
-
-    public func `where`(_ predicate: NSPredicate) -> Self {
-        let newConfig = _config.updated(\.predicate, value: predicate)
-        return Self.init(config: newConfig, context: _context)
-    }
-    
-    public func andWhere(_ predicate: NSPredicate) -> Self {
-        let newPredicate: NSPredicate = {
-            if let pred = _config.predicate {
-                return NSCompoundPredicate(andPredicateWithSubpredicates: [pred, predicate])
-            }
-            return predicate
-        }()
-        let newConfig = _config.updated(\.predicate, value: newPredicate)
-        return Self.init(config: newConfig, context: _context)
-    }
-    
-    public func orWhere(_ predicate: NSPredicate) -> Self {
-        let newPredicate: NSPredicate = {
-            if let pred = _config.predicate {
-                return NSCompoundPredicate(orPredicateWithSubpredicates: [pred, predicate])
-            }
-            return predicate
-        }()
-        let newConfig = _config.updated(\.predicate, value: newPredicate)
-        return Self.init(config: newConfig, context: _context)
-    }
-}
-
-public struct QueryBuilder<Target: Entity, Received, Result> {
-    internal var _config: QueryConfig<Target>
-    
-    internal let _context: ReadOnlyTransactionContext & RawContextProviderProtocol
-
-    internal init(config: QueryConfig<Target>, context: ReadOnlyTransactionContext & RawContextProviderProtocol) {
-        self._config = config
-        self._context = context
-    }
-    
+extension QueryBuilder {
     public func count() -> Int {
         let newConfig = _config.updated(\.resultType, value: .countResultType)
         let request = newConfig.createFetchRequest()
         return _context.count(request: request)
     }
-    
+}
+
+extension PartialQueryBuilder {
     public func limit(_ size: Int) -> PartialQueryBuilder<Target, Received, Result> {
-        let newConfig = _config.updated(\.limit, value: size)
-        return PartialQueryBuilder(config: newConfig, context: _context)
+        _config = _config.updated(\.limit, value: size)
+        return self
     }
 
     public func offset(_ step: Int) -> PartialQueryBuilder<Target, Received, Result> {
-        let newConfig = _config.updated(\.offset, value: step)
-        return PartialQueryBuilder<Target, Received, Result>(config: newConfig, context: _context)
+        _config = _config.updated(\.offset, value: step)
+        return self
     }
     
     public func groupAndCount<T>(col name: T) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> where T : TracableKeyPathProtocol, T.Root == Target {
@@ -247,51 +124,82 @@ public struct QueryBuilder<Target: Entity, Received, Result> {
             .updated(\.groupBy, value: (_config.groupBy ?? []) + [name])
             .updated(\.mapTo, value: [name, expression])
             .updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>>(config: newConfig, context: _context)
+        return .init(config: newConfig, context: _context)
     }
     
     public func ascendingSort<T>(_ keyPath: T, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
         let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: true, selector: type.selector)
-        let newConfig = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return PartialQueryBuilder(config: newConfig, context: _context)
+        _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
+        return self
     }
     
     public func descendingSort<T>(_ keyPath: T, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
         let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: false, selector: type.selector)
-        let newConfig = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return PartialQueryBuilder(config: newConfig, context: _context)
+        _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
+        return self
     }
     
     public func ascendingSort(_ keyPath: PartialKeyPath<Target>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> {
         let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: true, selector: type.selector)
-        let newConfig = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return PartialQueryBuilder(config: newConfig, context: _context)
+        _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
+        return self
     }
     
     public func descendingSort(_ keyPath: PartialKeyPath<Target>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> {
         let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: false, selector: type.selector)
-        let newConfig = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return PartialQueryBuilder(config: newConfig, context: _context)
+        _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
+        return self
     }
     
     public func map<T: TracableKeyPathProtocol>(_ keyPath: T) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T.Value.PropertyValue> {
         let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, T.Value.PropertyValue>(config: newConfig, context: _context)
+        return .init(config: newConfig, context: _context)
     }
     
     public func map<T: TracableKeyPathProtocol>(_ keyPaths: [T]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>>(config: newConfig, context: _context)
+        return .init(config: newConfig, context: _context)
     }
     
     public func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPath: KeyPath<E, T>) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T> {
         let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, T>(config: newConfig, context: _context)
+        return .init(config: newConfig, context: _context)
     }
     
     public func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPaths: [KeyPath<E, T>]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
-        return PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>>(config: newConfig, context: _context)
+        return .init(config: newConfig, context: _context)
+    }
+
+    public func `where`(_ predicate: NSPredicate) -> Self {
+        _config = _config.updated(\.predicate, value: predicate)
+        return self
+    }
+    
+    public func andWhere(_ predicate: NSPredicate) -> Self {
+        let newPredicate: NSPredicate = {
+            if let pred = _config.predicate {
+                return NSCompoundPredicate(andPredicateWithSubpredicates: [pred, predicate])
+            }
+            return predicate
+        }()
+        _config = _config.updated(\.predicate, value: newPredicate)
+        return self
+    }
+    
+    public func orWhere(_ predicate: NSPredicate) -> Self {
+        let newPredicate: NSPredicate = {
+            if let pred = _config.predicate {
+                return NSCompoundPredicate(orPredicateWithSubpredicates: [pred, predicate])
+            }
+            return predicate
+        }()
+        _config = _config.updated(\.predicate, value: newPredicate)
+        return self
+    }
+    
+    public func findOne() -> Result? {
+        limit(1).exec().first
     }
     
     public func exec() -> [Result] {
@@ -308,37 +216,6 @@ public struct QueryBuilder<Target: Entity, Received, Result> {
         } else {
             return (results as! [Dictionary<String, Any>]).flatMap{ $0.values }.compactMap{ $0 as? Result }
         }
-    }
-    
-    public func findOne() -> Result? {
-        limit(1).exec().first
-    }
-
-    public func `where`(_ predicate: NSPredicate) -> Self {
-        let newConfig = _config.updated(\.predicate, value: predicate)
-        return Self.init(config: newConfig, context: _context)
-    }
-    
-    public func andWhere(_ predicate: NSPredicate) -> Self {
-        let newPredicate: NSPredicate = {
-            if let pred = _config.predicate {
-                return NSCompoundPredicate(andPredicateWithSubpredicates: [pred, predicate])
-            }
-            return predicate
-        }()
-        let newConfig = _config.updated(\.predicate, value: newPredicate)
-        return Self.init(config: newConfig, context: _context)
-    }
-    
-    public func orWhere(_ predicate: NSPredicate) -> Self {
-        let newPredicate: NSPredicate = {
-            if let pred = _config.predicate {
-                return NSCompoundPredicate(orPredicateWithSubpredicates: [pred, predicate])
-            }
-            return predicate
-        }()
-        let newConfig = _config.updated(\.predicate, value: newPredicate)
-        return Self.init(config: newConfig, context: _context)
     }
 }
 
