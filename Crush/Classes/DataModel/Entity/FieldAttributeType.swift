@@ -187,23 +187,23 @@ extension Swift.Optional: PredicateComparable where Wrapped: PredicateComparable
     }
 }
 
-public protocol Enumerator: RawRepresentable, FieldAttributeType, PredicateComparable where RawValue == Int16, ManagedObjectValue == Int16 { }
+public protocol Enumerator: RawRepresentable, FieldAttributeType, PredicateComparable where RawValue: SavableTypeProtocol & PredicateEquatable, ManagedObjectValue: SavableTypeProtocol & PredicateEquatable { }
 
 extension Enumerator {
-    public static func convert(value: Int16) -> Self {
+    public static func convert(value: RawValue) -> Self {
         Self.init(rawValue: value)!
     }
     
-    public static func convert(value: Self) -> Int16 {
+    public static func convert(value: Self) -> RawValue {
         value.rawValue
     }
     
     public static var nativeType: NSAttributeType { .integer16AttributeType }
-    public var predicateValue: NSObject { NSNumber(value: self.rawValue) }
+    public var predicateValue: NSObject { self.rawValue.predicateValue }
 }
 
 extension RawRepresentable where Self: FieldAttributeType {
-    public typealias ManagedObjectValue = Int16
+    public typealias ManagedObjectValue = RawValue
     public typealias RuntimeObjectValue = Self
 }
 
