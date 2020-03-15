@@ -21,17 +21,19 @@ public protocol Entity: RuntimeObject {
     static func entityDescription() -> NSEntityDescription
     static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping?
     static func entity() -> NSEntityDescription
+    static func setOverrideCacheKey(for type: Entity.Type, key: String)
     static var isAbstract: Bool { get }
     static var renamingIdentifier: String? { get }
-    
+    static var entityCacheKey: String { get }
     var entity: NSEntityDescription { get }
 }
 
-fileprivate var _dummyObjects: [String: RuntimeObject] = [:]
-fileprivate var _dummyObjectsQueue = DispatchQueue(label: "Crush._dummyObjectsQueue")
-fileprivate var dummyObjects: [String: RuntimeObject] {
-    get { _dummyObjects }
-    set { _dummyObjectsQueue.sync { _dummyObjects = newValue}}
+fileprivate enum _Shared {
+    @ThreadSafe
+    static var dummyObjects: [String: RuntimeObject] = [:]
+    
+    @ThreadSafe
+    static var overrideCacheKeyDict: [String: String] = [:]
 }
 
 extension RuntimeObject {
@@ -62,7 +64,7 @@ extension Entity {
     init(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) {
         self.init()
         self.proxyType = proxyType
-        self.rawObject = NSManagedObject(entity: entity, insertInto: context)
+        self.rawObject = NSManagedObject(entity: Self.dummy().entity, insertInto: context)
     }
         
     static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
@@ -75,13 +77,13 @@ extension Entity {
     }
     
     internal static func dummy() -> Self {
-        let key = String(reflecting: Self.self)
-        if let object: Self = (dummyObjects[key] as? Self) {
+        let key = Self.entityCacheKey
+        if let object: Self = (_Shared.dummyObjects[key] as? Self) {
             return object
         }
         let runtimeObject = Self.init()
         runtimeObject.setupProperties(mirror: Mirror(reflecting: runtimeObject), recursive: true)
-        dummyObjects[key] = runtimeObject
+        _Shared.dummyObjects[key] = runtimeObject
         return runtimeObject
     }
     
@@ -89,12 +91,16 @@ extension Entity {
         return Self.entity()
     }
     
-    static var entityCacheKey: String {
-        return String(reflecting: Self.self)
+    public static func setOverrideCacheKey(for type: Entity.Type, key: String) {
+        _Shared.overrideCacheKeyDict[type.defaultCacheKey] = key
+    }
+
+    public static var entityCacheKey: String {
+        _Shared.overrideCacheKeyDict[defaultCacheKey] ?? defaultCacheKey
     }
     
-    var entityCacheKey: String {
-        return String(reflecting: type(of: self))
+    static var defaultCacheKey: String {
+        String(reflecting: Self.self)
     }
     
     @discardableResult func setupProperties(mirror: Mirror?, recursive: Bool) -> [NSPropertyDescription] {
@@ -220,7 +226,7 @@ open class NeutralEntityObject: NSObject, Entity {
         let properties: [NSPropertyDescription] = object.setupProperties(mirror: mirror, recursive: false)
         
         // Setup related inverse relationship
-        coordinator.getAndWaitDescription(Self.entityCacheKey, type: InverRelationshipCacheType.self) { pairs in
+        coordinator.getAndWaitDescription(entityKey, type: InverRelationshipCacheType.self) { pairs in
             pairs.forEach { (keyPath, relationship) in
                 if let prop = object[keyPath: keyPath] as? PropertyProtocol,
                     let description = prop.description as? NSRelationshipDescription {
@@ -244,7 +250,7 @@ open class NeutralEntityObject: NSObject, Entity {
             guard let destinationKey = relationship.userInfo?[UserInfoKey.relationshipDestination] as? String else { return }
             
             if let inverseKey = relationship.userInfo?[UserInfoKey.inverseRelationship] as? AnyKeyPath,
-                let inverseType = relationship.userInfo?[UserInfoKey.inverseRelationshipType] as? String {
+                let inverseType = relationship.userInfo?[UserInfoKey.relationshipDestination] as? String {
                 let arr = coordinator.getDescription(inverseType, type: InverRelationshipCacheType.self) ?? []
                 coordinator.setDescription(inverseType, value: arr + [(inverseKey, relationship)], type: InverRelationshipCacheType.self)
             }
@@ -259,8 +265,9 @@ open class NeutralEntityObject: NSObject, Entity {
             superMirror.subjectType is Entity.Type,
             superMirror.subjectType != NeutralEntityObject.self,
             superMirror.subjectType != EntityObject.self,
-            superMirror.subjectType != AbstractEntityObject.self {
-            coordinator.getAndWaitDescription(String(reflecting: superMirror.subjectType), type: EntityCacheType.self) {
+            superMirror.subjectType != AbstractEntityObject.self,
+            let superType = superMirror.subjectType as? EntityObject.Type {
+            coordinator.getAndWaitDescription(superType.entityCacheKey, type: EntityCacheType.self) {
                 $0.subentities.append(description)
             }
         }
@@ -295,7 +302,9 @@ open class NeutralEntityObject: NSObject, Entity {
                 return []
             }
             
-            return [(mirror, String(reflecting: mirror.subjectType))] + findAllMirrors(mirror.superclassMirror)
+            guard let subjectType = mirror.subjectType as? EntityObject.Type else { return [] }
+            
+            return [(mirror, String(reflecting: subjectType))] + findAllMirrors(mirror.superclassMirror)
         }
         
         return findAllMirrors(Mirror(reflecting: self)).flatMap{
@@ -336,6 +345,10 @@ open class EntityObject: NeutralEntityObject {
 }
 
 extension NSManagedObject: Entity {
+    public static var entityCacheKey: String {
+        defaultCacheKey
+    }
+        
     public convenience init(context: Transaction.ReadWriteContext) {
         precondition(context is _ReadWriteAsyncTransactionContext || context is _ReadWriteSerialTransactionContext)
         if let transactionContext = context as? _ReadWriteSerialTransactionContext {

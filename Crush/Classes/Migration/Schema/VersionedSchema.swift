@@ -9,29 +9,35 @@ import Foundation
 
 public protocol DataSchemaProtocol: SchemaProtocol { }
 
-open class Schema<Version: SchemaProtocol>: DataSchemaProtocol {
-    public typealias LastVersion = Version
-    
+open class _Schema: DataSchemaProtocol {
     public var lastVersion: SchemaProtocol? {
-        return LastVersion.init()
+        fatalError()
     }
     
-    required public init() { }
-}
-
-open class SchemaOrigin: DataSchemaProtocol {
-    public var lastVersion: SchemaProtocol? {
-        return nil
-    }
-    
-    required public init() { }
-}
-
-public extension DataSchemaProtocol {
-    var model: ObjectModel {
+    open var model: ObjectModel {
         DataModel(version: self,
                   entities: allClasses[String(reflecting: Self.self)] ?? [])
     }
+    
+    required public init() { }
+}
+
+open class Schema<Version: SchemaProtocol>: _Schema {
+    public typealias LastVersion = Version
+    
+    public override var lastVersion: SchemaProtocol? {
+        return LastVersion.init()
+    }
+        
+    required public init() { }
+}
+
+open class SchemaOrigin: _Schema {
+    public override var lastVersion: SchemaProtocol? {
+        return nil
+    }
+        
+    required public init() { }
 }
 
 fileprivate func findTypeNames(type: RuntimeObject.Type) -> [String] {

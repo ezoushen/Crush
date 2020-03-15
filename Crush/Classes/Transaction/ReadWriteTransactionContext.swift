@@ -22,7 +22,6 @@ internal struct _ReadWriteSerialTransactionContext: ReadWriteSerialTransactionCo
         self.readOnlyContext = readOnlyContext
     }
     
-    
     public func stash() {
         guard context.hasChanges else {
             return
@@ -30,7 +29,7 @@ internal struct _ReadWriteSerialTransactionContext: ReadWriteSerialTransactionCo
         
         withExtendedLifetime(self) { object in
             object.context.performAndWait {
-                try? object.context.save()
+                try! object.context.save()
                 
                 object.readOnlyContext.performAndWait {
                     object.readOnlyContext.refreshAllObjects()
@@ -46,10 +45,10 @@ internal struct _ReadWriteSerialTransactionContext: ReadWriteSerialTransactionCo
         
         withExtendedLifetime(self) { object in
             object.context.performAndWait {
-                try? object.context.save()
+                try! object.context.save()
 
                 object.targetContext.perform {
-                    try? object.targetContext.save()
+                    try! object.targetContext.save()
                 }
                 
                 object.readOnlyContext.performAndWait {
@@ -78,7 +77,7 @@ internal struct _ReadWriteAsyncTransactionContext: ReadWriteAsyncTransactionCont
         
         withExtendedLifetime(self) { object in
             object.context.perform {
-                try? object.context.save()
+                try! object.context.save()
                 
                 object.readOnlyContext.perform {
                     object.readOnlyContext.refreshAllObjects()
@@ -94,10 +93,10 @@ internal struct _ReadWriteAsyncTransactionContext: ReadWriteAsyncTransactionCont
         
         withExtendedLifetime(self) { object in
             object.context.perform {
-                try? object.context.save()
+                try! object.context.save()
 
                 object.targetContext.perform {
-                    try? object.targetContext.save()
+                    try! object.targetContext.save()
                 }
                 
                 object.readOnlyContext.perform {

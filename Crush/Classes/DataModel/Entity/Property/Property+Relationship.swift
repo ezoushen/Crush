@@ -72,7 +72,7 @@ public extension RelationshipProtocol {
         description.minCount = minCount
         description.deleteRule = deleteRule
         description.isOrdered = isOrdered
-        description.userInfo?[UserInfoKey.relationshipDestination] = String(reflecting: DestinationEntity.self)
+        description.userInfo?[UserInfoKey.relationshipDestination] = DestinationEntity.entityCacheKey
         
         if let inverseKeyPath = inverseKeyPath {
             description.userInfo?[UserInfoKey.inverseRelationship] = inverseKeyPath
@@ -217,7 +217,6 @@ public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProt
         description.isOptional = OptionalType.isOptional
         
         if let inverseKeyPath = inverseKeyPath {
-            description.userInfo?[UserInfoKey.inverseRelationshipType] = String(reflecting: DestinationEntity.self)
             description.userInfo?[UserInfoKey.inverseRelationship] = inverseKeyPath
         }
     }

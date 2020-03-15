@@ -198,7 +198,7 @@ extension Enumerator {
         value.rawValue
     }
     
-    public static var nativeType: NSAttributeType { .integer16AttributeType }
+    public static var nativeType: NSAttributeType { RawValue.nativeType }
     public var predicateValue: NSObject { self.rawValue.predicateValue }
 }
 

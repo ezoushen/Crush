@@ -12,7 +12,6 @@ class DescriptionCacheCoordinator {
     
     static let shared: DescriptionCacheCoordinator = .init()
     
-    
     private init() { }
     
     func setDescription<T: DescriptionCacheType>(_ key: String, value: T.Cache.Element, type: T.Type) {
@@ -21,6 +20,7 @@ class DescriptionCacheCoordinator {
         
         guard let callbacks = type.callbackStore[key] else { return }
         callbacks.forEach{ ($0 as! (T.Cache.Element) -> Void)(value) }
+        type.callbackStore[key] = []
     }
     
     func getDescription<T: DescriptionCacheType>(_ key: String, type: T.Type) -> T.Cache.Element? {

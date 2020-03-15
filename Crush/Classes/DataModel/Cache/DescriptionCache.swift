@@ -37,14 +37,17 @@ extension CacheProtocol {
 // MARK: - Storage of each cache type
 
 struct EntityDescriptionCache: CacheProtocol {
+    @ThreadSafe
     static var cache: [AnyHashable: NSEntityDescription] = [:]
 }
 
 struct PropertyDescriptionCache: CacheProtocol {
+    @ThreadSafe
     static var cache: [AnyHashable: NSPropertyDescription] = [:]
 }
 
 struct InverRelationshipCache: CacheProtocol {
+    @ThreadSafe
     static var cache: [AnyHashable: [(AnyKeyPath, NSRelationshipDescription)]] = [:]
 }
 

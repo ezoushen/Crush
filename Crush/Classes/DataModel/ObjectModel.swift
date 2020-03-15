@@ -45,26 +45,33 @@ public class DataModel: ObjectModel {
     public var previousModel: ObjectModel?
     
     public init(version: SchemaProtocol, entities: [Entity.Type]) {
-        let sorted = entities.sorted { !$1.isAbstract }
-        let entities = sorted.map { $0.entityDescription() }
-        let hashValue = NSString(string: String(reflecting: version.self))
-
+        let versionString = String(reflecting: version.self)
+        let hashValue = NSString(string: versionString)
+        
+        previousModel = version.lastVersion?.model
+        
         if let model = DataModel.modelCache.object(forKey: hashValue) {
             rawModel = model
             migration = DataModel.mappingCache.object(forKey: hashValue)?.migration
             return
         }
 
+        let sorted = entities.sorted { !$1.isAbstract }
         let versionHashModifier = String(reflecting: version)
-        let model = NSManagedObjectModel()
-        model.entities = entities
-        model.versionIdentifiers = [versionHashModifier]
         
+        sorted.forEach {
+            let key = [versionString, String(String(describing: type(of: $0)).dropLast(5))].joined(separator: ".")
+            $0.setOverrideCacheKey(for: $0, key: key)
+        }
+        
+        let model = NSManagedObjectModel()
+        model.entities = sorted.map { $0.dummy().entity }
+        model.versionIdentifiers = [versionHashModifier]
+
         DataModel.modelCache.setObject(model, forKey: hashValue)
         
         rawModel = model
-        previousModel = version.lastVersion?.model
-
+        
         guard let lastVersion = version.lastVersion,
               let previousModel = self.previousModel else {
             migration = nil
