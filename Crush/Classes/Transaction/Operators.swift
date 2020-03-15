@@ -126,6 +126,18 @@ extension KeyPath where Root: Entity, Value: NullablePropertyProtocol, Value.Ent
     }
 }
 
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable & Hashable {
+    public static func <> (lhs: Self, rhs: Set<Value.EntityType>) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) IN %@", NSSet(set: rhs))
+    }
+}
+
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable {
+    public static func <> (lhs: Self, rhs: Array<Value.EntityType>) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) IN %@", NSArray(array: rhs))
+    }
+}
+
 extension KeyPath where Root: NSManagedObject, Value: PredicateEquatable & Equatable {
     public static func == (lhs: KeyPath, rhs: Value) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) == %@", rhs.predicateValue)
