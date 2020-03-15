@@ -39,6 +39,22 @@ extension Transaction {
         return result
     }
     
+    public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) -> T?) -> T? {
+        let transactionContext = serialContext
+
+        var result: T?
+
+        transactionContext.context.performAndWait {
+            result = block(transactionContext)
+            transactionContext.stash()
+        }
+        guard let object = result else { return nil }
+        
+        let readOnlyObject = readOnlyContext.receive(runtimeObject: object)
+
+        return T.init(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
+    }
+    
     public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) -> T) -> T {
         let transactionContext = serialContext
 

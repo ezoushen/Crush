@@ -9,18 +9,6 @@
 import Foundation
 import CoreData
 
-extension PartialKeyPath {
-    var rootClass: String {
-        return String(reflecting: Root.self)
-    }
-}
-
-extension KeyPath {
-    var valueClass: String {
-        return String(reflecting: Value.self)
-    }
-}
-
 extension AnyKeyPath {
     var stringValue: String? {
         return _kvcKeyPathString

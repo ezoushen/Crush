@@ -13,7 +13,6 @@ import CoreData
 enum UserInfoKey: Hashable {
     case relationshipDestination
     case inverseRelationship
-    case inverseRelationshipType
     case inverseUnidirectional
     case propertyMappingKeyPath
     case propertyMappingSource
