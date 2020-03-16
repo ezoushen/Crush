@@ -7,6 +7,7 @@
 //
 
 import Crush
+import Foundation
 
 class V1: SchemaOrigin {
     class Todo: EntityObject {
