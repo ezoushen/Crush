@@ -9,7 +9,7 @@
 import CoreData
 
 public protocol QueryerProtocol {
-    func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T>
+    func query<T: Entity>(for type: T.Type) -> Query<T>
 }
 
 public enum QuerySorterOption {
@@ -84,18 +84,18 @@ internal struct QueryConfig<T: Entity> {
     }
 }
 
-public class PartialQueryBuilder<Target: Entity, Received, Result> {
+public class PartialQueryBuilder<Target, Received, Result> where Target: Entity {
     internal var _config: QueryConfig<Target>
     
-    internal let _context: TransactionContextProtocol & RawContextProviderProtocol
+    internal let _context: ReaderTransactionContext
 
-    internal required init(config: QueryConfig<Target>, context: TransactionContextProtocol & RawContextProviderProtocol) {
+    internal required init(config: QueryConfig<Target>, context: ReaderTransactionContext) {
         self._config = config
         self._context = context
     }
 }
 
-public class QueryBuilder<Target: Entity, Received, Result>: PartialQueryBuilder<Target, Received, Result> { }
+public class QueryBuilder<Target, Received, Result>: PartialQueryBuilder<Target, Received, Result> where Target: Entity { }
 
 extension QueryBuilder {
     public func count() -> Int {
@@ -202,24 +202,33 @@ extension PartialQueryBuilder {
         return self
     }
     
+    private var received: [Received] {
+        let request = _config.createFetchRequest()
+        return _context.execute(request: request)
+    }
+}
+
+extension PartialQueryBuilder where Result == Dictionary<String, Any>, Received == Result {
+    public func exec() -> [Result] {
+        received
+    }
+}
+
+extension PartialQueryBuilder where Result: RuntimeObject, Received == NSManagedObject {
     public func findOne() -> Result? {
         limit(1).exec().first
     }
     
     public func exec() -> [Result] {
-        let request = _config.createFetchRequest()
-        let results: [Received] = _context.execute(request: request)
-        
-        if Result.self == Dictionary<String, Any>.self {
-            return results as! [Result]
-        } else if let runtimeObject = Result.self as? RuntimeObject.Type {
-            return results.compactMap{
-                let object = $0 as! NSManagedObject
-                return runtimeObject.init(objectID: object.objectID, in: _context.context, proxyType: _context.proxyType) as? Result
-            }
-        } else {
-            return (results as! [Dictionary<String, Any>]).flatMap{ $0.values }.compactMap{ $0 as? Result }
+        received.map {
+            Result.init(_context.receive($0), proxyType: _context.proxyType)
         }
+    }
+}
+
+extension PartialQueryBuilder where Received == Dictionary<String, Any> {
+    public func exec() -> [Result] {
+        received.flatMap{ $0.values }.compactMap{ $0 as? Result }
     }
 }
 

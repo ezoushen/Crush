@@ -75,46 +75,14 @@ extension DataContainer {
     }
 }
 
-extension DataContainer {
-    public func save() {
-        guard writerContext.hasChanges else {
-            return
-        }
-        
-        withExtendedLifetime(self) { object in
-            object.writerContext.perform {
-                try? object.writerContext.save()
-            }
-        }
-    }
-    
-    public func rollback() {
-        writerContext.rollback()
-        readOnlyContext.refreshAllObjects()
-    }
-}
-
 extension DataContainer: QueryerProtocol {
-    public func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
-        return QueryBuilder<T, NSManagedObject, T>(config: .init(), context: readerContext)
+    public func query<T: Entity>(for type: T.Type) -> Query<T> {
+        return Query<T>(config: .init(), context: readerContext)
     }
 }
 
 extension DataContainer {
-    
-    public func edit<T: Entity>(_ entity: T) -> Transaction.SingularEditor<T> {
-        .init(entity, transaction: startTransaction())
-    }
-    
-    public func edit<T: Entity>(_ entities: [T]) -> Transaction.PluralEditor<T> {
-        .init(entities, transaction: startTransaction())
-    }
-    
-    public func edit<T: Entity>(_ entities: T...) -> Transaction.PluralEditor<T> {
-        .init(entities, transaction: startTransaction())
-    }
-    
     public func startTransaction() -> Transaction {
-        Transaction(readOnlyContext: readOnlyContext, executionContext: executionContext)
+        Transaction(objectContext: readOnlyContext, executionContext: executionContext)
     }
 }

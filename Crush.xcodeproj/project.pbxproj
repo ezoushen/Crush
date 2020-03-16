@@ -30,7 +30,7 @@
 		15C7AF66241F625F007F14A3 /* SearchString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3D241F625F007F14A3 /* SearchString.swift */; };
 		15C7AF67241F625F007F14A3 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3E241F625F007F14A3 /* Transaction.swift */; };
 		15C7AF68241F625F007F14A3 /* QueryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3F241F625F007F14A3 /* QueryBuilder.swift */; };
-		15C7AF69241F625F007F14A3 /* WriterTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF40241F625F007F14A3 /* WriterTransactionContext.swift */; };
+		15C7AF69241F625F007F14A3 /* ReadWriteTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF40241F625F007F14A3 /* ReadWriteTransactionContext.swift */; };
 		15C7AF6A241F625F007F14A3 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF42241F625F007F14A3 /* Connection.swift */; };
 		15C7AF6B241F625F007F14A3 /* DataContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF43241F625F007F14A3 /* DataContainer.swift */; };
 		15C7AF6C241F625F007F14A3 /* DataContainer+Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF44241F625F007F14A3 /* DataContainer+Type.swift */; };
@@ -124,7 +124,7 @@
 		15C7AF3D241F625F007F14A3 /* SearchString.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchString.swift; sourceTree = "<group>"; };
 		15C7AF3E241F625F007F14A3 /* Transaction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 		15C7AF3F241F625F007F14A3 /* QueryBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryBuilder.swift; sourceTree = "<group>"; };
-		15C7AF40241F625F007F14A3 /* WriterTransactionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WriterTransactionContext.swift; sourceTree = "<group>"; };
+		15C7AF40241F625F007F14A3 /* ReadWriteTransactionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReadWriteTransactionContext.swift; sourceTree = "<group>"; };
 		15C7AF42241F625F007F14A3 /* Connection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
 		15C7AF43241F625F007F14A3 /* DataContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataContainer.swift; sourceTree = "<group>"; };
 		15C7AF44241F625F007F14A3 /* DataContainer+Type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "DataContainer+Type.swift"; sourceTree = "<group>"; };
@@ -212,6 +212,7 @@
 				15C7AF27241F625F007F14A3 /* DataModel */,
 				15C7AF45241F625F007F14A3 /* Migration */,
 				15C7AF39241F625F007F14A3 /* Transaction */,
+				15C7AFDA241F7468007F14A3 /* QueryBuilder */,
 				15C7AF21241F625F007F14A3 /* Utils */,
 				15C7AFA7241F66C4007F14A3 /* LICENSE */,
 				15C7AFA6241F66C4007F14A3 /* README.md */,
@@ -254,9 +255,9 @@
 		15C7AF2B241F625F007F14A3 /* Entity */ = {
 			isa = PBXGroup;
 			children = (
+				15C7AF2E241F625F007F14A3 /* Property */,
 				15C7AF2C241F625F007F14A3 /* EntityObject.swift */,
 				15C7AF2D241F625F007F14A3 /* ValueMapper.swift */,
-				15C7AF2E241F625F007F14A3 /* Property */,
 				15C7AF35241F625F007F14A3 /* FieldAttributeType.swift */,
 				15C7AF36241F625F007F14A3 /* Index */,
 			);
@@ -287,13 +288,10 @@
 		15C7AF39241F625F007F14A3 /* Transaction */ = {
 			isa = PBXGroup;
 			children = (
-				15C7AF3A241F625F007F14A3 /* TransactionContext.swift */,
-				15C7AF3B241F625F007F14A3 /* Operators.swift */,
-				15C7AF3C241F625F007F14A3 /* ReaderTransactionContext.swift */,
-				15C7AF3D241F625F007F14A3 /* SearchString.swift */,
 				15C7AF3E241F625F007F14A3 /* Transaction.swift */,
-				15C7AF3F241F625F007F14A3 /* QueryBuilder.swift */,
-				15C7AF40241F625F007F14A3 /* WriterTransactionContext.swift */,
+				15C7AF3A241F625F007F14A3 /* TransactionContext.swift */,
+				15C7AF3C241F625F007F14A3 /* ReaderTransactionContext.swift */,
+				15C7AF40241F625F007F14A3 /* ReadWriteTransactionContext.swift */,
 			);
 			path = Transaction;
 			sourceTree = "<group>";
@@ -312,9 +310,9 @@
 			isa = PBXGroup;
 			children = (
 				15C7AF46241F625F007F14A3 /* Migrator */,
+				15C7AF4B241F625F007F14A3 /* Schema */,
 				15C7AF49241F625F007F14A3 /* MigrationModel.swift */,
 				15C7AF4A241F625F007F14A3 /* PropertyMapping.swift */,
-				15C7AF4B241F625F007F14A3 /* Schema */,
 				15C7AF4F241F625F007F14A3 /* MappingModelMerger.swift */,
 				15C7AF50241F625F007F14A3 /* EntityMapping.swift */,
 			);
@@ -379,6 +377,16 @@
 				15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */,
 			);
 			path = Assertions;
+			sourceTree = "<group>";
+		};
+		15C7AFDA241F7468007F14A3 /* QueryBuilder */ = {
+			isa = PBXGroup;
+			children = (
+				15C7AF3F241F625F007F14A3 /* QueryBuilder.swift */,
+				15C7AF3B241F625F007F14A3 /* Operators.swift */,
+				15C7AF3D241F625F007F14A3 /* SearchString.swift */,
+			);
+			path = QueryBuilder;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -538,7 +546,7 @@
 				15C7AF66241F625F007F14A3 /* SearchString.swift in Sources */,
 				15C7AF58241F625F007F14A3 /* EntityObject.swift in Sources */,
 				15C7AF6E241F625F007F14A3 /* Migrator.swift in Sources */,
-				15C7AF69241F625F007F14A3 /* WriterTransactionContext.swift in Sources */,
+				15C7AF69241F625F007F14A3 /* ReadWriteTransactionContext.swift in Sources */,
 				15C7AF6D241F625F007F14A3 /* SQLMigrator.swift in Sources */,
 				15C7AF6F241F625F007F14A3 /* MigrationModel.swift in Sources */,
 				15C7AF54241F625F007F14A3 /* KeyPath+helper.swift in Sources */,
