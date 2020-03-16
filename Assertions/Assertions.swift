@@ -2,12 +2,6 @@ import Foundation
 
 /// drop-in replacements
 #if DEBUG
-private func never() -> Never {
-    repeat {
-        RunLoop.current.run()
-    } while (true)
-}
-
 @inlinable var isRunningInTest: Bool { ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil }
 
 @inlinable func assert(_ condition: @autoclosure () -> Bool,_ message: @autoclosure  () -> String = "", file: StaticString = #file, line: UInt = #line) {
