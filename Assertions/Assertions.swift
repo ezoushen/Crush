@@ -1,14 +1,7 @@
 import Foundation
 
 /// drop-in replacements
-
-private func never() -> Never {
-    repeat {
-        RunLoop.current.run()
-    } while (true)
-}
-
-
+#if DEBUG
 func assert(_ condition: @autoclosure () -> Bool,_ message: @autoclosure  () -> String = "", file: StaticString = #file, line: UInt = #line) {
     Assertions.assertClosure(condition(), message(), file, line)
 }
@@ -44,3 +37,4 @@ public class Assertions {
     public static let swiftPreconditionFailureClosure = { Swift.preconditionFailure($0, file: $1, line: $2) }
     public static let swiftFatalErrorClosure          = { Swift.fatalError($0, file: $1, line: $2) }
 }
+#endif

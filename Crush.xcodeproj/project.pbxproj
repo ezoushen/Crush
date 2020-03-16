@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		15C7AF51241F625F007F14A3 /* ThreadSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF22241F625F007F14A3 /* ThreadSafe.swift */; };
-		15C7AF52241F625F007F14A3 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF23241F625F007F14A3 /* Assertions.swift */; };
 		15C7AF53241F625F007F14A3 /* Data+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF24241F625F007F14A3 /* Data+hexString.swift */; };
 		15C7AF54241F625F007F14A3 /* KeyPath+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF25241F625F007F14A3 /* KeyPath+helper.swift */; };
 		15C7AF55241F625F007F14A3 /* NSManagedObject+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF26241F625F007F14A3 /* NSManagedObject+helper.swift */; };
@@ -55,6 +54,10 @@
 		15C7AFB4241F6754007F14A3 /* Crush.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C7AEB2241F6204007F14A3 /* Crush.framework */; };
 		15C7AFBD241F67F9007F14A3 /* Crush.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 15C7AFBC241F67F9007F14A3 /* Crush.podspec */; };
 		15C7AFC0241F68D0007F14A3 /* Crush.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 15C7AEB2241F6204007F14A3 /* Crush.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		15C7AFD5241F6FA5007F14A3 /* XCTestCase+Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */; };
+		15C7AFD6241F6FAB007F14A3 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF23241F625F007F14A3 /* Assertions.swift */; };
+		15C7AFD7241F6FAC007F14A3 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF23241F625F007F14A3 /* Assertions.swift */; };
+		15C7AFD9241F71D8007F14A3 /* DataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -150,6 +153,8 @@
 		15C7AFB3241F6754007F14A3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		15C7AFBA241F67C1007F14A3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		15C7AFBC241F67F9007F14A3 /* Crush.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Crush.podspec; sourceTree = SOURCE_ROOT; };
+		15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "XCTestCase+Assertions.swift"; sourceTree = "<group>"; };
+		15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -184,6 +189,7 @@
 				15C7AEB4241F6204007F14A3 /* Crush */,
 				15C7AFB0241F6754007F14A3 /* Tests */,
 				15C7AF7B241F62BF007F14A3 /* Example */,
+				15C7AFCC241F6DBD007F14A3 /* Assertions */,
 				15C7AEB3241F6204007F14A3 /* Products */,
 				15C7AFBE241F68D0007F14A3 /* Frameworks */,
 			);
@@ -219,7 +225,6 @@
 			isa = PBXGroup;
 			children = (
 				15C7AF22241F625F007F14A3 /* ThreadSafe.swift */,
-				15C7AF23241F625F007F14A3 /* Assertions.swift */,
 				15C7AF24241F625F007F14A3 /* Data+hexString.swift */,
 				15C7AF25241F625F007F14A3 /* KeyPath+helper.swift */,
 				15C7AF26241F625F007F14A3 /* NSManagedObject+helper.swift */,
@@ -355,6 +360,7 @@
 			isa = PBXGroup;
 			children = (
 				15C7AFB3241F6754007F14A3 /* Info.plist */,
+				15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -364,6 +370,15 @@
 			children = (
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		15C7AFCC241F6DBD007F14A3 /* Assertions */ = {
+			isa = PBXGroup;
+			children = (
+				15C7AF23241F625F007F14A3 /* Assertions.swift */,
+				15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */,
+			);
+			path = Assertions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -454,6 +469,7 @@
 					};
 					15C7AFAE241F6754007F14A3 = {
 						CreatedOnToolsVersion = 11.3.1;
+						LastSwiftMigration = 1130;
 					};
 				};
 			};
@@ -536,13 +552,13 @@
 				15C7AF5E241F625F007F14A3 /* Property+Type.swift in Sources */,
 				15C7AF67241F625F007F14A3 /* Transaction.swift in Sources */,
 				15C7AF5C241F625F007F14A3 /* Property+Attribute.swift in Sources */,
-				15C7AF52241F625F007F14A3 /* Assertions.swift in Sources */,
 				15C7AF55241F625F007F14A3 /* NSManagedObject+helper.swift in Sources */,
 				15C7AF6B241F625F007F14A3 /* DataContainer.swift in Sources */,
 				15C7AF68241F625F007F14A3 /* QueryBuilder.swift in Sources */,
 				15C7AF51241F625F007F14A3 /* ThreadSafe.swift in Sources */,
 				15C7AF60241F625F007F14A3 /* FieldAttributeType.swift in Sources */,
 				15C7AF71241F625F007F14A3 /* CoreDataSchema.swift in Sources */,
+				15C7AFD6241F6FAB007F14A3 /* Assertions.swift in Sources */,
 				15C7AF63241F625F007F14A3 /* TransactionContext.swift in Sources */,
 				15C7AF6C241F625F007F14A3 /* DataContainer+Type.swift in Sources */,
 				15C7AF5F241F625F007F14A3 /* Property+Trasient.swift in Sources */,
@@ -566,6 +582,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15C7AFD9241F71D8007F14A3 /* DataModelTests.swift in Sources */,
+				15C7AFD7241F6FAC007F14A3 /* Assertions.swift in Sources */,
+				15C7AFD5241F6FA5007F14A3 /* XCTestCase+Assertions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -752,6 +771,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -780,6 +800,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -831,6 +852,7 @@
 		15C7AFB8241F6754007F14A3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6RTPJGVKB3;
 				INFOPLIST_FILE = Tests/Info.plist;
@@ -841,6 +863,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -849,6 +872,7 @@
 		15C7AFB9241F6754007F14A3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6RTPJGVKB3;
 				INFOPLIST_FILE = Tests/Info.plist;
