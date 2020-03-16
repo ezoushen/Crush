@@ -167,7 +167,6 @@
 		OBJ_67 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		OBJ_68 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		OBJ_69 /* Crush.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Crush.podspec; sourceTree = "<group>"; };
-		OBJ_9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -414,7 +413,6 @@
 				OBJ_44 /* QueryBuilder */,
 				OBJ_48 /* Transaction */,
 				OBJ_53 /* Utils */,
-				OBJ_9 /* Info.plist */,
 			);
 			name = Crush;
 			path = Sources/Crush;
