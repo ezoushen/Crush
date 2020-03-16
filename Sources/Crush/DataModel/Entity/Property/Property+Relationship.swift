@@ -112,7 +112,7 @@ public struct ToOneRelationshipType<EntityType: Entity>: RelationshipTypeProtoco
     
     @inline(__always)
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return RuntimeObjectValue.init(value)
+        return RuntimeObjectValue.create(value)
     }
     
     @inline(__always)
@@ -131,7 +131,7 @@ public struct ToManyRelationshipType<EntityType: Hashable & Entity>: Relationshi
     
     @inline(__always)
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return Set(value.allObjects.compactMap{ EntityType($0 as! NSManagedObject) })
+        return Set(value.allObjects.compactMap{ EntityType.create($0 as! NSManagedObject) })
     }
     
     @inline(__always)

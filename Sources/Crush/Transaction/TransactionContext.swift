@@ -8,22 +8,31 @@
 
 import CoreData
 
-public protocol AsynchronousContextProtocol { }
-
-public protocol RawContextProviderProtocol {
+public protocol ContextProtocol {
     typealias Proxy = RuntimeObject.Proxy
-    
     var proxyType: Proxy.Type { get }
+}
+
+public protocol RawContextProviderProtocol: ContextProtocol {
     var context: NSManagedObjectContext { get }
     var targetContext: NSManagedObjectContext { get }
 }
 
-public protocol TransactionContextProtocol: QueryerProtocol { }
+public protocol TransactionContextProtocol: QueryerProtocol, ContextProtocol {
+    func receive<T: Entity>(_ object: T) -> T
+    func receive<T: NSManagedObject>(_ object: T) -> T
+    func count(request: NSFetchRequest<NSFetchRequestResult>) -> Int
+    func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) -> [T]
+}
 
 internal extension TransactionContextProtocol where Self: RawContextProviderProtocol {
     func receive<T: Entity>(_ object: T) -> T {
         let newObject = context.receive(runtimeObject: object)
-        return T.init(newObject, proxyType: proxyType)
+        return T.create(newObject, proxyType: proxyType)
+    }
+    
+    func receive<T: NSManagedObject>(_ object: T) -> T {
+        return context.receive(runtimeObject: object) as! T
     }
 }
 
@@ -34,15 +43,15 @@ public protocol ReaderTransactionContext: TransactionContextProtocol {
     func fetch<T: TracableKeyPathProtocol>(properties: [T], predicate: NSPredicate?) -> [[String: Any]]
 }
 
-extension ReaderTransactionContext where Self: RawContextProviderProtocol {
+extension ReaderTransactionContext {
     public var proxyType: Proxy.Type {
         return ReadOnlyValueMapper.self
     }
 }
 
 extension ReaderTransactionContext where Self: RawContextProviderProtocol {
-    public func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T> {
-        return QueryBuilder<T, NSManagedObject, T>(config: .init(), context: self)
+    public func query<T: Entity>(for type: T.Type) -> Query<T> {
+        return Query<T>(config: .init(), context: self)
     }
 }
 

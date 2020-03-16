@@ -3,95 +3,108 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		"Crush::CrushPackageTests::ProductTarget" /* CrushPackageTests */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = OBJ_119 /* Build configuration list for PBXAggregateTarget "CrushPackageTests" */;
+			buildPhases = (
+			);
+			dependencies = (
+				OBJ_122 /* PBXTargetDependency */,
+			);
+			name = CrushPackageTests;
+			productName = CrushPackageTests;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
-		15C7AF51241F625F007F14A3 /* ThreadSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF22241F625F007F14A3 /* ThreadSafe.swift */; };
-		15C7AF53241F625F007F14A3 /* Data+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF24241F625F007F14A3 /* Data+hexString.swift */; };
-		15C7AF54241F625F007F14A3 /* KeyPath+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF25241F625F007F14A3 /* KeyPath+helper.swift */; };
-		15C7AF55241F625F007F14A3 /* NSManagedObject+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF26241F625F007F14A3 /* NSManagedObject+helper.swift */; };
-		15C7AF56241F625F007F14A3 /* DescriptionCacheCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF29241F625F007F14A3 /* DescriptionCacheCoordinator.swift */; };
-		15C7AF57241F625F007F14A3 /* DescriptionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF2A241F625F007F14A3 /* DescriptionCache.swift */; };
-		15C7AF58241F625F007F14A3 /* EntityObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF2C241F625F007F14A3 /* EntityObject.swift */; };
-		15C7AF59241F625F007F14A3 /* ValueMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF2D241F625F007F14A3 /* ValueMapper.swift */; };
-		15C7AF5A241F625F007F14A3 /* Property+Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF2F241F625F007F14A3 /* Property+Optional.swift */; };
-		15C7AF5B241F625F007F14A3 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF30241F625F007F14A3 /* Property.swift */; };
-		15C7AF5C241F625F007F14A3 /* Property+Attribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF31241F625F007F14A3 /* Property+Attribute.swift */; };
-		15C7AF5D241F625F007F14A3 /* Property+Relationship.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF32241F625F007F14A3 /* Property+Relationship.swift */; };
-		15C7AF5E241F625F007F14A3 /* Property+Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF33241F625F007F14A3 /* Property+Type.swift */; };
-		15C7AF5F241F625F007F14A3 /* Property+Trasient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF34241F625F007F14A3 /* Property+Trasient.swift */; };
-		15C7AF60241F625F007F14A3 /* FieldAttributeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF35241F625F007F14A3 /* FieldAttributeType.swift */; };
-		15C7AF61241F625F007F14A3 /* Index.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF37241F625F007F14A3 /* Index.swift */; };
-		15C7AF62241F625F007F14A3 /* ObjectModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF38241F625F007F14A3 /* ObjectModel.swift */; };
-		15C7AF63241F625F007F14A3 /* TransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3A241F625F007F14A3 /* TransactionContext.swift */; };
-		15C7AF64241F625F007F14A3 /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3B241F625F007F14A3 /* Operators.swift */; };
-		15C7AF65241F625F007F14A3 /* ReaderTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3C241F625F007F14A3 /* ReaderTransactionContext.swift */; };
-		15C7AF66241F625F007F14A3 /* SearchString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3D241F625F007F14A3 /* SearchString.swift */; };
-		15C7AF67241F625F007F14A3 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3E241F625F007F14A3 /* Transaction.swift */; };
-		15C7AF68241F625F007F14A3 /* QueryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF3F241F625F007F14A3 /* QueryBuilder.swift */; };
-		15C7AF69241F625F007F14A3 /* WriterTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF40241F625F007F14A3 /* WriterTransactionContext.swift */; };
-		15C7AF6A241F625F007F14A3 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF42241F625F007F14A3 /* Connection.swift */; };
-		15C7AF6B241F625F007F14A3 /* DataContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF43241F625F007F14A3 /* DataContainer.swift */; };
-		15C7AF6C241F625F007F14A3 /* DataContainer+Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF44241F625F007F14A3 /* DataContainer+Type.swift */; };
-		15C7AF6D241F625F007F14A3 /* SQLMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF47241F625F007F14A3 /* SQLMigrator.swift */; };
-		15C7AF6E241F625F007F14A3 /* Migrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF48241F625F007F14A3 /* Migrator.swift */; };
-		15C7AF6F241F625F007F14A3 /* MigrationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF49241F625F007F14A3 /* MigrationModel.swift */; };
-		15C7AF70241F625F007F14A3 /* PropertyMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF4A241F625F007F14A3 /* PropertyMapping.swift */; };
-		15C7AF71241F625F007F14A3 /* CoreDataSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF4C241F625F007F14A3 /* CoreDataSchema.swift */; };
-		15C7AF72241F625F007F14A3 /* VersionedSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF4D241F625F007F14A3 /* VersionedSchema.swift */; };
-		15C7AF73241F625F007F14A3 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF4E241F625F007F14A3 /* Schema.swift */; };
-		15C7AF74241F625F007F14A3 /* MappingModelMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF4F241F625F007F14A3 /* MappingModelMerger.swift */; };
-		15C7AF75241F625F007F14A3 /* EntityMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF50241F625F007F14A3 /* EntityMapping.swift */; };
-		15C7AF95241F6327007F14A3 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 15C7AF8E241F6327007F14A3 /* Images.xcassets */; };
-		15C7AF96241F6327007F14A3 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF8F241F6327007F14A3 /* Schema.swift */; };
-		15C7AF97241F6327007F14A3 /* TodoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF90241F6327007F14A3 /* TodoViewController.swift */; };
-		15C7AF99241F6327007F14A3 /* TodoTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF92241F6327007F14A3 /* TodoTableViewCell.swift */; };
-		15C7AF9A241F6327007F14A3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF93241F6327007F14A3 /* AppDelegate.swift */; };
-		15C7AF9B241F6327007F14A3 /* TodoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF94241F6327007F14A3 /* TodoListViewController.swift */; };
-		15C7AFA0241F6411007F14A3 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 15C7AF9C241F6411007F14A3 /* LaunchScreen.xib */; };
-		15C7AFA1241F6411007F14A3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 15C7AF9E241F6411007F14A3 /* Main.storyboard */; };
-		15C7AFB4241F6754007F14A3 /* Crush.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C7AEB2241F6204007F14A3 /* Crush.framework */; };
-		15C7AFBD241F67F9007F14A3 /* Crush.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 15C7AFBC241F67F9007F14A3 /* Crush.podspec */; };
-		15C7AFC0241F68D0007F14A3 /* Crush.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 15C7AEB2241F6204007F14A3 /* Crush.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		15C7AFD5241F6FA5007F14A3 /* XCTestCase+Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */; };
-		15C7AFD6241F6FAB007F14A3 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF23241F625F007F14A3 /* Assertions.swift */; };
-		15C7AFD7241F6FAC007F14A3 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF23241F625F007F14A3 /* Assertions.swift */; };
-		15C7AFD9241F71D8007F14A3 /* DataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */; };
+		98014DAD241FD48600397957 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DAC241FD48600397957 /* AppDelegate.swift */; };
+		98014DB4241FD48600397957 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98014DB2241FD48600397957 /* Main.storyboard */; };
+		98014DB9241FD48800397957 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98014DB7241FD48800397957 /* LaunchScreen.storyboard */; };
+		98014DC2241FD51D00397957 /* TodoTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DBE241FD51D00397957 /* TodoTableViewCell.swift */; };
+		98014DC3241FD51D00397957 /* TodoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DC0241FD51D00397957 /* TodoViewController.swift */; };
+		98014DC4241FD51D00397957 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DC1241FD51D00397957 /* Schema.swift */; };
+		98014DC5241FD51D00397957 /* TodoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DBF241FD51D00397957 /* TodoListViewController.swift */; };
+		98014DCA241FD57900397957 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DC8241FD57200397957 /* Assertions.swift */; };
+		98014DCB241FD57900397957 /* XCTestCase+Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DC9241FD57200397957 /* XCTestCase+Assertions.swift */; };
+		98014DCC241FD57E00397957 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DC8241FD57200397957 /* Assertions.swift */; };
+		98014DCF241FD62400397957 /* Crush.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = "Crush::Crush::Product" /* Crush.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		OBJ_100 /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Operators.swift */; };
+		OBJ_101 /* QueryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* QueryBuilder.swift */; };
+		OBJ_102 /* SearchString.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* SearchString.swift */; };
+		OBJ_103 /* ReadWriteTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* ReadWriteTransactionContext.swift */; };
+		OBJ_104 /* ReaderTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* ReaderTransactionContext.swift */; };
+		OBJ_105 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* Transaction.swift */; };
+		OBJ_106 /* TransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_52 /* TransactionContext.swift */; };
+		OBJ_107 /* Data+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_54 /* Data+hexString.swift */; };
+		OBJ_108 /* KeyPath+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_55 /* KeyPath+helper.swift */; };
+		OBJ_109 /* NSManagedObject+helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_56 /* NSManagedObject+helper.swift */; };
+		OBJ_110 /* ThreadSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_57 /* ThreadSafe.swift */; };
+		OBJ_117 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_6 /* Package.swift */; };
+		OBJ_128 /* DataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_61 /* DataModelTests.swift */; };
+		OBJ_130 /* Crush.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Crush::Crush::Product" /* Crush.framework */; };
+		OBJ_75 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Connection.swift */; };
+		OBJ_76 /* DataContainer+Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* DataContainer+Type.swift */; };
+		OBJ_77 /* DataContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* DataContainer.swift */; };
+		OBJ_78 /* DescriptionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* DescriptionCache.swift */; };
+		OBJ_79 /* DescriptionCacheCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* DescriptionCacheCoordinator.swift */; };
+		OBJ_80 /* EntityObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* EntityObject.swift */; };
+		OBJ_81 /* FieldAttributeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* FieldAttributeType.swift */; };
+		OBJ_82 /* Index.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* Index.swift */; };
+		OBJ_83 /* Property+Attribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_24 /* Property+Attribute.swift */; };
+		OBJ_84 /* Property+Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* Property+Optional.swift */; };
+		OBJ_85 /* Property+Relationship.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_26 /* Property+Relationship.swift */; };
+		OBJ_86 /* Property+Trasient.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_27 /* Property+Trasient.swift */; };
+		OBJ_87 /* Property+Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* Property+Type.swift */; };
+		OBJ_88 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* Property.swift */; };
+		OBJ_89 /* ValueMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* ValueMapper.swift */; };
+		OBJ_90 /* ObjectModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* ObjectModel.swift */; };
+		OBJ_91 /* EntityMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_33 /* EntityMapping.swift */; };
+		OBJ_92 /* MappingModelMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* MappingModelMerger.swift */; };
+		OBJ_93 /* MigrationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_35 /* MigrationModel.swift */; };
+		OBJ_94 /* Migrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_37 /* Migrator.swift */; };
+		OBJ_95 /* SQLMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_38 /* SQLMigrator.swift */; };
+		OBJ_96 /* PropertyMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_39 /* PropertyMapping.swift */; };
+		OBJ_97 /* CoreDataSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_41 /* CoreDataSchema.swift */; };
+		OBJ_98 /* Schema.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_42 /* Schema.swift */; };
+		OBJ_99 /* VersionedSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_43 /* VersionedSchema.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		15C7AFA2241F6472007F14A3 /* PBXContainerItemProxy */ = {
+		98014DA4241FD21D00397957 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 15C7AEA9241F6204007F14A3 /* Project object */;
+			containerPortal = OBJ_1 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 15C7AEB1241F6204007F14A3;
+			remoteGlobalIDString = "Crush::Crush";
 			remoteInfo = Crush;
 		};
-		15C7AFB5241F6754007F14A3 /* PBXContainerItemProxy */ = {
+		98014DA5241FD21E00397957 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 15C7AEA9241F6204007F14A3 /* Project object */;
+			containerPortal = OBJ_1 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 15C7AEB1241F6204007F14A3;
-			remoteInfo = Crush;
+			remoteGlobalIDString = "Crush::CrushTests";
+			remoteInfo = CrushTests;
 		};
-		15C7AFC1241F68D0007F14A3 /* PBXContainerItemProxy */ = {
+		98014DD0241FD62400397957 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 15C7AEA9241F6204007F14A3 /* Project object */;
+			containerPortal = OBJ_1 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 15C7AEB1241F6204007F14A3;
+			remoteGlobalIDString = "Crush::Crush";
 			remoteInfo = Crush;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		15C7AFC3241F68D0007F14A3 /* Embed Frameworks */ = {
+		98014DD2241FD62400397957 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				15C7AFC0241F68D0007F14A3 /* Crush.framework in Embed Frameworks */,
+				98014DCF241FD62400397957 /* Crush.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -99,309 +112,340 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		15C7AEB2241F6204007F14A3 /* Crush.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Crush.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		15C7AF22241F625F007F14A3 /* ThreadSafe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThreadSafe.swift; sourceTree = "<group>"; };
-		15C7AF23241F625F007F14A3 /* Assertions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Assertions.swift; sourceTree = "<group>"; };
-		15C7AF24241F625F007F14A3 /* Data+hexString.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Data+hexString.swift"; sourceTree = "<group>"; };
-		15C7AF25241F625F007F14A3 /* KeyPath+helper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "KeyPath+helper.swift"; sourceTree = "<group>"; };
-		15C7AF26241F625F007F14A3 /* NSManagedObject+helper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+helper.swift"; sourceTree = "<group>"; };
-		15C7AF29241F625F007F14A3 /* DescriptionCacheCoordinator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DescriptionCacheCoordinator.swift; sourceTree = "<group>"; };
-		15C7AF2A241F625F007F14A3 /* DescriptionCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DescriptionCache.swift; sourceTree = "<group>"; };
-		15C7AF2C241F625F007F14A3 /* EntityObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntityObject.swift; sourceTree = "<group>"; };
-		15C7AF2D241F625F007F14A3 /* ValueMapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValueMapper.swift; sourceTree = "<group>"; };
-		15C7AF2F241F625F007F14A3 /* Property+Optional.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Property+Optional.swift"; sourceTree = "<group>"; };
-		15C7AF30241F625F007F14A3 /* Property.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
-		15C7AF31241F625F007F14A3 /* Property+Attribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Property+Attribute.swift"; sourceTree = "<group>"; };
-		15C7AF32241F625F007F14A3 /* Property+Relationship.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Property+Relationship.swift"; sourceTree = "<group>"; };
-		15C7AF33241F625F007F14A3 /* Property+Type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Property+Type.swift"; sourceTree = "<group>"; };
-		15C7AF34241F625F007F14A3 /* Property+Trasient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Property+Trasient.swift"; sourceTree = "<group>"; };
-		15C7AF35241F625F007F14A3 /* FieldAttributeType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FieldAttributeType.swift; sourceTree = "<group>"; };
-		15C7AF37241F625F007F14A3 /* Index.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Index.swift; sourceTree = "<group>"; };
-		15C7AF38241F625F007F14A3 /* ObjectModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjectModel.swift; sourceTree = "<group>"; };
-		15C7AF3A241F625F007F14A3 /* TransactionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransactionContext.swift; sourceTree = "<group>"; };
-		15C7AF3B241F625F007F14A3 /* Operators.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Operators.swift; sourceTree = "<group>"; };
-		15C7AF3C241F625F007F14A3 /* ReaderTransactionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReaderTransactionContext.swift; sourceTree = "<group>"; };
-		15C7AF3D241F625F007F14A3 /* SearchString.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchString.swift; sourceTree = "<group>"; };
-		15C7AF3E241F625F007F14A3 /* Transaction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
-		15C7AF3F241F625F007F14A3 /* QueryBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueryBuilder.swift; sourceTree = "<group>"; };
-		15C7AF40241F625F007F14A3 /* WriterTransactionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WriterTransactionContext.swift; sourceTree = "<group>"; };
-		15C7AF42241F625F007F14A3 /* Connection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
-		15C7AF43241F625F007F14A3 /* DataContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataContainer.swift; sourceTree = "<group>"; };
-		15C7AF44241F625F007F14A3 /* DataContainer+Type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "DataContainer+Type.swift"; sourceTree = "<group>"; };
-		15C7AF47241F625F007F14A3 /* SQLMigrator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SQLMigrator.swift; sourceTree = "<group>"; };
-		15C7AF48241F625F007F14A3 /* Migrator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Migrator.swift; sourceTree = "<group>"; };
-		15C7AF49241F625F007F14A3 /* MigrationModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MigrationModel.swift; sourceTree = "<group>"; };
-		15C7AF4A241F625F007F14A3 /* PropertyMapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertyMapping.swift; sourceTree = "<group>"; };
-		15C7AF4C241F625F007F14A3 /* CoreDataSchema.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreDataSchema.swift; sourceTree = "<group>"; };
-		15C7AF4D241F625F007F14A3 /* VersionedSchema.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VersionedSchema.swift; sourceTree = "<group>"; };
-		15C7AF4E241F625F007F14A3 /* Schema.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
-		15C7AF4F241F625F007F14A3 /* MappingModelMerger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MappingModelMerger.swift; sourceTree = "<group>"; };
-		15C7AF50241F625F007F14A3 /* EntityMapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntityMapping.swift; sourceTree = "<group>"; };
-		15C7AF7A241F62BF007F14A3 /* Crush_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Crush_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		15C7AF8E241F6327007F14A3 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		15C7AF8F241F6327007F14A3 /* Schema.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
-		15C7AF90241F6327007F14A3 /* TodoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TodoViewController.swift; sourceTree = "<group>"; };
-		15C7AF91241F6327007F14A3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		15C7AF92241F6327007F14A3 /* TodoTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TodoTableViewCell.swift; sourceTree = "<group>"; };
-		15C7AF93241F6327007F14A3 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		15C7AF94241F6327007F14A3 /* TodoListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TodoListViewController.swift; sourceTree = "<group>"; };
-		15C7AF9D241F6411007F14A3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		15C7AF9F241F6411007F14A3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		15C7AFA6241F66C4007F14A3 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
-		15C7AFA7241F66C4007F14A3 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = SOURCE_ROOT; };
-		15C7AFAF241F6754007F14A3 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		15C7AFB3241F6754007F14A3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		15C7AFBA241F67C1007F14A3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		15C7AFBC241F67F9007F14A3 /* Crush.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Crush.podspec; sourceTree = SOURCE_ROOT; };
-		15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "XCTestCase+Assertions.swift"; sourceTree = "<group>"; };
-		15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModelTests.swift; sourceTree = "<group>"; };
+		98014DAA241FD48600397957 /* Crush_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Crush_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		98014DAC241FD48600397957 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		98014DB3241FD48600397957 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		98014DB8241FD48800397957 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		98014DBA241FD48800397957 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		98014DBE241FD51D00397957 /* TodoTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoTableViewCell.swift; sourceTree = "<group>"; };
+		98014DBF241FD51D00397957 /* TodoListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoListViewController.swift; sourceTree = "<group>"; };
+		98014DC0241FD51D00397957 /* TodoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoViewController.swift; sourceTree = "<group>"; };
+		98014DC1241FD51D00397957 /* Schema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
+		98014DC8241FD57200397957 /* Assertions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assertions.swift; sourceTree = "<group>"; };
+		98014DC9241FD57200397957 /* XCTestCase+Assertions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+Assertions.swift"; sourceTree = "<group>"; };
+		"Crush::Crush::Product" /* Crush.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Crush.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		"Crush::CrushTests::Product" /* CrushTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = CrushTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		OBJ_11 /* Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
+		OBJ_12 /* DataContainer+Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DataContainer+Type.swift"; sourceTree = "<group>"; };
+		OBJ_13 /* DataContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataContainer.swift; sourceTree = "<group>"; };
+		OBJ_16 /* DescriptionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptionCache.swift; sourceTree = "<group>"; };
+		OBJ_17 /* DescriptionCacheCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptionCacheCoordinator.swift; sourceTree = "<group>"; };
+		OBJ_19 /* EntityObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityObject.swift; sourceTree = "<group>"; };
+		OBJ_20 /* FieldAttributeType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldAttributeType.swift; sourceTree = "<group>"; };
+		OBJ_22 /* Index.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Index.swift; sourceTree = "<group>"; };
+		OBJ_24 /* Property+Attribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Attribute.swift"; sourceTree = "<group>"; };
+		OBJ_25 /* Property+Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Optional.swift"; sourceTree = "<group>"; };
+		OBJ_26 /* Property+Relationship.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Relationship.swift"; sourceTree = "<group>"; };
+		OBJ_27 /* Property+Trasient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Trasient.swift"; sourceTree = "<group>"; };
+		OBJ_28 /* Property+Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Type.swift"; sourceTree = "<group>"; };
+		OBJ_29 /* Property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
+		OBJ_30 /* ValueMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueMapper.swift; sourceTree = "<group>"; };
+		OBJ_31 /* ObjectModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectModel.swift; sourceTree = "<group>"; };
+		OBJ_33 /* EntityMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityMapping.swift; sourceTree = "<group>"; };
+		OBJ_34 /* MappingModelMerger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MappingModelMerger.swift; sourceTree = "<group>"; };
+		OBJ_35 /* MigrationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationModel.swift; sourceTree = "<group>"; };
+		OBJ_37 /* Migrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migrator.swift; sourceTree = "<group>"; };
+		OBJ_38 /* SQLMigrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLMigrator.swift; sourceTree = "<group>"; };
+		OBJ_39 /* PropertyMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyMapping.swift; sourceTree = "<group>"; };
+		OBJ_41 /* CoreDataSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSchema.swift; sourceTree = "<group>"; };
+		OBJ_42 /* Schema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
+		OBJ_43 /* VersionedSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionedSchema.swift; sourceTree = "<group>"; };
+		OBJ_45 /* Operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Operators.swift; sourceTree = "<group>"; };
+		OBJ_46 /* QueryBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilder.swift; sourceTree = "<group>"; };
+		OBJ_47 /* SearchString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchString.swift; sourceTree = "<group>"; };
+		OBJ_49 /* ReadWriteTransactionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadWriteTransactionContext.swift; sourceTree = "<group>"; };
+		OBJ_50 /* ReaderTransactionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderTransactionContext.swift; sourceTree = "<group>"; };
+		OBJ_51 /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
+		OBJ_52 /* TransactionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionContext.swift; sourceTree = "<group>"; };
+		OBJ_54 /* Data+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+hexString.swift"; sourceTree = "<group>"; };
+		OBJ_55 /* KeyPath+helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyPath+helper.swift"; sourceTree = "<group>"; };
+		OBJ_56 /* NSManagedObject+helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+helper.swift"; sourceTree = "<group>"; };
+		OBJ_57 /* ThreadSafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafe.swift; sourceTree = "<group>"; };
+		OBJ_6 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		OBJ_60 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		OBJ_61 /* DataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModelTests.swift; sourceTree = "<group>"; };
+		OBJ_67 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		OBJ_68 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		OBJ_69 /* Crush.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Crush.podspec; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		15C7AEAF241F6204007F14A3 /* Frameworks */ = {
+		98014DA7241FD48600397957 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		15C7AF77241F62BF007F14A3 /* Frameworks */ = {
+		OBJ_111 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 0;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		15C7AFAC241F6754007F14A3 /* Frameworks */ = {
+		OBJ_129 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 0;
 			files = (
-				15C7AFB4241F6754007F14A3 /* Crush.framework in Frameworks */,
+				OBJ_130 /* Crush.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		15C7AEA8241F6204007F14A3 = {
+		98014DAB241FD48600397957 /* Example */ = {
 			isa = PBXGroup;
 			children = (
-				15C7AEB4241F6204007F14A3 /* Crush */,
-				15C7AFB0241F6754007F14A3 /* Tests */,
-				15C7AF7B241F62BF007F14A3 /* Example */,
-				15C7AFCC241F6DBD007F14A3 /* Assertions */,
-				15C7AEB3241F6204007F14A3 /* Products */,
-				15C7AFBE241F68D0007F14A3 /* Frameworks */,
-			);
-			sourceTree = "<group>";
-		};
-		15C7AEB3241F6204007F14A3 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AEB2241F6204007F14A3 /* Crush.framework */,
-				15C7AF7A241F62BF007F14A3 /* Crush_Example.app */,
-				15C7AFAF241F6754007F14A3 /* Tests.xctest */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		15C7AEB4241F6204007F14A3 /* Crush */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF41241F625F007F14A3 /* DataContainer */,
-				15C7AF27241F625F007F14A3 /* DataModel */,
-				15C7AF45241F625F007F14A3 /* Migration */,
-				15C7AF39241F625F007F14A3 /* Transaction */,
-				15C7AF21241F625F007F14A3 /* Utils */,
-				15C7AFA7241F66C4007F14A3 /* LICENSE */,
-				15C7AFA6241F66C4007F14A3 /* README.md */,
-				15C7AFBC241F67F9007F14A3 /* Crush.podspec */,
-				15C7AFBA241F67C1007F14A3 /* Info.plist */,
-			);
-			path = Crush;
-			sourceTree = "<group>";
-		};
-		15C7AF21241F625F007F14A3 /* Utils */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF22241F625F007F14A3 /* ThreadSafe.swift */,
-				15C7AF24241F625F007F14A3 /* Data+hexString.swift */,
-				15C7AF25241F625F007F14A3 /* KeyPath+helper.swift */,
-				15C7AF26241F625F007F14A3 /* NSManagedObject+helper.swift */,
-			);
-			path = Utils;
-			sourceTree = "<group>";
-		};
-		15C7AF27241F625F007F14A3 /* DataModel */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF28241F625F007F14A3 /* Cache */,
-				15C7AF2B241F625F007F14A3 /* Entity */,
-				15C7AF38241F625F007F14A3 /* ObjectModel.swift */,
-			);
-			path = DataModel;
-			sourceTree = "<group>";
-		};
-		15C7AF28241F625F007F14A3 /* Cache */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF29241F625F007F14A3 /* DescriptionCacheCoordinator.swift */,
-				15C7AF2A241F625F007F14A3 /* DescriptionCache.swift */,
-			);
-			path = Cache;
-			sourceTree = "<group>";
-		};
-		15C7AF2B241F625F007F14A3 /* Entity */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF2C241F625F007F14A3 /* EntityObject.swift */,
-				15C7AF2D241F625F007F14A3 /* ValueMapper.swift */,
-				15C7AF2E241F625F007F14A3 /* Property */,
-				15C7AF35241F625F007F14A3 /* FieldAttributeType.swift */,
-				15C7AF36241F625F007F14A3 /* Index */,
-			);
-			path = Entity;
-			sourceTree = "<group>";
-		};
-		15C7AF2E241F625F007F14A3 /* Property */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF2F241F625F007F14A3 /* Property+Optional.swift */,
-				15C7AF30241F625F007F14A3 /* Property.swift */,
-				15C7AF31241F625F007F14A3 /* Property+Attribute.swift */,
-				15C7AF32241F625F007F14A3 /* Property+Relationship.swift */,
-				15C7AF33241F625F007F14A3 /* Property+Type.swift */,
-				15C7AF34241F625F007F14A3 /* Property+Trasient.swift */,
-			);
-			path = Property;
-			sourceTree = "<group>";
-		};
-		15C7AF36241F625F007F14A3 /* Index */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF37241F625F007F14A3 /* Index.swift */,
-			);
-			path = Index;
-			sourceTree = "<group>";
-		};
-		15C7AF39241F625F007F14A3 /* Transaction */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF3A241F625F007F14A3 /* TransactionContext.swift */,
-				15C7AF3B241F625F007F14A3 /* Operators.swift */,
-				15C7AF3C241F625F007F14A3 /* ReaderTransactionContext.swift */,
-				15C7AF3D241F625F007F14A3 /* SearchString.swift */,
-				15C7AF3E241F625F007F14A3 /* Transaction.swift */,
-				15C7AF3F241F625F007F14A3 /* QueryBuilder.swift */,
-				15C7AF40241F625F007F14A3 /* WriterTransactionContext.swift */,
-			);
-			path = Transaction;
-			sourceTree = "<group>";
-		};
-		15C7AF41241F625F007F14A3 /* DataContainer */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF42241F625F007F14A3 /* Connection.swift */,
-				15C7AF43241F625F007F14A3 /* DataContainer.swift */,
-				15C7AF44241F625F007F14A3 /* DataContainer+Type.swift */,
-			);
-			path = DataContainer;
-			sourceTree = "<group>";
-		};
-		15C7AF45241F625F007F14A3 /* Migration */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF46241F625F007F14A3 /* Migrator */,
-				15C7AF49241F625F007F14A3 /* MigrationModel.swift */,
-				15C7AF4A241F625F007F14A3 /* PropertyMapping.swift */,
-				15C7AF4B241F625F007F14A3 /* Schema */,
-				15C7AF4F241F625F007F14A3 /* MappingModelMerger.swift */,
-				15C7AF50241F625F007F14A3 /* EntityMapping.swift */,
-			);
-			path = Migration;
-			sourceTree = "<group>";
-		};
-		15C7AF46241F625F007F14A3 /* Migrator */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF47241F625F007F14A3 /* SQLMigrator.swift */,
-				15C7AF48241F625F007F14A3 /* Migrator.swift */,
-			);
-			path = Migrator;
-			sourceTree = "<group>";
-		};
-		15C7AF4B241F625F007F14A3 /* Schema */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF4C241F625F007F14A3 /* CoreDataSchema.swift */,
-				15C7AF4D241F625F007F14A3 /* VersionedSchema.swift */,
-				15C7AF4E241F625F007F14A3 /* Schema.swift */,
-			);
-			path = Schema;
-			sourceTree = "<group>";
-		};
-		15C7AF7B241F62BF007F14A3 /* Example */ = {
-			isa = PBXGroup;
-			children = (
-				15C7AF93241F6327007F14A3 /* AppDelegate.swift */,
-				15C7AF8F241F6327007F14A3 /* Schema.swift */,
-				15C7AF94241F6327007F14A3 /* TodoListViewController.swift */,
-				15C7AF92241F6327007F14A3 /* TodoTableViewCell.swift */,
-				15C7AF90241F6327007F14A3 /* TodoViewController.swift */,
-				15C7AF9C241F6411007F14A3 /* LaunchScreen.xib */,
-				15C7AF9E241F6411007F14A3 /* Main.storyboard */,
-				15C7AF8E241F6327007F14A3 /* Images.xcassets */,
-				15C7AF91241F6327007F14A3 /* Info.plist */,
+				98014DAC241FD48600397957 /* AppDelegate.swift */,
+				98014DB2241FD48600397957 /* Main.storyboard */,
+				98014DB7241FD48800397957 /* LaunchScreen.storyboard */,
+				98014DBA241FD48800397957 /* Info.plist */,
+				98014DC1241FD51D00397957 /* Schema.swift */,
+				98014DBF241FD51D00397957 /* TodoListViewController.swift */,
+				98014DBE241FD51D00397957 /* TodoTableViewCell.swift */,
+				98014DC0241FD51D00397957 /* TodoViewController.swift */,
 			);
 			path = Example;
 			sourceTree = "<group>";
 		};
-		15C7AFB0241F6754007F14A3 /* Tests */ = {
+		98014DC7241FD57200397957 /* Assertions */ = {
 			isa = PBXGroup;
 			children = (
-				15C7AFB3241F6754007F14A3 /* Info.plist */,
-				15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */,
+				98014DC8241FD57200397957 /* Assertions.swift */,
+				98014DC9241FD57200397957 /* XCTestCase+Assertions.swift */,
 			);
-			path = Tests;
+			path = Assertions;
 			sourceTree = "<group>";
 		};
-		15C7AFBE241F68D0007F14A3 /* Frameworks */ = {
+		98014DCD241FD62400397957 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		15C7AFCC241F6DBD007F14A3 /* Assertions */ = {
+		OBJ_10 /* DataContainer */ = {
 			isa = PBXGroup;
 			children = (
-				15C7AF23241F625F007F14A3 /* Assertions.swift */,
-				15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */,
+				OBJ_11 /* Connection.swift */,
+				OBJ_12 /* DataContainer+Type.swift */,
+				OBJ_13 /* DataContainer.swift */,
 			);
-			path = Assertions;
+			path = DataContainer;
 			sourceTree = "<group>";
+		};
+		OBJ_14 /* DataModel */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_15 /* Cache */,
+				OBJ_18 /* Entity */,
+				OBJ_31 /* ObjectModel.swift */,
+			);
+			path = DataModel;
+			sourceTree = "<group>";
+		};
+		OBJ_15 /* Cache */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_16 /* DescriptionCache.swift */,
+				OBJ_17 /* DescriptionCacheCoordinator.swift */,
+			);
+			path = Cache;
+			sourceTree = "<group>";
+		};
+		OBJ_18 /* Entity */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_19 /* EntityObject.swift */,
+				OBJ_20 /* FieldAttributeType.swift */,
+				OBJ_21 /* Index */,
+				OBJ_23 /* Property */,
+				OBJ_30 /* ValueMapper.swift */,
+			);
+			path = Entity;
+			sourceTree = "<group>";
+		};
+		OBJ_21 /* Index */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_22 /* Index.swift */,
+			);
+			path = Index;
+			sourceTree = "<group>";
+		};
+		OBJ_23 /* Property */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_24 /* Property+Attribute.swift */,
+				OBJ_25 /* Property+Optional.swift */,
+				OBJ_26 /* Property+Relationship.swift */,
+				OBJ_27 /* Property+Trasient.swift */,
+				OBJ_28 /* Property+Type.swift */,
+				OBJ_29 /* Property.swift */,
+			);
+			path = Property;
+			sourceTree = "<group>";
+		};
+		OBJ_32 /* Migration */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_33 /* EntityMapping.swift */,
+				OBJ_34 /* MappingModelMerger.swift */,
+				OBJ_35 /* MigrationModel.swift */,
+				OBJ_36 /* Migrator */,
+				OBJ_39 /* PropertyMapping.swift */,
+				OBJ_40 /* Schema */,
+			);
+			path = Migration;
+			sourceTree = "<group>";
+		};
+		OBJ_36 /* Migrator */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_37 /* Migrator.swift */,
+				OBJ_38 /* SQLMigrator.swift */,
+			);
+			path = Migrator;
+			sourceTree = "<group>";
+		};
+		OBJ_40 /* Schema */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_41 /* CoreDataSchema.swift */,
+				OBJ_42 /* Schema.swift */,
+				OBJ_43 /* VersionedSchema.swift */,
+			);
+			path = Schema;
+			sourceTree = "<group>";
+		};
+		OBJ_44 /* QueryBuilder */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_45 /* Operators.swift */,
+				OBJ_46 /* QueryBuilder.swift */,
+				OBJ_47 /* SearchString.swift */,
+			);
+			path = QueryBuilder;
+			sourceTree = "<group>";
+		};
+		OBJ_48 /* Transaction */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_49 /* ReadWriteTransactionContext.swift */,
+				OBJ_50 /* ReaderTransactionContext.swift */,
+				OBJ_51 /* Transaction.swift */,
+				OBJ_52 /* TransactionContext.swift */,
+			);
+			path = Transaction;
+			sourceTree = "<group>";
+		};
+		OBJ_5 = {
+			isa = PBXGroup;
+			children = (
+				OBJ_6 /* Package.swift */,
+				OBJ_7 /* Sources */,
+				OBJ_58 /* Tests */,
+				98014DAB241FD48600397957 /* Example */,
+				98014DC7241FD57200397957 /* Assertions */,
+				OBJ_62 /* Products */,
+				98014DCD241FD62400397957 /* Frameworks */,
+				OBJ_67 /* LICENSE */,
+				OBJ_68 /* README.md */,
+				OBJ_69 /* Crush.podspec */,
+			);
+			sourceTree = "<group>";
+		};
+		OBJ_53 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_54 /* Data+hexString.swift */,
+				OBJ_55 /* KeyPath+helper.swift */,
+				OBJ_56 /* NSManagedObject+helper.swift */,
+				OBJ_57 /* ThreadSafe.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		OBJ_58 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_59 /* CrushTests */,
+			);
+			name = Tests;
+			sourceTree = SOURCE_ROOT;
+		};
+		OBJ_59 /* CrushTests */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_60 /* Info.plist */,
+				OBJ_61 /* DataModelTests.swift */,
+			);
+			name = CrushTests;
+			path = Sources/CrushTests;
+			sourceTree = SOURCE_ROOT;
+		};
+		OBJ_62 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				"Crush::Crush::Product" /* Crush.framework */,
+				"Crush::CrushTests::Product" /* CrushTests.xctest */,
+				98014DAA241FD48600397957 /* Crush_Example.app */,
+			);
+			name = Products;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		OBJ_7 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_8 /* Crush */,
+			);
+			name = Sources;
+			sourceTree = SOURCE_ROOT;
+		};
+		OBJ_8 /* Crush */ = {
+			isa = PBXGroup;
+			children = (
+				OBJ_10 /* DataContainer */,
+				OBJ_14 /* DataModel */,
+				OBJ_32 /* Migration */,
+				OBJ_44 /* QueryBuilder */,
+				OBJ_48 /* Transaction */,
+				OBJ_53 /* Utils */,
+			);
+			name = Crush;
+			path = Sources/Crush;
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
-/* Begin PBXHeadersBuildPhase section */
-		15C7AEAD241F6204007F14A3 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
-
 /* Begin PBXNativeTarget section */
-		15C7AEB1241F6204007F14A3 /* Crush */ = {
+		98014DA9241FD48600397957 /* Example */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 15C7AEC6241F6204007F14A3 /* Build configuration list for PBXNativeTarget "Crush" */;
+			buildConfigurationList = 98014DBB241FD48800397957 /* Build configuration list for PBXNativeTarget "Example" */;
 			buildPhases = (
-				15C7AEAD241F6204007F14A3 /* Headers */,
-				15C7AEAE241F6204007F14A3 /* Sources */,
-				15C7AEAF241F6204007F14A3 /* Frameworks */,
-				15C7AEB0241F6204007F14A3 /* Resources */,
+				98014DA6241FD48600397957 /* Sources */,
+				98014DA7241FD48600397957 /* Frameworks */,
+				98014DA8241FD48600397957 /* Resources */,
+				98014DD2241FD62400397957 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				98014DD1241FD62400397957 /* PBXTargetDependency */,
+			);
+			name = Example;
+			productName = Example;
+			productReference = 98014DAA241FD48600397957 /* Crush_Example.app */;
+			productType = "com.apple.product-type.application";
+		};
+		"Crush::Crush" /* Crush */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = OBJ_71 /* Build configuration list for PBXNativeTarget "Crush" */;
+			buildPhases = (
+				OBJ_74 /* Sources */,
+				OBJ_111 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -409,226 +453,207 @@
 			);
 			name = Crush;
 			productName = Crush;
-			productReference = 15C7AEB2241F6204007F14A3 /* Crush.framework */;
+			productReference = "Crush::Crush::Product" /* Crush.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		15C7AF79241F62BF007F14A3 /* Example */ = {
+		"Crush::CrushTests" /* CrushTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 15C7AF8B241F62BF007F14A3 /* Build configuration list for PBXNativeTarget "Example" */;
+			buildConfigurationList = OBJ_124 /* Build configuration list for PBXNativeTarget "CrushTests" */;
 			buildPhases = (
-				15C7AF76241F62BF007F14A3 /* Sources */,
-				15C7AF77241F62BF007F14A3 /* Frameworks */,
-				15C7AF78241F62BF007F14A3 /* Resources */,
-				15C7AFC3241F68D0007F14A3 /* Embed Frameworks */,
+				OBJ_127 /* Sources */,
+				OBJ_129 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				15C7AFA3241F6472007F14A3 /* PBXTargetDependency */,
-				15C7AFC2241F68D0007F14A3 /* PBXTargetDependency */,
+				OBJ_131 /* PBXTargetDependency */,
 			);
-			name = Example;
-			productName = Example;
-			productReference = 15C7AF7A241F62BF007F14A3 /* Crush_Example.app */;
-			productType = "com.apple.product-type.application";
-		};
-		15C7AFAE241F6754007F14A3 /* Tests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 15C7AFB7241F6754007F14A3 /* Build configuration list for PBXNativeTarget "Tests" */;
-			buildPhases = (
-				15C7AFAB241F6754007F14A3 /* Sources */,
-				15C7AFAC241F6754007F14A3 /* Frameworks */,
-				15C7AFAD241F6754007F14A3 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				15C7AFB6241F6754007F14A3 /* PBXTargetDependency */,
-			);
-			name = Tests;
-			productName = Tests;
-			productReference = 15C7AFAF241F6754007F14A3 /* Tests.xctest */;
+			name = CrushTests;
+			productName = CrushTests;
+			productReference = "Crush::CrushTests::Product" /* CrushTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		"Crush::SwiftPMPackageDescription" /* CrushPackageDescription */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = OBJ_113 /* Build configuration list for PBXNativeTarget "CrushPackageDescription" */;
+			buildPhases = (
+				OBJ_116 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CrushPackageDescription;
+			productName = CrushPackageDescription;
+			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		15C7AEA9241F6204007F14A3 /* Project object */ = {
+		OBJ_1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftMigration = 9999;
 				LastSwiftUpdateCheck = 1130;
-				LastUpgradeCheck = 1130;
-				ORGANIZATIONNAME = ezoushen;
+				LastUpgradeCheck = 9999;
 				TargetAttributes = {
-					15C7AEB1241F6204007F14A3 = {
+					98014DA9241FD48600397957 = {
 						CreatedOnToolsVersion = 11.3.1;
-					};
-					15C7AF79241F62BF007F14A3 = {
-						CreatedOnToolsVersion = 11.3.1;
-						LastSwiftMigration = 1130;
-					};
-					15C7AFAE241F6754007F14A3 = {
-						CreatedOnToolsVersion = 11.3.1;
-						LastSwiftMigration = 1130;
+						DevelopmentTeam = 6RTPJGVKB3;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 15C7AEAC241F6204007F14A3 /* Build configuration list for PBXProject "Crush" */;
-			compatibilityVersion = "Xcode 9.3";
+			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "Crush" */;
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 15C7AEA8241F6204007F14A3;
-			productRefGroup = 15C7AEB3241F6204007F14A3 /* Products */;
+			mainGroup = OBJ_5;
+			productRefGroup = OBJ_62 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				15C7AEB1241F6204007F14A3 /* Crush */,
-				15C7AFAE241F6754007F14A3 /* Tests */,
-				15C7AF79241F62BF007F14A3 /* Example */,
+				"Crush::Crush" /* Crush */,
+				"Crush::CrushTests" /* CrushTests */,
+				"Crush::SwiftPMPackageDescription" /* CrushPackageDescription */,
+				"Crush::CrushPackageTests::ProductTarget" /* CrushPackageTests */,
+				98014DA9241FD48600397957 /* Example */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		15C7AEB0241F6204007F14A3 /* Resources */ = {
+		98014DA8241FD48600397957 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15C7AFBD241F67F9007F14A3 /* Crush.podspec in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		15C7AF78241F62BF007F14A3 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				15C7AFA1241F6411007F14A3 /* Main.storyboard in Resources */,
-				15C7AFA0241F6411007F14A3 /* LaunchScreen.xib in Resources */,
-				15C7AF95241F6327007F14A3 /* Images.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		15C7AFAD241F6754007F14A3 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				98014DB9241FD48800397957 /* LaunchScreen.storyboard in Resources */,
+				98014DB4241FD48600397957 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		15C7AEAE241F6204007F14A3 /* Sources */ = {
+		98014DA6241FD48600397957 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15C7AF72241F625F007F14A3 /* VersionedSchema.swift in Sources */,
-				15C7AF5A241F625F007F14A3 /* Property+Optional.swift in Sources */,
-				15C7AF74241F625F007F14A3 /* MappingModelMerger.swift in Sources */,
-				15C7AF70241F625F007F14A3 /* PropertyMapping.swift in Sources */,
-				15C7AF64241F625F007F14A3 /* Operators.swift in Sources */,
-				15C7AF56241F625F007F14A3 /* DescriptionCacheCoordinator.swift in Sources */,
-				15C7AF5B241F625F007F14A3 /* Property.swift in Sources */,
-				15C7AF59241F625F007F14A3 /* ValueMapper.swift in Sources */,
-				15C7AF62241F625F007F14A3 /* ObjectModel.swift in Sources */,
-				15C7AF66241F625F007F14A3 /* SearchString.swift in Sources */,
-				15C7AF58241F625F007F14A3 /* EntityObject.swift in Sources */,
-				15C7AF6E241F625F007F14A3 /* Migrator.swift in Sources */,
-				15C7AF69241F625F007F14A3 /* WriterTransactionContext.swift in Sources */,
-				15C7AF6D241F625F007F14A3 /* SQLMigrator.swift in Sources */,
-				15C7AF6F241F625F007F14A3 /* MigrationModel.swift in Sources */,
-				15C7AF54241F625F007F14A3 /* KeyPath+helper.swift in Sources */,
-				15C7AF57241F625F007F14A3 /* DescriptionCache.swift in Sources */,
-				15C7AF65241F625F007F14A3 /* ReaderTransactionContext.swift in Sources */,
-				15C7AF61241F625F007F14A3 /* Index.swift in Sources */,
-				15C7AF6A241F625F007F14A3 /* Connection.swift in Sources */,
-				15C7AF73241F625F007F14A3 /* Schema.swift in Sources */,
-				15C7AF75241F625F007F14A3 /* EntityMapping.swift in Sources */,
-				15C7AF5D241F625F007F14A3 /* Property+Relationship.swift in Sources */,
-				15C7AF5E241F625F007F14A3 /* Property+Type.swift in Sources */,
-				15C7AF67241F625F007F14A3 /* Transaction.swift in Sources */,
-				15C7AF5C241F625F007F14A3 /* Property+Attribute.swift in Sources */,
-				15C7AF55241F625F007F14A3 /* NSManagedObject+helper.swift in Sources */,
-				15C7AF6B241F625F007F14A3 /* DataContainer.swift in Sources */,
-				15C7AF68241F625F007F14A3 /* QueryBuilder.swift in Sources */,
-				15C7AF51241F625F007F14A3 /* ThreadSafe.swift in Sources */,
-				15C7AF60241F625F007F14A3 /* FieldAttributeType.swift in Sources */,
-				15C7AF71241F625F007F14A3 /* CoreDataSchema.swift in Sources */,
-				15C7AFD6241F6FAB007F14A3 /* Assertions.swift in Sources */,
-				15C7AF63241F625F007F14A3 /* TransactionContext.swift in Sources */,
-				15C7AF6C241F625F007F14A3 /* DataContainer+Type.swift in Sources */,
-				15C7AF5F241F625F007F14A3 /* Property+Trasient.swift in Sources */,
-				15C7AF53241F625F007F14A3 /* Data+hexString.swift in Sources */,
+				98014DC4241FD51D00397957 /* Schema.swift in Sources */,
+				98014DAD241FD48600397957 /* AppDelegate.swift in Sources */,
+				98014DC3241FD51D00397957 /* TodoViewController.swift in Sources */,
+				98014DC2241FD51D00397957 /* TodoTableViewCell.swift in Sources */,
+				98014DC5241FD51D00397957 /* TodoListViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		15C7AF76241F62BF007F14A3 /* Sources */ = {
+		OBJ_116 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 0;
 			files = (
-				15C7AF9A241F6327007F14A3 /* AppDelegate.swift in Sources */,
-				15C7AF99241F6327007F14A3 /* TodoTableViewCell.swift in Sources */,
-				15C7AF97241F6327007F14A3 /* TodoViewController.swift in Sources */,
-				15C7AF96241F6327007F14A3 /* Schema.swift in Sources */,
-				15C7AF9B241F6327007F14A3 /* TodoListViewController.swift in Sources */,
+				OBJ_117 /* Package.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		15C7AFAB241F6754007F14A3 /* Sources */ = {
+		OBJ_127 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 0;
 			files = (
-				15C7AFD9241F71D8007F14A3 /* DataModelTests.swift in Sources */,
-				15C7AFD7241F6FAC007F14A3 /* Assertions.swift in Sources */,
-				15C7AFD5241F6FA5007F14A3 /* XCTestCase+Assertions.swift in Sources */,
+				98014DCB241FD57900397957 /* XCTestCase+Assertions.swift in Sources */,
+				98014DCA241FD57900397957 /* Assertions.swift in Sources */,
+				OBJ_128 /* DataModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		OBJ_74 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				OBJ_75 /* Connection.swift in Sources */,
+				OBJ_76 /* DataContainer+Type.swift in Sources */,
+				OBJ_77 /* DataContainer.swift in Sources */,
+				OBJ_78 /* DescriptionCache.swift in Sources */,
+				OBJ_79 /* DescriptionCacheCoordinator.swift in Sources */,
+				OBJ_80 /* EntityObject.swift in Sources */,
+				OBJ_81 /* FieldAttributeType.swift in Sources */,
+				OBJ_82 /* Index.swift in Sources */,
+				OBJ_83 /* Property+Attribute.swift in Sources */,
+				OBJ_84 /* Property+Optional.swift in Sources */,
+				OBJ_85 /* Property+Relationship.swift in Sources */,
+				OBJ_86 /* Property+Trasient.swift in Sources */,
+				OBJ_87 /* Property+Type.swift in Sources */,
+				OBJ_88 /* Property.swift in Sources */,
+				OBJ_89 /* ValueMapper.swift in Sources */,
+				OBJ_90 /* ObjectModel.swift in Sources */,
+				OBJ_91 /* EntityMapping.swift in Sources */,
+				OBJ_92 /* MappingModelMerger.swift in Sources */,
+				OBJ_93 /* MigrationModel.swift in Sources */,
+				OBJ_94 /* Migrator.swift in Sources */,
+				OBJ_95 /* SQLMigrator.swift in Sources */,
+				OBJ_96 /* PropertyMapping.swift in Sources */,
+				OBJ_97 /* CoreDataSchema.swift in Sources */,
+				OBJ_98 /* Schema.swift in Sources */,
+				OBJ_99 /* VersionedSchema.swift in Sources */,
+				OBJ_100 /* Operators.swift in Sources */,
+				OBJ_101 /* QueryBuilder.swift in Sources */,
+				OBJ_102 /* SearchString.swift in Sources */,
+				OBJ_103 /* ReadWriteTransactionContext.swift in Sources */,
+				OBJ_104 /* ReaderTransactionContext.swift in Sources */,
+				OBJ_105 /* Transaction.swift in Sources */,
+				OBJ_106 /* TransactionContext.swift in Sources */,
+				98014DCC241FD57E00397957 /* Assertions.swift in Sources */,
+				OBJ_107 /* Data+hexString.swift in Sources */,
+				OBJ_108 /* KeyPath+helper.swift in Sources */,
+				OBJ_109 /* NSManagedObject+helper.swift in Sources */,
+				OBJ_110 /* ThreadSafe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		15C7AFA3241F6472007F14A3 /* PBXTargetDependency */ = {
+		98014DD1241FD62400397957 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 15C7AEB1241F6204007F14A3 /* Crush */;
-			targetProxy = 15C7AFA2241F6472007F14A3 /* PBXContainerItemProxy */;
+			target = "Crush::Crush" /* Crush */;
+			targetProxy = 98014DD0241FD62400397957 /* PBXContainerItemProxy */;
 		};
-		15C7AFB6241F6754007F14A3 /* PBXTargetDependency */ = {
+		OBJ_122 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 15C7AEB1241F6204007F14A3 /* Crush */;
-			targetProxy = 15C7AFB5241F6754007F14A3 /* PBXContainerItemProxy */;
+			target = "Crush::CrushTests" /* CrushTests */;
+			targetProxy = 98014DA5241FD21E00397957 /* PBXContainerItemProxy */;
 		};
-		15C7AFC2241F68D0007F14A3 /* PBXTargetDependency */ = {
+		OBJ_131 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 15C7AEB1241F6204007F14A3 /* Crush */;
-			targetProxy = 15C7AFC1241F68D0007F14A3 /* PBXContainerItemProxy */;
+			target = "Crush::Crush" /* Crush */;
+			targetProxy = 98014DA4241FD21D00397957 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		15C7AF9C241F6411007F14A3 /* LaunchScreen.xib */ = {
+		98014DB2241FD48600397957 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				15C7AF9D241F6411007F14A3 /* Base */,
-			);
-			name = LaunchScreen.xib;
-			sourceTree = "<group>";
-		};
-		15C7AF9E241F6411007F14A3 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				15C7AF9F241F6411007F14A3 /* Base */,
+				98014DB3241FD48600397957 /* Base */,
 			);
 			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		98014DB7241FD48800397957 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				98014DB8241FD48800397957 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		15C7AEC4241F6204007F14A3 /* Debug */ = {
+		98014DBC241FD48800397957 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -637,7 +662,6 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -660,15 +684,13 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6RTPJGVKB3;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -679,19 +701,21 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Example/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Example;
+				PRODUCT_NAME = Crush_Example;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		15C7AEC5241F6204007F14A3 /* Release */ = {
+		98014DBD241FD48800397957 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -700,7 +724,6 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -723,9 +746,9 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 6RTPJGVKB3;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -736,198 +759,271 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = Example/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Example;
+				PRODUCT_NAME = Crush_Example;
 				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
 			};
 			name = Release;
 		};
-		15C7AEC7241F6204007F14A3 /* Debug */ = {
+		OBJ_114 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
-				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 6RTPJGVKB3;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
+				INFOPLIST_FILE = "$(SRCROOT)/Sources/Crush/Info.plist";
+				LD = /usr/bin/true;
+				OTHER_SWIFT_FLAGS = "-swift-version 5 -I $(TOOLCHAIN_DIR)/usr/lib/swift/pm/4_2 -target x86_64-apple-macosx10.10 -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -package-description-version 5.1";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		OBJ_115 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = "$(SRCROOT)/Sources/Crush/Info.plist";
+				LD = /usr/bin/true;
+				OTHER_SWIFT_FLAGS = "-swift-version 5 -I $(TOOLCHAIN_DIR)/usr/lib/swift/pm/4_2 -target x86_64-apple-macosx10.10 -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -package-description-version 5.1";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		OBJ_120 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		OBJ_121 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		OBJ_125 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = Crush.xcodeproj/CrushTests_Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
+				SWIFT_VERSION = 5.0;
+				TARGET_NAME = CrushTests;
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+				WATCHOS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Debug;
+		};
+		OBJ_126 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = Crush.xcodeproj/CrushTests_Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
+				SWIFT_VERSION = 5.0;
+				TARGET_NAME = CrushTests;
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+				WATCHOS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Release;
+		};
+		OBJ_3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = Crush/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = (
+				ENABLE_NS_ASSERTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
+					"SWIFT_PACKAGE=1",
+					"DEBUG=1",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Crush;
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -DXcode";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) SWIFT_PACKAGE DEBUG";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				USE_HEADERMAP = NO;
 			};
 			name = Debug;
 		};
-		15C7AEC8241F6204007F14A3 /* Release */ = {
+		OBJ_4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
-				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 6RTPJGVKB3;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = Crush/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"SWIFT_PACKAGE=1",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				LD_RUNPATH_SEARCH_PATHS = (
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				OTHER_SWIFT_FLAGS = "$(inherited) -DXcode";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) SWIFT_PACKAGE";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				USE_HEADERMAP = NO;
+			};
+			name = Release;
+		};
+		OBJ_72 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Crush;
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = Crush.xcodeproj/Crush_Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = Crush;
+				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		15C7AF8C241F62BF007F14A3 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6RTPJGVKB3;
-				INFOPLIST_FILE = Example/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.ezoushen.Crush-Example";
-				PRODUCT_NAME = Crush_Example;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGET_NAME = Crush;
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+				WATCHOS_DEPLOYMENT_TARGET = 4.0;
 			};
 			name = Debug;
 		};
-		15C7AF8D241F62BF007F14A3 /* Release */ = {
+		OBJ_73 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6RTPJGVKB3;
-				INFOPLIST_FILE = Example/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"@executable_path/Frameworks",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.ezoushen.Crush-Example";
-				PRODUCT_NAME = Crush_Example;
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = Crush.xcodeproj/Crush_Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = Crush;
+				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		15C7AFB8241F6754007F14A3 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6RTPJGVKB3;
-				INFOPLIST_FILE = Tests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		15C7AFB9241F6754007F14A3 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6RTPJGVKB3;
-				INFOPLIST_FILE = Tests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGET_NAME = Crush;
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+				WATCHOS_DEPLOYMENT_TARGET = 4.0;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		15C7AEAC241F6204007F14A3 /* Build configuration list for PBXProject "Crush" */ = {
+		98014DBB241FD48800397957 /* Build configuration list for PBXNativeTarget "Example" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				15C7AEC4241F6204007F14A3 /* Debug */,
-				15C7AEC5241F6204007F14A3 /* Release */,
+				98014DBC241FD48800397957 /* Debug */,
+				98014DBD241FD48800397957 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		15C7AEC6241F6204007F14A3 /* Build configuration list for PBXNativeTarget "Crush" */ = {
+		OBJ_113 /* Build configuration list for PBXNativeTarget "CrushPackageDescription" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				15C7AEC7241F6204007F14A3 /* Debug */,
-				15C7AEC8241F6204007F14A3 /* Release */,
+				OBJ_114 /* Debug */,
+				OBJ_115 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		15C7AF8B241F62BF007F14A3 /* Build configuration list for PBXNativeTarget "Example" */ = {
+		OBJ_119 /* Build configuration list for PBXAggregateTarget "CrushPackageTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				15C7AF8C241F62BF007F14A3 /* Debug */,
-				15C7AF8D241F62BF007F14A3 /* Release */,
+				OBJ_120 /* Debug */,
+				OBJ_121 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		15C7AFB7241F6754007F14A3 /* Build configuration list for PBXNativeTarget "Tests" */ = {
+		OBJ_124 /* Build configuration list for PBXNativeTarget "CrushTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				15C7AFB8241F6754007F14A3 /* Debug */,
-				15C7AFB9241F6754007F14A3 /* Release */,
+				OBJ_125 /* Debug */,
+				OBJ_126 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		OBJ_2 /* Build configuration list for PBXProject "Crush" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				OBJ_3 /* Debug */,
+				OBJ_4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		OBJ_71 /* Build configuration list for PBXNativeTarget "Crush" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				OBJ_72 /* Debug */,
+				OBJ_73 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 15C7AEA9241F6204007F14A3 /* Project object */;
+	rootObject = OBJ_1 /* Project object */;
 }

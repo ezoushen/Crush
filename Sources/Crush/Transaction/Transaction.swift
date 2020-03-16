@@ -9,10 +9,10 @@ import CoreData
 
 public struct Transaction {
     public typealias ReadOnlyContext = ReaderTransactionContext
-    public typealias ReadWriteContext = WriterTransactionContext
+    public typealias ReadWriteContext = ReadWriteTransactionContext
     
-    internal let readOnlyContext: NSManagedObjectContext
-    internal let executionContext: ReadWriteTransactionContext & RawContextProviderProtocol
+    internal let objectContext: NSManagedObjectContext
+    internal let executionContext: _ReadWriteTransactionContext
 }
 
 extension Transaction {
@@ -67,9 +67,9 @@ extension Transaction {
         assert(object.rawObject.hasChanges == false,
                "You should commit changes in transaction before return")
         
-        let readOnlyObject = readOnlyContext.receive(runtimeObject: object)
+        let readOnlyObject = objectContext.receive(runtimeObject: object)
 
-        return T.init(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
+        return T.create(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
     }
     
     public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) -> T) -> T {
@@ -84,9 +84,9 @@ extension Transaction {
         assert(result.rawObject.hasChanges == false,
                "You should commit changes in transaction before return")
 
-        let readOnlyObject = readOnlyContext.receive(runtimeObject: result)
+        let readOnlyObject = objectContext.receive(runtimeObject: result)
 
-        return T.init(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
+        return T.create(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
     }
 
     public func sync<T: Entity, S: Sequence>(_ block: @escaping (ReadWriteContext) -> S) -> S where S.Element == T {
@@ -101,8 +101,8 @@ extension Transaction {
         return result.compactMap { object -> T in
             assert(object.rawObject.hasChanges == false,
                    "You should commit changes in transaction before return")
-            let readOnlyObject = readOnlyContext.receive(runtimeObject: object)
-            return T.init(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
+            let readOnlyObject = objectContext.receive(runtimeObject: object)
+            return T.create(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
         } as! S
     }
 }
@@ -162,7 +162,7 @@ extension Transaction.SingularEditor {
         assert(result.rawObject.hasChanges == false,
                "You should commit changes in transaction before return")
         
-        return V.init(transaction.readOnlyContext.receive(runtimeObject: result),
+        return V.create(transaction.objectContext.receive(runtimeObject: result),
                       proxyType: ReadOnlyValueMapper.self)
     }
     
@@ -177,7 +177,7 @@ extension Transaction.SingularEditor {
             assert(entity.rawObject.hasChanges == false,
                    "You should commit changes in transaction before return")
             
-            return V.init(transaction.readOnlyContext.receive(runtimeObject: entity),
+            return V.create(transaction.objectContext.receive(runtimeObject: entity),
                           proxyType: ReadOnlyValueMapper.self)
         } as! S
     }
@@ -240,7 +240,7 @@ extension Transaction.PluralEditor {
         assert(result.rawObject.hasChanges == false,
                "You should commit changes in transaction before return")
         
-        return V.init(transaction.readOnlyContext.receive(runtimeObject: result),
+        return V.create(transaction.objectContext.receive(runtimeObject: result),
                       proxyType: ReadOnlyValueMapper.self)
     }
     
@@ -256,7 +256,7 @@ extension Transaction.PluralEditor {
             assert(entity.rawObject.hasChanges == false,
                    "You should commit changes in transaction before return")
             
-            return V.init(transaction.readOnlyContext.receive(runtimeObject: entity),
+            return V.create(transaction.objectContext.receive(runtimeObject: entity),
                    proxyType: ReadOnlyValueMapper.self)
         } as! S
     }
