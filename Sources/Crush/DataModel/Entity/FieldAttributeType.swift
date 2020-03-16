@@ -7,7 +7,6 @@
 //
 
 import CoreData
-import UIKit
 import Foundation
 
 public protocol SavableTypeProtocol {
@@ -138,9 +137,12 @@ extension NSCoding where Self: FieldAttributeType {
     public static var nativeType: NSAttributeType { .transformableAttributeType }
 }
 
+#if os(iOS) || os(watchOS)
+import UIKit.UIImage
 extension UIImage: FieldAttributeType, PredicateEquatable {
     public var predicateValue: NSObject { self }
 }
+#endif
 
 extension Swift.Optional: FieldTypeProtocol where Wrapped: FieldTypeProtocol {
     public static func convert(value: Swift.Optional<Wrapped.ManagedObjectValue>) -> Swift.Optional<Wrapped.RuntimeObjectValue> {

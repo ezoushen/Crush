@@ -14,6 +14,7 @@ public protocol RuntimeObject: AnyObject {
     init()
     var proxyType: Proxy.Type { get set }
     var rawObject: NSManagedObject! { get set }
+    static var isProxy: Bool { get }
     static func entity() -> NSEntityDescription
 }
 
@@ -41,30 +42,52 @@ extension RuntimeObject {
         return String(describing: Self.self)
     }
     
-    init(_ runtimeObject: Self, proxyType: Proxy.Type) {
-        self.init()
-        self.proxyType = proxyType
-        self.rawObject = runtimeObject.rawObject
+    static func create(_ runtimeObject: Self, proxyType: Proxy.Type) -> Self {
+        let object = Self.init()
+        object.proxyType = proxyType
+        object.rawObject = runtimeObject.rawObject
+        return object
     }
     
-    init(_ object: NSManagedObject, proxyType: Proxy.Type = ReadOnlyValueMapper.self) {
-        self.init()
-        self.proxyType = proxyType
-        self.rawObject = object
+    static func create(_ object: NSManagedObject, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
+        let entity = Self.init()
+        entity.proxyType = proxyType
+        entity.rawObject = object
+        return entity
     }
     
-    init(objectID: NSManagedObjectID, in context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) {
-        self.init()
-        self.proxyType = proxyType
-        self.rawObject = context.object(with: objectID)
+    static func create(objectID: NSManagedObjectID, in context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
+        let object = Self.init()
+        object.proxyType = proxyType
+        object.rawObject = context.object(with: objectID)
+        return object
     }
 }
 
+extension RuntimeObject where Self == NSManagedObject {
+    static func create(_ object: NSManagedObject, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> NSManagedObject {
+        object
+    }
+    
+    static func create(objectID: NSManagedObjectID, in context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> NSManagedObject {
+        context.object(with: objectID)
+    }
+}
+
+extension Entity where Self == NSManagedObject {
+    static func create(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> NSManagedObject {
+        NSManagedObject(entity: Self.dummy().entity, insertInto: context)
+    }
+}
+
+
 extension Entity {
-    init(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) {
-        self.init()
-        self.proxyType = proxyType
-        self.rawObject = NSManagedObject(entity: Self.dummy().entity, insertInto: context)
+    static func create(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
+        let managedObject = NSManagedObject(entity: Self.dummy().entity, insertInto: context)
+        let object = Self.init()
+        object.proxyType = proxyType
+        object.rawObject = managedObject
+        return object
     }
         
     static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
@@ -149,6 +172,8 @@ extension Entity {
 }
 
 open class NeutralEntityObject: NSObject, Entity {
+    public class var isProxy: Bool { true }
+    
     public static var renamingIdentifier: String? { renamingClass?.fetchKey }
     public class var renamingClass: Entity.Type? { nil}
 
@@ -345,6 +370,10 @@ open class EntityObject: NeutralEntityObject {
 }
 
 extension NSManagedObject: Entity {
+    public class var isProxy: Bool {
+        false
+    }
+    
     public static var entityCacheKey: String {
         defaultCacheKey
     }

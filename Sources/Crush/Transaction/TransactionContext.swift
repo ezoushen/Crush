@@ -20,6 +20,7 @@ public protocol RawContextProviderProtocol: ContextProtocol {
 
 public protocol TransactionContextProtocol: QueryerProtocol, ContextProtocol {
     func receive<T: Entity>(_ object: T) -> T
+    func receive<T: NSManagedObject>(_ object: T) -> T
     func count(request: NSFetchRequest<NSFetchRequestResult>) -> Int
     func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) -> [T]
 }
@@ -27,7 +28,11 @@ public protocol TransactionContextProtocol: QueryerProtocol, ContextProtocol {
 internal extension TransactionContextProtocol where Self: RawContextProviderProtocol {
     func receive<T: Entity>(_ object: T) -> T {
         let newObject = context.receive(runtimeObject: object)
-        return T.init(newObject, proxyType: proxyType)
+        return T.create(newObject, proxyType: proxyType)
+    }
+    
+    func receive<T: NSManagedObject>(_ object: T) -> T {
+        return context.receive(runtimeObject: object) as! T
     }
 }
 

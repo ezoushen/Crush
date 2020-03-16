@@ -30,7 +30,7 @@ extension _ReadWriteTransactionContext {
         var object: T!
         
         context.performAndWait {
-            object = entiy.init(context: context, proxyType: proxyType)
+            object = entiy.create(context: context, proxyType: proxyType)
         }
         
         return object

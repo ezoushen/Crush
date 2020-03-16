@@ -120,7 +120,7 @@ extension ReaderTransactionContext where Self: RawContextProviderProtocol {
         if T.self is NSManagedObject.Type {
             return results.map(transferToContext) as! [T]
         } else {
-            return results.map(receive(_:))
+            return results.map(transferToContext).map{ T.create($0, proxyType: proxyType) }
         }
     }
 }

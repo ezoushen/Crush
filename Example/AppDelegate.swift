@@ -1,9 +1,8 @@
 //
 //  AppDelegate.swift
-//  Crush
+//  Example
 //
-//  Created by mill010363 on 01/20/2020.
-//  Copyright (c) 2020 mill010363. All rights reserved.
+//  Created by 沈昱佐 on 2020/3/16.
 //
 
 import UIKit
