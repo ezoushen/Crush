@@ -68,16 +68,10 @@ public class DataContainer {
 }
 
 extension DataContainer {
-    internal var serialContext: _ReadWriteSerialTransactionContext {
-        _ReadWriteSerialTransactionContext(context: createBackgroundContext(parent: writerContext),
-                                           targetContext: writerContext,
-                                           readOnlyContext: readOnlyContext)
-    }
-    
-    internal var asyncContext: _ReadWriteAsyncTransactionContext {
-        _ReadWriteAsyncTransactionContext(context: createBackgroundContext(parent: writerContext),
-                                          targetContext: writerContext,
-                                          readOnlyContext: readOnlyContext)
+    internal var executionContext: _ReadWriteTransactionContext {
+        _ReadWriteTransactionContext(context: createBackgroundContext(parent: writerContext),
+                                     targetContext: writerContext,
+                                     readOnlyContext: readOnlyContext)
     }
 }
 
@@ -109,18 +103,18 @@ extension DataContainer: QueryerProtocol {
 extension DataContainer {
     
     public func edit<T: Entity>(_ entity: T) -> Transaction.SingularEditor<T> {
-        .init(entity, transaction: transaction)
+        .init(entity, transaction: startTransaction())
     }
     
     public func edit<T: Entity>(_ entities: [T]) -> Transaction.PluralEditor<T> {
-        .init(entities, transaction: transaction)
+        .init(entities, transaction: startTransaction())
     }
     
     public func edit<T: Entity>(_ entities: T...) -> Transaction.PluralEditor<T> {
-        .init(entities, transaction: transaction)
+        .init(entities, transaction: startTransaction())
     }
     
-    public var transaction: Transaction {
-        Transaction(readOnlyContext: readOnlyContext, asyncContext: asyncContext, serialContext: serialContext)
+    public func startTransaction() -> Transaction {
+        Transaction(readOnlyContext: readOnlyContext, executionContext: executionContext)
     }
 }
