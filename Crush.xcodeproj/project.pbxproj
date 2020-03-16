@@ -54,6 +54,7 @@
 		15C7AFA1241F6411007F14A3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 15C7AF9E241F6411007F14A3 /* Main.storyboard */; };
 		15C7AFB4241F6754007F14A3 /* Crush.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C7AEB2241F6204007F14A3 /* Crush.framework */; };
 		15C7AFBD241F67F9007F14A3 /* Crush.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 15C7AFBC241F67F9007F14A3 /* Crush.podspec */; };
+		15C7AFC0241F68D0007F14A3 /* Crush.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 15C7AEB2241F6204007F14A3 /* Crush.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,7 +72,28 @@
 			remoteGlobalIDString = 15C7AEB1241F6204007F14A3;
 			remoteInfo = Crush;
 		};
+		15C7AFC1241F68D0007F14A3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 15C7AEA9241F6204007F14A3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 15C7AEB1241F6204007F14A3;
+			remoteInfo = Crush;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		15C7AFC3241F68D0007F14A3 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				15C7AFC0241F68D0007F14A3 /* Crush.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		15C7AEB2241F6204007F14A3 /* Crush.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Crush.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,7 +134,7 @@
 		15C7AF4E241F625F007F14A3 /* Schema.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
 		15C7AF4F241F625F007F14A3 /* MappingModelMerger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MappingModelMerger.swift; sourceTree = "<group>"; };
 		15C7AF50241F625F007F14A3 /* EntityMapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntityMapping.swift; sourceTree = "<group>"; };
-		15C7AF7A241F62BF007F14A3 /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		15C7AF7A241F62BF007F14A3 /* Crush_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Crush_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15C7AF8E241F6327007F14A3 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		15C7AF8F241F6327007F14A3 /* Schema.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
 		15C7AF90241F6327007F14A3 /* TodoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TodoViewController.swift; sourceTree = "<group>"; };
@@ -127,7 +149,7 @@
 		15C7AFAF241F6754007F14A3 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		15C7AFB3241F6754007F14A3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		15C7AFBA241F67C1007F14A3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		15C7AFBC241F67F9007F14A3 /* Crush.podspec */ = {isa = PBXFileReference; lastKnownFileType = file; path = Crush.podspec; sourceTree = SOURCE_ROOT; };
+		15C7AFBC241F67F9007F14A3 /* Crush.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Crush.podspec; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -163,6 +185,7 @@
 				15C7AFB0241F6754007F14A3 /* Tests */,
 				15C7AF7B241F62BF007F14A3 /* Example */,
 				15C7AEB3241F6204007F14A3 /* Products */,
+				15C7AFBE241F68D0007F14A3 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -170,7 +193,7 @@
 			isa = PBXGroup;
 			children = (
 				15C7AEB2241F6204007F14A3 /* Crush.framework */,
-				15C7AF7A241F62BF007F14A3 /* Example.app */,
+				15C7AF7A241F62BF007F14A3 /* Crush_Example.app */,
 				15C7AFAF241F6754007F14A3 /* Tests.xctest */,
 			);
 			name = Products;
@@ -336,6 +359,13 @@
 			path = Tests;
 			sourceTree = "<group>";
 		};
+		15C7AFBE241F68D0007F14A3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -374,15 +404,17 @@
 				15C7AF76241F62BF007F14A3 /* Sources */,
 				15C7AF77241F62BF007F14A3 /* Frameworks */,
 				15C7AF78241F62BF007F14A3 /* Resources */,
+				15C7AFC3241F68D0007F14A3 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				15C7AFA3241F6472007F14A3 /* PBXTargetDependency */,
+				15C7AFC2241F68D0007F14A3 /* PBXTargetDependency */,
 			);
 			name = Example;
 			productName = Example;
-			productReference = 15C7AF7A241F62BF007F14A3 /* Example.app */;
+			productReference = 15C7AF7A241F62BF007F14A3 /* Crush_Example.app */;
 			productType = "com.apple.product-type.application";
 		};
 		15C7AFAE241F6754007F14A3 /* Tests */ = {
@@ -549,6 +581,11 @@
 			isa = PBXTargetDependency;
 			target = 15C7AEB1241F6204007F14A3 /* Crush */;
 			targetProxy = 15C7AFB5241F6754007F14A3 /* PBXContainerItemProxy */;
+		};
+		15C7AFC2241F68D0007F14A3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 15C7AEB1241F6204007F14A3 /* Crush */;
+			targetProxy = 15C7AFC1241F68D0007F14A3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -761,8 +798,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Example;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ezoushen.Crush-Example";
+				PRODUCT_NAME = Crush_Example;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -783,8 +820,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.ezoushen.Example;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ezoushen.Crush-Example";
+				PRODUCT_NAME = Crush_Example;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
