@@ -350,10 +350,10 @@ extension NSManagedObject: Entity {
     }
         
     public convenience init(context: Transaction.ReadWriteContext) {
-        precondition(context is _ReadWriteAsyncTransactionContext || context is _ReadWriteSerialTransactionContext)
-        if let transactionContext = context as? _ReadWriteSerialTransactionContext {
+        precondition(context is _ReadWriteTransactionContext)
+        if let transactionContext = context as? _ReadWriteTransactionContext {
             self.init(context: transactionContext.context)
-        } else if let transactionContext = context as? _ReadWriteAsyncTransactionContext {
+        } else if let transactionContext = context as? _ReadWriteTransactionContext {
             self.init(context: transactionContext.context)
         }
         fatalError()

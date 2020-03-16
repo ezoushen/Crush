@@ -8,6 +8,10 @@
 
 import CoreData
 
+public protocol QueryerProtocol {
+    func query<T: Entity>(for type: T.Type) -> QueryBuilder<T, NSManagedObject, T>
+}
+
 public enum QuerySorterOption {
     case `default`
     case caseInsensitive
@@ -83,9 +87,9 @@ internal struct QueryConfig<T: Entity> {
 public class PartialQueryBuilder<Target: Entity, Received, Result> {
     internal var _config: QueryConfig<Target>
     
-    internal let _context: ReadOnlyTransactionContext & RawContextProviderProtocol
+    internal let _context: TransactionContextProtocol & RawContextProviderProtocol
 
-    internal required init(config: QueryConfig<Target>, context: ReadOnlyTransactionContext & RawContextProviderProtocol) {
+    internal required init(config: QueryConfig<Target>, context: TransactionContextProtocol & RawContextProviderProtocol) {
         self._config = config
         self._context = context
     }

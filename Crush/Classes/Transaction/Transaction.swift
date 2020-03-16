@@ -8,47 +8,64 @@
 import CoreData
 
 public struct Transaction {
-    public typealias ReadOnlyContext = ReadOnlyTransactionContext
-    public typealias ReadWriteContext = ReadWriteTransactionContext
+    public typealias ReadOnlyContext = ReaderTransactionContext
+    public typealias ReadWriteContext = WriterTransactionContext
     
     internal let readOnlyContext: NSManagedObjectContext
-    internal let asyncContext: ReadWriteAsyncTransactionContext
-    internal let serialContext: ReadWriteSerialTransactionContext
+    internal let executionContext: ReadWriteTransactionContext & RawContextProviderProtocol
+}
+
+extension Transaction {
+    public func edit<T: Entity>(_ entity: T) -> SingularEditor<T> {
+        .init(entity, transaction: self)
+    }
+    
+    public func edit<T: Entity>(_ entities: [T]) -> PluralEditor<T> {
+        .init(entities, transaction: self)
+    }
+    
+    public func edit<T: Entity>(_ entities: T...) -> PluralEditor<T> {
+        .init(entities, transaction: self)
+    }
+    
+    public func commit() {
+        executionContext.commit()
+    }
 }
 
 extension Transaction {
     public func async(_ block: @escaping (ReadWriteContext) -> Void) {
-        let transactionContext = asyncContext
+        let transactionContext = executionContext
 
         transactionContext.context.perform {
             block(transactionContext)
-            transactionContext.stash()
         }
     }
     
     public func sync<T>(_ block: @escaping (ReadWriteContext) -> T) -> T {
-        let transactionContext = serialContext
+        let transactionContext = executionContext
 
         var result: T!
 
         transactionContext.context.performAndWait {
             result = block(transactionContext)
-            transactionContext.stash()
         }
 
         return result
     }
     
     public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) -> T?) -> T? {
-        let transactionContext = serialContext
+        let transactionContext = executionContext
 
         var result: T?
 
         transactionContext.context.performAndWait {
             result = block(transactionContext)
-            transactionContext.stash()
         }
         guard let object = result else { return nil }
+        
+        assert(object.rawObject.hasChanges == false,
+               "You should commit changes in transaction before return")
         
         let readOnlyObject = readOnlyContext.receive(runtimeObject: object)
 
@@ -56,14 +73,16 @@ extension Transaction {
     }
     
     public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) -> T) -> T {
-        let transactionContext = serialContext
+        let transactionContext = executionContext
 
         var result: T!
 
         transactionContext.context.performAndWait {
             result = block(transactionContext)
-            transactionContext.stash()
         }
+        
+        assert(result.rawObject.hasChanges == false,
+               "You should commit changes in transaction before return")
 
         let readOnlyObject = readOnlyContext.receive(runtimeObject: result)
 
@@ -71,16 +90,17 @@ extension Transaction {
     }
 
     public func sync<T: Entity, S: Sequence>(_ block: @escaping (ReadWriteContext) -> S) -> S where S.Element == T {
-        let transactionContext = serialContext
+        let transactionContext = executionContext
 
         var result: S!
 
         transactionContext.context.performAndWait {
             result = block(transactionContext)
-            transactionContext.stash()
         }
 
         return result.compactMap { object -> T in
+            assert(object.rawObject.hasChanges == false,
+                   "You should commit changes in transaction before return")
             let readOnlyObject = readOnlyContext.receive(runtimeObject: object)
             return T.init(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
         } as! S
@@ -103,59 +123,62 @@ extension Transaction {
     
 extension Transaction.SingularEditor {
     public func async(_ block: @escaping (Transaction.ReadWriteContext, T) -> Void) {
-        let context = transaction.asyncContext
+        let context = transaction.executionContext
 
         context.context.perform {
             let value = context.receive(self._value)
             block(context, value)
-            context.stash()
         }
     }
     
     public func sync(_ block: @escaping (Transaction.ReadWriteContext, T) -> Void) {
-        let context = transaction.serialContext
+        let context = transaction.executionContext
         
         context.context.performAndWait {
             let value = context.receive(self._value)
             block(context, value)
-            context.stash()
         }
     }
     
     public func sync<V>(_ block: @escaping (Transaction.ReadWriteContext, T) -> V) -> V {
-        let context = transaction.serialContext
+        let context = transaction.executionContext
         var result: V!
         context.context.performAndWait {
             let value = context.receive(self._value)
             result = block(context, value)
-            context.stash()
         }
         return result
     }
     
     public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, T) -> V) -> V {
-        let context = transaction.serialContext
+        let context = transaction.executionContext
         var result: V!
+        
         context.context.performAndWait {
             let value = context.receive(self._value)
             result = block(context, value)
-            context.stash()
         }
+        
+        assert(result.rawObject.hasChanges == false,
+               "You should commit changes in transaction before return")
+        
         return V.init(transaction.readOnlyContext.receive(runtimeObject: result),
                       proxyType: ReadOnlyValueMapper.self)
     }
     
     public func sync<V: Entity, S: Sequence>(_ block: @escaping (Transaction.ReadWriteContext, T) -> S) -> S where S.Element == V {
-        let context = transaction.serialContext
+        let context = transaction.executionContext
         var result: S!
         context.context.performAndWait {
             let value = context.receive(self._value)
             result = block(context, value)
-            context.stash()
         }
-        return result.compactMap {
-            V.init(transaction.readOnlyContext.receive(runtimeObject: $0),
-                   proxyType: ReadOnlyValueMapper.self)
+        return result.compactMap { entity -> V in
+            assert(entity.rawObject.hasChanges == false,
+                   "You should commit changes in transaction before return")
+            
+            return V.init(transaction.readOnlyContext.receive(runtimeObject: entity),
+                          proxyType: ReadOnlyValueMapper.self)
         } as! S
     }
 }
@@ -175,59 +198,65 @@ extension Transaction {
 }
     
 extension Transaction.PluralEditor {
-    public func async(_ block: @escaping (ReadWriteAsyncTransactionContext, [T]) -> Void) {
-        let context = transaction.asyncContext
+    public func async(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> Void) {
+        let context = transaction.executionContext
         
         context.context.perform {
             let values = self._values.map(context.receive(_:))
             block(context, values)
-            context.stash()
         }
     }
     
     public func sync(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> Void) {
-        let context = transaction.serialContext
+        let context = transaction.executionContext
         
         context.context.performAndWait {
             let values = self._values.map(context.receive(_:))
             block(context, values)
-            context.stash()
         }
     }
     
     public func sync<V>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> V) -> V {
-        let context = transaction.serialContext
+        let context = transaction.executionContext
         var result: V!
+        
         context.context.performAndWait {
             let values = self._values.map(context.receive(_:))
             result = block(context, values)
-            context.stash()
         }
+        
         return result
     }
     
     public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> V) -> V {
-        let context = transaction.serialContext
+        let context = transaction.executionContext
         var result: V!
+        
         context.context.performAndWait {
             let values = self._values.map(context.receive(_:))
             result = block(context, values)
-            context.stash()
         }
+        
+        assert(result.rawObject.hasChanges == false,
+               "You should commit changes in transaction before return")
+        
         return V.init(transaction.readOnlyContext.receive(runtimeObject: result),
                       proxyType: ReadOnlyValueMapper.self)
     }
     
     public func sync<V: Entity, S: Sequence>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> S) -> S where S.Element == V {
-        let context = transaction.serialContext
+        let context = transaction.executionContext
         var result: S!
         context.context.performAndWait {
             let values = self._values.map(context.receive(_:))
             result = block(context, values)
-            context.stash()
         }
-        return result.compactMap {
-            V.init(transaction.readOnlyContext.receive(runtimeObject: $0),
+        
+        return result.compactMap { entity -> V in
+            assert(entity.rawObject.hasChanges == false,
+                   "You should commit changes in transaction before return")
+            
+            return V.init(transaction.readOnlyContext.receive(runtimeObject: entity),
                    proxyType: ReadOnlyValueMapper.self)
         } as! S
     }
