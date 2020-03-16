@@ -87,9 +87,9 @@ internal struct QueryConfig<T: Entity> {
 public class PartialQueryBuilder<Target, Received, Result> where Target: Entity {
     internal var _config: QueryConfig<Target>
     
-    internal let _context: ReaderTransactionContext
+    internal let _context: ReaderTransactionContext & RawContextProviderProtocol
 
-    internal required init(config: QueryConfig<Target>, context: ReaderTransactionContext) {
+    internal required init(config: QueryConfig<Target>, context: ReaderTransactionContext & RawContextProviderProtocol) {
         self._config = config
         self._context = context
     }
@@ -221,7 +221,7 @@ extension PartialQueryBuilder where Result: RuntimeObject, Received == NSManaged
     
     public func exec() -> [Result] {
         received.map {
-            Result.init(_context.receive($0), proxyType: _context.proxyType)
+            Result.create(_context.receive($0), proxyType: _context.proxyType)
         }
     }
 }

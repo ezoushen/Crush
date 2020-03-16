@@ -7,7 +7,6 @@
 //
 
 import CoreData
-import UIKit
 
 // MARK: - EntityAttribute
 
@@ -24,7 +23,7 @@ extension AttributeOption: MutablePropertyOptionProtocol {
         switch self {
         case .allowsExternalBinaryDataStorage(let flag): description.allowsExternalBinaryDataStorage = flag
         case .preservesValueInHistoryOnDeletion(let flag):
-            if #available(iOS 13.0, watchOS 6.0, *) {
+            if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
                 description.preservesValueInHistoryOnDeletion = flag
             }
         }
@@ -78,7 +77,7 @@ extension AttributeProtocol where EntityType: SavableTypeProtocol {
             description.attributeValueClassName = className
         }
         
-        if #available(iOS 13.0, watchOS 6.0, *) {
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
             description.preservesValueInHistoryOnDeletion = preservesValueInHistoryOnDeletion
         }
         
