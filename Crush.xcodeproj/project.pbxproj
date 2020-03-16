@@ -57,6 +57,7 @@
 		15C7AFD5241F6FA5007F14A3 /* XCTestCase+Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */; };
 		15C7AFD6241F6FAB007F14A3 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF23241F625F007F14A3 /* Assertions.swift */; };
 		15C7AFD7241F6FAC007F14A3 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AF23241F625F007F14A3 /* Assertions.swift */; };
+		15C7AFD9241F71D8007F14A3 /* DataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -153,6 +154,7 @@
 		15C7AFBA241F67C1007F14A3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		15C7AFBC241F67F9007F14A3 /* Crush.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = Crush.podspec; sourceTree = SOURCE_ROOT; };
 		15C7AFC4241F6D71007F14A3 /* XCTestCase+Assertions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "XCTestCase+Assertions.swift"; sourceTree = "<group>"; };
+		15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -358,6 +360,7 @@
 			isa = PBXGroup;
 			children = (
 				15C7AFB3241F6754007F14A3 /* Info.plist */,
+				15C7AFD8241F71D8007F14A3 /* DataModelTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -579,6 +582,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15C7AFD9241F71D8007F14A3 /* DataModelTests.swift in Sources */,
 				15C7AFD7241F6FAC007F14A3 /* Assertions.swift in Sources */,
 				15C7AFD5241F6FA5007F14A3 /* XCTestCase+Assertions.swift in Sources */,
 			);
@@ -767,6 +771,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -795,6 +800,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

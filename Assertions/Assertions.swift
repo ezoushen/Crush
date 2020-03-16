@@ -2,36 +2,24 @@ import Foundation
 
 /// drop-in replacements
 #if DEBUG
-@inlinable var isRunningInTest: Bool { ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil }
-
-@inlinable func assert(_ condition: @autoclosure () -> Bool,_ message: @autoclosure  () -> String = "", file: StaticString = #file, line: UInt = #line) {
-    isRunningInTest
-        ? Assertions.assertClosure(condition(), message(), file, line)
-        : Swift.assert(condition(), message(), file: file, line: line)
+func assert(_ condition: @autoclosure () -> Bool,_ message: @autoclosure  () -> String = "", file: StaticString = #file, line: UInt = #line) {
+    Assertions.assertClosure(condition(), message(), file, line)
 }
 
-@inlinable func assertionFailure(_ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) {
-    isRunningInTest
-        ? Assertions.assertionFailureClosure(message(), file, line)
-        : Swift.assertionFailure(message(), file: file, line: line)
+func assertionFailure(_ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) {
+    Assertions.assertionFailureClosure(message(), file, line)
 }
 
-@inlinable func precondition(_ condition: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) {
-    isRunningInTest
-        ? Assertions.preconditionClosure(condition(), message(), file, line)
-        : Swift.precondition(condition(), message(), file: file, line: line)
+func precondition(_ condition: @autoclosure () -> Bool, _ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) {
+    Assertions.preconditionClosure(condition(), message(), file, line)
 }
 
-@inlinable func preconditionFailure(_ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) -> Never {
-    isRunningInTest
-        ? Assertions.preconditionFailureClosure(message(), file, line)
-        : Swift.preconditionFailure(message(), file: file, line: line)
+func preconditionFailure(_ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) -> Never {
+    Assertions.preconditionFailureClosure(message(), file, line)
 }
 
-@inlinable func fatalError(_ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) -> Never {
-    isRunningInTest
-        ? Assertions.fatalErrorClosure(message(), file, line)
-        : Swift.fatalError(message(), file: file, line: line)
+func fatalError(_ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) -> Never {
+    Assertions.fatalErrorClosure(message(), file, line)
 }
 
 /// Stores custom assertions closures, by default it points to Swift functions. But test target can override them.
