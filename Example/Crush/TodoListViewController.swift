@@ -39,7 +39,7 @@ class TodoListViewController: UIViewController {
     }
     
     @IBAction func didPressCreateButton() {
-        let todo = container.transaction.sync { context -> Todo in
+        let todo = container.startTransaction().sync { context -> Todo in
             let todo = context.create(entiy: Todo.self)
             context.commit()
             return todo
@@ -66,7 +66,7 @@ class TodoListViewController: UIViewController {
             destination.mode = mode
             destination.todo = todo
             destination.delegate = self
-            destination.container = container
+            destination.transaction = container.startTransaction()
         default: break
         }
     }

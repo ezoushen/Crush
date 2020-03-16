@@ -39,7 +39,7 @@ class TodoViewController: UIViewController {
     @IBOutlet weak var cancelButton: UIButton!
     @IBOutlet weak var saveButton: UIButton!
     
-    weak var container: DataContainer?
+    var transaction: Transaction?
     weak var delegate: TodoViewDelegate?
     
     var todo: Todo!
@@ -74,26 +74,25 @@ class TodoViewController: UIViewController {
     @objc func dueDateValueChanged(_ sender: UIDatePicker?) {
         let date = sender?.date ?? todo.dueDate
         dueDateLabel.text = Self._dateFormatter.string(from: date)
-        container?.edit(todo).async { context, todo in
+        transaction?.edit(todo).async { context, todo in
             todo.dueDate = date
         }
     }
     
     @objc func titleChanged(_ sender: UITextField?) {
         let title = sender?.text ?? todo.content
-        container?.edit(todo).async { context, todo in
+        transaction?.edit(todo).async { context, todo in
             todo.content = title
         }
     }
     
     @IBAction func didPressSaveButton() {
-        container?.save()
+        transaction?.commit()
         delegate?.didSaveModification(type: mode, todo: todo)
         dismiss(animated: true, completion: nil)
     }
     
     @IBAction func didPressCancelButton() {
-        container?.rollback()
         delegate?.didCancelModification(type: mode, todo: todo)
         dismiss(animated: true, completion: nil)
     }
@@ -102,7 +101,7 @@ class TodoViewController: UIViewController {
 extension TodoViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         let memo = textView.text ?? ""
-        container?.edit(todo).async { context, todo in
+        transaction?.edit(todo).async { context, todo in
             todo.memo = memo
         }
     }
