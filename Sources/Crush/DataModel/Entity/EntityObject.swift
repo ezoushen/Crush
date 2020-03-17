@@ -8,6 +8,14 @@
 
 import CoreData
 
+fileprivate enum _Shared {
+    @ThreadSafe
+    static var dummyObjects: [String: RuntimeObject] = [:]
+    
+    @ThreadSafe
+    static var overrideCacheKeyDict: [String: String] = [:]
+}
+
 public protocol RuntimeObject: AnyObject {
     typealias Proxy = ReadOnlyValueMapperProtocol & ValueProviderProtocol
 
@@ -27,14 +35,6 @@ public protocol Entity: RuntimeObject {
     static var renamingIdentifier: String? { get }
     static var entityCacheKey: String { get }
     var entity: NSEntityDescription { get }
-}
-
-fileprivate enum _Shared {
-    @ThreadSafe
-    static var dummyObjects: [String: RuntimeObject] = [:]
-    
-    @ThreadSafe
-    static var overrideCacheKeyDict: [String: String] = [:]
 }
 
 extension RuntimeObject {
