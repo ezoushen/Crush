@@ -142,14 +142,14 @@ extension PartialQueryBuilder {
         return self
     }
     
-    public func ascendingSort(_ keyPath: PartialKeyPath<Target>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: true, selector: type.selector)
+    public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where V: SavableTypeProtocol {
+        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: true, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
     
-    public func descendingSort(_ keyPath: PartialKeyPath<Target>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: false, selector: type.selector)
+    public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where V: SavableTypeProtocol{
+        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: false, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
