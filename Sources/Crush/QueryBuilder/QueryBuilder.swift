@@ -34,8 +34,8 @@ internal struct QueryConfig<T: Entity> {
     private(set) var predicate: NSPredicate?
     private(set) var sorters: [NSSortDescriptor]?
     private(set) var resultType: NSFetchRequestResultType
-    private(set) var groupBy: [TracableProtocol]?
-    private(set) var mapTo: [TracableProtocol]?
+    private(set) var groupBy: [Expressible]?
+    private(set) var mapTo: [Expressible]?
     private(set) var limit: Int?
     private(set) var offset: Int?
     private(set) var asFaults: Bool
@@ -51,7 +51,7 @@ internal struct QueryConfig<T: Entity> {
         self.resultType = .managedObjectResultType
     }
     
-    private init(predicate: NSPredicate?, limit: Int?, offset: Int?,  sorters: [NSSortDescriptor]?, groupBy: [TracableProtocol]?, mapTo: [TracableProtocol]?, asFaults: Bool, resultType: NSFetchRequestResultType) {
+    private init(predicate: NSPredicate?, limit: Int?, offset: Int?,  sorters: [NSSortDescriptor]?, groupBy: [Expressible]?, mapTo: [Expressible]?, asFaults: Bool, resultType: NSFetchRequestResultType) {
         self.predicate = predicate
         self.sorters = sorters
         self.resultType = resultType
@@ -74,8 +74,8 @@ internal struct QueryConfig<T: Entity> {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entityDescription().name ?? String(describing: T.self))
         request.sortDescriptors = sorters
         request.predicate = predicate
-        request.propertiesToFetch = mapTo?.map{ $0.expression }
-        request.propertiesToGroupBy = groupBy?.map{ $0.expression }
+        request.propertiesToFetch = mapTo?.map{ $0.asExpression() }
+        request.propertiesToGroupBy = groupBy?.map{ $0.asExpression() }
         request.resultType = resultType
         request.fetchLimit = limit ?? .max
         request.fetchOffset = offset ?? 0
@@ -123,10 +123,9 @@ extension PartialQueryBuilder {
         countDesc.expressionResultType = .integer64AttributeType
         countDesc.expression = NSExpression(forFunction: "count:",
                                             arguments: [keypathExp])
-        let expression = _TracableExpression<Target>(descriptor: countDesc)
         let newConfig = _config
             .updated(\.groupBy, value: (_config.groupBy ?? []) + [name])
-            .updated(\.mapTo, value: [name, expression])
+            .updated(\.mapTo, value: [name, countDesc])
             .updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }
@@ -233,12 +232,8 @@ extension PartialQueryBuilder where Received == Dictionary<String, Any> {
 }
 
 
-fileprivate class _TracableExpression<T: Entity>: TracableProtocol {
-    let expression: Any
-    
-    var rootType: Entity.Type { T.self }
-    
-    init(descriptor: NSExpressionDescription) {
-        self.expression = descriptor
+extension NSExpressionDescription: Expressible {
+    public func asExpression() -> Any {
+        self
     }
 }

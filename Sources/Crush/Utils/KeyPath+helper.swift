@@ -15,12 +15,12 @@ extension AnyKeyPath {
     }
 }
 
-public protocol TracableProtocol {
-    var rootType: Entity.Type { get }
-    var expression: Any { get }
+public protocol Expressible {
+    func asExpression() -> Any
 }
 
-public protocol RootTracableKeyPathProtocol: TracableProtocol {
+public protocol RootTracableKeyPathProtocol: Expressible {
+    var rootType: Entity.Type { get }
     var keyPath: AnyKeyPath { get }
     var fullPath: String { get }
 }
@@ -36,8 +36,8 @@ public protocol TracableKeyPathProtocol: PartailTracableKeyPathProtocol {
 }
 
 extension PartailTracableKeyPathProtocol {
-    public var expression: Any {
-        return fullPath
+    public func asExpression() -> Any {
+        fullPath
     }
     
     public var fullPath: String {
@@ -86,7 +86,7 @@ public class TracableKeyPath<Root: Entity, Value: NullablePropertyProtocol>: Par
     }
 }
 
-extension PartialKeyPath: TracableProtocol where Root: Entity {
+extension PartialKeyPath: Expressible where Root: Entity {
     public var rootType: Entity.Type {
         return Root.self
     }
