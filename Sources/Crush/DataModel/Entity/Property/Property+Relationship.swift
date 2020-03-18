@@ -42,47 +42,13 @@ public protocol RelationshipProtocol: NullablePropertyProtocol {
     associatedtype InverseType: RelationshipTypeProtocol
     
     var inverseKeyPath: Any! { get set }
-    var maxCount: Int { get }
-    var minCount: Int { get }
-    var deleteRule: NSDeleteRule { get }
-    var isOrdered: Bool { get }
     
-    init<R: RelationshipProtocol>(_ name: String?, inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol]) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType
+    init<R: RelationshipProtocol>(inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol]) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType
 }
 
 public extension RelationshipProtocol {
-    
-    var maxCount: Int { 1 }
-    var minCount: Int { 0 }
-    var deleteRule: NSDeleteRule { .nullifyDeleteRule }
-    var isOrdered: Bool { false }
-    
-    func createDescription<T: NSPropertyDescription>() -> T! {
-        let description = NSRelationshipDescription()
-        
-        description.isOptional = isOptional
-        description.isTransient = isTransient
-        description.userInfo = userInfo
-        description.isIndexedBySpotlight = isIndexedBySpotlight
-        description.versionHashModifier = versionHashModifier
-        description.renamingIdentifier = renamingIdentifier
-        description.setValidationPredicates(validationPredicates, withValidationWarnings: validationWarnings)
-        
-        description.maxCount = maxCount
-        description.minCount = minCount
-        description.deleteRule = deleteRule
-        description.isOrdered = isOrdered
-        description.userInfo?[UserInfoKey.relationshipDestination] = DestinationEntity.entityCacheKey
-        
-        if let inverseKeyPath = inverseKeyPath {
-            description.userInfo?[UserInfoKey.inverseRelationship] = inverseKeyPath
-        }
-        
-        return description as? T
-    }
-    
-    init<R: RelationshipProtocol>(_ name: String?, inverse: KeyPath<DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
-        self.init(name, inverse: inverse, options: options)
+    init<R: RelationshipProtocol>(inverse: KeyPath<DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
+        self.init(inverse: inverse, options: options)
     }
 }
 
@@ -175,49 +141,44 @@ public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProt
     dynamic public var projectedValue: Relationship<OptionalType, InverseType> {
         self
     }
-    
-    public var userInfo: [AnyHashable : Any]? = [:]
-    
-    public var name: String?
-    
-    public var renamingIdentifier: String?
-    
-    public var versionHashModifier: String?
-    
-    public lazy var description: NSPropertyDescription! = {
-        return self.createDescription()
-    }()
-    
+            
+    public var defaultName: String = ""
+            
     public var inverseRelationship: String?
     
     public var inverseKeyPath: Any!
+    
+    public var options: [PropertyOptionProtocol] = []
+    
+    public var propertyCacheKey: String = ""
     
     public convenience init(wrappedValue: O.PropertyValue) {
         self.init()
     }
     
-    public init() {
-        updateProperty()
-    }
+    public init() { }
     
-    public init<R: RelationshipProtocol>(_ name: String? = nil, inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol] = []) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
+    public init<R: RelationshipProtocol>(inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol] = []) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
         self.inverseKeyPath = inverse
-        self.name = name
-        self.updateProperty()
-        options.forEach{ $0.updatePropertyDescription(description) }
+        self.options = []
     }
     
-    
-    public func updateProperty() {
-        guard let description = description as? NSRelationshipDescription else { return }
-        description.name = name ?? description.name
-        description.renamingIdentifier = renamingIdentifier
-        description.versionHashModifier = versionHashModifier
+    public func emptyPropertyDescription() -> NSPropertyDescription {
+        let description = NSRelationshipDescription()
+        
+        options.forEach{ $0.updatePropertyDescription(description) }
+
+        description.isOptional = O.isOptional
+        description.isTransient = isTransient
+        description.name = description.name.isEmpty ? defaultName : description.name
         description.maxCount = RelationshipType.resolveMaxCount(description.maxCount)
-        description.isOptional = OptionalType.isOptional
+        description.userInfo = description.userInfo ?? [:]
+        description.userInfo?[UserInfoKey.relationshipDestination] = DestinationEntity.entityCacheKey
         
         if let inverseKeyPath = inverseKeyPath {
             description.userInfo?[UserInfoKey.inverseRelationship] = inverseKeyPath
         }
+        
+        return description
     }
 }

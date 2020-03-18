@@ -19,6 +19,36 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
     public typealias OptionalType = Property.OptionalType
     public typealias EntityType = Property.EntityType
 
+    public var defaultName: String {
+        get {
+            guard case let .transient(attribute) = self else {
+                fatalError("Trasient type mismatch")
+            }
+            return attribute.defaultName
+        }
+        set {
+            guard case var .transient(attribute) = self else {
+                fatalError("Trasient type mismatch")
+            }
+            attribute.defaultName = newValue
+        }
+    }
+    
+    public var propertyCacheKey: String {
+        get {
+            guard case let .transient(attribute) = self else {
+                fatalError("Trasient type mismatch")
+            }
+            return attribute.propertyCacheKey
+        }
+        set {
+            guard case var .transient(attribute) = self else {
+                fatalError("Trasient type mismatch")
+            }
+            attribute.propertyCacheKey = newValue
+        }
+    }
+    
     public var wrappedValue: PropertyValue {
         get {
             guard case let .transient(attribute) = self else {
@@ -49,64 +79,6 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
             attribute.valueMappingProxy = newValue
         }
     }
-
-    public var name: String? {
-        get {
-            guard case let .transient(attribute) = self else { return nil }
-            return attribute.name
-        }
-        set {
-            preconditionFailure("do not set the name directly")
-        }
-    }
-    
-    public var renamingIdentifier: String? {
-        get {
-            guard case let .transient(attribute) = self else { return nil }
-            return attribute.renamingIdentifier
-        }
-        set {
-            preconditionFailure("do not set the name directly")
-        }
-    }
-    
-    public var versionHashModifier: String? {
-        get {
-            guard case let .transient(attribute) = self else { return nil }
-            return attribute.versionHashModifier
-        }
-        set {
-            preconditionFailure("do not set the name directly")
-        }
-    }
-    
-    public var description: NSPropertyDescription! {
-        get {
-            guard case let .transient(attribute) = self else { return nil }
-            return attribute.description
-        }
-        set {
-            guard case var .transient(attribute) = self else { return }
-            attribute.description = newValue
-        }
-    }
-    
-    public var userInfo: [AnyHashable : Any]? {
-        get {
-            guard case let .transient(attribute) = self else { return nil }
-            return attribute.userInfo
-        }
-        set {
-            guard case var .transient(attribute) = self else { return }
-            attribute.userInfo = newValue
-        }
-    }
-
-    
-    public func createDescription<T: NSPropertyDescription>() -> T! {
-        guard case let .transient(attribute) = self else { return nil }
-        return attribute.createDescription()
-    }
     
     init(_ some: Property) {
         self = .transient(some)
@@ -116,10 +88,15 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
         self = .transient(Property.init(wrappedValue: wrappedValue))
     }
     
-    public func updateProperty() {
-        guard case let .transient(attribute) = self else { return }
-        attribute.updateProperty()
+    public func emptyPropertyDescription() -> NSPropertyDescription {
+        guard case let .transient(attribute) = self else {
+            fatalError("Trasient type mismatch")
+        }
+        let description = attribute.emptyPropertyDescription()
+        description.isTransient = true
+        return description
     }
+    
 }
 
 extension Temporary where Property: AttributeProtocol {
@@ -129,7 +106,7 @@ extension Temporary where Property: AttributeProtocol {
 }
 
 extension Temporary where Property: RelationshipProtocol {
-    public init<R: RelationshipProtocol>(_ name: String? = nil, inverse: KeyPath<Property.DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == Property.SourceEntity, R.SourceEntity == Property.DestinationEntity, R.RelationshipType == Property.InverseType, R.InverseType == Property.RelationshipType {
-        self.init(Property.init(name, inverse: inverse, options: options))
+    public init<R: RelationshipProtocol>(inverse: KeyPath<Property.DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == Property.SourceEntity, R.SourceEntity == Property.DestinationEntity, R.RelationshipType == Property.InverseType, R.InverseType == Property.RelationshipType {
+        self.init(Property.init(inverse: inverse, options: options))
     }
 }

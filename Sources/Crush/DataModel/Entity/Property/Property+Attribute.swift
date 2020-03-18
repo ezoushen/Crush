@@ -33,8 +33,6 @@ extension AttributeOption: MutablePropertyOptionProtocol {
 public protocol AttributeProtocol: NullablePropertyProtocol where PropertyValue: FieldAttributeType {
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
-    var allowsExternalBinaryDataStorage: Bool { get }
-    var preservesValueInHistoryOnDeletion: Bool { get }
     init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol])
 }
 
@@ -55,34 +53,6 @@ extension AttributeProtocol where EntityType: SavableTypeProtocol {
 
 extension AttributeProtocol where EntityType: SavableTypeProtocol {
     public var defaultValue: Any? { nil }
-    public var allowsExternalBinaryDataStorage: Bool { false }
-    public var preservesValueInHistoryOnDeletion: Bool { false }
-    
-    public func createDescription<T: NSPropertyDescription>() -> T! {
-        let description = NSAttributeDescription()
-        
-        description.isOptional = isOptional
-        description.isTransient = isTransient
-        description.userInfo = userInfo
-        description.isIndexedBySpotlight = isIndexedBySpotlight
-        description.versionHashModifier = versionHashModifier
-        description.renamingIdentifier = renamingIdentifier
-        description.setValidationPredicates(validationPredicates, withValidationWarnings: validationWarnings)
-        
-        description.allowsExternalBinaryDataStorage = allowsExternalBinaryDataStorage
-        description.defaultValue = defaultValue
-        description.valueTransformerName = valueTransformerName
-        
-        if let className = attributeValueClassName {
-            description.attributeValueClassName = className
-        }
-        
-        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
-            description.preservesValueInHistoryOnDeletion = preservesValueInHistoryOnDeletion
-        }
-        
-        return description as? T
-    }
 }
 
 // MARK: - EntityAttributeType
@@ -93,7 +63,7 @@ public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O
     public typealias OptionalType = O
     public typealias Option = AttributeOption
     public typealias EntityType = O.FieldType.RuntimeObjectValue
-    
+        
     public var wrappedValue: PropertyValue {
         get {
             let value: PropertyValue.ManagedObjectValue = valueMappingProxy!.getValue(property: self)
@@ -113,23 +83,37 @@ public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O
     }
     
     public var valueMappingProxy: ReadOnlyValueMapperProtocol? = nil
-
-    public var name: String?
     
     public var defaultValue: Any? = nil
 
+    public var defaultName: String = ""
+    
     public var renamingIdentifier: String?
-
-    public var versionHashModifier: String?
     
-    public var userInfo: [AnyHashable : Any]? = [:]
-
-    public lazy var description: NSPropertyDescription! = {
-        return self.createDescription()
-    }()
+    public var options: [PropertyOptionProtocol] = []
     
-    public init() {
-        updateProperty()
+    public var propertyCacheKey: String = ""
+    
+    public init() { }
+    
+    public func emptyPropertyDescription() -> NSPropertyDescription {
+        let description = NSAttributeDescription()
+
+        options.forEach{ $0.updatePropertyDescription(description) }
+
+        description.isTransient = isTransient
+        description.valueTransformerName = valueTransformerName
+        description.name = description.name.isEmpty ? defaultName : description.name
+        description.defaultValue = defaultValue
+        description.versionHashModifier = description.name
+        description.isOptional = O.isOptional
+        description.attributeType = attributeType
+        
+        if let className = attributeValueClassName {
+            description.attributeValueClassName = className
+        }
+        
+        return description
     }
     
     public convenience init(wrappedValue: PropertyValue) {
@@ -138,23 +122,11 @@ public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O
     
     public init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol]) {
         self.defaultValue = wrappedValue
-        self.updateProperty()
-        options.forEach{ $0.updatePropertyDescription(description) }
+        self.options = options
     }
     
     public init(_ defaultValue: String? = nil, options: [PropertyOptionProtocol] = []) {
         self.defaultValue = defaultValue
-        self.updateProperty()
-        options.forEach{ $0.updatePropertyDescription(description) }
-    }
-    
-    public func updateProperty() {
-        guard let description = description as? NSAttributeDescription else { return }
-        description.name = name ?? description.name
-        description.defaultValue = defaultValue
-        description.versionHashModifier = versionHashModifier
-        description.renamingIdentifier = renamingIdentifier
-        description.isOptional = O.isOptional
-        description.attributeType = attributeType
+        self.options = options
     }
 }

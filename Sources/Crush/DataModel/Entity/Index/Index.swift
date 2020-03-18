@@ -34,8 +34,10 @@ extension IndexSetProtocol {
         guard let mirror = mirror, let type = mirror.subjectType as? Entity.Type else { return }
                 
         mirror.children.forEach { label, value in
-            guard var value = value as? PropertyProtocol else { return }
-            value.userInfo?[DEFAULT_KEY] = type.entityCacheKey+"."+label!
+            guard let value = value as? PropertyProtocol else { return }
+            var userInfo = value.description.userInfo ?? [:]
+            userInfo[DEFAULT_KEY] = type.entityCacheKey+"."+label!
+            value.description.userInfo = userInfo
         }
         
         return setDefaultKeys(mirror: mirror.superclassMirror)
@@ -115,7 +117,7 @@ extension TargetedIndexProtocol {
             return (index, keyPath)
         }.compactMap{ (index, keyPath) -> (IndexElementProtocol, NSPropertyDescription)? in
             guard let property = object[keyPath: keyPath] as? PropertyProtocol,
-                  let defaultKey = property.userInfo?[DEFAULT_KEY] as? String else { return nil }
+                  let defaultKey = property.description.userInfo?[DEFAULT_KEY] as? String else { return nil }
             let coordinator = DescriptionCacheCoordinator.shared
             let description = coordinator.getDescription(defaultKey, type: PropertyCacheType.self)!
             return (index, description)

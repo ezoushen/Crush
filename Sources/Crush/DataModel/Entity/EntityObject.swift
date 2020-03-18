@@ -86,7 +86,6 @@ extension Entity {
             return object
         }
         let runtimeObject = Self.init()
-        runtimeObject.setupProperties(mirror: Mirror(reflecting: runtimeObject), recursive: true)
         _Shared.dummyObjects[key] = runtimeObject
         return runtimeObject
     }
@@ -103,48 +102,8 @@ extension Entity {
         String(reflecting: Self.self)
     }
     
-    @discardableResult func setupProperties(mirror: Mirror?, recursive: Bool) -> [NSPropertyDescription] {
-        guard let mirror = mirror, let objectType = mirror.subjectType as? Entity.Type else { return [] }
-        let coordinator = DescriptionCacheCoordinator.shared
-        let properties = mirror.children
-        .compactMap { (label, value) -> NSPropertyDescription? in
-            let defaultKey = "\(objectType.entityCacheKey).\(label!)"
-            guard var property = value as? PropertyProtocol,
-                  var description = property.description, let label = label else {
-                    return nil
-            }
-            defer {
-                property.description = description
-            }
-            
-            if let _description = coordinator.getDescription(defaultKey, type: PropertyCacheType.self) {
-                description = _description
-                return description
-            }
-            
-            description.name = description.name.isEmpty
-                ? property.name ?? String(label.dropFirst())
-                : description.name
-            description.versionHashModifier = description.name
-            
-            if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
-                if mapping.fullPath.contains(".") {
-                    description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
-                    description.userInfo?[UserInfoKey.propertyMappingDestination] = description.name
-                    description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
-                    description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
-                } else {
-                    description.renamingIdentifier = mapping.fullPath
-                }
-            }
-            
-            coordinator.setDescription(defaultKey, value: description, type: PropertyCacheType.self)
-            return description
-        }
-            return recursive
-            ? properties + setupProperties(mirror: mirror.superclassMirror, recursive: recursive)
-            : properties
-        
+    fileprivate func createPropertyCacheKey(domain: String, name: String) -> String {
+        "\(domain).\(name)"
     }
 }
 
@@ -223,7 +182,7 @@ open class NeutralEntityObject: NSObject, Entity {
         let mirror = Mirror(reflecting: object)
         
         // Setup properties
-        let properties: [NSPropertyDescription] = object.setupProperties(mirror: mirror, recursive: false)
+        let properties: [NSPropertyDescription] = object.createProperties()
         
         // Setup related inverse relationship
         coordinator.getAndWaitDescription(entityKey, type: InverRelationshipCacheType.self) { pairs in
@@ -266,7 +225,7 @@ open class NeutralEntityObject: NSObject, Entity {
             superMirror.subjectType != NeutralEntityObject.self,
             superMirror.subjectType != EntityObject.self,
             superMirror.subjectType != AbstractEntityObject.self,
-            let superType = superMirror.subjectType as? EntityObject.Type {
+            let superType = superMirror.subjectType as? Entity.Type {
             coordinator.getAndWaitDescription(superType.entityCacheKey, type: EntityCacheType.self) {
                 $0.subentities.append(description)
             }
@@ -286,6 +245,38 @@ open class NeutralEntityObject: NSObject, Entity {
         return description
     }
     
+    func createProperties() -> [NSPropertyDescription] {
+        let coordinator = DescriptionCacheCoordinator.shared
+
+        return _allMirrors
+            .compactMap { pair, key -> NSPropertyDescription? in
+                let (_label, value) = pair
+                guard key == Self.entityCacheKey, let property = value as? PropertyProtocol, let label = _label else {
+                    return nil
+                }
+                let defaultKey = createPropertyCacheKey(domain: key, name: label)
+                if let description = coordinator.getDescription(defaultKey, type: PropertyCacheType.self) {
+                    return description
+                }
+                let description = property.emptyPropertyDescription()
+                description.versionHashModifier = description.name
+                
+                if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
+                    if mapping.fullPath.contains(".") {
+                        description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
+                        description.userInfo?[UserInfoKey.propertyMappingDestination] = description.name
+                        description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
+                        description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
+                    } else {
+                        description.renamingIdentifier = mapping.fullPath
+                    }
+                }
+                
+                coordinator.setDescription(defaultKey, value: description, type: PropertyCacheType.self)
+                return description
+            }
+    }
+    
     final public var rawObject: NSManagedObject! = nil {
         didSet {
             setProxy()
@@ -302,9 +293,8 @@ open class NeutralEntityObject: NSObject, Entity {
                 return []
             }
             
-            guard let subjectType = mirror.subjectType as? EntityObject.Type else { return [] }
-            
-            return [(mirror, String(reflecting: subjectType))] + findAllMirrors(mirror.superclassMirror)
+            guard let subjectType = mirror.subjectType as? Entity.Type else { return [] }
+            return [(mirror, subjectType.entityCacheKey)] + findAllMirrors(mirror.superclassMirror)
         }
         
         return findAllMirrors(Mirror(reflecting: self)).flatMap{
@@ -315,6 +305,7 @@ open class NeutralEntityObject: NSObject, Entity {
     
     required override public init() {
         super.init()
+        setProxy()
     }
     
     private func setProxy() {
@@ -323,11 +314,9 @@ open class NeutralEntityObject: NSObject, Entity {
                 let (label, value) = pair
                 guard var property = value as? PropertyProtocol else  { return }
                 let object = proxyType.init(rawObject: self.rawObject)
-                DescriptionCacheCoordinator.shared.getAndWaitDescription(key + ".\(label!)",
-                                                                         type: PropertyCacheType.self) { element in
-                    property.description = element
-                    property.valueMappingProxy = object
-                }
+                property.valueMappingProxy = object
+                property.defaultName = String(label?.dropFirst() ?? "")
+                property.propertyCacheKey = createPropertyCacheKey(domain: key, name: label!)
             }
     }
 }
@@ -352,15 +341,6 @@ extension NSManagedObject: RuntimeObject {
             self.init(context: transactionContext.context)
         } else {
             fatalError()
-        }
-    }
-    
-    public var proxyType: Proxy.Type {
-        get {
-            ReadWriteValueMapper.self
-        }
-        set {
-            assertionFailure("Should not set this property directly")
         }
     }
     
