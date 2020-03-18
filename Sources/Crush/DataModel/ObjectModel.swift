@@ -65,7 +65,7 @@ public class DataModel: ObjectModel {
         }
         
         let model = NSManagedObjectModel()
-        model.entities = sorted.map { $0.dummy().entity }
+        model.entities = sorted.map { $0.self.entity() }
         model.versionIdentifiers = [versionHashModifier]
 
         DataModel.modelCache.setObject(model, forKey: hashValue)

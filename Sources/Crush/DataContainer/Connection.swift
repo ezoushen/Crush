@@ -14,6 +14,7 @@ enum ConnectionError: Error {
 }
 
 public final class Connection {
+    @ThreadSafe
     private static var connected: [String: NSPersistentStoreCoordinator] = [:]
     
     private lazy var docomentDirectoryUrl: URL? = {

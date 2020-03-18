@@ -71,7 +71,7 @@ internal struct QueryConfig<T: Entity> {
     }
     
     func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entityDescription().name ?? String(describing: T.self))
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entity().name ?? String(describing: T.self))
         request.sortDescriptors = sorters
         request.predicate = predicate
         request.propertiesToFetch = mapTo?.map{ $0.asExpression() }
@@ -213,7 +213,19 @@ extension PartialQueryBuilder where Result == Dictionary<String, Any>, Received 
     }
 }
 
-extension PartialQueryBuilder where Result: RuntimeObject, Received == NSManagedObject {
+extension PartialQueryBuilder where Result: NSManagedObject, Received == NSManagedObject {
+    public func findOne() -> Result? {
+        limit(1).exec().first
+    }
+    
+    public func exec() -> [Result] {
+        return received.map {
+            _context.receive($0) as! Result
+        }
+    }
+}
+
+extension PartialQueryBuilder where Result: Entity, Received == NSManagedObject {
     public func findOne() -> Result? {
         limit(1).exec().first
     }
