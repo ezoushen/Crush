@@ -11,7 +11,6 @@ import Foundation
 
 public protocol SavableTypeProtocol {
     static var nativeType: NSAttributeType { get }
-    static var nativeTypeName: String { get }
 }
 
 public protocol PredicateEquatable {
@@ -22,10 +21,6 @@ public protocol PredicateComparable: PredicateEquatable { }
 
 public protocol FieldAttributeType: SavableTypeProtocol, FieldTypeProtocol
 where Self == RuntimeObjectValue, ManagedObjectValue: FieldAttributeType {
-}
-
-extension SavableTypeProtocol {
-    public static var nativeTypeName: String { String(describing: Self.self) }
 }
 
 extension FieldAttributeType
@@ -51,7 +46,6 @@ extension Int16: FieldAttributeType, PredicateComparable {
 }
 
 extension NSDecimalNumber: FieldAttributeType, PredicateComparable {
-    public static var nativeTypeName: String { "DenimalNumber" }
     public static var nativeType: NSAttributeType { .decimalAttributeType }
     public var predicateValue: NSObject { self }
 }
@@ -69,7 +63,6 @@ extension Float: FieldAttributeType, PredicateComparable {
 extension String: FieldAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .stringAttributeType }
     public var predicateValue: NSObject { NSString(string: self) }
-    public var presentedAsString: String { "\\\"\(self)\\\"" }
 }
 
 extension Bool: FieldAttributeType, PredicateEquatable {
@@ -130,9 +123,6 @@ where Wrapped: SavableTypeProtocol {
 
 extension Swift.Optional: FieldAttributeType
 where Wrapped: FieldAttributeType {
-    public static var nativeTypeName: String {
-        return Wrapped.nativeTypeName
-    }
 }
 
 extension Swift.Optional: PredicateEquatable
