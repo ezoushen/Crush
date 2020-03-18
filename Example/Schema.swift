@@ -12,13 +12,13 @@ import Foundation
 class V1: SchemaOrigin {
     class Todo: EntityObject {
         @Value.String
-        var title: String = ""
+        var title: String! = ""
         
         @Value.Date
-        var dueDate: Date = Date()
+        var dueDate: Date! = Date()
         
         @Value.Bool
-        var isFinished: Bool = false
+        var isFinished: Bool! = false
         
         @Optional.Value.String
         var memo: String?
@@ -30,13 +30,13 @@ class V2: Schema<V1> {
         @Value.String(options: [
             PropertyOption.mapping(\V1.Todo.$title)
         ])
-        var content: String = ""
+        var content: String! = ""
         
         @Value.Date
-        var dueDate: Date = Date()
+        var dueDate: Date! = Date()
         
         @Value.Bool
-        var isFinished: Bool = false
+        var isFinished: Bool! = false
         
         @Optional.Value.String
         var memo: String?

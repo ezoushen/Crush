@@ -63,7 +63,7 @@ extension ReaderTransactionContext where Self: RawContextProviderProtocol {
         return count(request: request)
     }
     
-    public func fetch<T: TracableKeyPathProtocol>(property: T, predicate: NSPredicate?) -> [T.Value.EntityType?] {
+    public func fetch<T: TracableKeyPathProtocol>(property: T, predicate: NSPredicate?) -> [T.Value.PropertyValue?] {
         let request = NSFetchRequest<NSDictionary>(entityName: T.Root.entityCacheKey)
         request.predicate = predicate
         request.propertiesToFetch = [property.fullPath]
@@ -80,7 +80,7 @@ extension ReaderTransactionContext where Self: RawContextProviderProtocol {
             }
         }
         
-        return results.flatMap{$0.values}.map{$0 as? T.Value.EntityType}
+        return results.flatMap{$0.values}.map{$0 as? T.Value.PropertyValue}
     }
 
     public func fetch<T: TracableKeyPathProtocol>(properties: [T], predicate: NSPredicate?) -> [[String: Any]] {
@@ -120,7 +120,7 @@ extension ReaderTransactionContext where Self: RawContextProviderProtocol {
         if T.self is NSManagedObject.Type {
             return results.map(transferToContext) as! [T]
         } else {
-            return results.map(transferToContext).map{ T.create($0, proxyType: proxyType) }
+            return results.map(transferToContext).map{ T.init($0, proxyType: proxyType) }
         }
     }
 }
@@ -131,7 +131,7 @@ extension ReaderTransactionContext {
         count(type: type, predicate: nil)
     }
     
-    public func fetch<T: TracableKeyPathProtocol>(property: T) -> [T.Value.EntityType?] {
+    public func fetch<T: TracableKeyPathProtocol>(property: T) -> [T.Value.PropertyValue?] {
         fetch(property: property, predicate: nil)
     }
     

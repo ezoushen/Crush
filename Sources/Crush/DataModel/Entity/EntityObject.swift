@@ -17,10 +17,8 @@ fileprivate enum _Shared {
 }
 
 public protocol RuntimeObject: AnyObject {
-    typealias Proxy = ReadOnlyValueMapperProtocol & ValueProviderProtocol
-
-    var rawObject: NSManagedObject! { get set }
     static func entity() -> NSEntityDescription
+    var rawObject: NSManagedObject { get }
 }
 
 public protocol Entity: RuntimeObject {
@@ -30,8 +28,8 @@ public protocol Entity: RuntimeObject {
     static var renamingIdentifier: String? { get }
     static var entityCacheKey: String { get }
     
-    init()
-    var proxyType: Proxy.Type { get set }
+    init(proxy: PropertyProxy)
+    var proxy: PropertyProxy! { get }
 }
 
 extension RuntimeObject {
@@ -45,39 +43,22 @@ extension RuntimeObject {
     }
 }
 
-extension RuntimeObject where Self: NSManagedObject {
-    static func create(objectID: NSManagedObjectID, in context: NSManagedObjectContext) -> NSManagedObject {
-        context.object(with: objectID)
-    }
-}
-
 extension Entity {
-    static func create(_ runtimeObject: Self, proxyType: Proxy.Type) -> Self {
-        let object = Self.init()
-        object.proxyType = proxyType
-        object.rawObject = runtimeObject.rawObject
-        return object
+    init(_ runtimeObject: Self, proxyType: PropertyProxyType) {
+        self.init(proxy: proxyType.proxy(proxy: runtimeObject.proxy as! ConcretePropertyProxy))
     }
     
-    static func create(_ object: NSManagedObject, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
-        let entity = Self.init()
-        entity.proxyType = proxyType
-        entity.rawObject = object
-        return entity
+    init(_ object: NSManagedObject, proxyType: PropertyProxyType) {
+        self.init(proxy: proxyType.proxy(object: object))
     }
     
-    static func create(objectID: NSManagedObjectID, in context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
-        let object = Self.init()
-        object.proxyType = proxyType
-        object.rawObject = context.object(with: objectID)
-        return object
+    init(objectID: NSManagedObjectID, in context: NSManagedObjectContext, proxyType: PropertyProxyType) {
+        self.init(proxy: proxyType.proxy(object: context.object(with: objectID)))
     }
-    static func create(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
+    
+    init(context: NSManagedObjectContext, proxyType: PropertyProxyType) {
         let managedObject = NSManagedObject(entity: Self.entity(), insertInto: context)
-        let object = Self.init()
-        object.proxyType = proxyType
-        object.rawObject = managedObject
-        return object
+        self.init(proxy: proxyType.proxy(object: managedObject))
     }
     
     internal static func dummy() -> Self {
@@ -85,7 +66,7 @@ extension Entity {
         if let object: Self = (_Shared.dummyObjects[key] as? Self) {
             return object
         }
-        let runtimeObject = Self.init()
+        let runtimeObject = Self.init(proxy: DummyPropertyProxy())
         _Shared.dummyObjects[key] = runtimeObject
         return runtimeObject
     }
@@ -102,6 +83,10 @@ extension Entity {
         String(reflecting: Self.self)
     }
     
+    public var rawObject: NSManagedObject {
+        (proxy as! ConcretePropertyProxy).rawObject
+    }
+    
     fileprivate func createPropertyCacheKey(domain: String, name: String) -> String {
         "\(domain).\(name)"
     }
@@ -109,7 +94,7 @@ extension Entity {
 
 open class NeutralEntityObject: NSObject, Entity {
     public static var renamingIdentifier: String? { renamingClass?.fetchKey }
-    public class var renamingClass: Entity.Type? { nil}
+    public class var renamingClass: Entity.Type? { nil }
 
     public class var isAbstract: Bool {
         assertionFailure("Should not call isAbstract variale directly")
@@ -178,7 +163,7 @@ open class NeutralEntityObject: NSObject, Entity {
         }
         
         let description = NSEntityDescription()
-        let object = Self.init()
+        let object = Self.init(proxy: DummyPropertyProxy())
         let mirror = Mirror(reflecting: object)
         
         // Setup properties
@@ -240,6 +225,7 @@ open class NeutralEntityObject: NSObject, Entity {
                 return index.fetchIndexDescription(name: label ?? "", in: object)
             }
             description.indexes = indexes
+            print(indexes)
         }
         
         return description
@@ -277,13 +263,7 @@ open class NeutralEntityObject: NSObject, Entity {
             }
     }
     
-    final public var rawObject: NSManagedObject! = nil {
-        didSet {
-            setProxy()
-        }
-    }
-    
-    public var proxyType: Proxy.Type = ReadWriteValueMapper.self
+    public var proxy: PropertyProxy!
     
     private lazy var _allMirrors: [(Mirror.Child, String)] = {
         func findAllMirrors(_ mirror: Mirror?) -> [(Mirror, String)] {
@@ -302,8 +282,8 @@ open class NeutralEntityObject: NSObject, Entity {
         }
     }()
     
-    
-    required override public init() {
+    required public init(proxy: PropertyProxy) {
+        self.proxy = proxy
         super.init()
         setProxy()
     }
@@ -313,8 +293,7 @@ open class NeutralEntityObject: NSObject, Entity {
             .forEach { pair, key in
                 let (label, value) = pair
                 guard var property = value as? PropertyProtocol else  { return }
-                let object = proxyType.init(rawObject: self.rawObject)
-                property.valueMappingProxy = object
+                property.proxy = proxy
                 property.defaultName = String(label?.dropFirst() ?? "")
                 property.propertyCacheKey = createPropertyCacheKey(domain: key, name: label!)
             }
@@ -334,7 +313,6 @@ open class EntityObject: NeutralEntityObject {
 }
 
 extension NSManagedObject: RuntimeObject {
-        
     public convenience init(context: Transaction.ReadWriteContext) {
         precondition(context is _ReadWriteTransactionContext)
         if let transactionContext = context as? _ReadWriteTransactionContext {
@@ -344,12 +322,7 @@ extension NSManagedObject: RuntimeObject {
         }
     }
     
-    public var rawObject: NSManagedObject! {
-        get {
-            return self
-        }
-        set {
-            assertionFailure("Should not set this property directly")
-        }
+    public var rawObject: NSManagedObject {
+        self
     }
 }

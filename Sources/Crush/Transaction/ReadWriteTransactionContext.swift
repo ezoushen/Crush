@@ -22,15 +22,15 @@ internal struct _ReadWriteTransactionContext: ReadWriteTransactionContext & RawC
 }
 
 extension _ReadWriteTransactionContext {
-    public var proxyType: Proxy.Type {
-        return ReadWriteValueMapper.self
+    public var proxyType: PropertyProxyType {
+        return .readWrite
     }
     
     public func create<T: Entity>(entiy: T.Type) -> T {
         var object: T!
         
         context.performAndWait {
-            object = entiy.create(context: context, proxyType: proxyType)
+            object = entiy.init(context: context, proxyType: proxyType)
         }
         
         return object

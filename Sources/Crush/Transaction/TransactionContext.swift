@@ -9,8 +9,7 @@
 import CoreData
 
 public protocol ContextProtocol {
-    typealias Proxy = RuntimeObject.Proxy
-    var proxyType: Proxy.Type { get }
+    var proxyType: PropertyProxyType { get }
 }
 
 public protocol RawContextProviderProtocol: ContextProtocol {
@@ -28,7 +27,7 @@ public protocol TransactionContextProtocol: QueryerProtocol, ContextProtocol {
 internal extension TransactionContextProtocol where Self: RawContextProviderProtocol {
     func receive<T: Entity>(_ object: T) -> T {
         let newObject = context.receive(runtimeObject: object)
-        return T.create(newObject, proxyType: proxyType)
+        return T.init(newObject, proxyType: proxyType)
     }
     
     func receive<T: NSManagedObject>(_ object: T) -> T {
@@ -39,13 +38,13 @@ internal extension TransactionContextProtocol where Self: RawContextProviderProt
 public protocol ReaderTransactionContext: TransactionContextProtocol {
     func count<T: Entity>(type: T.Type, predicate: NSPredicate?) -> Int
     func fetch<T: Entity>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T]
-    func fetch<T: TracableKeyPathProtocol>(property: T, predicate: NSPredicate?) -> [T.Value.EntityType?]
+    func fetch<T: TracableKeyPathProtocol>(property: T, predicate: NSPredicate?) -> [T.Value.PropertyValue?]
     func fetch<T: TracableKeyPathProtocol>(properties: [T], predicate: NSPredicate?) -> [[String: Any]]
 }
 
 extension ReaderTransactionContext {
-    public var proxyType: Proxy.Type {
-        return ReadOnlyValueMapper.self
+    public var proxyType: PropertyProxyType {
+        return .readOnly
     }
 }
 

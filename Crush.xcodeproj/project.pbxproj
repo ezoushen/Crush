@@ -258,10 +258,10 @@
 		OBJ_18 /* Entity */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_19 /* EntityObject.swift */,
-				OBJ_20 /* FieldAttributeType.swift */,
 				OBJ_21 /* Index */,
 				OBJ_23 /* Property */,
+				OBJ_19 /* EntityObject.swift */,
+				OBJ_20 /* FieldAttributeType.swift */,
 				OBJ_30 /* ValueMapper.swift */,
 			);
 			path = Entity;
@@ -291,12 +291,12 @@
 		OBJ_32 /* Migration */ = {
 			isa = PBXGroup;
 			children = (
+				OBJ_36 /* Migrator */,
+				OBJ_40 /* Schema */,
 				OBJ_33 /* EntityMapping.swift */,
 				OBJ_34 /* MappingModelMerger.swift */,
 				OBJ_35 /* MigrationModel.swift */,
-				OBJ_36 /* Migrator */,
 				OBJ_39 /* PropertyMapping.swift */,
-				OBJ_40 /* Schema */,
 			);
 			path = Migration;
 			sourceTree = "<group>";

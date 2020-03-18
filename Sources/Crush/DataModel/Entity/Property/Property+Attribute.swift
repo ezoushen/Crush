@@ -33,47 +33,46 @@ extension AttributeOption: MutablePropertyOptionProtocol {
 public protocol AttributeProtocol: NullablePropertyProtocol where PropertyValue: FieldAttributeType {
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
-    init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol])
+    init(wrappedValue: PropertyValue?, options: [PropertyOptionProtocol])
 }
 
-extension AttributeProtocol where EntityType: SavableTypeProtocol {
+extension AttributeProtocol where PropertyValue: SavableTypeProtocol {
     public var attributeType: NSAttributeType {
         PropertyValue.nativeType
     }
     
     public var attributeValueClassName: String? {
-        EntityType.self is NSCoding.Type ? String(describing: Self.self) : nil
+        PropertyValue.self is NSCoding.Type ? String(describing: Self.self) : nil
     }
     
     public var valueTransformerName: String? {
-        EntityType.self is NSCoding.Type ? String(describing: DefaultTransformer.self) : nil
+        PropertyValue.self is NSCoding.Type ? String(describing: DefaultTransformer.self) : nil
     }
 
 }
 
-extension AttributeProtocol where EntityType: SavableTypeProtocol {
+extension AttributeProtocol where PropertyValue: SavableTypeProtocol {
     public var defaultValue: Any? { nil }
 }
 
 // MARK: - EntityAttributeType
 @propertyWrapper
-public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType, O.PropertyValue: FieldAttributeType {
+public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O.FieldType: FieldAttributeType {
     
-    public typealias PropertyValue = O.PropertyValue
+    public typealias PropertyValue = O.FieldType
     public typealias OptionalType = O
     public typealias Option = AttributeOption
-    public typealias EntityType = O.FieldType.RuntimeObjectValue
         
-    public var wrappedValue: PropertyValue {
+    public var wrappedValue: PropertyValue? {
         get {
-            let value: PropertyValue.ManagedObjectValue = valueMappingProxy!.getValue(property: self)
+            let value: PropertyValue.ManagedObjectValue = proxy!.getValue(property: self)
             return PropertyValue.convert(value: value)
         }
         set {
-            guard let proxy = valueMappingProxy as? ReadWriteValueMapperProtocol else {
+            guard let proxy = proxy as? ReadWritePropertyProxy else {
                 return assertionFailure("value should not be modified with read only value mapper")
             }
-            let value: PropertyValue.ManagedObjectValue = PropertyValue.convert(value: newValue)
+            let value: PropertyValue.ManagedObjectValue? = PropertyValue.convert(value: newValue)
             proxy.setValue(value, property: self)
         }
     }
@@ -82,7 +81,7 @@ public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O
         self
     }
     
-    public var valueMappingProxy: ReadOnlyValueMapperProtocol? = nil
+    public weak var proxy: PropertyProxy! = nil
     
     public var defaultValue: Any? = nil
 
@@ -116,11 +115,11 @@ public final class Attribute<O: OptionalTypeProtocol>: AttributeProtocol where O
         return description
     }
     
-    public convenience init(wrappedValue: PropertyValue) {
+    public convenience init(wrappedValue: PropertyValue?) {
         self.init(wrappedValue: wrappedValue, options: [])
     }
     
-    public init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol]) {
+    public init(wrappedValue: PropertyValue?, options: [PropertyOptionProtocol]) {
         self.defaultValue = wrappedValue
         self.options = options
     }

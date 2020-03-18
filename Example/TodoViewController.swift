@@ -73,7 +73,7 @@ class TodoViewController: UIViewController {
     
     @objc func dueDateValueChanged(_ sender: UIDatePicker?) {
         let date = sender?.date ?? todo.dueDate
-        dueDateLabel.text = Self._dateFormatter.string(from: date)
+        dueDateLabel.text = Self._dateFormatter.string(from: date!)
         transaction?.edit(todo).async { context, todo in
             todo.dueDate = date
         }

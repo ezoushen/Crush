@@ -232,7 +232,7 @@ extension PartialQueryBuilder where Result: Entity, Received == NSManagedObject 
     
     public func exec() -> [Result] {
         received.map {
-            Result.create(_context.receive($0), proxyType: _context.proxyType)
+            Result.init(_context.receive($0), proxyType: _context.proxyType)
         }
     }
 }

@@ -58,7 +58,7 @@ extension PropertyOption: MutablePropertyOptionProtocol {
 
 public protocol PropertyProtocol {
     var defaultName: String { get set }
-    var valueMappingProxy: ReadOnlyValueMapperProtocol? { get set }
+    var proxy: PropertyProxy! { get set }
     var value: Any { get }
     var propertyCacheKey: String { get set }
     
@@ -78,10 +78,9 @@ extension PropertyProtocol {
 public protocol MutablePropertyProtocol: PropertyProtocol {
     associatedtype Option: MutablePropertyOptionProtocol
     associatedtype PropertyValue
-    associatedtype EntityType
     
-    var wrappedValue: PropertyValue { get set }
-    init(wrappedValue: PropertyValue)
+    var wrappedValue: PropertyValue? { get set }
+    init(wrappedValue: PropertyValue?)
 }
 
 extension MutablePropertyProtocol {

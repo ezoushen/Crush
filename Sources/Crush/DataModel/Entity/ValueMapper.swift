@@ -8,88 +8,42 @@
 
 import CoreData
 
-public protocol ValueProviderProtocol {
-    var rawObject: NSManagedObject { get }
-    init(rawObject: @escaping @autoclosure () -> NSManagedObject)
-}
-
-public protocol ReadOnlyValueMapperProtocol {
-    func getValue<T>(property: PropertyProtocol) -> T
-}
-
-public protocol ReadWriteValueMapperProtocol: ReadOnlyValueMapperProtocol {
-    func setValue(_ value: Any?, property: PropertyProtocol)
-}
-
-extension ReadOnlyValueMapperProtocol where Self: ValueProviderProtocol {
-    @inline(__always)
-    func getValue<T>(property: PropertyProtocol) -> T {
-        let key = property.description.name
-        rawObject.willAccessValue(forKey: key)
-        defer {
-            rawObject.didAccessValue(forKey: key)
-        }
-        let value = rawObject.primitiveValue(forKey: key)
-        return (value is NSNull ? nil : value) as! T
-    }
-}
-
-extension ReadWriteValueMapperProtocol where Self: ValueProviderProtocol {
-    @inline(__always)
-    func setValue(_ value: Any?, property: PropertyProtocol) {
-        let key = property.description.name
-        rawObject.willChangeValue(forKey: key)
-        rawObject.setPrimitiveValue(value, forKey: key)
-        rawObject.didChangeValue(forKey: key)
-    }
-}
-
-struct ReadOnlyValueMapper: ReadOnlyValueMapperProtocol, ValueProviderProtocol {
-    var rawObject: NSManagedObject {
-        _getter()
-    }
-    
-    private let _getter: () -> NSManagedObject
-    
-    init(rawObject: @escaping @autoclosure () -> NSManagedObject) {
-        self._getter = rawObject
-    }
-}
-
-struct ReadWriteValueMapper: ReadWriteValueMapperProtocol, ValueProviderProtocol {
-    var rawObject: NSManagedObject {
-        _getter()
-    }
-    
-    private let _getter: () -> NSManagedObject
-    
-    init(rawObject: @escaping @autoclosure () -> NSManagedObject) {
-        self._getter = rawObject
-    }
-}
-
-enum PropertyProxyType {
+public enum PropertyProxyType {
     case readOnly, readWrite, dummy
 }
 
 extension PropertyProxyType {
-//    var proxy: PropertyProxy 
+    func proxy(object: NSManagedObject) -> PropertyProxy {
+        switch self {
+        case .readOnly: return ReadOnlyPropertyProxy(rawObject: object)
+        case .readWrite: return ReadWritePropertyProxy(rawObject: object)
+        case .dummy: return ConcretePropertyProxy(rawObject: object, type: .dummy)
+        }
+    }
+    
+    func proxy(proxy: ConcretePropertyProxy) -> PropertyProxy {
+        switch self {
+        case .readOnly: return ReadOnlyPropertyProxy(rawObject: proxy.rawObject)
+        case .readWrite: return ReadWritePropertyProxy(rawObject: proxy.rawObject)
+        case .dummy: return ConcretePropertyProxy(rawObject: proxy.rawObject, type: .dummy)
+        }
+    }
 }
 
-protocol PropertyProxy { }
-
-protocol ReadablePropertyProxy: PropertyProxy {
+public protocol PropertyProxy: AnyObject {
+    var proxyType: PropertyProxyType { get }
     func getValue<T>(property: PropertyProtocol) -> T
-}
-
-protocol WritablePropertyProxy: PropertyProxy {
     func setValue(_ value: Any?, property: PropertyProtocol)
 }
+
+protocol ReadablePropertyProxy: PropertyProxy { }
+
+protocol WritablePropertyProxy: PropertyProxy { }
 
 extension ReadablePropertyProxy
 where Self: ConcretePropertyProxy {
     @inline(__always)
-    func getValue<T>(property: PropertyProtocol) -> T {
+    fileprivate func get<T>(property: PropertyProtocol) -> T {
         let key = property.description.name
         rawObject.willAccessValue(forKey: key)
         defer {
@@ -103,7 +57,7 @@ where Self: ConcretePropertyProxy {
 extension WritablePropertyProxy
 where Self: ConcretePropertyProxy {
     @inline(__always)
-    func setValue(_ value: Any?, property: PropertyProtocol) {
+    func set(_ value: Any?, property: PropertyProtocol) {
         let key = property.description.name
         rawObject.willChangeValue(forKey: key)
         rawObject.setPrimitiveValue(value, forKey: key)
@@ -111,26 +65,61 @@ where Self: ConcretePropertyProxy {
     }
 }
 
-
 class ConcretePropertyProxy: PropertyProxy {
+    let proxyType: PropertyProxyType
+    
+    func setValue(_ value: Any?, property: PropertyProtocol) {
+        fatalError()
+    }
+    
+    func getValue<T>(property: PropertyProtocol) -> T {
+        fatalError()
+    }
+    
     let rawObject: NSManagedObject
     
-    init(rawObject: NSManagedObject) {
+    init(rawObject: NSManagedObject, type: PropertyProxyType) {
         self.rawObject = rawObject
+        self.proxyType = type
     }
 }
 
-class ReadOnlyPropertyProxy: ConcretePropertyProxy, ReadablePropertyProxy { }
+final class ReadOnlyPropertyProxy: ConcretePropertyProxy, ReadablePropertyProxy {
+    init(rawObject: NSManagedObject) {
+        super.init(rawObject: rawObject, type: .readOnly)
+    }
+    
+    @inline(__always)
+    override func getValue<T>(property: PropertyProtocol) -> T {
+        get(property: property)
+    }
+    
+}
 
-class ReadWritePropertyProxy: ConcretePropertyProxy, ReadablePropertyProxy, WritablePropertyProxy { }
+final class ReadWritePropertyProxy: ConcretePropertyProxy, ReadablePropertyProxy, WritablePropertyProxy {
+    init(rawObject: NSManagedObject) {
+        super.init(rawObject: rawObject, type: .readWrite)
+    }
+    
+    @inline(__always)
+    override func getValue<T>(property: PropertyProtocol) -> T {
+        get(property: property)
+    }
+    
+    @inline(__always)
+    override func setValue(_ value: Any?, property: PropertyProtocol) {
+        set(value, property: property)
+    }
+}
 
-//class DummyPropertyProxy<T>: PropertyProxy, ReadablePropertyProxy, WritablePropertyProxy {
-//
-//    func getValue<T>(property: PropertyProtocol) -> T {
-//        <#code#>
-//    }
-//
-//    func setValue(_ value: Any?, property: PropertyProtocol) {
-//        <#code#>
-//    }
-//}
+final class DummyPropertyProxy: ConcretePropertyProxy {
+    static var dummyObject: NSManagedObject = {
+        let description = NSEntityDescription()
+        description.name = "Dummy"
+        return NSManagedObject(entity: description, insertInto: nil)
+    }()
+    
+    init() {
+        super.init(rawObject: Self.dummyObject, type: .readWrite)
+    }
+}

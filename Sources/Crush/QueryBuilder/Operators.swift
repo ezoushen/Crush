@@ -38,39 +38,39 @@ infix operator |*|
 
 // MARK: - Operator Overloading for `RuntimeObject`
 
-extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable {
-    public static func == (lhs: Self, rhs: Value.EntityType) -> NSPredicate {
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.PropertyValue: PredicateEquatable & Equatable {
+    public static func == (lhs: Self, rhs: Value.PropertyValue) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) == %@", rhs.predicateValue)
     }
     
-    public static func != (lhs: Self, rhs: Value.EntityType) -> NSPredicate {
+    public static func != (lhs: Self, rhs: Value.PropertyValue) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) != %@", rhs.predicateValue)
     }
 }
 
-extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType: PredicateComparable & Comparable {
-    public static func > (lhs: Self, rhs: Value.EntityType) -> NSPredicate {
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.PropertyValue: PredicateComparable & Comparable {
+    public static func > (lhs: Self, rhs: Value.PropertyValue) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) > %@", rhs.predicateValue)
     }
     
-    public static func < (lhs: Self, rhs: Value.EntityType) -> NSPredicate {
+    public static func < (lhs: Self, rhs: Value.PropertyValue) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) < %@", rhs.predicateValue)
     }
     
-    public static func >= (lhs: Self, rhs: Value.EntityType) -> NSPredicate {
+    public static func >= (lhs: Self, rhs: Value.PropertyValue) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) >= %@", rhs.predicateValue)
     }
     
-    public static func <= (lhs: Self, rhs: Value.EntityType) -> NSPredicate {
+    public static func <= (lhs: Self, rhs: Value.PropertyValue) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) <= %@", rhs.predicateValue)
     }
     
-    public static func <> (lhs: Self, rhs: Range<Value.EntityType>) -> NSPredicate {
+    public static func <> (lhs: Self, rhs: Range<Value.PropertyValue>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) BETWEEN '{\(rhs.lowerBound.predicateValue), \(rhs.upperBound.predicateValue)}'")
     }
 }
 
-extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.EntityType == String {
+extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol, Value.PropertyValue == String {
     public static func |~ (lhs: Self, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
@@ -114,26 +114,26 @@ extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyPro
     }
 }
 
-extension KeyPath where Root: NeutralEntityObject, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable & Hashable {
-    public static func <> (lhs: KeyPath, rhs: Set<Value.EntityType>) -> NSPredicate {
+extension KeyPath where Root: NeutralEntityObject, Value: NullablePropertyProtocol, Value.PropertyValue: PredicateEquatable & Equatable & Hashable {
+    public static func <> (lhs: KeyPath, rhs: Set<Value.PropertyValue>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) IN %@", NSSet(set: rhs))
     }
 }
 
-extension KeyPath where Root: NeutralEntityObject, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable {
-    public static func <> (lhs: KeyPath, rhs: Array<Value.EntityType>) -> NSPredicate {
+extension KeyPath where Root: NeutralEntityObject, Value: NullablePropertyProtocol, Value.PropertyValue: PredicateEquatable & Equatable {
+    public static func <> (lhs: KeyPath, rhs: Array<Value.PropertyValue>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) IN %@", NSArray(array: rhs))
     }
 }
 
-extension TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable & Hashable {
-    public static func <> (lhs: Self, rhs: Set<Value.EntityType>) -> NSPredicate {
+extension TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol, Value.PropertyValue: PredicateEquatable & Equatable & Hashable {
+    public static func <> (lhs: Self, rhs: Set<Value.PropertyValue>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) IN %@", NSSet(set: rhs))
     }
 }
 
-extension TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol, Value.EntityType: PredicateEquatable & Equatable {
-    public static func <> (lhs: Self, rhs: Array<Value.EntityType>) -> NSPredicate {
+extension TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol, Value.PropertyValue: PredicateEquatable & Equatable {
+    public static func <> (lhs: Self, rhs: Array<Value.PropertyValue>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) IN %@", NSArray(array: rhs))
     }
 }

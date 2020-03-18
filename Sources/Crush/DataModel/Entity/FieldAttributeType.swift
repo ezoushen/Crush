@@ -20,126 +20,88 @@ public protocol PredicateEquatable {
 public protocol PredicateComparable: PredicateEquatable { }
 
 public protocol FieldAttributeType: SavableTypeProtocol, FieldTypeProtocol
-where Self == RuntimeObjectValue, ManagedObjectValue: FieldAttributeType {
-}
+where Self == RuntimeObjectValue, ManagedObjectValue: FieldAttributeType { }
+
+public protocol PrimitiveAttributeType: FieldAttributeType
+where ManagedObjectValue == Self { }
+
 
 extension FieldAttributeType
 where RuntimeObjectValue == Self, RuntimeObjectValue == ManagedObjectValue {
-    public static func convert(value: Self) -> Self {
+    @inline(__always)
+    public static func convert(value: Self?) -> Self? {
         value
     }
 }
 
-extension Int64: FieldAttributeType, PredicateComparable {
+extension Int64: PrimitiveAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .integer64AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int32: FieldAttributeType, PredicateComparable {
+extension Int32: PrimitiveAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .integer32AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int16: FieldAttributeType, PredicateComparable {
+extension Int16: PrimitiveAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .integer16AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension NSDecimalNumber: FieldAttributeType, PredicateComparable {
+extension NSDecimalNumber: PrimitiveAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .decimalAttributeType }
     public var predicateValue: NSObject { self }
 }
 
-extension Double: FieldAttributeType, PredicateComparable {
+extension Double: PrimitiveAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .doubleAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Float: FieldAttributeType, PredicateComparable {
+extension Float: PrimitiveAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .floatAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension String: FieldAttributeType, PredicateEquatable {
+extension String: PrimitiveAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .stringAttributeType }
     public var predicateValue: NSObject { NSString(string: self) }
 }
 
-extension Bool: FieldAttributeType, PredicateEquatable {
+extension Bool: PrimitiveAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .booleanAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Date: FieldAttributeType, PredicateComparable {
+extension Date: PrimitiveAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .dateAttributeType }
     public var predicateValue: NSObject { self as NSDate }
 }
 
-extension Data: FieldAttributeType, PredicateEquatable {
+extension Data: PrimitiveAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .binaryDataAttributeType }
     public var predicateValue: NSObject { self as NSData }
 }
 
-extension UUID: FieldAttributeType, PredicateEquatable {
+extension UUID: PrimitiveAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .UUIDAttributeType }
     public var predicateValue: NSObject { self as NSUUID }
 }
 
-extension NSCoding where Self: FieldAttributeType {
+extension NSCoding where Self: PrimitiveAttributeType {
     public typealias RawType = Self
     public typealias PresentingType = Self
+    
     public static var nativeType: NSAttributeType { .transformableAttributeType }
 }
 
 #if os(iOS) || os(watchOS)
 import UIKit.UIImage
-extension UIImage: FieldAttributeType, PredicateEquatable {
+extension UIImage: PrimitiveAttributeType, PredicateEquatable {
     public var predicateValue: NSObject { self }
 }
 #endif
-
-extension Swift.Optional: FieldTypeProtocol
-where Wrapped: FieldTypeProtocol {
-    public static func convert(value: Swift.Optional<Wrapped.ManagedObjectValue>) -> Swift.Optional<Wrapped.RuntimeObjectValue> {
-        guard let value = value else { return nil }
-        return Wrapped.convert(value: value)
-    }
-    
-    public static func convert(value: Swift.Optional<Wrapped.RuntimeObjectValue>) -> Swift.Optional<Wrapped.ManagedObjectValue> {
-        guard let value = value else { return nil }
-        return Wrapped.convert(value: value)
-    }
-    
-    public typealias RuntimeObjectValue = Swift.Optional<Wrapped.RuntimeObjectValue>
-    public typealias ManagedObjectValue = Swift.Optional<Wrapped.ManagedObjectValue>
-}
-
-extension Swift.Optional: SavableTypeProtocol
-where Wrapped: SavableTypeProtocol {
-    public static var nativeType: NSAttributeType {
-        return Wrapped.nativeType
-    }
-}
-
-extension Swift.Optional: FieldAttributeType
-where Wrapped: FieldAttributeType {
-}
-
-extension Swift.Optional: PredicateEquatable
-where Wrapped: PredicateEquatable {
-    public var predicateValue: NSObject {
-        guard case let .some(value) = self else { return NSNull() }
-        return value.predicateValue
-    }
-}
-
-extension Swift.Optional: PredicateComparable
-where Wrapped: PredicateComparable {
-    public var predicateValue: NSObject {
-        guard case let .some(value) = self else { return NSNull() }
-        return value.predicateValue
-    }
-}
 
 public protocol Enumerator: RawRepresentable, FieldAttributeType, PredicateComparable
 where RawValue: SavableTypeProtocol & PredicateEquatable, ManagedObjectValue: PredicateEquatable { }

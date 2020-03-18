@@ -17,7 +17,6 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
     public typealias PropertyValue = Property.PropertyValue
     public typealias Option = Property.Option
     public typealias OptionalType = Property.OptionalType
-    public typealias EntityType = Property.EntityType
 
     public var defaultName: String {
         get {
@@ -49,7 +48,7 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
         }
     }
     
-    public var wrappedValue: PropertyValue {
+    public var wrappedValue: PropertyValue? {
         get {
             guard case let .transient(attribute) = self else {
                 fatalError("Trasient type mismatch")
@@ -69,14 +68,14 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
     }
     
     
-    public var valueMappingProxy: ReadOnlyValueMapperProtocol? {
+    public var proxy: PropertyProxy! {
         get {
             guard case let .transient(attribute) = self else { return nil }
-            return attribute.valueMappingProxy
+            return attribute.proxy
         }
         set {
             guard case var .transient(attribute) = self else { return }
-            attribute.valueMappingProxy = newValue
+            attribute.proxy = newValue
         }
     }
     
@@ -84,7 +83,7 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
         self = .transient(some)
     }
     
-    public init(wrappedValue: PropertyValue) {
+    public init(wrappedValue: PropertyValue?) {
         self = .transient(Property.init(wrappedValue: wrappedValue))
     }
     

@@ -58,8 +58,8 @@ public protocol FieldTypeProtocol {
     associatedtype RuntimeObjectValue
     associatedtype ManagedObjectValue
     
-    static func convert(value: ManagedObjectValue) -> RuntimeObjectValue
-    static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
+    static func convert(value: ManagedObjectValue?) -> RuntimeObjectValue?
+    static func convert(value: RuntimeObjectValue?) -> ManagedObjectValue?
 }
 
 public protocol RelationshipTypeProtocol: FieldTypeProtocol {
@@ -77,13 +77,14 @@ public struct ToOneRelationshipType<EntityType: Entity>: RelationshipTypeProtoco
     }
     
     @inline(__always)
-    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return RuntimeObjectValue.create(value)
+    public static func convert(value: ManagedObjectValue?) -> RuntimeObjectValue? {
+        guard let value = value else { return nil }
+        return RuntimeObjectValue.init(value, proxyType: .readWrite)
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        return value.rawObject
+    public static func convert(value: RuntimeObjectValue?) -> ManagedObjectValue? {
+        return value?.rawObject
     }
 }
 
@@ -96,45 +97,41 @@ public struct ToManyRelationshipType<EntityType: Hashable & Entity>: Relationshi
     }
     
     @inline(__always)
-    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return Set(value.allObjects.compactMap{ EntityType.create($0 as! NSManagedObject) })
+    public static func convert(value: ManagedObjectValue?) -> RuntimeObjectValue? {
+        guard let value = value else { return nil }
+        return Set(value.allObjects.compactMap{ EntityType.init($0 as! NSManagedObject, proxyType: .readWrite) })
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        return value as ManagedObjectValue
+    public static func convert(value: RuntimeObjectValue?) -> ManagedObjectValue? {
+        return value as ManagedObjectValue?
     }
 }
 
 @propertyWrapper
 public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProtocol>: RelationshipProtocol where O.FieldType: RelationshipTypeProtocol {
     
-    public typealias PropertyValue = OptionalType.PropertyValue
+    public typealias PropertyValue = O.FieldType.RuntimeObjectValue
     public typealias InverseType = I
     public typealias RelationshipType = O.FieldType
     public typealias SourceEntity = I.EntityType
     public typealias DestinationEntity = RelationshipType.EntityType
     public typealias OptionalType = O
     public typealias Option = RelationshipOption
-    public typealias EntityType = RelationshipType.EntityType
     
-    public var valueMappingProxy: ReadOnlyValueMapperProtocol? = nil
+    public weak var proxy: PropertyProxy! = nil
     
-    public var wrappedValue: PropertyValue {
+    public var wrappedValue: PropertyValue? {
         get {
-            let value: RelationshipType.ManagedObjectValue! = valueMappingProxy?.getValue(property: self)
-            return RelationshipType.convert(value: value) as! O.PropertyValue
+            let value: NSManagedObject! = proxy?.getValue(property: self)
+            return O.FieldType.EntityType.init(value, proxyType: proxy!.proxyType) as? PropertyValue
         }
         set {
-            guard let proxy = valueMappingProxy as? ReadWriteValueMapperProtocol else {
+            guard let proxy = proxy as? ReadWritePropertyProxy else {
                 return assertionFailure("value should not be modified with read only value mapper")
             }
             
-            guard let value = newValue as? RelationshipType.RuntimeObjectValue else {
-                return assertionFailure("raw object type mismatch")
-            }
-            
-            proxy.setValue(RelationshipType.convert(value: value), property: self)
+            proxy.setValue(RelationshipType.convert(value: newValue), property: self)
         }
     }
 
@@ -152,7 +149,7 @@ public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProt
     
     public var propertyCacheKey: String = ""
     
-    public convenience init(wrappedValue: O.PropertyValue) {
+    public convenience init(wrappedValue: PropertyValue?) {
         self.init()
     }
     
