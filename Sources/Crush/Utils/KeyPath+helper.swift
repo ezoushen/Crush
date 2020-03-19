@@ -24,13 +24,13 @@ public protocol Expressible {
 }
 
 public protocol RootTracableKeyPathProtocol: Expressible {
-    var rootType: NeutralEntityObject.Type { get }
+    var rootType: Entity.Type { get }
     var keyPath: AnyKeyPath { get }
     var fullPath: String { get }
 }
 
 public protocol PartailTracableKeyPathProtocol: RootTracableKeyPathProtocol {
-    associatedtype Root: NeutralEntityObject
+    associatedtype Root: Entity
     var root: PartialKeyPath<Root> { get }
     var allPaths: [RootTracableKeyPathProtocol] { get }
 }
@@ -53,7 +53,7 @@ extension PartailTracableKeyPathProtocol {
     }
 }
 
-public class PartialTracableKeyPath<Root: NeutralEntityObject>: PartailTracableKeyPathProtocol {
+public class PartialTracableKeyPath<Root: Entity>: PartailTracableKeyPathProtocol {
     
     public let root: PartialKeyPath<Root>
     
@@ -63,7 +63,7 @@ public class PartialTracableKeyPath<Root: NeutralEntityObject>: PartailTracableK
         return root
     }
     
-    public var rootType: NeutralEntityObject.Type {
+    public var rootType: Entity.Type {
         return Root.self
     }
     
@@ -77,7 +77,7 @@ public class PartialTracableKeyPath<Root: NeutralEntityObject>: PartailTracableK
     }
 }
 
-public class TracableKeyPath<Root: NeutralEntityObject, Value: NullablePropertyProtocol>: PartialTracableKeyPath<Root>, TracableKeyPathProtocol {
+public class TracableKeyPath<Root: Entity, Value: NullablePropertyProtocol>: PartialTracableKeyPath<Root>, TracableKeyPathProtocol {
     
     public override var allPaths: [RootTracableKeyPathProtocol] {
         return [TracableKeyPath<Root, Value>(root)] + subpaths
@@ -85,7 +85,7 @@ public class TracableKeyPath<Root: NeutralEntityObject, Value: NullablePropertyP
 }
 
 extension KeyPath: RootTracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol {
-    public var rootType: NeutralEntityObject.Type {
+    public var rootType: Entity.Type {
         return Root.self
     }
     
