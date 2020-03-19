@@ -25,7 +25,8 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Crush",
-            dependencies: []),
+            dependencies: [],
+            path: "./Sources/Crush"),
         .testTarget(
             name: "CrushTests",
             dependencies: ["Crush"]),
