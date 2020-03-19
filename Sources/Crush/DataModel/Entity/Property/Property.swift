@@ -28,33 +28,25 @@ public protocol PropertyOptionProtocol {
     func updatePropertyDescription<D: NSPropertyDescription>(_ description: D)
 }
 
-public protocol MutablePropertyOptionProtocol: Hashable, PropertyOptionProtocol {
+public protocol MutablePropertyOptionProtocol: PropertyOptionProtocol {
     associatedtype Description: NSPropertyDescription
-}
-
-extension MutablePropertyOptionProtocol {
-    public var hashValue: Int {
-        return String(reflecting: self).hashValue
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(String(reflecting: self))
-    }
-}
-
-extension Equatable where Self: MutablePropertyOptionProtocol {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.hashValue == rhs.hashValue
-    }
 }
 
 public enum PropertyOption {
     case name(String)
     case mapping(RootTracableKeyPathProtocol)
-    case userInfo([AnyHashable: Any])
     case isIndexedBySpotlight(Bool)
-    case renamingIdentifier(String)
     case validationPredicatesWithWarnings([(NSPredicate, String)])
+}
+
+public struct PropertyOptionSet {
+    let options: [PropertyOption]
+}
+
+extension PropertyOptionSet: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: PropertyOption...) {
+        options = elements
+    }
 }
 
 extension PropertyOption: MutablePropertyOptionProtocol {
@@ -63,9 +55,7 @@ extension PropertyOption: MutablePropertyOptionProtocol {
     
     public func updatePropertyDescription<D: NSPropertyDescription>(_ description: D) {
         switch self {
-        case .userInfo(let userInfo): description.userInfo = userInfo.merging(description.userInfo ?? [:], uniquingKeysWith: { $1 })
         case .isIndexedBySpotlight(let flag): description.isIndexedBySpotlight = flag
-        case .renamingIdentifier(let identifier): description.renamingIdentifier = identifier
         case .validationPredicatesWithWarnings(let tuples):
             description.setValidationPredicates(tuples.map{$0.0}, withValidationWarnings: tuples.map{$0.1})
         case .name(let name): description.name = name
@@ -77,29 +67,19 @@ extension PropertyOption: MutablePropertyOptionProtocol {
 }
 
 public protocol PropertyProtocol {
-    var name: String? { get set }
-    var isOptional: Bool { get }
-    var isTransient: Bool { get }
-    var userInfo: [AnyHashable: Any]? { get set }
-    var isIndexedBySpotlight: Bool { get }
-    var renamingIdentifier: String? { get set }
-    var versionHashModifier: String? { get set }
-    var validationPredicates: [NSPredicate]? { get }
-    var validationWarnings: [String]? { get }
-    var description: NSPropertyDescription! { get set }
-    var valueMappingProxy: ReadOnlyValueMapperProtocol? { get set }
-    var value: Any { get }
+    var defaultName: String { get set }
+    var proxy: PropertyProxy! { get set }
+    var propertyCacheKey: String { get set }
     
-    func createDescription<T: NSPropertyDescription>() -> T!
+    func emptyPropertyDescription() -> NSPropertyDescription
 }
 
 extension PropertyProtocol {
-    public var isOptional: Bool { true }
     public var isTransient: Bool { false }
-    public var userInfo: [AnyHashable: Any]? { nil }
-    public var isIndexedBySpotlight: Bool { false }
-    public var validationPredicates: [NSPredicate]? { nil }
-    public var validationWarnings: [String]? { nil }
+    
+    var description: NSPropertyDescription {
+        DescriptionCacheCoordinator.shared.getDescription(propertyCacheKey, type: PropertyCacheType.self)!
+    }
 }
 
 // MARK: - Entity Property
@@ -107,11 +87,10 @@ extension PropertyProtocol {
 public protocol MutablePropertyProtocol: PropertyProtocol {
     associatedtype Option: MutablePropertyOptionProtocol
     associatedtype PropertyValue
-    associatedtype EntityType
-        
+    associatedtype PredicateValue
+    
     var wrappedValue: PropertyValue { get set }
     init(wrappedValue: PropertyValue)
-    func updateProperty()
 }
 
 extension MutablePropertyProtocol {

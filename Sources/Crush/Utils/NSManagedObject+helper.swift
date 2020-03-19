@@ -9,7 +9,7 @@
 import CoreData
 
 extension NSManagedObjectContext {
-    func receive<T: Entity>(runtimeObject: T) -> NSManagedObject {
+    func receive<T: RuntimeObject>(runtimeObject: T) -> NSManagedObject {
         return object(with: runtimeObject.rawObject.objectID)
     }
 }

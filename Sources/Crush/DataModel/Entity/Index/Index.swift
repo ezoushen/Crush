@@ -8,7 +8,7 @@
 
 import CoreData
 
-public protocol IndexSetProtocol: NSObject { }
+public protocol ConstraintSet: NSObject { }
 
 protocol IndexProtocol {
     func fetchIndexDescription<R: RuntimeObject>(name: String, in object: R) -> NSFetchIndexDescription
@@ -29,13 +29,14 @@ public protocol IndexElementProtocol {
 
 fileprivate let DEFAULT_KEY = "defaultKey"
 
-extension IndexSetProtocol {
+extension ConstraintSet {
     static func setDefaultKeys(mirror: Mirror?) {
         guard let mirror = mirror, let type = mirror.subjectType as? Entity.Type else { return }
                 
         mirror.children.forEach { label, value in
-            guard var value = value as? PropertyProtocol else { return }
-            value.userInfo?[DEFAULT_KEY] = type.entityCacheKey+"."+label!
+            guard let value = value as? PropertyProtocol else { return }
+            value.description.userInfo = value.description.userInfo ?? [:]
+            value.description.userInfo![DEFAULT_KEY] = type.entityCacheKey+"."+label!
         }
         
         return setDefaultKeys(mirror: mirror.superclassMirror)
@@ -46,6 +47,7 @@ extension IndexElementProtocol {
     public func fetchIndexElementDescription(property: NSPropertyDescription) -> NSFetchIndexElementDescription {
         let description = NSFetchIndexElementDescription(property: property, collationType: type)
         description.isAscending = isAscending
+        
         return description
     }
 }
@@ -115,7 +117,7 @@ extension TargetedIndexProtocol {
             return (index, keyPath)
         }.compactMap{ (index, keyPath) -> (IndexElementProtocol, NSPropertyDescription)? in
             guard let property = object[keyPath: keyPath] as? PropertyProtocol,
-                  let defaultKey = property.userInfo?[DEFAULT_KEY] as? String else { return nil }
+                  let defaultKey = property.description.userInfo?[DEFAULT_KEY] as? String else { return nil }
             let coordinator = DescriptionCacheCoordinator.shared
             let description = coordinator.getDescription(defaultKey, type: PropertyCacheType.self)!
             return (index, description)
@@ -123,5 +125,53 @@ extension TargetedIndexProtocol {
             return index.fetchIndexElementDescription(property: description)
         }
         return NSFetchIndexDescription(name: name, elements: indcies)
+    }
+}
+
+protocol UniqueConstraintProtocol {
+    var uniquenessConstarints: [String] { get }
+}
+
+public struct UniqueConstraintSet<Target: Entity> {
+    public let constraints: [PartialKeyPath<Target>]
+}
+
+extension UniqueConstraintSet: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: PartialKeyPath<Target>...) {
+        constraints = elements
+    }
+}
+
+@propertyWrapper
+public struct CompositeUniqueConstraint<Target: Entity>: UniqueConstraintProtocol {
+    public var wrappedValue: UniqueConstraintSet<Target>
+    
+    public init(wrappedValue: UniqueConstraintSet<Target>) {
+        self.wrappedValue = wrappedValue
+    }
+}
+
+extension CompositeUniqueConstraint {
+    var uniquenessConstarints: [String] {
+        let entity = Target.dummy()
+        return wrappedValue.constraints.compactMap {
+            (entity[keyPath: $0] as? PropertyProtocol)?.description.name
+        }
+    }
+}
+
+@propertyWrapper
+public struct UniqueConstraint<Target: Entity>: UniqueConstraintProtocol {
+    
+    public var wrappedValue: PartialKeyPath<Target>
+    
+    public init(wrappedValue: PartialKeyPath<Target>) {
+        self.wrappedValue = wrappedValue
+    }
+}
+
+extension UniqueConstraint {
+    var uniquenessConstarints: [String] {
+        [(Target.dummy()[keyPath: wrappedValue] as? PropertyProtocol)?.description.name].compactMap{ $0 }
     }
 }

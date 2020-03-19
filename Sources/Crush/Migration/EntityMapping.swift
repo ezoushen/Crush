@@ -58,7 +58,7 @@ extension EntityMapping where Self: MappingModelMergeDelegate {
         entityMapping.mappingType = mappingType
         entityMapping.attributeMappings = try attributeMappings(sourceModel: sourceModel, destinationModel: destinationModel).map{ $0.propertyMapping }
         entityMapping.relationshipMappings = try relationMappings(sourceModel: sourceModel, destinationModel: destinationModel).map{ $0.propertyMapping }
-        entityMapping.userInfo = (entityMapping.userInfo ?? [:])
+        entityMapping.userInfo = entityMapping.userInfo ?? [:]
         entityMapping.userInfo?[EntityMappingUserInfoKey.delegate] = self
         return entityMapping
     }

@@ -33,7 +33,6 @@ class TodoListViewController: UIViewController {
         
         // Load all tasks
         todos = container.query(for: Todo.self).exec()
-        
         // Reload table view
         tableView.reloadData()
     }

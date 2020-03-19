@@ -9,18 +9,13 @@
 import Foundation
 
 public protocol OptionalTypeProtocol {
-    associatedtype FieldType: FieldTypeProtocol
-    associatedtype PropertyValue
-    
     static var isOptional: Bool { get }
 }
 
-public struct Nullable<FieldType: FieldTypeProtocol>: OptionalTypeProtocol {
-    public typealias PropertyValue = Swift.Optional<FieldType.RuntimeObjectValue>
+public struct Nullable: OptionalTypeProtocol {
     public static var isOptional: Bool { true }
 }
 
-public struct NotNull<FieldType: FieldTypeProtocol>: OptionalTypeProtocol {
-    public typealias PropertyValue = FieldType.RuntimeObjectValue
+public struct NotNull: OptionalTypeProtocol {
     public static var isOptional: Bool { false }
 }

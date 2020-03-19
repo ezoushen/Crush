@@ -8,27 +8,6 @@
 
 import CoreData
 
-public protocol RuntimeObject: AnyObject {
-    typealias Proxy = ReadOnlyValueMapperProtocol & ValueProviderProtocol
-
-    init()
-    var proxyType: Proxy.Type { get set }
-    var rawObject: NSManagedObject! { get set }
-    static var isProxy: Bool { get }
-    static func entity() -> NSEntityDescription
-}
-
-public protocol Entity: RuntimeObject {
-    static func entityDescription() -> NSEntityDescription
-    static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping?
-    static func entity() -> NSEntityDescription
-    static func setOverrideCacheKey(for type: Entity.Type, key: String)
-    static var isAbstract: Bool { get }
-    static var renamingIdentifier: String? { get }
-    static var entityCacheKey: String { get }
-    var entity: NSEntityDescription { get }
-}
-
 fileprivate enum _Shared {
     @ThreadSafe
     static var dummyObjects: [String: RuntimeObject] = [:]
@@ -37,66 +16,49 @@ fileprivate enum _Shared {
     static var overrideCacheKeyDict: [String: String] = [:]
 }
 
+public protocol RuntimeObject: AnyObject {
+    static func entity() -> NSEntityDescription
+    var rawObject: NSManagedObject { get }
+}
+
+public protocol Entity: RuntimeObject {
+    static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping?
+    static func setOverrideCacheKey(for type: Entity.Type, key: String)
+    static var isAbstract: Bool { get }
+    static var renamingIdentifier: String? { get }
+    static var entityCacheKey: String { get }
+    
+    init(proxy: PropertyProxy)
+    var proxy: PropertyProxy! { get }
+}
+
 extension RuntimeObject {
     static var fetchKey: String {
         return String(describing: Self.self)
     }
-    
-    static func create(_ runtimeObject: Self, proxyType: Proxy.Type) -> Self {
-        let object = Self.init()
-        object.proxyType = proxyType
-        object.rawObject = runtimeObject.rawObject
-        return object
-    }
-    
-    static func create(_ object: NSManagedObject, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
-        let entity = Self.init()
-        entity.proxyType = proxyType
-        entity.rawObject = object
-        return entity
-    }
-    
-    static func create(objectID: NSManagedObjectID, in context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
-        let object = Self.init()
-        object.proxyType = proxyType
-        object.rawObject = context.object(with: objectID)
-        return object
-    }
-}
-
-extension RuntimeObject where Self == NSManagedObject {
-    static func create(_ object: NSManagedObject, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> NSManagedObject {
-        object
-    }
-    
-    static func create(objectID: NSManagedObjectID, in context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> NSManagedObject {
-        context.object(with: objectID)
-    }
-}
-
-extension Entity where Self == NSManagedObject {
-    static func create(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> NSManagedObject {
-        NSManagedObject(entity: Self.dummy().entity, insertInto: context)
-    }
-}
-
-
-extension Entity {
-    static func create(context: NSManagedObjectContext, proxyType: Proxy.Type = ReadOnlyValueMapper.self) -> Self {
-        let managedObject = NSManagedObject(entity: Self.dummy().entity, insertInto: context)
-        let object = Self.init()
-        object.proxyType = proxyType
-        object.rawObject = managedObject
-        return object
-    }
         
     static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: entityCacheKey)
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: fetchKey)
         return request
     }
+}
+
+extension Entity {
+    init(_ runtimeObject: Self, proxyType: PropertyProxyType) {
+        self.init(proxy: proxyType.proxy(proxy: runtimeObject.proxy as! ConcretePropertyProxy))
+    }
     
-    public static func entity() -> NSEntityDescription {
-        return DescriptionCacheCoordinator.shared.getDescription(entityCacheKey, type: EntityCacheType.self) ?? entityDescription()
+    init(_ object: NSManagedObject, proxyType: PropertyProxyType) {
+        self.init(proxy: proxyType.proxy(object: object))
+    }
+    
+    init(objectID: NSManagedObjectID, in context: NSManagedObjectContext, proxyType: PropertyProxyType) {
+        self.init(proxy: proxyType.proxy(object: context.object(with: objectID)))
+    }
+    
+    init(context: NSManagedObjectContext, proxyType: PropertyProxyType) {
+        let managedObject = NSManagedObject(entity: Self.entity(), insertInto: context)
+        self.init(proxy: proxyType.proxy(object: managedObject))
     }
     
     internal static func dummy() -> Self {
@@ -104,14 +66,9 @@ extension Entity {
         if let object: Self = (_Shared.dummyObjects[key] as? Self) {
             return object
         }
-        let runtimeObject = Self.init()
-        runtimeObject.setupProperties(mirror: Mirror(reflecting: runtimeObject), recursive: true)
+        let runtimeObject = Self.init(proxy: DummyPropertyProxy())
         _Shared.dummyObjects[key] = runtimeObject
         return runtimeObject
-    }
-    
-    public var entity: NSEntityDescription {
-        return Self.entity()
     }
     
     public static func setOverrideCacheKey(for type: Entity.Type, key: String) {
@@ -126,56 +83,18 @@ extension Entity {
         String(reflecting: Self.self)
     }
     
-    @discardableResult func setupProperties(mirror: Mirror?, recursive: Bool) -> [NSPropertyDescription] {
-        guard let mirror = mirror, let objectType = mirror.subjectType as? Entity.Type else { return [] }
-        let coordinator = DescriptionCacheCoordinator.shared
-        let properties = mirror.children
-        .compactMap { (label, value) -> NSPropertyDescription? in
-            let defaultKey = "\(objectType.entityCacheKey).\(label!)"
-            guard var property = value as? PropertyProtocol,
-                  var description = property.description, let label = label else {
-                    return nil
-            }
-            defer {
-                property.description = description
-            }
-            
-            if let _description = coordinator.getDescription(defaultKey, type: PropertyCacheType.self) {
-                description = _description
-                return description
-            }
-            
-            description.name = description.name.isEmpty
-                ? property.name ?? String(label.dropFirst())
-                : description.name
-            description.versionHashModifier = description.name
-            
-            if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
-                if mapping.fullPath.contains(".") {
-                    description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
-                    description.userInfo?[UserInfoKey.propertyMappingDestination] = description.name
-                    description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
-                    description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
-                } else {
-                    description.renamingIdentifier = mapping.fullPath
-                }
-            }
-            
-            coordinator.setDescription(defaultKey, value: description, type: PropertyCacheType.self)
-            return description
-        }
-            return recursive
-            ? properties + setupProperties(mirror: mirror.superclassMirror, recursive: recursive)
-            : properties
-        
+    public var rawObject: NSManagedObject {
+        (proxy as! ConcretePropertyProxy).rawObject
+    }
+    
+    fileprivate func createPropertyCacheKey(domain: String, name: String) -> String {
+        "\(domain).\(name)"
     }
 }
 
 open class NeutralEntityObject: NSObject, Entity {
-    public class var isProxy: Bool { true }
-    
     public static var renamingIdentifier: String? { renamingClass?.fetchKey }
-    public class var renamingClass: Entity.Type? { nil}
+    public class var renamingClass: Entity.Type? { nil }
 
     public class var isAbstract: Bool {
         assertionFailure("Should not call isAbstract variale directly")
@@ -186,7 +105,7 @@ open class NeutralEntityObject: NSObject, Entity {
         var fromEntityTypeName: String? = nil
         var toEntityTypeName: String? = nil
         
-        let attributeMappings = try entityDescription().properties
+        let attributeMappings = try entity().properties
             .filter { $0 is NSAttributeDescription }
             .compactMap { property -> PropertyMappingProtocol? in
             guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
@@ -204,7 +123,7 @@ open class NeutralEntityObject: NSObject, Entity {
             return AnyPropertyMapping(type: .attribute, from: fromPath, to: toPath)
         }
         
-        let relationshipMappings = try entityDescription().properties
+        let relationshipMappings = try entity().properties
             .filter { $0 is NSRelationshipDescription }
             .compactMap { property -> PropertyMappingProtocol? in
             guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
@@ -235,7 +154,7 @@ open class NeutralEntityObject: NSObject, Entity {
                            destinationModel: destinationModel)
     }
     
-    public class func entityDescription() -> NSEntityDescription {
+    public class func entity() -> NSEntityDescription {
         let coordinator = DescriptionCacheCoordinator.shared
         let entityKey = Self.entityCacheKey
 
@@ -244,11 +163,11 @@ open class NeutralEntityObject: NSObject, Entity {
         }
         
         let description = NSEntityDescription()
-        let object = Self.init()
+        let object = Self.init(proxy: DummyPropertyProxy())
         let mirror = Mirror(reflecting: object)
         
         // Setup properties
-        let properties: [NSPropertyDescription] = object.setupProperties(mirror: mirror, recursive: false)
+        let properties: [NSPropertyDescription] = object.createProperties()
         
         // Setup related inverse relationship
         coordinator.getAndWaitDescription(entityKey, type: InverRelationshipCacheType.self) { pairs in
@@ -291,33 +210,67 @@ open class NeutralEntityObject: NSObject, Entity {
             superMirror.subjectType != NeutralEntityObject.self,
             superMirror.subjectType != EntityObject.self,
             superMirror.subjectType != AbstractEntityObject.self,
-            let superType = superMirror.subjectType as? EntityObject.Type {
+            let superType = superMirror.subjectType as? Entity.Type {
             coordinator.getAndWaitDescription(superType.entityCacheKey, type: EntityCacheType.self) {
                 $0.subentities.append(description)
             }
         }
         
-        // Setup Indices
-        if let indexClass = NSClassFromString((NSStringFromClass(Self.self)+"5Index").replacingOccurrences(of: "_TtC", with: "_TtCC")) as? IndexSetProtocol.Type {
-            indexClass.setDefaultKeys(mirror: mirror)
-            let indexClassMirror = Mirror(reflecting: indexClass.init())
-            let indexes: [NSFetchIndexDescription] = indexClassMirror.children.compactMap{ (label, value) in
+        // Setup Constraints
+        if let constraintClass = NSClassFromString((NSStringFromClass(Self.self)+"10Constraint").replacingOccurrences(of: "_TtC", with: "_TtCC")) as? ConstraintSet.Type {
+            constraintClass.setDefaultKeys(mirror: mirror)
+            let indexClassMirror = Mirror(reflecting: constraintClass.init())
+            let indexChildren = indexClassMirror.children
+            let indexes: [NSFetchIndexDescription] = indexChildren.compactMap{ (label, value) in
                 guard let index = value as? IndexProtocol else { return nil }
                 return index.fetchIndexDescription(name: label ?? "", in: object)
             }
+            let uniquenessConstarints: [[Any]] = Set<[String]>(
+                indexChildren.compactMap { (label, value) -> [String]? in
+                    guard let constraint = value as? UniqueConstraintProtocol else{ return nil }
+                    return constraint.uniquenessConstarints
+                }
+            ).map{ $0 as [Any]}
             description.indexes = indexes
+            description.uniquenessConstraints = uniquenessConstarints
         }
         
         return description
     }
     
-    final public var rawObject: NSManagedObject! = nil {
-        didSet {
-            setProxy()
-        }
+    func createProperties() -> [NSPropertyDescription] {
+        let coordinator = DescriptionCacheCoordinator.shared
+
+        return _allMirrors
+            .compactMap { pair, key -> NSPropertyDescription? in
+                let (_label, value) = pair
+                guard key == Self.entityCacheKey, let property = value as? PropertyProtocol, let label = _label else {
+                    return nil
+                }
+                let defaultKey = createPropertyCacheKey(domain: key, name: label)
+                if let description = coordinator.getDescription(defaultKey, type: PropertyCacheType.self) {
+                    return description
+                }
+                let description = property.emptyPropertyDescription()
+                description.versionHashModifier = description.name
+                
+                if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
+                    if mapping.fullPath.contains(".") {
+                        description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
+                        description.userInfo?[UserInfoKey.propertyMappingDestination] = description.name
+                        description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
+                        description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
+                    } else {
+                        description.renamingIdentifier = mapping.fullPath
+                    }
+                }
+                
+                coordinator.setDescription(defaultKey, value: description, type: PropertyCacheType.self)
+                return description
+            }
     }
     
-    public var proxyType: Proxy.Type = ReadWriteValueMapper.self
+    public var proxy: PropertyProxy!
     
     private lazy var _allMirrors: [(Mirror.Child, String)] = {
         func findAllMirrors(_ mirror: Mirror?) -> [(Mirror, String)] {
@@ -327,9 +280,8 @@ open class NeutralEntityObject: NSObject, Entity {
                 return []
             }
             
-            guard let subjectType = mirror.subjectType as? EntityObject.Type else { return [] }
-            
-            return [(mirror, String(reflecting: subjectType))] + findAllMirrors(mirror.superclassMirror)
+            guard let subjectType = mirror.subjectType as? Entity.Type else { return [] }
+            return [(mirror, subjectType.entityCacheKey)] + findAllMirrors(mirror.superclassMirror)
         }
         
         return findAllMirrors(Mirror(reflecting: self)).flatMap{
@@ -337,9 +289,10 @@ open class NeutralEntityObject: NSObject, Entity {
         }
     }()
     
-    
-    required override public init() {
+    required public init(proxy: PropertyProxy) {
+        self.proxy = proxy
         super.init()
+        setProxy()
     }
     
     private func setProxy() {
@@ -347,12 +300,9 @@ open class NeutralEntityObject: NSObject, Entity {
             .forEach { pair, key in
                 let (label, value) = pair
                 guard var property = value as? PropertyProtocol else  { return }
-                let object = proxyType.init(rawObject: rawObject)
-                DescriptionCacheCoordinator.shared.getAndWaitDescription(key + ".\(label!)",
-                                                                         type: PropertyCacheType.self) { element in
-                    property.description = element
-                    property.valueMappingProxy = object
-                }
+                property.proxy = proxy
+                property.defaultName = String(label?.dropFirst() ?? "")
+                property.propertyCacheKey = createPropertyCacheKey(domain: key, name: label!)
             }
     }
 }
@@ -369,56 +319,17 @@ open class EntityObject: NeutralEntityObject {
     }
 }
 
-extension NSManagedObject: Entity {
-    public class var isProxy: Bool {
-        false
-    }
-    
-    public static var entityCacheKey: String {
-        defaultCacheKey
-    }
-        
+extension NSManagedObject: RuntimeObject {
     public convenience init(context: Transaction.ReadWriteContext) {
         precondition(context is _ReadWriteTransactionContext)
         if let transactionContext = context as? _ReadWriteTransactionContext {
             self.init(context: transactionContext.context)
-        } else if let transactionContext = context as? _ReadWriteTransactionContext {
-            self.init(context: transactionContext.context)
-        }
-        fatalError()
-    }
-    
-    public static var renamingIdentifier: String? {
-        return entity().renamingIdentifier
-    }
-    
-    public static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping? {
-        nil
-    }
-    
-    public static var isAbstract: Bool {
-        return entity().isAbstract
-    }
-        
-    public static func entityDescription() -> NSEntityDescription {
-        return Self.entity()
-    }
-    
-    public var proxyType: Proxy.Type {
-        get {
-            ReadWriteValueMapper.self
-        }
-        set {
-            assertionFailure("Should not set this property directly")
+        } else {
+            fatalError()
         }
     }
     
-    public var rawObject: NSManagedObject! {
-        get {
-            return self
-        }
-        set {
-            assertionFailure("Should not set this property directly")
-        }
+    public var rawObject: NSManagedObject {
+        self
     }
 }

@@ -69,7 +69,7 @@ extension Transaction {
         
         let readOnlyObject = objectContext.receive(runtimeObject: object)
 
-        return T.create(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
+        return T.init(readOnlyObject, proxyType: .readOnly)
     }
     
     public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) -> T) -> T {
@@ -86,7 +86,7 @@ extension Transaction {
 
         let readOnlyObject = objectContext.receive(runtimeObject: result)
 
-        return T.create(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
+        return T.init(readOnlyObject, proxyType: .readOnly)
     }
 
     public func sync<T: Entity, S: Sequence>(_ block: @escaping (ReadWriteContext) -> S) -> S where S.Element == T {
@@ -102,7 +102,7 @@ extension Transaction {
             assert(object.rawObject.hasChanges == false,
                    "You should commit changes in transaction before return")
             let readOnlyObject = objectContext.receive(runtimeObject: object)
-            return T.create(readOnlyObject, proxyType: ReadOnlyValueMapper.self)
+            return T.init(readOnlyObject, proxyType: .readOnly)
         } as! S
     }
 }
@@ -162,8 +162,8 @@ extension Transaction.SingularEditor {
         assert(result.rawObject.hasChanges == false,
                "You should commit changes in transaction before return")
         
-        return V.create(transaction.objectContext.receive(runtimeObject: result),
-                      proxyType: ReadOnlyValueMapper.self)
+        return V.init(transaction.objectContext.receive(runtimeObject: result),
+                        proxyType: .readOnly)
     }
     
     public func sync<V: Entity, S: Sequence>(_ block: @escaping (Transaction.ReadWriteContext, T) -> S) -> S where S.Element == V {
@@ -177,8 +177,8 @@ extension Transaction.SingularEditor {
             assert(entity.rawObject.hasChanges == false,
                    "You should commit changes in transaction before return")
             
-            return V.create(transaction.objectContext.receive(runtimeObject: entity),
-                          proxyType: ReadOnlyValueMapper.self)
+            return V.init(transaction.objectContext.receive(runtimeObject: entity),
+                            proxyType: .readOnly)
         } as! S
     }
 }
@@ -240,8 +240,8 @@ extension Transaction.PluralEditor {
         assert(result.rawObject.hasChanges == false,
                "You should commit changes in transaction before return")
         
-        return V.create(transaction.objectContext.receive(runtimeObject: result),
-                      proxyType: ReadOnlyValueMapper.self)
+        return V.init(transaction.objectContext.receive(runtimeObject: result),
+                      proxyType: .readOnly)
     }
     
     public func sync<V: Entity, S: Sequence>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> S) -> S where S.Element == V {
@@ -256,8 +256,8 @@ extension Transaction.PluralEditor {
             assert(entity.rawObject.hasChanges == false,
                    "You should commit changes in transaction before return")
             
-            return V.create(transaction.objectContext.receive(runtimeObject: entity),
-                   proxyType: ReadOnlyValueMapper.self)
+            return V.init(transaction.objectContext.receive(runtimeObject: entity),
+                          proxyType: .readOnly)
         } as! S
     }
 }

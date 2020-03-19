@@ -9,24 +9,28 @@
 import Foundation
 import CoreData
 
-extension AnyKeyPath {
-    var stringValue: String? {
-        return _kvcKeyPathString
+extension AnyKeyPath: Expressible {
+    public func asExpression() -> Any {
+        stringValue
+    }
+    
+    var stringValue: String {
+        return _kvcKeyPathString!
     }
 }
 
-public protocol TracableProtocol {
-    var rootType: Entity.Type { get }
-    var expression: Any { get }
+public protocol Expressible {
+    func asExpression() -> Any
 }
 
-public protocol RootTracableKeyPathProtocol: TracableProtocol {
+public protocol RootTracableKeyPathProtocol: Expressible {
+    var rootType: NeutralEntityObject.Type { get }
     var keyPath: AnyKeyPath { get }
     var fullPath: String { get }
 }
 
 public protocol PartailTracableKeyPathProtocol: RootTracableKeyPathProtocol {
-    associatedtype Root: Entity
+    associatedtype Root: NeutralEntityObject
     var root: PartialKeyPath<Root> { get }
     var allPaths: [RootTracableKeyPathProtocol] { get }
 }
@@ -36,8 +40,8 @@ public protocol TracableKeyPathProtocol: PartailTracableKeyPathProtocol {
 }
 
 extension PartailTracableKeyPathProtocol {
-    public var expression: Any {
-        return fullPath
+    public func asExpression() -> Any {
+        fullPath
     }
     
     public var fullPath: String {
@@ -49,13 +53,7 @@ extension PartailTracableKeyPathProtocol {
     }
 }
 
-extension PartailTracableKeyPathProtocol where Root: NSManagedObject {
-    public var fullPath: String {
-        return allPaths.compactMap{ $0.keyPath.stringValue }.joined(separator: ".")
-    }
-}
-
-public class PartialTracableKeyPath<Root: Entity>: PartailTracableKeyPathProtocol {
+public class PartialTracableKeyPath<Root: NeutralEntityObject>: PartailTracableKeyPathProtocol {
     
     public let root: PartialKeyPath<Root>
     
@@ -65,7 +63,7 @@ public class PartialTracableKeyPath<Root: Entity>: PartailTracableKeyPathProtoco
         return root
     }
     
-    public var rootType: Entity.Type {
+    public var rootType: NeutralEntityObject.Type {
         return Root.self
     }
     
@@ -79,26 +77,29 @@ public class PartialTracableKeyPath<Root: Entity>: PartailTracableKeyPathProtoco
     }
 }
 
-public class TracableKeyPath<Root: Entity, Value: NullablePropertyProtocol>: PartialTracableKeyPath<Root>, TracableKeyPathProtocol {
+public class TracableKeyPath<Root: NeutralEntityObject, Value: NullablePropertyProtocol>: PartialTracableKeyPath<Root>, TracableKeyPathProtocol {
     
     public override var allPaths: [RootTracableKeyPathProtocol] {
         return [TracableKeyPath<Root, Value>(root)] + subpaths
     }
 }
 
-extension PartialKeyPath: TracableProtocol where Root: Entity {
-    public var rootType: Entity.Type {
+extension KeyPath: RootTracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol {
+    public var rootType: NeutralEntityObject.Type {
         return Root.self
     }
-}
-
-extension PartialKeyPath: RootTracableKeyPathProtocol where Root: Entity {
+    
     public var keyPath: AnyKeyPath {
         return self
     }
+    
+    public var fullPath: String {
+        let dummy = Root.dummy()
+        return dummy[keyPath: self].description.name
+    }
 }
 
-extension PartialKeyPath: PartailTracableKeyPathProtocol where Root: Entity {
+extension KeyPath: PartailTracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol {
     public var root: PartialKeyPath<Root> {
         self
     }
@@ -108,29 +109,33 @@ extension PartialKeyPath: PartailTracableKeyPathProtocol where Root: Entity {
     }
 }
 
-extension KeyPath: TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol {}
+extension KeyPath: TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol {
+    
+}
 
 extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol {
+    public typealias RelationshipType = Value.PredicateValue
+    
     static public func + <ExtendedValue: Entity>(
         lhs: Self,
-        keyPath: KeyPath<Value.OptionalType.FieldType.RuntimeObjectValue, ExtendedValue>
+        keyPath: KeyPath<RelationshipType, ExtendedValue>
     )
         -> TracableKeyPath<Root, ExtendedValue>
-        where Value.OptionalType.FieldType.RuntimeObjectValue: Entity
+        where RelationshipType: NeutralEntityObject
     {
         return TracableKeyPath<Root, ExtendedValue>(lhs.root, subpaths: [
-            TracableKeyPath<Value.OptionalType.FieldType.RuntimeObjectValue, ExtendedValue>(keyPath)
+            TracableKeyPath<RelationshipType, ExtendedValue>(keyPath)
         ])
     }
     
     static public func + <ExtendedValue: AttributeProtocol>(
         lhs: Self,
-        keyPath: KeyPath<Value.OptionalType.FieldType.RuntimeObjectValue, ExtendedValue>
+        keyPath: KeyPath<RelationshipType, ExtendedValue>
     ) -> TracableKeyPath<Root, ExtendedValue>
-        where Value.OptionalType.FieldType.RuntimeObjectValue: Entity
+        where RelationshipType: NeutralEntityObject
     {
         return TracableKeyPath<Root, ExtendedValue>(lhs.root, subpaths: [
-            TracableKeyPath<Value.OptionalType.FieldType.RuntimeObjectValue, ExtendedValue>(keyPath)
+            TracableKeyPath<RelationshipType, ExtendedValue>(keyPath)
         ])
     }
 }
