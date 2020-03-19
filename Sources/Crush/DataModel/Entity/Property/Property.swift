@@ -39,6 +39,16 @@ public enum PropertyOption {
     case validationPredicatesWithWarnings([(NSPredicate, String)])
 }
 
+public struct PropertyOptionSet {
+    let options: [PropertyOption]
+}
+
+extension PropertyOptionSet: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: PropertyOption...) {
+        options = elements
+    }
+}
+
 extension PropertyOption: MutablePropertyOptionProtocol {
 
     public typealias Description = NSPropertyDescription
@@ -59,7 +69,6 @@ extension PropertyOption: MutablePropertyOptionProtocol {
 public protocol PropertyProtocol {
     var defaultName: String { get set }
     var proxy: PropertyProxy! { get set }
-    var value: Any { get }
     var propertyCacheKey: String { get set }
     
     func emptyPropertyDescription() -> NSPropertyDescription
@@ -78,9 +87,10 @@ extension PropertyProtocol {
 public protocol MutablePropertyProtocol: PropertyProtocol {
     associatedtype Option: MutablePropertyOptionProtocol
     associatedtype PropertyValue
+    associatedtype PredicateValue
     
-    var wrappedValue: PropertyValue? { get set }
-    init(wrappedValue: PropertyValue?)
+    var wrappedValue: PropertyValue { get set }
+    init(wrappedValue: PropertyValue)
 }
 
 extension MutablePropertyProtocol {

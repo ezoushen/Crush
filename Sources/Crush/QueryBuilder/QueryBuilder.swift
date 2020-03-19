@@ -77,7 +77,7 @@ internal struct QueryConfig<T: Entity> {
         request.propertiesToFetch = mapTo?.map{ $0.asExpression() }
         request.propertiesToGroupBy = groupBy?.map{ $0.asExpression() }
         request.resultType = resultType
-        request.fetchLimit = limit ?? .max
+        request.fetchLimit = limit ?? 0
         request.fetchOffset = offset ?? 0
         request.returnsObjectsAsFaults = asFaults
         return request

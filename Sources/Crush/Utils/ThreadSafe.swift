@@ -8,7 +8,7 @@
 import Foundation
 
 @propertyWrapper
-final class ThreadSafe<Value> {
+public final class ThreadSafe<Value> {
     
     private var _value: Value
     private var _accessQueue: DispatchQueue!
@@ -18,8 +18,9 @@ final class ThreadSafe<Value> {
         set { _accessQueue.async(flags: .barrier){ self._value = newValue }}
     }
     
-    init(wrappedValue: Value, on queue: DispatchQueue? = nil) {
+    public init(wrappedValue: Value, on queue: DispatchQueue? = nil) {
         self._value = wrappedValue
+        
         self._accessQueue = queue ?? DispatchQueue(label: "ThreadSafe Access Queue, \(String(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque())))", attributes: .concurrent)
     }
 }

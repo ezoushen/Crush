@@ -216,16 +216,23 @@ open class NeutralEntityObject: NSObject, Entity {
             }
         }
         
-        // Setup Indices
-        if let indexClass = NSClassFromString((NSStringFromClass(Self.self)+"5Index").replacingOccurrences(of: "_TtC", with: "_TtCC")) as? IndexSetProtocol.Type {
-            indexClass.setDefaultKeys(mirror: mirror)
-            let indexClassMirror = Mirror(reflecting: indexClass.init())
-            let indexes: [NSFetchIndexDescription] = indexClassMirror.children.compactMap{ (label, value) in
+        // Setup Constraints
+        if let constraintClass = NSClassFromString((NSStringFromClass(Self.self)+"10Constraint").replacingOccurrences(of: "_TtC", with: "_TtCC")) as? ConstraintSet.Type {
+            constraintClass.setDefaultKeys(mirror: mirror)
+            let indexClassMirror = Mirror(reflecting: constraintClass.init())
+            let indexChildren = indexClassMirror.children
+            let indexes: [NSFetchIndexDescription] = indexChildren.compactMap{ (label, value) in
                 guard let index = value as? IndexProtocol else { return nil }
                 return index.fetchIndexDescription(name: label ?? "", in: object)
             }
+            let uniquenessConstarints: [[Any]] = Set<[String]>(
+                indexChildren.compactMap { (label, value) -> [String]? in
+                    guard let constraint = value as? UniqueConstraintProtocol else{ return nil }
+                    return constraint.uniquenessConstarints
+                }
+            ).map{ $0 as [Any]}
             description.indexes = indexes
-            print(indexes)
+            description.uniquenessConstraints = uniquenessConstarints
         }
         
         return description

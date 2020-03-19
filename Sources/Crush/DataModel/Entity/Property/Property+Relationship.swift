@@ -43,12 +43,12 @@ public protocol RelationshipProtocol: NullablePropertyProtocol {
     
     var inverseKeyPath: Any! { get set }
     
-    init<R: RelationshipProtocol>(inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol]) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType
+    init<R: RelationshipProtocol>(wrappedValue: PropertyValue?, inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol]) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType
 }
 
 public extension RelationshipProtocol {
-    init<R: RelationshipProtocol>(inverse: KeyPath<DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
-        self.init(inverse: inverse, options: options)
+    init<R: RelationshipProtocol>(wrappedValue: PropertyValue?, inverse: KeyPath<DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
+        self.init(wrappedValue: wrappedValue, inverse: inverse, options: options)
     }
 }
 
@@ -58,8 +58,8 @@ public protocol FieldTypeProtocol {
     associatedtype RuntimeObjectValue
     associatedtype ManagedObjectValue
     
-    static func convert(value: ManagedObjectValue?) -> RuntimeObjectValue?
-    static func convert(value: RuntimeObjectValue?) -> ManagedObjectValue?
+    static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue
+    static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue
 }
 
 public protocol RelationshipTypeProtocol: FieldTypeProtocol {
@@ -69,21 +69,21 @@ public protocol RelationshipTypeProtocol: FieldTypeProtocol {
 }
 
 public struct ToOneRelationshipType<EntityType: Entity>: RelationshipTypeProtocol, FieldTypeProtocol {
-    public typealias RuntimeObjectValue = EntityType
-    public typealias ManagedObjectValue = NSManagedObject
+    public typealias RuntimeObjectValue = EntityType?
+    public typealias ManagedObjectValue = NSManagedObject?
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return 1
     }
     
     @inline(__always)
-    public static func convert(value: ManagedObjectValue?) -> RuntimeObjectValue? {
+    public static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue {
         guard let value = value else { return nil }
-        return RuntimeObjectValue.init(value, proxyType: .readWrite)
+        return EntityType.init(value, proxyType: proxyType)
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue?) -> ManagedObjectValue? {
+    public static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
         return value?.rawObject
     }
 }
@@ -97,45 +97,45 @@ public struct ToManyRelationshipType<EntityType: Hashable & Entity>: Relationshi
     }
     
     @inline(__always)
-    public static func convert(value: ManagedObjectValue?) -> RuntimeObjectValue? {
-        guard let value = value else { return nil }
-        return Set(value.allObjects.compactMap{ EntityType.init($0 as! NSManagedObject, proxyType: .readWrite) })
+    public static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue {
+        return Set(value.allObjects.compactMap{ EntityType.init($0 as! NSManagedObject, proxyType: proxyType) })
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue?) -> ManagedObjectValue? {
-        return value as ManagedObjectValue?
+    public static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
+        return value as ManagedObjectValue
     }
 }
 
 @propertyWrapper
-public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProtocol>: RelationshipProtocol where O.FieldType: RelationshipTypeProtocol {
-    
-    public typealias PropertyValue = O.FieldType.RuntimeObjectValue
+public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProtocol, R: RelationshipTypeProtocol>: RelationshipProtocol {
+
+    public typealias PredicateValue = DestinationEntity
+    public typealias PropertyValue = R.RuntimeObjectValue
     public typealias InverseType = I
-    public typealias RelationshipType = O.FieldType
+    public typealias RelationshipType = R
     public typealias SourceEntity = I.EntityType
-    public typealias DestinationEntity = RelationshipType.EntityType
+    public typealias DestinationEntity = R.EntityType
     public typealias OptionalType = O
     public typealias Option = RelationshipOption
     
     public weak var proxy: PropertyProxy! = nil
     
-    public var wrappedValue: PropertyValue? {
+    public var wrappedValue: PropertyValue {
         get {
-            let value: NSManagedObject! = proxy?.getValue(property: self)
-            return O.FieldType.EntityType.init(value, proxyType: proxy!.proxyType) as? PropertyValue
+            let value: R.ManagedObjectValue = proxy!.getValue(property: self)
+            return R.convert(value: value, proxyType: proxy.proxyType)
         }
         set {
             guard let proxy = proxy as? ReadWritePropertyProxy else {
                 return assertionFailure("value should not be modified with read only value mapper")
             }
             
-            proxy.setValue(RelationshipType.convert(value: newValue), property: self)
+            proxy.setValue(RelationshipType.convert(value: newValue, proxyType: proxy.proxyType), property: self)
         }
     }
 
-    dynamic public var projectedValue: Relationship<OptionalType, InverseType> {
+    dynamic public var projectedValue: Relationship<OptionalType, InverseType, RelationshipType> {
         self
     }
             
@@ -149,15 +149,20 @@ public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProt
     
     public var propertyCacheKey: String = ""
     
-    public convenience init(wrappedValue: PropertyValue?) {
+    public convenience init(wrappedValue: PropertyValue) {
         self.init()
     }
     
     public init() { }
     
-    public init<R: RelationshipProtocol>(inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol] = []) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
+    public init<R>(wrappedValue: PropertyValue? = nil, inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol] = [])
+        where R: RelationshipProtocol, R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
         self.inverseKeyPath = inverse
-        self.options = []
+        self.options = options
+    }
+    
+    public init(wrappedValue: PropertyValue? = nil, options: [PropertyOptionProtocol]) {
+        self.options = options
     }
     
     public func emptyPropertyDescription() -> NSPropertyDescription {

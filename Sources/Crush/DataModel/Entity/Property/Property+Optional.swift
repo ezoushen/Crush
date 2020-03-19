@@ -9,15 +9,13 @@
 import Foundation
 
 public protocol OptionalTypeProtocol {
-    associatedtype FieldType: FieldTypeProtocol
-    
     static var isOptional: Bool { get }
 }
 
-public struct Nullable<FieldType: FieldTypeProtocol>: OptionalTypeProtocol {
+public struct Nullable: OptionalTypeProtocol {
     public static var isOptional: Bool { true }
 }
 
-public struct NotNull<FieldType: FieldTypeProtocol>: OptionalTypeProtocol {
+public struct NotNull: OptionalTypeProtocol {
     public static var isOptional: Bool { false }
 }

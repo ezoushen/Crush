@@ -114,7 +114,7 @@ extension KeyPath: TracableKeyPathProtocol where Root: NeutralEntityObject, Valu
 }
 
 extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol {
-    public typealias RelationshipType = Value.OptionalType.FieldType.RuntimeObjectValue
+    public typealias RelationshipType = Value.PredicateValue
     
     static public func + <ExtendedValue: Entity>(
         lhs: Self,

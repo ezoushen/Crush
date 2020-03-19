@@ -14,6 +14,7 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
     
     case transient(Property)
     
+    public typealias PredicateValue = Property.PredicateValue
     public typealias PropertyValue = Property.PropertyValue
     public typealias Option = Property.Option
     public typealias OptionalType = Property.OptionalType
@@ -48,7 +49,7 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
         }
     }
     
-    public var wrappedValue: PropertyValue? {
+    public var wrappedValue: PropertyValue {
         get {
             guard case let .transient(attribute) = self else {
                 fatalError("Trasient type mismatch")
@@ -83,7 +84,7 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
         self = .transient(some)
     }
     
-    public init(wrappedValue: PropertyValue?) {
+    public init(wrappedValue: PropertyValue) {
         self = .transient(Property.init(wrappedValue: wrappedValue))
     }
     
@@ -99,13 +100,13 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
 }
 
 extension Temporary where Property: AttributeProtocol {
-    public init(wrappedValue: PropertyValue, options: PropertyOptionProtocol...) {
+    public init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol]) {
         self.init(Property.init(wrappedValue: wrappedValue, options: options))
     }
 }
 
 extension Temporary where Property: RelationshipProtocol {
-    public init<R: RelationshipProtocol>(inverse: KeyPath<Property.DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == Property.SourceEntity, R.SourceEntity == Property.DestinationEntity, R.RelationshipType == Property.InverseType, R.InverseType == Property.RelationshipType {
-        self.init(Property.init(inverse: inverse, options: options))
+    public init<R: RelationshipProtocol>(inverse: KeyPath<Property.DestinationEntity, R>, options: [PropertyOptionProtocol]) where R.DestinationEntity == Property.SourceEntity, R.SourceEntity == Property.DestinationEntity, R.RelationshipType == Property.InverseType, R.InverseType == Property.RelationshipType {
+        self.init(Property.init(wrappedValue: nil, inverse: inverse, options: options))
     }
 }

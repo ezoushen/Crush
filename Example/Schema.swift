@@ -25,11 +25,9 @@ class V1: SchemaOrigin {
     }
 }
 
-class V2: Schema<V1> {
+class V2: SchemaOrigin {
     class Todo: EntityObject {
-        @Value.String(options: [
-            PropertyOption.mapping(\V1.Todo.$title)
-        ])
+        @Value.String
         var content: String! = ""
         
         @Value.Date
@@ -43,5 +41,41 @@ class V2: Schema<V1> {
     }
 }
 
-typealias CurrentSchema = V2
+extension V2.Todo {
+    class Constraint: NSObject, ConstraintSet {
+        @CompositeFetchIndex
+        var title = [AscendingIndex(\V2.Todo.$content), AscendingIndex(\V2.Todo.$isFinished)]
+        
+        @UniqueConstraint
+        var context = \V2.Todo.$content
+    }
+}
+
+class V3: SchemaOrigin {
+    class Titleable: EntityObject {
+        @Value.String
+        var title: String! = "TITLE"
+    }
+    
+    class Todo: Titleable {
+        @Value.String
+        var content: String! = ""
+        
+        @Value.Date
+        var dueDate: Date! = Date()
+        
+        @Value.Bool
+        var isFinished: Bool! = false
+        
+        @Optional.Value.String
+        var memo: String?
+    }
+    
+    class List: Titleable {
+        @Value.String
+        var alias: String! = "ALIAS"
+    }
+}
+
+typealias CurrentSchema = V3
 typealias Todo = CurrentSchema.Todo

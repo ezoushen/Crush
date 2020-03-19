@@ -20,16 +20,19 @@ public protocol PredicateEquatable {
 public protocol PredicateComparable: PredicateEquatable { }
 
 public protocol FieldAttributeType: SavableTypeProtocol, FieldTypeProtocol
-where Self == RuntimeObjectValue, ManagedObjectValue: FieldAttributeType { }
+where Self? == RuntimeObjectValue {
+}
 
 public protocol PrimitiveAttributeType: FieldAttributeType
-where ManagedObjectValue == Self { }
+where ManagedObjectValue == Self? {
+    typealias PrimitiveType = Self
+}
 
 
 extension FieldAttributeType
-where RuntimeObjectValue == Self, RuntimeObjectValue == ManagedObjectValue {
+where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
     @inline(__always)
-    public static func convert(value: Self?) -> Self? {
+    public static func convert(value: Self?, proxyType: PropertyProxyType) -> Self? {
         value
     }
 }
@@ -104,15 +107,16 @@ extension UIImage: PrimitiveAttributeType, PredicateEquatable {
 #endif
 
 public protocol Enumerator: RawRepresentable, FieldAttributeType, PredicateComparable
-where RawValue: SavableTypeProtocol & PredicateEquatable, ManagedObjectValue: PredicateEquatable { }
+where RawValue: SavableTypeProtocol & PredicateEquatable { }
 
 extension Enumerator {
-    public static func convert(value: RawValue) -> Self {
-        Self.init(rawValue: value)!
+    public static func convert(value: RawValue?, proxyType: PropertyProxyType) -> Self? {
+        guard let value = value else { return nil }
+        return Self.init(rawValue: value)
     }
     
-    public static func convert(value: Self) -> RawValue {
-        value.rawValue
+    public static func convert(value: Self?, proxyType: PropertyProxyType) -> RawValue? {
+        value?.rawValue
     }
     
     public static var nativeType: NSAttributeType { RawValue.nativeType }
@@ -120,8 +124,8 @@ extension Enumerator {
 }
 
 extension RawRepresentable where Self: FieldAttributeType {
-    public typealias ManagedObjectValue = RawValue
-    public typealias RuntimeObjectValue = Self
+    public typealias ManagedObjectValue = RawValue?
+    public typealias RuntimeObjectValue = Self?
 }
 
 @objc(DefaultTransformer)
