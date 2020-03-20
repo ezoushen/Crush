@@ -33,20 +33,20 @@ extension TransactionContextProtocol where Self: RawContextProviderProtocol {
         return result ?? 0
     }
     
-    func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) -> [T] {
+    func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) throws -> [T] {
         targetContext.processPendingChanges()
 
-        var results: [T] = []
-        
-        targetContext.performAndWait {
-            do{
-                results = try targetContext.fetch(request) as! [T]
-            } catch {
-                print("Unable to fetch data in private context, error:",
-                      error.localizedDescription)
-            }
+        return try targetContext.performAndWait {
+            return try self.targetContext.fetch(request) as! [T]
         }
-        return results
+    }
+    
+    func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest) throws -> T {
+        targetContext.processPendingChanges()
+
+        return try targetContext.performAndWait {
+            return try self.targetContext.execute(request) as! T
+        }
     }
 }
 

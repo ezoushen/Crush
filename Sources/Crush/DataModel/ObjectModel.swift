@@ -48,7 +48,7 @@ public final class DataModel: ObjectModel {
         let coordinator = CacheCoordinator.shared
         let versionString = String(reflecting: version.self)
         
-        previousModel = version.lastVersion?.model
+        previousModel = version.previousVersion?.model
         
         if let model = coordinator.get(versionString, in: CacheType.objectModel) {
             rawModel = model
@@ -72,7 +72,7 @@ public final class DataModel: ObjectModel {
         
         rawModel = model
         
-        guard let lastVersion = version.lastVersion,
+        guard let lastVersion = version.previousVersion,
               let previousModel = self.previousModel else {
             migration = nil
             return

@@ -61,7 +61,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute>: Attribu
         
     public var wrappedValue: PropertyValue {
         get {
-            let value: FieldType.ManagedObjectValue = proxy!.getValue(property: self)
+            let value: FieldType.ManagedObjectValue = proxy!.getValue(key: description.name)
             return FieldType.convert(value: value, proxyType: proxy.proxyType)
         }
         set {
@@ -69,7 +69,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute>: Attribu
                 return assertionFailure("value should not be modified with read only value mapper")
             }
             let value: FieldType.ManagedObjectValue = FieldType.convert(value: newValue, proxyType: proxy.proxyType)
-            proxy.setValue(value, property: self)
+            proxy.setValue(value, key: description.name)
         }
     }
     

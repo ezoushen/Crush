@@ -108,7 +108,7 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     
     public var wrappedValue: PropertyValue {
         get {
-            let value: R.ManagedObjectValue = proxy!.getValue(property: self)
+            let value: R.ManagedObjectValue = proxy!.getValue(key: description.name)
             return R.convert(value: value, proxyType: proxy.proxyType)
         }
         set {
@@ -116,7 +116,7 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
                 return assertionFailure("value should not be modified with read only value mapper")
             }
             
-            proxy.setValue(Mapping.convert(value: newValue, proxyType: proxy.proxyType), property: self)
+            proxy.setValue(Mapping.convert(value: newValue, proxyType: proxy.proxyType), key: description.name)
         }
     }
 

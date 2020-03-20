@@ -32,8 +32,8 @@ extension PropertyProxyType {
 
 public protocol PropertyProxy: AnyObject {
     var proxyType: PropertyProxyType { get }
-    func getValue<T>(property: PropertyProtocol) -> T
-    func setValue(_ value: Any?, property: PropertyProtocol)
+    func getValue<T>(key: String) -> T
+    func setValue(_ value: Any?, key: String)
 }
 
 protocol ReadablePropertyProxy: PropertyProxy { }
@@ -43,8 +43,7 @@ protocol WritablePropertyProxy: PropertyProxy { }
 extension ReadablePropertyProxy
 where Self: ConcretePropertyProxy {
     @inline(__always)
-    fileprivate func get<T>(property: PropertyProtocol) -> T {
-        let key = property.description.name
+    fileprivate func get<T>(key: String) -> T {
         rawObject.willAccessValue(forKey: key)
         defer {
             rawObject.didAccessValue(forKey: key)
@@ -57,8 +56,7 @@ where Self: ConcretePropertyProxy {
 extension WritablePropertyProxy
 where Self: ConcretePropertyProxy {
     @inline(__always)
-    func set(_ value: Any?, property: PropertyProtocol) {
-        let key = property.description.name
+    func set(_ value: Any?, key: String) {
         rawObject.willChangeValue(forKey: key)
         rawObject.setPrimitiveValue(value, forKey: key)
         rawObject.didChangeValue(forKey: key)
@@ -66,13 +64,14 @@ where Self: ConcretePropertyProxy {
 }
 
 class ConcretePropertyProxy: PropertyProxy {
+    
     let proxyType: PropertyProxyType
     
-    func setValue(_ value: Any?, property: PropertyProtocol) {
+    func getValue<T>(key: String) -> T {
         fatalError()
     }
     
-    func getValue<T>(property: PropertyProtocol) -> T {
+    func setValue(_ value: Any?, key: String) {
         fatalError()
     }
     
@@ -90,10 +89,9 @@ final class ReadOnlyPropertyProxy: ConcretePropertyProxy, ReadablePropertyProxy 
     }
     
     @inline(__always)
-    override func getValue<T>(property: PropertyProtocol) -> T {
-        get(property: property)
+    override func getValue<T>(key: String) -> T {
+        get(key: key)
     }
-    
 }
 
 final class ReadWritePropertyProxy: ConcretePropertyProxy, ReadablePropertyProxy, WritablePropertyProxy {
@@ -102,13 +100,13 @@ final class ReadWritePropertyProxy: ConcretePropertyProxy, ReadablePropertyProxy
     }
     
     @inline(__always)
-    override func getValue<T>(property: PropertyProtocol) -> T {
-        get(property: property)
+    override func getValue<T>(key: String) -> T {
+        get(key: key)
     }
     
     @inline(__always)
-    override func setValue(_ value: Any?, property: PropertyProtocol) {
-        set(value, property: property)
+    override func setValue(_ value: Any?, key: String) {
+        set(value, key: key)
     }
 }
 

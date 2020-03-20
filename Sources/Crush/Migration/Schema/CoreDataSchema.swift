@@ -18,7 +18,7 @@ public struct CoreDataSchema: SchemaProtocol {
 
     private let schemaChain: [CoreDataMomSchema]
     
-    public var lastVersion: SchemaProtocol?
+    public var previousVersion: SchemaProtocol?
 
     public var concreteVersion: SchemaProtocol?
 
@@ -60,7 +60,7 @@ internal class CoreDataMomSchema: SchemaProtocol {
     
     var model: ObjectModel
     
-    var lastVersion: SchemaProtocol?
+    var previousVersion: SchemaProtocol?
     
     var concreteVersion: SchemaProtocol? {
         return self
@@ -72,7 +72,7 @@ internal class CoreDataMomSchema: SchemaProtocol {
     
     init(url: URL, previous: CoreDataMomSchema?) {
         self.name = url.lastPathComponent
-        self.lastVersion = previous
+        self.previousVersion = previous
         self.model = CoreDataModel(url: url, previousModel: previous?.model)
     }
 }

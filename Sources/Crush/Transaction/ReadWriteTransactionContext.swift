@@ -8,7 +8,7 @@
 
 import CoreData
 
-internal struct _ReadWriteTransactionContext: ReadWriteTransactionContext & RawContextProviderProtocol {
+internal struct _ReadWriteTransactionContext: ReadWriteTransactionContext, RawContextProviderProtocol {
     internal let context: NSManagedObjectContext
     internal let targetContext: NSManagedObjectContext
     internal let readOnlyContext: NSManagedObjectContext
@@ -46,17 +46,27 @@ extension _ReadWriteTransactionContext {
         guard context.hasChanges else {
             return
         }
-        
-        withExtendedLifetime(self) { object in
-            object.context.performAndWait {
-                try! object.context.save()
+        withExtendedLifetime(self) { transactionContext in
+            transactionContext.context.performAndWait {
+                do {
+                    try transactionContext.context.save()
+                } catch {
+                    assertionFailure(error.localizedDescription)
+                }
 
-                object.targetContext.perform {
-                    try! object.targetContext.save()
+                transactionContext.targetContext.perform {
+                    do {
+                        try transactionContext.targetContext.save()
+                    } catch {
+                        assertionFailure(error.localizedDescription)
+                    }
                 }
                 
-                object.readOnlyContext.performAndWait {
-                    object.readOnlyContext.refreshAllObjects()
+                let ids = transactionContext.targetContext.updatedObjects.map{ $0.objectID }
+                
+                transactionContext.readOnlyContext.performAndWait {
+                    let objects = ids.map{ transactionContext.readOnlyContext.object(with: $0 )}
+                    objects.forEach{ transactionContext.readOnlyContext.refresh($0, mergeChanges: true)}
                 }
             }
         }

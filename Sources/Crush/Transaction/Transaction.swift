@@ -11,7 +11,7 @@ public struct Transaction {
     public typealias ReadOnlyContext = ReaderTransactionContext
     public typealias ReadWriteContext = ReadWriteTransactionContext
     
-    internal let objectContext: NSManagedObjectContext
+    internal let presentContext: _ReadOnlyTransactionContext
     internal let executionContext: _ReadWriteTransactionContext
 }
 
@@ -36,86 +36,52 @@ extension Transaction {
 extension Transaction {
     public func async(_ block: @escaping (ReadWriteContext) -> Void) {
         let transactionContext = executionContext
-
+        
         transactionContext.context.perform {
             block(transactionContext)
         }
     }
     
-    public func sync<T>(_ block: @escaping (ReadWriteContext) -> T) -> T {
+    public func sync<T>(_ block: @escaping (ReadWriteContext) throws -> T) throws -> T {
         let transactionContext = executionContext
-
-        var result: T!
-
-        transactionContext.context.performAndWait {
-            result = block(transactionContext)
+        return try transactionContext.context.performAndWait {
+            try block(transactionContext)
         }
-
-        return result
     }
     
-    public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) -> T?) -> T? {
+    public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) throws -> T) throws -> T {
         let transactionContext = executionContext
-
-        var result: T?
-
-        transactionContext.context.performAndWait {
-            result = block(transactionContext)
-        }
-        guard let object = result else { return nil }
-        
-        assert(object.rawObject.hasChanges == false,
-               "You should commit changes in transaction before return")
-        
-        let readOnlyObject = objectContext.receive(runtimeObject: object)
-
-        return T.init(readOnlyObject, proxyType: .readOnly)
-    }
-    
-    public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) -> T) -> T {
-        let transactionContext = executionContext
-
-        var result: T!
-
-        transactionContext.context.performAndWait {
-            result = block(transactionContext)
+        let result: T = try transactionContext.context.performAndWait {
+            try block(transactionContext)
         }
         
-        assert(result.rawObject.hasChanges == false,
+        assert(transactionContext.context.hasChanges == false,
                "You should commit changes in transaction before return")
 
-        let readOnlyObject = objectContext.receive(runtimeObject: result)
-
-        return T.init(readOnlyObject, proxyType: .readOnly)
+        return presentContext.receive(result)
     }
 
-    public func sync<T: Entity, S: Sequence>(_ block: @escaping (ReadWriteContext) -> S) -> S where S.Element == T {
+    public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) throws -> [T]) throws -> [T]{
         let transactionContext = executionContext
 
-        var result: S!
-
-        transactionContext.context.performAndWait {
-            result = block(transactionContext)
+        let result: [T] = try transactionContext.context.performAndWait {
+            try block(transactionContext)
         }
-
-        return result.compactMap { object -> T in
-            assert(object.rawObject.hasChanges == false,
-                   "You should commit changes in transaction before return")
-            let readOnlyObject = objectContext.receive(runtimeObject: object)
-            return T.init(readOnlyObject, proxyType: .readOnly)
-        } as! S
+        assert(transactionContext.context.hasChanges == false,
+               "You should commit changes in transaction before return")
+        
+        return result.compactMap(presentContext.receive(_:))
     }
 }
 
 extension Transaction {
     public struct SingularEditor<T: Entity> {
         
-        private let _value: T
-        
-        let transaction: Transaction
+        private let value: T
+        private let transaction: Transaction
         
         init(_ value: T, transaction: Transaction) {
-            self._value = value
+            self.value = value
             self.transaction = transaction
         }
     }
@@ -126,72 +92,61 @@ extension Transaction.SingularEditor {
         let context = transaction.executionContext
 
         context.context.perform {
-            let value = context.receive(self._value)
+            let value = context.receive(self.value)
             block(context, value)
         }
     }
     
-    public func sync(_ block: @escaping (Transaction.ReadWriteContext, T) -> Void) {
+    public func sync(_ block: @escaping (Transaction.ReadWriteContext, T) throws -> Void) throws {
         let context = transaction.executionContext
         
-        context.context.performAndWait {
-            let value = context.receive(self._value)
-            block(context, value)
+        try context.context.performAndWait {
+            let value = context.receive(self.value)
+            try block(context, value)
         }
     }
     
-    public func sync<V>(_ block: @escaping (Transaction.ReadWriteContext, T) -> V) -> V {
+    public func sync<V>(_ block: @escaping (Transaction.ReadWriteContext, T) throws -> V) throws -> V {
         let context = transaction.executionContext
-        var result: V!
-        context.context.performAndWait {
-            let value = context.receive(self._value)
-            result = block(context, value)
+        let result: V = try context.context.performAndWait {
+            try block(context, context.receive(self.value))
         }
         return result
     }
     
-    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, T) -> V) -> V {
+    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, T) throws -> V) throws -> V {
         let context = transaction.executionContext
-        var result: V!
-        
-        context.context.performAndWait {
-            let value = context.receive(self._value)
-            result = block(context, value)
+        let result: V = try context.context.performAndWait {
+            return try block(context, context.receive(self.value))
         }
         
-        assert(result.rawObject.hasChanges == false,
+        assert(context.context.hasChanges == false,
                "You should commit changes in transaction before return")
         
-        return V.init(transaction.objectContext.receive(runtimeObject: result),
-                        proxyType: .readOnly)
+        return transaction.presentContext.receive(result)
     }
     
-    public func sync<V: Entity, S: Sequence>(_ block: @escaping (Transaction.ReadWriteContext, T) -> S) -> S where S.Element == V {
+    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, T) throws -> [V]) throws -> [V]  {
         let context = transaction.executionContext
-        var result: S!
-        context.context.performAndWait {
-            let value = context.receive(self._value)
-            result = block(context, value)
+        let result: [V] = try context.context.performAndWait {
+            try block(context, context.receive(self.value))
         }
-        return result.compactMap { entity -> V in
-            assert(entity.rawObject.hasChanges == false,
-                   "You should commit changes in transaction before return")
-            
-            return V.init(transaction.objectContext.receive(runtimeObject: entity),
-                            proxyType: .readOnly)
-        } as! S
+        
+        assert(context.context.hasChanges == false,
+               "You should commit changes in transaction before return")
+        
+        return result.compactMap(transaction.presentContext.receive(_:))
     }
 }
 
 extension Transaction {
     public struct PluralEditor<T: Entity> {
     
-        private let _values: [T]
-        
-        let transaction: Transaction
+        private let values: [T]
+        private let transaction: Transaction
         
         init(_ values: [T], transaction: Transaction) {
-            self._values = values
+            self.values = values
             self.transaction = transaction
         }
     }
@@ -202,62 +157,67 @@ extension Transaction.PluralEditor {
         let context = transaction.executionContext
         
         context.context.perform {
-            let values = self._values.map(context.receive(_:))
+            let values = self.values.map(context.receive(_:))
             block(context, values)
         }
     }
     
-    public func sync(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> Void) {
+    public func sync(_ block: @escaping (Transaction.ReadWriteContext, [T]) throws -> Void) throws {
         let context = transaction.executionContext
         
-        context.context.performAndWait {
-            let values = self._values.map(context.receive(_:))
-            block(context, values)
+        try context.context.performAndWait {
+            let values = self.values.map(context.receive(_:))
+            try block(context, values)
         }
     }
     
-    public func sync<V>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> V) -> V {
-        let context = transaction.executionContext
-        var result: V!
-        
-        context.context.performAndWait {
-            let values = self._values.map(context.receive(_:))
-            result = block(context, values)
+    public func sync<V>(_ block: @escaping (Transaction.ReadWriteContext, [T]) throws -> V) throws -> V {
+        try transaction.executionContext.context.performAndWait {
+            try block(self.transaction.executionContext, self.values.map(self.transaction.executionContext.receive(_:)))
         }
-        
-        return result
     }
     
-    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> V) -> V {
+    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) throws -> V) throws -> V {
         let context = transaction.executionContext
-        var result: V!
-        
-        context.context.performAndWait {
-            let values = self._values.map(context.receive(_:))
-            result = block(context, values)
+        let result: V = try context.context.performAndWait {
+            let values = self.values.map(context.receive(_:))
+            return try block(context, values)
         }
         
-        assert(result.rawObject.hasChanges == false,
+        assert(context.context.hasChanges == false,
                "You should commit changes in transaction before return")
         
-        return V.init(transaction.objectContext.receive(runtimeObject: result),
-                      proxyType: .readOnly)
+        return transaction.presentContext.receive(result)
     }
     
-    public func sync<V: Entity, S: Sequence>(_ block: @escaping (Transaction.ReadWriteContext, [T]) -> S) -> S where S.Element == V {
+    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) throws -> [V]) throws -> [V] {
         let context = transaction.executionContext
-        var result: S!
-        context.context.performAndWait {
-            let values = self._values.map(context.receive(_:))
-            result = block(context, values)
+        let result: [V] = try context.context.performAndWait {
+            let values = self.values.map(context.receive(_:))
+            return try block(context, values)
         }
         
-        return result.compactMap { entity -> V in
-            assert(entity.rawObject.hasChanges == false,
-                   "You should commit changes in transaction before return")
-            
-            return V.init(transaction.objectContext.receive(runtimeObject: entity),
-                          proxyType: .readOnly)
-        } as! S
+        assert(context.context.hasChanges == false,
+               "You should commit changes in transaction before return")
+        
+        return result.compactMap(transaction.presentContext.receive(_:))
+    }
+}
+
+extension NSManagedObjectContext {
+    func performAndWait<T>(_ block: @escaping () throws -> T) throws -> T {
+        var result: T!
+        var error: Error?
+        performAndWait {
+            do {
+                result = try block()
+            } catch(let err) {
+                error = err
+            }
+        }
+        if let error = error {
+            throw error
+        }
+        return result
     }
 }

@@ -19,7 +19,7 @@ final public class SQLMigrator: DataMigrator {
         
         func createVersionChain(version: SchemaProtocol?) -> [SchemaProtocol] {
             guard let version = version else { return [] }
-            return [version] + createVersionChain(version: version.lastVersion)
+            return [version] + createVersionChain(version: version.previousVersion)
         }
         
         versions = createVersionChain(version: activeVersion).reversed()

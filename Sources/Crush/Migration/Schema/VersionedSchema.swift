@@ -18,7 +18,7 @@ extension DataSchema {
 }
 
 open class BaseSchema: DataSchema {
-    public var lastVersion: SchemaProtocol? {
+    public var previousVersion: SchemaProtocol? {
         fatalError()
     }
     
@@ -30,17 +30,17 @@ open class BaseSchema: DataSchema {
 }
 
 open class Schema<Version: DataSchema>: BaseSchema {
-    public typealias LastVersion = Version
+    public typealias PreviousVersion = Version
     
-    public override var lastVersion: SchemaProtocol? {
-        return LastVersion.init()
+    public override var previousVersion: SchemaProtocol? {
+        return PreviousVersion.init()
     }
         
     required public init() { }
 }
 
 open class SchemaOrigin: BaseSchema {
-    public override var lastVersion: SchemaProtocol? {
+    public override var previousVersion: SchemaProtocol? {
         return nil
     }
         
