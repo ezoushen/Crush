@@ -36,7 +36,7 @@ public protocol PartailTracableKeyPathProtocol: RootTracableKeyPathProtocol {
 }
 
 public protocol TracableKeyPathProtocol: PartailTracableKeyPathProtocol {
-    associatedtype Value: NullablePropertyProtocol
+    associatedtype Value: NullableProperty
 }
 
 extension PartailTracableKeyPathProtocol {
@@ -77,14 +77,14 @@ public class PartialTracableKeyPath<Root: Entity>: PartailTracableKeyPathProtoco
     }
 }
 
-public class TracableKeyPath<Root: Entity, Value: NullablePropertyProtocol>: PartialTracableKeyPath<Root>, TracableKeyPathProtocol {
+public class TracableKeyPath<Root: Entity, Value: NullableProperty>: PartialTracableKeyPath<Root>, TracableKeyPathProtocol {
     
     public override var allPaths: [RootTracableKeyPathProtocol] {
         return [TracableKeyPath<Root, Value>(root)] + subpaths
     }
 }
 
-extension KeyPath: RootTracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol {
+extension KeyPath: RootTracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullableProperty {
     public var rootType: Entity.Type {
         return Root.self
     }
@@ -99,7 +99,7 @@ extension KeyPath: RootTracableKeyPathProtocol where Root: NeutralEntityObject, 
     }
 }
 
-extension KeyPath: PartailTracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol {
+extension KeyPath: PartailTracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullableProperty {
     public var root: PartialKeyPath<Root> {
         self
     }
@@ -109,11 +109,11 @@ extension KeyPath: PartailTracableKeyPathProtocol where Root: NeutralEntityObjec
     }
 }
 
-extension KeyPath: TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullablePropertyProtocol {
+extension KeyPath: TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullableProperty {
     
 }
 
-extension TracableKeyPathProtocol where Root: Entity, Value: NullablePropertyProtocol {
+extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty {
     public typealias RelationshipType = Value.PredicateValue
     
     static public func + <ExtendedValue: Entity>(

@@ -7,22 +7,29 @@
 
 import Foundation
 
-public protocol DataSchemaProtocol: SchemaProtocol { }
+public protocol DataSchema: SchemaProtocol {
+    var entities: [Entity.Type] { get }
+}
 
-open class _Schema: DataSchemaProtocol {
+extension DataSchema {
+    public var model: ObjectModel {
+        DataModel(version: self, entities: entities)
+    }
+}
+
+open class BaseSchema: DataSchema {
     public var lastVersion: SchemaProtocol? {
         fatalError()
     }
     
-    open var model: ObjectModel {
-        DataModel(version: self,
-                  entities: allClasses[String(reflecting: Self.self)] ?? [])
+    open var entities: [Entity.Type] {
+        allClasses[String(reflecting: Self.self)] ?? []
     }
     
     required public init() { }
 }
 
-open class Schema<Version: SchemaProtocol>: _Schema {
+open class Schema<Version: DataSchema>: BaseSchema {
     public typealias LastVersion = Version
     
     public override var lastVersion: SchemaProtocol? {
@@ -32,7 +39,7 @@ open class Schema<Version: SchemaProtocol>: _Schema {
     required public init() { }
 }
 
-open class SchemaOrigin: _Schema {
+open class SchemaOrigin: BaseSchema {
     public override var lastVersion: SchemaProtocol? {
         return nil
     }
@@ -40,7 +47,7 @@ open class SchemaOrigin: _Schema {
     required public init() { }
 }
 
-fileprivate func findTypeNames(type: RuntimeObject.Type) -> [String] {
+fileprivate func findTypeNames(type: Entity.Type) -> [String] {
     let string = String(reflecting: type)
     let types = string.split(separator: ".")
     let packageName = String(types.first!)

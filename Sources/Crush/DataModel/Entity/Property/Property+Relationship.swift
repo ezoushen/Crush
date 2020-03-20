@@ -18,7 +18,7 @@ public enum RelationshipOption {
     case isOrdered(Bool)
 }
 
-extension RelationshipOption: MutablePropertyOptionProtocol {
+extension RelationshipOption: MutablePropertyConfigurable {
     public typealias Description = NSRelationshipDescription
     
     public func updatePropertyDescription<D: NSPropertyDescription>(_ description: D) {
@@ -35,40 +35,25 @@ extension RelationshipOption: MutablePropertyOptionProtocol {
     }
 }
 
-public protocol RelationshipProtocol: NullablePropertyProtocol {
-    associatedtype DestinationEntity: Entity
-    associatedtype SourceEntity: Entity
-    associatedtype RelationshipType: RelationshipTypeProtocol
-    associatedtype InverseType: RelationshipTypeProtocol
+public protocol RelationshipProtocol: NullableProperty {
+    associatedtype Destination: Entity
+    associatedtype Source: Entity
+    associatedtype Mapping: RelationMapping
+    associatedtype InverseMapping: RelationMapping
     
-    var inverseKeyPath: Any! { get set }
+    var inverseKeyPath: AnyKeyPath! { get set }
     
-    init<R: RelationshipProtocol>(wrappedValue: PropertyValue?, inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol]) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType
-}
-
-public extension RelationshipProtocol {
-    init<R: RelationshipProtocol>(wrappedValue: PropertyValue?, inverse: KeyPath<DestinationEntity, R>, options: PropertyOptionProtocol...) where R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
-        self.init(wrappedValue: wrappedValue, inverse: inverse, options: options)
-    }
+    init<R: RelationshipProtocol>(wrappedValue: PropertyValue?, inverse: KeyPath<Destination, R>, options: PropertyConfiguration) where R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping
 }
 
 // MARK: - EntityRelationShipType
-
-public protocol FieldTypeProtocol {
-    associatedtype RuntimeObjectValue
-    associatedtype ManagedObjectValue
+public protocol RelationMapping: FieldConvertible {
+    associatedtype EntityType: HashableEntity
     
-    static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue
-    static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue
-}
-
-public protocol RelationshipTypeProtocol: FieldTypeProtocol {
-    associatedtype EntityType: Entity
-        
     static func resolveMaxCount(_ amount: Int) -> Int
 }
 
-public struct ToOneRelationshipType<EntityType: Entity>: RelationshipTypeProtocol, FieldTypeProtocol {
+public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
     public typealias RuntimeObjectValue = EntityType?
     public typealias ManagedObjectValue = NSManagedObject?
     
@@ -88,7 +73,7 @@ public struct ToOneRelationshipType<EntityType: Entity>: RelationshipTypeProtoco
     }
 }
 
-public struct ToManyRelationshipType<EntityType: Hashable & Entity>: RelationshipTypeProtocol, FieldTypeProtocol {
+public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
     public typealias RuntimeObjectValue = Set<EntityType>
     public typealias ManagedObjectValue = NSSet
     
@@ -108,16 +93,16 @@ public struct ToManyRelationshipType<EntityType: Hashable & Entity>: Relationshi
 }
 
 @propertyWrapper
-public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProtocol, R: RelationshipTypeProtocol>: RelationshipProtocol {
+public final class Relationship<O: Nullability, I: RelationMapping, R: RelationMapping>: RelationshipProtocol {
 
-    public typealias PredicateValue = DestinationEntity
+    public typealias PredicateValue = Destination
     public typealias PropertyValue = R.RuntimeObjectValue
-    public typealias InverseType = I
-    public typealias RelationshipType = R
-    public typealias SourceEntity = I.EntityType
-    public typealias DestinationEntity = R.EntityType
-    public typealias OptionalType = O
-    public typealias Option = RelationshipOption
+    public typealias InverseMapping = I
+    public typealias Mapping = R
+    public typealias Source = I.EntityType
+    public typealias Destination = R.EntityType
+    public typealias Nullability = O
+    public typealias PropertyOption = RelationshipOption
     
     public weak var proxy: PropertyProxy! = nil
     
@@ -131,11 +116,11 @@ public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProt
                 return assertionFailure("value should not be modified with read only value mapper")
             }
             
-            proxy.setValue(RelationshipType.convert(value: newValue, proxyType: proxy.proxyType), property: self)
+            proxy.setValue(Mapping.convert(value: newValue, proxyType: proxy.proxyType), property: self)
         }
     }
 
-    dynamic public var projectedValue: Relationship<OptionalType, InverseType, RelationshipType> {
+    dynamic public var projectedValue: Crush.Relationship<Nullability, InverseMapping, Mapping> {
         self
     }
             
@@ -143,9 +128,9 @@ public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProt
             
     public var inverseRelationship: String?
     
-    public var inverseKeyPath: Any!
+    public var inverseKeyPath: AnyKeyPath!
     
-    public var options: [PropertyOptionProtocol] = []
+    public var configuration: PropertyConfiguration = []
     
     public var propertyCacheKey: String = ""
     
@@ -155,28 +140,28 @@ public final class Relationship<O: OptionalTypeProtocol, I: RelationshipTypeProt
     
     public init() { }
     
-    public init<R>(wrappedValue: PropertyValue? = nil, inverse: KeyPath<DestinationEntity, R>, options: [PropertyOptionProtocol] = [])
-        where R: RelationshipProtocol, R.DestinationEntity == SourceEntity, R.SourceEntity == DestinationEntity, R.RelationshipType == InverseType, R.InverseType == RelationshipType {
+    public init<R>(wrappedValue: PropertyValue? = nil, inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
+        where R: RelationshipProtocol, R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping {
         self.inverseKeyPath = inverse
-        self.options = options
+        self.configuration = options
     }
     
-    public init(wrappedValue: PropertyValue? = nil, options: [PropertyOptionProtocol]) {
-        self.options = options
+    public init(wrappedValue: PropertyValue? = nil, options: PropertyConfiguration) {
+        self.configuration = options
     }
     
     public func emptyPropertyDescription() -> NSPropertyDescription {
         let description = NSRelationshipDescription()
         
-        options.forEach{ $0.updatePropertyDescription(description) }
+        configuration.configure(description: description)
 
         description.isOptional = O.isOptional
         description.isTransient = isTransient
         description.name = description.name.isEmpty ? defaultName : description.name
-        description.maxCount = RelationshipType.resolveMaxCount(description.maxCount)
         description.userInfo = description.userInfo ?? [:]
-        description.userInfo?[UserInfoKey.relationshipDestination] = DestinationEntity.entityCacheKey
-        
+        description.userInfo?[UserInfoKey.relationshipDestination] = Destination.entityCacheKey
+        description.maxCount = Mapping.resolveMaxCount(description.maxCount)
+
         if let inverseKeyPath = inverseKeyPath {
             description.userInfo?[UserInfoKey.inverseRelationship] = inverseKeyPath
         }

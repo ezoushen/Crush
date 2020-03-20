@@ -10,14 +10,14 @@ import CoreData
 
 // MARK: - Transient Property
 @propertyWrapper
-public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProtocol {
+public enum Temporary<Property: NullableProperty>: NullableProperty {
     
     case transient(Property)
     
     public typealias PredicateValue = Property.PredicateValue
     public typealias PropertyValue = Property.PropertyValue
-    public typealias Option = Property.Option
-    public typealias OptionalType = Property.OptionalType
+    public typealias PropertyOption = Property.PropertyOption
+    public typealias Nullability = Property.Nullability
 
     public var defaultName: String {
         get {
@@ -100,13 +100,15 @@ public enum Temporary<Property: NullablePropertyProtocol>: NullablePropertyProto
 }
 
 extension Temporary where Property: AttributeProtocol {
-    public init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol]) {
+    public init(wrappedValue: PropertyValue, options: PropertyConfiguration) {
         self.init(Property.init(wrappedValue: wrappedValue, options: options))
     }
 }
 
 extension Temporary where Property: RelationshipProtocol {
-    public init<R: RelationshipProtocol>(inverse: KeyPath<Property.DestinationEntity, R>, options: [PropertyOptionProtocol]) where R.DestinationEntity == Property.SourceEntity, R.SourceEntity == Property.DestinationEntity, R.RelationshipType == Property.InverseType, R.InverseType == Property.RelationshipType {
+    public init<R: RelationshipProtocol>(inverse: KeyPath<Property.Destination, R>, options: PropertyConfiguration)
+        where R.Destination == Property.Source, R.Source == Property.Destination,
+        R.Mapping == Property.InverseMapping, R.InverseMapping == Property.Mapping {
         self.init(Property.init(wrappedValue: nil, inverse: inverse, options: options))
     }
 }

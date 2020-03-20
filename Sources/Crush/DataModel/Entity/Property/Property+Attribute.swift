@@ -15,7 +15,7 @@ public enum AttributeOption {
     case preservesValueInHistoryOnDeletion(Bool)
 }
 
-extension AttributeOption: MutablePropertyOptionProtocol {
+extension AttributeOption: MutablePropertyConfigurable {
     public typealias Description = NSAttributeDescription
     
     public func updatePropertyDescription<D: NSPropertyDescription>(_ description: D) {
@@ -30,10 +30,10 @@ extension AttributeOption: MutablePropertyOptionProtocol {
     }
 }
 
-public protocol AttributeProtocol: NullablePropertyProtocol where PredicateValue: SavableTypeProtocol{
+public protocol AttributeProtocol: NullableProperty where PredicateValue: FieldProtocol{
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
-    init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol])
+    init(wrappedValue: PropertyValue, options: PropertyConfiguration)
 }
 
 extension AttributeProtocol {
@@ -53,11 +53,11 @@ extension AttributeProtocol {
 
 // MARK: - EntityAttributeType
 @propertyWrapper
-public final class Attribute<O: OptionalTypeProtocol, FieldType: FieldAttributeType>: AttributeProtocol {
+public final class Attribute<O: Nullability, FieldType: FieldAttribute>: AttributeProtocol {
     public typealias PredicateValue = FieldType
     public typealias PropertyValue = FieldType?
-    public typealias OptionalType = O
-    public typealias Option = AttributeOption
+    public typealias Nullability = O
+    public typealias PropertyOption = AttributeOption
         
     public var wrappedValue: PropertyValue {
         get {
@@ -85,7 +85,7 @@ public final class Attribute<O: OptionalTypeProtocol, FieldType: FieldAttributeT
     
     public var renamingIdentifier: String?
     
-    public var options: [PropertyOptionProtocol] = []
+    public var configuration: PropertyConfiguration = []
     
     public var propertyCacheKey: String = ""
     
@@ -94,7 +94,7 @@ public final class Attribute<O: OptionalTypeProtocol, FieldType: FieldAttributeT
     public func emptyPropertyDescription() -> NSPropertyDescription {
         let description = NSAttributeDescription()
 
-        options.forEach{ $0.updatePropertyDescription(description) }
+        configuration.configure(description: description)
 
         description.isTransient = isTransient
         description.valueTransformerName = valueTransformerName
@@ -115,8 +115,8 @@ public final class Attribute<O: OptionalTypeProtocol, FieldType: FieldAttributeT
         self.init(wrappedValue: wrappedValue, options: [])
     }
     
-    public init(wrappedValue: PropertyValue, options: [PropertyOptionProtocol]) {
+    public init(wrappedValue: PropertyValue, options: PropertyConfiguration) {
         self.defaultValue = wrappedValue
-        self.options = options
+        self.configuration = options
     }
 }

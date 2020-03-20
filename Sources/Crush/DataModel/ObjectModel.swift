@@ -8,15 +8,15 @@
 
 import CoreData
 
-public protocol ObjectModel {
+public protocol ObjectModel: AnyObject {
     var rawModel: NSManagedObjectModel! { get }
     var migration: Migration? { get }
     var previousModel: ObjectModel? { get }
 }
 
-public class CoreDataModel: ObjectModel {
+public final class CoreDataModel: ObjectModel {
     public private(set) var rawModel: NSManagedObjectModel! = nil
-    public var previousModel: ObjectModel? { nil }
+    public var previousModel: ObjectModel?
     public var migration: Migration? {
         guard let previousModel = previousModel else { return nil }
         return CoreDataMigration(sourceModel: rawModel, destinationModel: previousModel.rawModel)
@@ -31,28 +31,28 @@ public class CoreDataModel: ObjectModel {
     }
     
     public init(url: URL, previousModel: ObjectModel? = nil) {
-        rawModel = NSManagedObjectModel(contentsOf: url)
+        self.rawModel = NSManagedObjectModel(contentsOf: url)
+        self.previousModel = previousModel
         precondition(rawModel != nil, "NSManagedObjectModel not found")
     }
 }
 
-public class DataModel: ObjectModel {
-    static private var modelCache: NSCache<NSString, NSManagedObjectModel> = .init()
-    static private var mappingCache: NSCache<NSString, _MigrationContainerObject> = .init()
+public final class DataModel: ObjectModel {
+    
+    public weak var previousModel: ObjectModel?
     
     public let rawModel: NSManagedObjectModel!
     public let migration: Migration?
-    public var previousModel: ObjectModel?
     
-    public init(version: SchemaProtocol, entities: [Entity.Type]) {
+    public init(version: DataSchema, entities: [Entity.Type]) {
+        let coordinator = CacheCoordinator.shared
         let versionString = String(reflecting: version.self)
-        let hashValue = NSString(string: versionString)
         
         previousModel = version.lastVersion?.model
         
-        if let model = DataModel.modelCache.object(forKey: hashValue) {
+        if let model = coordinator.get(versionString, in: CacheType.objectModel) {
             rawModel = model
-            migration = DataModel.mappingCache.object(forKey: hashValue)?.migration
+            migration = coordinator.get(versionString, in: CacheType.migration)
             return
         }
 
@@ -67,7 +67,8 @@ public class DataModel: ObjectModel {
         let model = NSManagedObjectModel()
         model.versionIdentifiers = [versionHashModifier]
         model.entities = sorted.map { $0.self.entity() }
-        DataModel.modelCache.setObject(model, forKey: hashValue)
+        
+        coordinator.set(versionString, value: model, in: CacheType.objectModel)
         
         rawModel = model
         
@@ -84,17 +85,9 @@ public class DataModel: ObjectModel {
         let mapping = VersionMigration(from: lastVersion,
                                        to: version,
                                        mappings: entityMappings)
-        
-        DataModel.mappingCache.setObject(_MigrationContainerObject(migration: mapping), forKey: hashValue)
+    
+        coordinator.set(versionString, value: mapping, in: CacheType.migration)
         
         migration = mapping
-    }
-}
-
-fileprivate class _MigrationContainerObject: NSObject {
-    let migration: Migration
-    
-    init(migration: Migration) {
-        self.migration = migration
     }
 }

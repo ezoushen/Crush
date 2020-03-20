@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		152299552424627D00F0A2BF /* Unique.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152299542424627D00F0A2BF /* Unique.swift */; };
 		98014DAD241FD48600397957 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DAC241FD48600397957 /* AppDelegate.swift */; };
 		98014DB4241FD48600397957 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98014DB2241FD48600397957 /* Main.storyboard */; };
 		98014DB9241FD48800397957 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98014DB7241FD48800397957 /* LaunchScreen.storyboard */; };
@@ -49,10 +50,9 @@
 		OBJ_75 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Connection.swift */; };
 		OBJ_76 /* DataContainer+Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* DataContainer+Type.swift */; };
 		OBJ_77 /* DataContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_13 /* DataContainer.swift */; };
-		OBJ_78 /* DescriptionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_16 /* DescriptionCache.swift */; };
-		OBJ_79 /* DescriptionCacheCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* DescriptionCacheCoordinator.swift */; };
+		OBJ_79 /* CacheCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_17 /* CacheCoordinator.swift */; };
 		OBJ_80 /* EntityObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* EntityObject.swift */; };
-		OBJ_81 /* FieldAttributeType.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* FieldAttributeType.swift */; };
+		OBJ_81 /* PrimitiveAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_20 /* PrimitiveAttribute.swift */; };
 		OBJ_82 /* Index.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_22 /* Index.swift */; };
 		OBJ_83 /* Property+Attribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_24 /* Property+Attribute.swift */; };
 		OBJ_84 /* Property+Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_25 /* Property+Optional.swift */; };
@@ -60,7 +60,7 @@
 		OBJ_86 /* Property+Trasient.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_27 /* Property+Trasient.swift */; };
 		OBJ_87 /* Property+Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_28 /* Property+Type.swift */; };
 		OBJ_88 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_29 /* Property.swift */; };
-		OBJ_89 /* ValueMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* ValueMapper.swift */; };
+		OBJ_89 /* PropertyProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_30 /* PropertyProxy.swift */; };
 		OBJ_90 /* ObjectModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_31 /* ObjectModel.swift */; };
 		OBJ_91 /* EntityMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_33 /* EntityMapping.swift */; };
 		OBJ_92 /* MappingModelMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_34 /* MappingModelMerger.swift */; };
@@ -112,6 +112,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		152299542424627D00F0A2BF /* Unique.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Unique.swift; sourceTree = "<group>"; };
 		98014DAA241FD48600397957 /* Crush_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Crush_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		98014DAC241FD48600397957 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		98014DB3241FD48600397957 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -128,10 +129,9 @@
 		OBJ_11 /* Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
 		OBJ_12 /* DataContainer+Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DataContainer+Type.swift"; sourceTree = "<group>"; };
 		OBJ_13 /* DataContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataContainer.swift; sourceTree = "<group>"; };
-		OBJ_16 /* DescriptionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptionCache.swift; sourceTree = "<group>"; };
-		OBJ_17 /* DescriptionCacheCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptionCacheCoordinator.swift; sourceTree = "<group>"; };
+		OBJ_17 /* CacheCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheCoordinator.swift; sourceTree = "<group>"; };
 		OBJ_19 /* EntityObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityObject.swift; sourceTree = "<group>"; };
-		OBJ_20 /* FieldAttributeType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldAttributeType.swift; sourceTree = "<group>"; };
+		OBJ_20 /* PrimitiveAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimitiveAttribute.swift; sourceTree = "<group>"; };
 		OBJ_22 /* Index.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Index.swift; sourceTree = "<group>"; };
 		OBJ_24 /* Property+Attribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Attribute.swift"; sourceTree = "<group>"; };
 		OBJ_25 /* Property+Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Optional.swift"; sourceTree = "<group>"; };
@@ -139,7 +139,7 @@
 		OBJ_27 /* Property+Trasient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Trasient.swift"; sourceTree = "<group>"; };
 		OBJ_28 /* Property+Type.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Type.swift"; sourceTree = "<group>"; };
 		OBJ_29 /* Property.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
-		OBJ_30 /* ValueMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueMapper.swift; sourceTree = "<group>"; };
+		OBJ_30 /* PropertyProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyProxy.swift; sourceTree = "<group>"; };
 		OBJ_31 /* ObjectModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectModel.swift; sourceTree = "<group>"; };
 		OBJ_33 /* EntityMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityMapping.swift; sourceTree = "<group>"; };
 		OBJ_34 /* MappingModelMerger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MappingModelMerger.swift; sourceTree = "<group>"; };
@@ -249,8 +249,7 @@
 		OBJ_15 /* Cache */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_16 /* DescriptionCache.swift */,
-				OBJ_17 /* DescriptionCacheCoordinator.swift */,
+				OBJ_17 /* CacheCoordinator.swift */,
 			);
 			path = Cache;
 			sourceTree = "<group>";
@@ -258,21 +257,22 @@
 		OBJ_18 /* Entity */ = {
 			isa = PBXGroup;
 			children = (
-				OBJ_21 /* Index */,
+				OBJ_21 /* Constraint */,
 				OBJ_23 /* Property */,
 				OBJ_19 /* EntityObject.swift */,
-				OBJ_20 /* FieldAttributeType.swift */,
-				OBJ_30 /* ValueMapper.swift */,
+				OBJ_20 /* PrimitiveAttribute.swift */,
+				OBJ_30 /* PropertyProxy.swift */,
 			);
 			path = Entity;
 			sourceTree = "<group>";
 		};
-		OBJ_21 /* Index */ = {
+		OBJ_21 /* Constraint */ = {
 			isa = PBXGroup;
 			children = (
 				OBJ_22 /* Index.swift */,
+				152299542424627D00F0A2BF /* Unique.swift */,
 			);
-			path = Index;
+			path = Constraint;
 			sourceTree = "<group>";
 		};
 		OBJ_23 /* Property */ = {
@@ -576,10 +576,9 @@
 				OBJ_75 /* Connection.swift in Sources */,
 				OBJ_76 /* DataContainer+Type.swift in Sources */,
 				OBJ_77 /* DataContainer.swift in Sources */,
-				OBJ_78 /* DescriptionCache.swift in Sources */,
-				OBJ_79 /* DescriptionCacheCoordinator.swift in Sources */,
+				OBJ_79 /* CacheCoordinator.swift in Sources */,
 				OBJ_80 /* EntityObject.swift in Sources */,
-				OBJ_81 /* FieldAttributeType.swift in Sources */,
+				OBJ_81 /* PrimitiveAttribute.swift in Sources */,
 				OBJ_82 /* Index.swift in Sources */,
 				OBJ_83 /* Property+Attribute.swift in Sources */,
 				OBJ_84 /* Property+Optional.swift in Sources */,
@@ -587,7 +586,7 @@
 				OBJ_86 /* Property+Trasient.swift in Sources */,
 				OBJ_87 /* Property+Type.swift in Sources */,
 				OBJ_88 /* Property.swift in Sources */,
-				OBJ_89 /* ValueMapper.swift in Sources */,
+				OBJ_89 /* PropertyProxy.swift in Sources */,
 				OBJ_90 /* ObjectModel.swift in Sources */,
 				OBJ_91 /* EntityMapping.swift in Sources */,
 				OBJ_92 /* MappingModelMerger.swift in Sources */,
@@ -601,6 +600,7 @@
 				OBJ_100 /* Operators.swift in Sources */,
 				OBJ_101 /* QueryBuilder.swift in Sources */,
 				OBJ_102 /* SearchString.swift in Sources */,
+				152299552424627D00F0A2BF /* Unique.swift in Sources */,
 				OBJ_103 /* ReadWriteTransactionContext.swift in Sources */,
 				OBJ_104 /* ReaderTransactionContext.swift in Sources */,
 				OBJ_105 /* Transaction.swift in Sources */,

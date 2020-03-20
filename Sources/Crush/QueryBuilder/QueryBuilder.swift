@@ -142,13 +142,13 @@ extension PartialQueryBuilder {
         return self
     }
     
-    public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where V: SavableTypeProtocol {
+    public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where V: FieldProtocol {
         let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: true, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
     
-    public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where V: SavableTypeProtocol{
+    public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where V: FieldProtocol{
         let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: false, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
@@ -164,12 +164,12 @@ extension PartialQueryBuilder {
         return .init(config: newConfig, context: _context)
     }
     
-    public func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPath: KeyPath<E, T>) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T> {
+    public func map<E: NSManagedObject, T: FieldProtocol>(_ keyPath: KeyPath<E, T>) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T> {
         let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }
     
-    public func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPaths: [KeyPath<E, T>]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
+    public func map<E: NSManagedObject, T: FieldProtocol>(_ keyPaths: [KeyPath<E, T>]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }
