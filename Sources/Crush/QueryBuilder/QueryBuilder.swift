@@ -12,6 +12,12 @@ public protocol QueryerProtocol {
     func query<T: Entity>(for type: T.Type) -> Query<T>
 }
 
+public protocol MutableQueryerProtocol {
+    func insert<T: Entity>(for type: T.Type) -> InsertionBuilder<T>
+    func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T>
+    func delete<T: Entity>(for type: T.Type) -> DeletionBuilder<T>
+}
+
 public enum QuerySorterOption {
     case `default`
     case caseInsensitive
@@ -30,7 +36,7 @@ public enum QuerySorterOption {
     }
 }
 
-internal struct QueryConfig<T: Entity> {
+public struct QueryConfig<T: Entity>: RequestConfig {
     private(set) var predicate: NSPredicate?
     private(set) var sorters: [NSSortDescriptor]?
     private(set) var resultType: NSFetchRequestResultType
@@ -62,14 +68,6 @@ internal struct QueryConfig<T: Entity> {
         self.offset = offset
     }
     
-    func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self {
-        guard let keyPath = keyPath as? WritableKeyPath<Self, V> else { return self }
-        
-        var config = Self.init(predicate: predicate, limit: limit, offset: offset, sorters: sorters, groupBy: groupBy, mapTo: mapTo, asFaults: asFaults, resultType: resultType)
-        config[keyPath: keyPath] = value
-        return config
-    }
-    
     func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entity().name ?? String(describing: T.self))
         request.sortDescriptors = sorters
@@ -85,11 +83,11 @@ internal struct QueryConfig<T: Entity> {
 }
 
 public class PartialQueryBuilder<Target, Received, Result> where Target: Entity {
-    internal var _config: QueryConfig<Target>
     
-    internal let _context: ReaderTransactionContext & RawContextProviderProtocol
+    internal var _config: Config
+    internal let _context: ReadOnlyContext
 
-    internal required init(config: QueryConfig<Target>, context: ReaderTransactionContext & RawContextProviderProtocol) {
+    internal required init(config: Config, context: ReadOnlyContext) {
         self._config = config
         self._context = context
     }
@@ -105,7 +103,9 @@ extension QueryBuilder {
     }
 }
 
-extension PartialQueryBuilder {
+extension PartialQueryBuilder: RequestBuilder {
+    typealias Config = QueryConfig<Target>
+    
     public func limit(_ size: Int) -> PartialQueryBuilder<Target, Received, Result> {
         _config = _config.updated(\.limit, value: size)
         return self
@@ -201,45 +201,45 @@ extension PartialQueryBuilder {
         return self
     }
     
-    private var received: [Received] {
+    private func received() throws -> [Received] {
         let request = _config.createFetchRequest()
-        return _context.execute(request: request)
+        return try _context.execute(request: request)
     }
 }
 
 extension PartialQueryBuilder where Result == Dictionary<String, Any>, Received == Result {
-    public func exec() -> [Result] {
-        received
+    public func exec() throws -> [Result] {
+        try received()
     }
 }
 
 extension PartialQueryBuilder where Result: NSManagedObject, Received == NSManagedObject {
-    public func findOne() -> Result? {
-        limit(1).exec().first
+    public func findOne() throws -> Result? {
+        try limit(1).exec().first
     }
     
-    public func exec() -> [Result] {
-        return received.map {
+    public func exec() throws -> [Result] {
+        return try received().map {
             _context.receive($0) as! Result
         }
     }
 }
 
 extension PartialQueryBuilder where Result: Entity, Received == NSManagedObject {
-    public func findOne() -> Result? {
-        limit(1).exec().first
+    public func findOne() throws -> Result? {
+        try limit(1).exec().first
     }
     
-    public func exec() -> [Result] {
-        received.map {
+    public func exec() throws -> [Result] {
+        try received().map {
             Result.init(_context.receive($0), proxyType: _context.proxyType)
         }
     }
 }
 
 extension PartialQueryBuilder where Received == Dictionary<String, Any> {
-    public func exec() -> [Result] {
-        received.flatMap{ $0.values }.compactMap{ $0 as? Result }
+    public func exec() throws -> [Result] {
+        try received().flatMap{ $0.values }.compactMap{ $0 as? Result }
     }
 }
 

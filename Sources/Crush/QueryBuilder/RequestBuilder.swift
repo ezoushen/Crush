@@ -1,0 +1,37 @@
+//
+//  RequestBuilder.swift
+//  Crush
+//
+//  Created by 沈昱佐 on 2020/3/20.
+//
+
+import CoreData
+
+protocol RequestConfig {
+    associatedtype Request
+    
+    func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self
+    func createFetchRequest() -> Request
+}
+
+protocol PredicatibleRequestConfig: RequestConfig {
+    var predicate: NSPredicate? { get set }
+}
+
+extension RequestConfig {
+    func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self {
+        guard let keyPath = keyPath as? WritableKeyPath<Self, V> else { return self }
+        var config = self
+        config[keyPath: keyPath] = value
+        return config
+    }
+}
+
+protocol RequestBuilder: AnyObject {
+    typealias ReadOnlyContext = ReaderTransactionContext & RawContextProviderProtocol
+    typealias ReadWriteContext = ReaderTransactionContext & RawContextProviderProtocol & WriterTransactionContext
+    
+    associatedtype Config: RequestConfig
+    
+    var _config: Config { get set }
+}
