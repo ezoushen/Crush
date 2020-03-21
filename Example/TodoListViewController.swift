@@ -30,10 +30,12 @@ class TodoListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Load all tasks
-        todos = try! container.query(for: Todo.self).exec()
-        // Reload table view
-        tableView.reloadData()
+        DispatchQueue.main.async {
+            // Load all tasks
+            self.todos = try! self.container.fetch(for: Todo.self).exec()
+            // Reload table view
+            self.tableView.reloadData()
+        }
     }
     
     @IBAction func didPressCreateButton() {

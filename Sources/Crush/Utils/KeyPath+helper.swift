@@ -9,11 +9,7 @@
 import Foundation
 import CoreData
 
-extension AnyKeyPath: Expressible {
-    public func asExpression() -> Any {
-        stringValue
-    }
-    
+extension AnyKeyPath {
     var stringValue: String {
         return _kvcKeyPathString!
     }
@@ -81,6 +77,23 @@ public class TracableKeyPath<Root: Entity, Value: NullableProperty>: PartialTrac
     
     public override var allPaths: [RootTracableKeyPathProtocol] {
         return [TracableKeyPath<Root, Value>(root)] + subpaths
+    }
+}
+
+extension KeyPath: Expressible where Root: RuntimeObject {
+    public func asExpression() -> Any {
+        Value.self is PropertyProtocol.Type
+            ? stringValueAsEntityObject
+            : stringValueAsNSManagedObject
+    }
+    
+    private var stringValueAsEntityObject: String {
+        let dummy = (Root.self as! Entity.Type).dummy()
+        return ((dummy[keyPath: self as AnyKeyPath] as? PropertyProtocol)?.description.name)!
+    }
+    
+    private var stringValueAsNSManagedObject: String {
+        stringValue
     }
 }
 

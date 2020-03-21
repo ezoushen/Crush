@@ -46,7 +46,7 @@ extension InsertionConfig: RequestConfig {
     }
 }
 
-public final class InsertionBuilder<Target: Entity>: RequestBuilder {
+public final class InsertBuilder<Target: Entity>: RequestBuilder {
     var _config: InsertionConfig<Target>
     let _context: ReadWriteContext
     
@@ -56,7 +56,7 @@ public final class InsertionBuilder<Target: Entity>: RequestBuilder {
     }
 }
 
-extension InsertionBuilder where Target: NeutralEntityObject {
+extension InsertBuilder where Target: NeutralEntityObject {
     private func transform<Value: AttributeProtocol>(object: [(KeyPath<Target, Value>, Value.PropertyValue)]) -> [String: Any] {
         var dict = Dictionary<String, Any>(minimumCapacity: object.count)
         object.forEach{ dict[$0.0.fullPath] = $0.1 }
@@ -78,7 +78,7 @@ extension InsertionBuilder where Target: NeutralEntityObject {
     }
 }
 
-extension InsertionBuilder {
+extension InsertBuilder {
     public func object(_ value: [String: Any]) -> Self {
         let objects = _config.objects
         _config = _config.updated(\.objects, value: objects + [value])

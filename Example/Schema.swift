@@ -45,9 +45,6 @@ extension V2.Todo {
     class Constraint: NSObject, ConstraintSet {
         @CompositeFetchIndex
         var title = [AscendingIndex(\V2.Todo.$content), AscendingIndex(\V2.Todo.$isFinished)]
-        
-        @UniqueConstraint
-        var context = \V2.Todo.$content
     }
 }
 

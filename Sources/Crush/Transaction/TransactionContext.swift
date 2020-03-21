@@ -47,7 +47,7 @@ extension ReaderTransactionContext {
 }
 
 extension ReaderTransactionContext where Self: RawContextProviderProtocol {
-    public func query<T: Entity>(for type: T.Type) -> Query<T> {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, NSManagedObject, T> {
         .init(config: .init(), context: self)
     }
 }
@@ -61,7 +61,7 @@ public protocol WriterTransactionContext: TransactionContextProtocol {
 
 extension WriterTransactionContext where Self: RawContextProviderProtocol & ReaderTransactionContext {
     
-    public func insert<T: Entity>(for type: T.Type) -> InsertionBuilder<T> {
+    public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
         .init(config: .init(), context: self)
     }
     
@@ -69,7 +69,7 @@ extension WriterTransactionContext where Self: RawContextProviderProtocol & Read
         .init(config: .init(), context: self)
     }
     
-    public func delete<T: Entity>(for type: T.Type) -> DeletionBuilder<T> {
+    public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
         .init(config: .init(), context: self)
     }
 }

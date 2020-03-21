@@ -88,11 +88,11 @@ extension DataContainer {
 }
 
 extension DataContainer: MutableQueryerProtocol {
-    public func query<T: Entity>(for type: T.Type) -> Query<T> {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, NSManagedObject, T> {
         .init(config: .init(), context: fetchContext)
     }
     
-    public func insert<T: Entity>(for type: T.Type) -> InsertionBuilder<T> {
+    public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
         .init(config: .init(), context: startTransaction().executionContext)
     }
     
@@ -100,7 +100,7 @@ extension DataContainer: MutableQueryerProtocol {
         .init(config: .init(), context: startTransaction().executionContext)
     }
     
-    public func delete<T: Entity>(for type: T.Type) -> DeletionBuilder<T> {
+    public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
         .init(config: .init(), context: startTransaction().executionContext)
     }
 }
@@ -108,5 +108,13 @@ extension DataContainer: MutableQueryerProtocol {
 extension DataContainer {
     public func startTransaction() -> Transaction {
         Transaction(presentContext: presentContext, executionContext: executionContext)
+    }
+    
+    public func load<T: Entity>(objectID: NSManagedObjectID) -> T {
+        T.init(objectID: objectID, in: readOnlyContext, proxyType: .readOnly)
+    }
+    
+    public func load<T: Entity>(objectIDs: [NSManagedObjectID]) -> [T] {
+        objectIDs.map(load(objectID:))
     }
 }

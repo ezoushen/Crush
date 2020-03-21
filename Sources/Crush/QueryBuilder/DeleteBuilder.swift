@@ -21,7 +21,7 @@ extension DeletionConfig: RequestConfig {
     }
 }
 
-public final class DeletionBuilder<Target: Entity> {
+public final class DeleteBuilder<Target: Entity> {
     var _config: DeletionConfig<Target>
     let _context: ReadWriteContext
     
@@ -31,7 +31,7 @@ public final class DeletionBuilder<Target: Entity> {
     }
 }
 
-extension DeletionBuilder: RequestBuilder {
+extension DeleteBuilder: RequestBuilder {
     public func `where`(_ predicate: NSPredicate) -> Self {
         _config = _config.updated(\.predicate, value: predicate)
         return self
@@ -60,7 +60,7 @@ extension DeletionBuilder: RequestBuilder {
     }
 }
 
-extension DeletionBuilder {
+extension DeleteBuilder {
     public func exec() throws -> NSBatchDeleteResult {
         try _context.execute(request: _config.createFetchRequest())
     }

@@ -24,8 +24,8 @@
 		152299552424627D00F0A2BF /* Unique.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152299542424627D00F0A2BF /* Unique.swift */; };
 		155CC5542424F5DA00CE5807 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155CC5532424F5DA00CE5807 /* RequestBuilder.swift */; };
 		15E95EE32424C11E0048264D /* UpdateBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE22424C11E0048264D /* UpdateBuilder.swift */; };
-		15E95EE52424C9EE0048264D /* InsertionBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE42424C9EE0048264D /* InsertionBuilder.swift */; };
-		15E95EE72424C9F60048264D /* DeletionBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE62424C9F60048264D /* DeletionBuilder.swift */; };
+		15E95EE52424C9EE0048264D /* InsertBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE42424C9EE0048264D /* InsertBuilder.swift */; };
+		15E95EE72424C9F60048264D /* DeleteBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE62424C9F60048264D /* DeleteBuilder.swift */; };
 		98014DAD241FD48600397957 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DAC241FD48600397957 /* AppDelegate.swift */; };
 		98014DB4241FD48600397957 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98014DB2241FD48600397957 /* Main.storyboard */; };
 		98014DB9241FD48800397957 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98014DB7241FD48800397957 /* LaunchScreen.storyboard */; };
@@ -38,7 +38,7 @@
 		98014DCC241FD57E00397957 /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98014DC8241FD57200397957 /* Assertions.swift */; };
 		98014DCF241FD62400397957 /* Crush.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = "Crush::Crush::Product" /* Crush.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		OBJ_100 /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Operators.swift */; };
-		OBJ_101 /* QueryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* QueryBuilder.swift */; };
+		OBJ_101 /* FetchBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* FetchBuilder.swift */; };
 		OBJ_102 /* SearchString.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* SearchString.swift */; };
 		OBJ_103 /* ReadWriteTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* ReadWriteTransactionContext.swift */; };
 		OBJ_104 /* ReaderTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* ReaderTransactionContext.swift */; };
@@ -119,8 +119,8 @@
 		152299542424627D00F0A2BF /* Unique.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Unique.swift; sourceTree = "<group>"; };
 		155CC5532424F5DA00CE5807 /* RequestBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestBuilder.swift; sourceTree = "<group>"; };
 		15E95EE22424C11E0048264D /* UpdateBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBuilder.swift; sourceTree = "<group>"; };
-		15E95EE42424C9EE0048264D /* InsertionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsertionBuilder.swift; sourceTree = "<group>"; };
-		15E95EE62424C9F60048264D /* DeletionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeletionBuilder.swift; sourceTree = "<group>"; };
+		15E95EE42424C9EE0048264D /* InsertBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsertBuilder.swift; sourceTree = "<group>"; };
+		15E95EE62424C9F60048264D /* DeleteBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteBuilder.swift; sourceTree = "<group>"; };
 		98014DAA241FD48600397957 /* Crush_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Crush_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		98014DAC241FD48600397957 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		98014DB3241FD48600397957 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -159,7 +159,7 @@
 		OBJ_42 /* Schema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
 		OBJ_43 /* VersionedSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionedSchema.swift; sourceTree = "<group>"; };
 		OBJ_45 /* Operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Operators.swift; sourceTree = "<group>"; };
-		OBJ_46 /* QueryBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilder.swift; sourceTree = "<group>"; };
+		OBJ_46 /* FetchBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchBuilder.swift; sourceTree = "<group>"; };
 		OBJ_47 /* SearchString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchString.swift; sourceTree = "<group>"; };
 		OBJ_49 /* ReadWriteTransactionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadWriteTransactionContext.swift; sourceTree = "<group>"; };
 		OBJ_50 /* ReaderTransactionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderTransactionContext.swift; sourceTree = "<group>"; };
@@ -333,10 +333,10 @@
 			children = (
 				OBJ_45 /* Operators.swift */,
 				OBJ_47 /* SearchString.swift */,
-				OBJ_46 /* QueryBuilder.swift */,
+				OBJ_46 /* FetchBuilder.swift */,
 				15E95EE22424C11E0048264D /* UpdateBuilder.swift */,
-				15E95EE42424C9EE0048264D /* InsertionBuilder.swift */,
-				15E95EE62424C9F60048264D /* DeletionBuilder.swift */,
+				15E95EE42424C9EE0048264D /* InsertBuilder.swift */,
+				15E95EE62424C9F60048264D /* DeleteBuilder.swift */,
 				155CC5532424F5DA00CE5807 /* RequestBuilder.swift */,
 			);
 			path = QueryBuilder;
@@ -612,16 +612,16 @@
 				OBJ_98 /* Schema.swift in Sources */,
 				OBJ_99 /* VersionedSchema.swift in Sources */,
 				OBJ_100 /* Operators.swift in Sources */,
-				OBJ_101 /* QueryBuilder.swift in Sources */,
+				OBJ_101 /* FetchBuilder.swift in Sources */,
 				OBJ_102 /* SearchString.swift in Sources */,
 				152299552424627D00F0A2BF /* Unique.swift in Sources */,
-				15E95EE52424C9EE0048264D /* InsertionBuilder.swift in Sources */,
+				15E95EE52424C9EE0048264D /* InsertBuilder.swift in Sources */,
 				OBJ_103 /* ReadWriteTransactionContext.swift in Sources */,
 				OBJ_104 /* ReaderTransactionContext.swift in Sources */,
 				OBJ_105 /* Transaction.swift in Sources */,
 				OBJ_106 /* TransactionContext.swift in Sources */,
 				98014DCC241FD57E00397957 /* Assertions.swift in Sources */,
-				15E95EE72424C9F60048264D /* DeletionBuilder.swift in Sources */,
+				15E95EE72424C9F60048264D /* DeleteBuilder.swift in Sources */,
 				OBJ_107 /* Data+hexString.swift in Sources */,
 				OBJ_108 /* KeyPath+helper.swift in Sources */,
 				OBJ_109 /* NSManagedObject+helper.swift in Sources */,

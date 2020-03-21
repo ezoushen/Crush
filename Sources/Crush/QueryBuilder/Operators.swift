@@ -7,8 +7,6 @@
 
 import CoreData
 
-public typealias Query<T: Entity> = QueryBuilder<T, NSManagedObject, T>
-
 extension NSPredicate {
     public static prefix func ! (_ predicate: NSPredicate) -> NSPredicate {
         NSCompoundPredicate(notPredicateWithSubpredicate: predicate)

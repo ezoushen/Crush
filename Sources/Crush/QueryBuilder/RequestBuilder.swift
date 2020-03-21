@@ -7,6 +7,16 @@
 
 import CoreData
 
+public protocol QueryerProtocol {
+    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, NSManagedObject, T>
+}
+
+public protocol MutableQueryerProtocol: QueryerProtocol {
+    func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T>
+    func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T>
+    func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T>
+}
+
 protocol RequestConfig {
     associatedtype Request
     
