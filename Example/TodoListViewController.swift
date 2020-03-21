@@ -24,21 +24,22 @@ class TodoListViewController: UIViewController {
 
     var todos: [Todo] = [] {
         didSet {
-            todos.sort(by: { $1.isFinished })
+            todos.sort(by: { $1.isFinished && !$0.isFinished })
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Load all tasks
-        todos = container.query(for: Todo.self).exec()
-        // Reload table view
-        tableView.reloadData()
+        DispatchQueue.main.async {
+            // Load all tasks
+            self.todos = try! self.container.fetch(for: Todo.self).exec()
+            // Reload table view
+            self.tableView.reloadData()
+        }
     }
     
     @IBAction func didPressCreateButton() {
-        let todo = container.startTransaction().sync { context -> Todo in
+        let todo = try! container.startTransaction().sync { context -> Todo in
             let todo = context.create(entiy: Todo.self)
             context.commit()
             return todo
@@ -90,7 +91,7 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let doneAction = UIContextualAction(style: .normal, title: "Done") { (action, view, completion) in
-            self.container.startTransaction().edit(todo).sync { context, todo in
+            try! self.container.startTransaction().edit(todo).sync { context, todo in
                 todo.isFinished = true
                 context.commit()
             }
@@ -102,7 +103,7 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let undoneAction = UIContextualAction(style: .normal, title: "Undone") { (action, view, completion) in
-            self.container.startTransaction().edit(todo).sync { context, todo in
+            try! self.container.startTransaction().edit(todo).sync { context, todo in
                 todo.isFinished = false
                 context.commit()
             }
@@ -144,7 +145,7 @@ extension TodoListViewController: TodoViewDelegate {
     func didCancelModification(type: TodoEditMode, todo: Todo) {
         switch type {
         case .create:
-            container.startTransaction().edit(todo).sync { context, todo in
+            try! container.startTransaction().edit(todo).sync { context, todo in
                 context.delete(todo)
                 context.commit()
             }

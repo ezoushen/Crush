@@ -61,7 +61,7 @@ public class IndexElement<Target: RuntimeObject>: IndexElementProtocol {
     
     public var type: NSFetchIndexElementType
     
-    public init<Value: NullablePropertyProtocol>(_ keyPath: KeyPath<Target, Value>, type: NSFetchIndexElementType = .binary) {
+    public init<Value: NullableProperty>(_ keyPath: KeyPath<Target, Value>, type: NSFetchIndexElementType = .binary) {
         self.keyPath = keyPath
         self.type = type
     }
@@ -118,60 +118,12 @@ extension TargetedIndexProtocol {
         }.compactMap{ (index, keyPath) -> (IndexElementProtocol, NSPropertyDescription)? in
             guard let property = object[keyPath: keyPath] as? PropertyProtocol,
                   let defaultKey = property.description.userInfo?[DEFAULT_KEY] as? String else { return nil }
-            let coordinator = DescriptionCacheCoordinator.shared
-            let description = coordinator.getDescription(defaultKey, type: PropertyCacheType.self)!
+            let coordinator = CacheCoordinator.shared
+            let description = coordinator.get(defaultKey, in: CacheType.property)!
             return (index, description)
         }.map{ (index, description) -> NSFetchIndexElementDescription in
             return index.fetchIndexElementDescription(property: description)
         }
         return NSFetchIndexDescription(name: name, elements: indcies)
-    }
-}
-
-protocol UniqueConstraintProtocol {
-    var uniquenessConstarints: [String] { get }
-}
-
-public struct UniqueConstraintSet<Target: Entity> {
-    public let constraints: [PartialKeyPath<Target>]
-}
-
-extension UniqueConstraintSet: ExpressibleByArrayLiteral {
-    public init(arrayLiteral elements: PartialKeyPath<Target>...) {
-        constraints = elements
-    }
-}
-
-@propertyWrapper
-public struct CompositeUniqueConstraint<Target: Entity>: UniqueConstraintProtocol {
-    public var wrappedValue: UniqueConstraintSet<Target>
-    
-    public init(wrappedValue: UniqueConstraintSet<Target>) {
-        self.wrappedValue = wrappedValue
-    }
-}
-
-extension CompositeUniqueConstraint {
-    var uniquenessConstarints: [String] {
-        let entity = Target.dummy()
-        return wrappedValue.constraints.compactMap {
-            (entity[keyPath: $0] as? PropertyProtocol)?.description.name
-        }
-    }
-}
-
-@propertyWrapper
-public struct UniqueConstraint<Target: Entity>: UniqueConstraintProtocol {
-    
-    public var wrappedValue: PartialKeyPath<Target>
-    
-    public init(wrappedValue: PartialKeyPath<Target>) {
-        self.wrappedValue = wrappedValue
-    }
-}
-
-extension UniqueConstraint {
-    var uniquenessConstarints: [String] {
-        [(Target.dummy()[keyPath: wrappedValue] as? PropertyProtocol)?.description.name].compactMap{ $0 }
     }
 }

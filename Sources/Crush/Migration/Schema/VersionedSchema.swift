@@ -7,40 +7,47 @@
 
 import Foundation
 
-public protocol DataSchemaProtocol: SchemaProtocol { }
+public protocol DataSchema: SchemaProtocol {
+    var entities: [Entity.Type] { get }
+}
 
-open class _Schema: DataSchemaProtocol {
-    public var lastVersion: SchemaProtocol? {
+extension DataSchema {
+    public var model: ObjectModel {
+        DataModel(version: self, entities: entities)
+    }
+}
+
+open class BaseSchema: DataSchema {
+    public var previousVersion: SchemaProtocol? {
         fatalError()
     }
     
-    open var model: ObjectModel {
-        DataModel(version: self,
-                  entities: allClasses[String(reflecting: Self.self)] ?? [])
+    open var entities: [Entity.Type] {
+        allClasses[String(reflecting: Self.self)] ?? []
     }
     
     required public init() { }
 }
 
-open class Schema<Version: SchemaProtocol>: _Schema {
-    public typealias LastVersion = Version
+open class Schema<Version: DataSchema>: BaseSchema {
+    public typealias PreviousVersion = Version
     
-    public override var lastVersion: SchemaProtocol? {
-        return LastVersion.init()
+    public override var previousVersion: SchemaProtocol? {
+        return PreviousVersion.init()
     }
         
     required public init() { }
 }
 
-open class SchemaOrigin: _Schema {
-    public override var lastVersion: SchemaProtocol? {
+open class SchemaOrigin: BaseSchema {
+    public override var previousVersion: SchemaProtocol? {
         return nil
     }
         
     required public init() { }
 }
 
-fileprivate func findTypeNames(type: RuntimeObject.Type) -> [String] {
+fileprivate func findTypeNames(type: Entity.Type) -> [String] {
     let string = String(reflecting: type)
     let types = string.split(separator: ".")
     let packageName = String(types.first!)

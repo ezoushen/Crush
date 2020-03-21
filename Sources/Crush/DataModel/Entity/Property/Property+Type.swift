@@ -10,18 +10,17 @@ import Foundation
 
 public typealias Value = Required.Value
 public typealias Relation = Required.Relation
-public typealias HashableEntity = Hashable & Entity
 
 public enum Optional {
     public struct Relation {
-        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToManyRelationshipType<S>, ToOneRelationshipType<D>>
-        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToManyRelationshipType<S>, ToManyRelationshipType<D>>
-        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToOneRelationshipType<S>, ToOneRelationshipType<D>>
-        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToOneRelationshipType<S>, ToManyRelationshipType<D>>
+        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToMany<S>, ToOne<D>>
+        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToMany<S>, ToMany<D>>
+        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToOne<S>, ToOne<D>>
+        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToOne<S>, ToMany<D>>
     }
     
     public struct Value {
-        public typealias Transform<T: NSCoding & FieldAttributeType> = Attribute<Nullable, T>
+        public typealias Transform<T: NSCoding & FieldAttribute> = Attribute<Nullable, T>
         public typealias Int16 = Attribute<Nullable, Swift.Int16>
         public typealias Int32 = Attribute<Nullable, Swift.Int32>
         public typealias Int64 = Attribute<Nullable, Swift.Int64>
@@ -39,14 +38,14 @@ public enum Optional {
 
 public enum Required {
     public struct Relation {
-        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToManyRelationshipType<S>, ToOneRelationshipType<D>>
-        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToManyRelationshipType<S>, ToManyRelationshipType<D>>
-        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToOneRelationshipType<S>, ToOneRelationshipType<D>>
-        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToOneRelationshipType<S>, ToManyRelationshipType<D>>
+        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToMany<S>, ToOne<D>>
+        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToMany<S>, ToMany<D>>
+        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToOne<S>, ToOne<D>>
+        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToOne<S>, ToMany<D>>
     }
 
     public struct Value {
-        public typealias Transform<T: NSCoding & FieldAttributeType> = Attribute<NotNull, T>
+        public typealias Transform<T: NSCoding & FieldAttribute> = Attribute<NotNull, T>
         public typealias Int16 = Attribute<NotNull, Swift.Int16>
         public typealias Int32 = Attribute<NotNull, Swift.Int32>
         public typealias Int64 = Attribute<NotNull, Swift.Int64>
@@ -68,14 +67,14 @@ enum Transient {
     
     public enum Optional {
         public struct Relation {
-            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToManyRelationshipType<S>, ToOneRelationshipType<D>>>
-            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToManyRelationshipType<S>, ToManyRelationshipType<D>>>
-            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToOneRelationshipType<S>, ToOneRelationshipType<D>>>
-            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToOneRelationshipType<S>, ToManyRelationshipType<D>>>
+            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToMany<S>, ToOne<D>>>
+            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToMany<S>, ToMany<D>>>
+            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToOne<S>, ToOne<D>>>
+            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToOne<S>, ToMany<D>>>
         }
         
         public struct Value {
-            public typealias Transform<T: NSCoding & FieldAttributeType> = Temporary<Attribute<Nullable, T>>
+            public typealias Transform<T: NSCoding & FieldAttribute> = Temporary<Attribute<Nullable, T>>
             public typealias Int16 = Temporary<Attribute<Nullable, Swift.Int16>>
             public typealias Int32 = Temporary<Attribute<Nullable, Swift.Int32>>
             public typealias Int64 = Temporary<Attribute<Nullable, Swift.Int64>>
@@ -94,14 +93,14 @@ enum Transient {
 
     public enum Required {
         public struct Relation {
-            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToManyRelationshipType<S>, ToOneRelationshipType<D>>>
-            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToManyRelationshipType<S>, ToManyRelationshipType<D>>>
-            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToOneRelationshipType<S>, ToOneRelationshipType<D>>>
-            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToOneRelationshipType<S>, ToManyRelationshipType<D>>>
+            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToMany<S>, ToOne<D>>>
+            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToMany<S>, ToMany<D>>>
+            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToOne<S>, ToOne<D>>>
+            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToOne<S>, ToMany<D>>>
         }
 
         public struct Value {
-            public typealias Transform<T: NSCoding & FieldAttributeType> = Temporary<Attribute<NotNull, T>>
+            public typealias Transform<T: NSCoding & FieldAttribute> = Temporary<Attribute<NotNull, T>>
             public typealias Int16 = Temporary<Attribute<NotNull, Swift.Int16>>
             public typealias Int32 = Temporary<Attribute<NotNull, Swift.Int32>>
             public typealias Int64 = Temporary<Attribute<NotNull, Swift.Int64>>

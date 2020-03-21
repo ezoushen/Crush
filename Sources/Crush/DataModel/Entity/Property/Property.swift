@@ -24,11 +24,11 @@ enum UserInfoKey: Hashable {
 
 // MARK: - EntityOption
 
-public protocol PropertyOptionProtocol {
+public protocol PropertyConfigurable {
     func updatePropertyDescription<D: NSPropertyDescription>(_ description: D)
 }
 
-public protocol MutablePropertyOptionProtocol: PropertyOptionProtocol {
+public protocol MutablePropertyConfigurable: PropertyConfigurable {
     associatedtype Description: NSPropertyDescription
 }
 
@@ -39,17 +39,21 @@ public enum PropertyOption {
     case validationPredicatesWithWarnings([(NSPredicate, String)])
 }
 
-public struct PropertyOptionSet {
-    let options: [PropertyOption]
+public struct PropertyConfiguration {
+    let options: [PropertyConfigurable]
 }
 
-extension PropertyOptionSet: ExpressibleByArrayLiteral {
-    public init(arrayLiteral elements: PropertyOption...) {
+extension PropertyConfiguration: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: PropertyConfigurable...) {
         options = elements
+    }
+    
+    func configure(description: NSPropertyDescription) {
+        options.forEach{ $0.updatePropertyDescription(description) }
     }
 }
 
-extension PropertyOption: MutablePropertyOptionProtocol {
+extension PropertyOption: MutablePropertyConfigurable {
 
     public typealias Description = NSPropertyDescription
     
@@ -78,14 +82,14 @@ extension PropertyProtocol {
     public var isTransient: Bool { false }
     
     var description: NSPropertyDescription {
-        DescriptionCacheCoordinator.shared.getDescription(propertyCacheKey, type: PropertyCacheType.self)!
+        CacheCoordinator.shared.get(propertyCacheKey, in: CacheType.property)!
     }
 }
 
 // MARK: - Entity Property
 
-public protocol MutablePropertyProtocol: PropertyProtocol {
-    associatedtype Option: MutablePropertyOptionProtocol
+public protocol MutableProperty: PropertyProtocol {
+    associatedtype PropertyOption: MutablePropertyConfigurable
     associatedtype PropertyValue
     associatedtype PredicateValue
     
@@ -93,12 +97,12 @@ public protocol MutablePropertyProtocol: PropertyProtocol {
     init(wrappedValue: PropertyValue)
 }
 
-extension MutablePropertyProtocol {
+extension MutableProperty {
     public var value: Any {
         return wrappedValue
     }
 }
 
-public protocol NullablePropertyProtocol: MutablePropertyProtocol {
-    associatedtype OptionalType: OptionalTypeProtocol
+public protocol NullableProperty: MutableProperty {
+    associatedtype Nullability: Crush.Nullability
 }

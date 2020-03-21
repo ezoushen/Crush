@@ -8,11 +8,7 @@
 
 import CoreData
 
-public protocol QueryerProtocol {
-    func query<T: Entity>(for type: T.Type) -> Query<T>
-}
-
-public enum QuerySorterOption {
+public enum FetchSorterOption {
     case `default`
     case caseInsensitive
     case localized
@@ -30,7 +26,7 @@ public enum QuerySorterOption {
     }
 }
 
-internal struct QueryConfig<T: Entity> {
+public struct FetchConfig<T: Entity>: RequestConfig {
     private(set) var predicate: NSPredicate?
     private(set) var sorters: [NSSortDescriptor]?
     private(set) var resultType: NSFetchRequestResultType
@@ -62,14 +58,6 @@ internal struct QueryConfig<T: Entity> {
         self.offset = offset
     }
     
-    func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self {
-        guard let keyPath = keyPath as? WritableKeyPath<Self, V> else { return self }
-        
-        var config = Self.init(predicate: predicate, limit: limit, offset: offset, sorters: sorters, groupBy: groupBy, mapTo: mapTo, asFaults: asFaults, resultType: resultType)
-        config[keyPath: keyPath] = value
-        return config
-    }
-    
     func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entity().name ?? String(describing: T.self))
         request.sortDescriptors = sorters
@@ -84,20 +72,20 @@ internal struct QueryConfig<T: Entity> {
     }
 }
 
-public class PartialQueryBuilder<Target, Received, Result> where Target: Entity {
-    internal var _config: QueryConfig<Target>
+public class PartialFetchBuilder<Target, Received, Result> where Target: Entity {
     
-    internal let _context: ReaderTransactionContext & RawContextProviderProtocol
+    internal var _config: Config
+    internal let _context: ReadOnlyContext
 
-    internal required init(config: QueryConfig<Target>, context: ReaderTransactionContext & RawContextProviderProtocol) {
+    internal required init(config: Config, context: ReadOnlyContext) {
         self._config = config
         self._context = context
     }
 }
 
-public class QueryBuilder<Target, Received, Result>: PartialQueryBuilder<Target, Received, Result> where Target: Entity { }
+public class FetchBuilder<Target, Received, Result>: PartialFetchBuilder<Target, Received, Result> where Target: Entity { }
 
-extension QueryBuilder {
+extension FetchBuilder {
     public func count() -> Int {
         let newConfig = _config.updated(\.resultType, value: .countResultType)
         let request = newConfig.createFetchRequest()
@@ -105,18 +93,20 @@ extension QueryBuilder {
     }
 }
 
-extension PartialQueryBuilder {
-    public func limit(_ size: Int) -> PartialQueryBuilder<Target, Received, Result> {
+extension PartialFetchBuilder: RequestBuilder {
+    typealias Config = FetchConfig<Target>
+    
+    public func limit(_ size: Int) -> PartialFetchBuilder<Target, Received, Result> {
         _config = _config.updated(\.limit, value: size)
         return self
     }
 
-    public func offset(_ step: Int) -> PartialQueryBuilder<Target, Received, Result> {
+    public func offset(_ step: Int) -> PartialFetchBuilder<Target, Received, Result> {
         _config = _config.updated(\.offset, value: step)
         return self
     }
     
-    public func groupAndCount<T>(col name: T) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> where T : TracableKeyPathProtocol, T.Root == Target {
+    public func groupAndCount<T>(col name: T) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> where T : TracableKeyPathProtocol, T.Root == Target {
         let keypathExp = NSExpression(forKeyPath: name.fullPath)
         let countDesc = NSExpressionDescription()
         countDesc.name = "count"
@@ -130,46 +120,46 @@ extension PartialQueryBuilder {
         return .init(config: newConfig, context: _context)
     }
     
-    public func ascendingSort<T>(_ keyPath: T, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
+    public func ascendingSort<T>(_ keyPath: T, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
         let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: true, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
     
-    public func descendingSort<T>(_ keyPath: T, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
+    public func descendingSort<T>(_ keyPath: T, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
         let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: false, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
     
-    public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where V: SavableTypeProtocol {
+    public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> where V: FieldProtocol {
         let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: true, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
     
-    public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: QuerySorterOption = .default) -> PartialQueryBuilder<Target, Received, Result> where V: SavableTypeProtocol{
+    public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> where V: FieldProtocol{
         let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: false, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
     
-    public func map<T: TracableKeyPathProtocol>(_ keyPath: T) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T.Value.PropertyValue> {
+    public func map<T: TracableKeyPathProtocol>(_ keyPath: T) -> PartialFetchBuilder<Target, Dictionary<String, Any>, T.Value.PropertyValue> {
         let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }
     
-    public func map<T: TracableKeyPathProtocol>(_ keyPaths: [T]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
+    public func map<T: TracableKeyPathProtocol>(_ keyPaths: [T]) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }
     
-    public func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPath: KeyPath<E, T>) -> PartialQueryBuilder<Target, Dictionary<String, Any>, T> {
+    public func map<E: NSManagedObject, T: FieldProtocol>(_ keyPath: KeyPath<E, T>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, T> {
         let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }
     
-    public func map<E: NSManagedObject, T: SavableTypeProtocol>(_ keyPaths: [KeyPath<E, T>]) -> PartialQueryBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
+    public func map<E: NSManagedObject, T: FieldProtocol>(_ keyPaths: [KeyPath<E, T>]) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }
@@ -201,45 +191,45 @@ extension PartialQueryBuilder {
         return self
     }
     
-    private var received: [Received] {
+    private func received() throws -> [Received] {
         let request = _config.createFetchRequest()
-        return _context.execute(request: request)
+        return try _context.execute(request: request)
     }
 }
 
-extension PartialQueryBuilder where Result == Dictionary<String, Any>, Received == Result {
-    public func exec() -> [Result] {
-        received
+extension PartialFetchBuilder where Result == Dictionary<String, Any>, Received == Result {
+    public func exec() throws -> [Result] {
+        try received()
     }
 }
 
-extension PartialQueryBuilder where Result: NSManagedObject, Received == NSManagedObject {
-    public func findOne() -> Result? {
-        limit(1).exec().first
+extension PartialFetchBuilder where Result: NSManagedObject, Received == NSManagedObject {
+    public func findOne() throws -> Result? {
+        try limit(1).exec().first
     }
     
-    public func exec() -> [Result] {
-        return received.map {
+    public func exec() throws -> [Result] {
+        return try received().map {
             _context.receive($0) as! Result
         }
     }
 }
 
-extension PartialQueryBuilder where Result: Entity, Received == NSManagedObject {
-    public func findOne() -> Result? {
-        limit(1).exec().first
+extension PartialFetchBuilder where Result: Entity, Received == NSManagedObject {
+    public func findOne() throws -> Result? {
+        try limit(1).exec().first
     }
     
-    public func exec() -> [Result] {
-        received.map {
+    public func exec() throws -> [Result] {
+        try received().map {
             Result.init(_context.receive($0), proxyType: _context.proxyType)
         }
     }
 }
 
-extension PartialQueryBuilder where Received == Dictionary<String, Any> {
-    public func exec() -> [Result] {
-        received.flatMap{ $0.values }.compactMap{ $0 as? Result }
+extension PartialFetchBuilder where Received == Dictionary<String, Any> {
+    public func exec() throws -> [Result] {
+        try received().flatMap{ $0.values }.compactMap{ $0 as? Result }
     }
 }
 

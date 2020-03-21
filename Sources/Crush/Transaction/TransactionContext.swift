@@ -20,8 +20,6 @@ public protocol RawContextProviderProtocol: ContextProtocol {
 public protocol TransactionContextProtocol: QueryerProtocol, ContextProtocol {
     func receive<T: Entity>(_ object: T) -> T
     func receive<T: NSManagedObject>(_ object: T) -> T
-    func count(request: NSFetchRequest<NSFetchRequestResult>) -> Int
-    func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) -> [T]
 }
 
 internal extension TransactionContextProtocol where Self: RawContextProviderProtocol {
@@ -49,8 +47,8 @@ extension ReaderTransactionContext {
 }
 
 extension ReaderTransactionContext where Self: RawContextProviderProtocol {
-    public func query<T: Entity>(for type: T.Type) -> Query<T> {
-        return Query<T>(config: .init(), context: self)
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, NSManagedObject, T> {
+        .init(config: .init(), context: self)
     }
 }
 
@@ -60,4 +58,20 @@ public protocol WriterTransactionContext: TransactionContextProtocol {
     
     func commit()
 }
+
+extension WriterTransactionContext where Self: RawContextProviderProtocol & ReaderTransactionContext {
+    
+    public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
+        .init(config: .init(), context: self)
+    }
+    
+    public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
+        .init(config: .init(), context: self)
+    }
+    
+    public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
+        .init(config: .init(), context: self)
+    }
+}
+
 public typealias ReadWriteTransactionContext = ReaderTransactionContext & WriterTransactionContext

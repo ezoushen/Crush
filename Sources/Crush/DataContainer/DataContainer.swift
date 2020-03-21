@@ -8,10 +8,18 @@
 
 import CoreData
 
+class WriterManagedObjectContext: NSManagedObjectContext {
+    override func save() throws {
+        try super.save()
+    }
+}
+
 public class DataContainer {
     internal var writerContext: NSManagedObjectContext!
     internal var readOnlyContext: NSManagedObjectContext!
-    internal var readerContext: _ReadOnlyTransactionContext!
+    
+    private var fetchContext: _ReadOnlyTransactionContext!
+    private var presentContext: _ReadOnlyTransactionContext!
     
     let connection: Connection
         
@@ -38,12 +46,15 @@ public class DataContainer {
         
         self.writerContext = writerContext
         self.readOnlyContext = readOnlyContext
-        self.readerContext = .init(context: writerContext, targetContext: readOnlyContext)
+        
+        self.fetchContext = .init(context: readOnlyContext, targetContext: writerContext)
+        self.presentContext = .init(context: readOnlyContext, targetContext: readOnlyContext)
     }
     
     private func createWriterContext() -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         context.persistentStoreCoordinator = connection.persistentStoreCoordinator
+        context.shouldDeleteInaccessibleFaults = true
         context.automaticallyMergesChangesFromParent = false
         return context
     }
@@ -51,7 +62,9 @@ public class DataContainer {
     private func createReadOnlyContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         context.parent = parent
+        context.stalenessInterval = 0.0
         context.automaticallyMergesChangesFromParent = true
+        context.shouldDeleteInaccessibleFaults = true
         return context
     }
     
@@ -70,19 +83,38 @@ public class DataContainer {
 extension DataContainer {
     internal var executionContext: _ReadWriteTransactionContext {
         _ReadWriteTransactionContext(context: createBackgroundContext(parent: writerContext),
-                                     targetContext: writerContext,
-                                     readOnlyContext: readOnlyContext)
+                                     targetContext: writerContext, readOnlyContext: readOnlyContext)
     }
 }
 
-extension DataContainer: QueryerProtocol {
-    public func query<T: Entity>(for type: T.Type) -> Query<T> {
-        return Query<T>(config: .init(), context: readerContext)
+extension DataContainer: MutableQueryerProtocol {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, NSManagedObject, T> {
+        .init(config: .init(), context: fetchContext)
+    }
+    
+    public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
+        .init(config: .init(), context: startTransaction().executionContext)
+    }
+    
+    public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
+        .init(config: .init(), context: startTransaction().executionContext)
+    }
+    
+    public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
+        .init(config: .init(), context: startTransaction().executionContext)
     }
 }
 
 extension DataContainer {
     public func startTransaction() -> Transaction {
-        Transaction(objectContext: readOnlyContext, executionContext: executionContext)
+        Transaction(presentContext: presentContext, executionContext: executionContext)
+    }
+    
+    public func load<T: Entity>(objectID: NSManagedObjectID) -> T {
+        T.init(objectID: objectID, in: readOnlyContext, proxyType: .readOnly)
+    }
+    
+    public func load<T: Entity>(objectIDs: [NSManagedObjectID]) -> [T] {
+        objectIDs.map(load(objectID:))
     }
 }

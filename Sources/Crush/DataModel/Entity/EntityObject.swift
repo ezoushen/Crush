@@ -32,6 +32,8 @@ public protocol Entity: RuntimeObject {
     var proxy: PropertyProxy! { get }
 }
 
+public typealias HashableEntity = Hashable & Entity
+
 extension RuntimeObject {
     static var fetchKey: String {
         return String(describing: Self.self)
@@ -155,10 +157,10 @@ open class NeutralEntityObject: NSObject, Entity {
     }
     
     public class func entity() -> NSEntityDescription {
-        let coordinator = DescriptionCacheCoordinator.shared
+        let coordinator = CacheCoordinator.shared
         let entityKey = Self.entityCacheKey
 
-        if let description = coordinator.getDescription(entityKey, type: EntityCacheType.self) {
+        if let description = coordinator.get(entityKey, in: CacheType.entity) {
             return description
         }
         
@@ -170,7 +172,7 @@ open class NeutralEntityObject: NSObject, Entity {
         let properties: [NSPropertyDescription] = object.createProperties()
         
         // Setup related inverse relationship
-        coordinator.getAndWaitDescription(entityKey, type: InverRelationshipCacheType.self) { pairs in
+        coordinator.getAndWait(entityKey, in: CacheType.inverseRelationship) { pairs in
             pairs.forEach { (keyPath, relationship) in
                 if let prop = object[keyPath: keyPath] as? PropertyProtocol,
                     let description = prop.description as? NSRelationshipDescription {
@@ -189,17 +191,17 @@ open class NeutralEntityObject: NSObject, Entity {
         description.renamingIdentifier = renamingIdentifier
         
         // Setup relationship
-        coordinator.setDescription(entityKey, value: description, type: EntityCacheType.self)
+        coordinator.set(entityKey, value: description, in: CacheType.entity)
         description.relationshipsByName.forEach { name, relationship in
             guard let destinationKey = relationship.userInfo?[UserInfoKey.relationshipDestination] as? String else { return }
             
             if let inverseKey = relationship.userInfo?[UserInfoKey.inverseRelationship] as? AnyKeyPath,
                 let inverseType = relationship.userInfo?[UserInfoKey.relationshipDestination] as? String {
-                let arr = coordinator.getDescription(inverseType, type: InverRelationshipCacheType.self) ?? []
-                coordinator.setDescription(inverseType, value: arr + [(inverseKey, relationship)], type: InverRelationshipCacheType.self)
+                let arr = coordinator.get(inverseType, in: CacheType.inverseRelationship) ?? []
+                coordinator.set(inverseType, value: arr + [(inverseKey, relationship)], in: CacheType.inverseRelationship)
             }
             
-            coordinator.getAndWaitDescription(destinationKey, type: EntityCacheType.self) {
+            coordinator.getAndWait(destinationKey, in: CacheType.entity) {
                 relationship.destinationEntity = $0
             }
         }
@@ -211,7 +213,7 @@ open class NeutralEntityObject: NSObject, Entity {
             superMirror.subjectType != EntityObject.self,
             superMirror.subjectType != AbstractEntityObject.self,
             let superType = superMirror.subjectType as? Entity.Type {
-            coordinator.getAndWaitDescription(superType.entityCacheKey, type: EntityCacheType.self) {
+            coordinator.getAndWait(superType.entityCacheKey, in: CacheType.entity) {
                 $0.subentities.append(description)
             }
         }
@@ -239,7 +241,7 @@ open class NeutralEntityObject: NSObject, Entity {
     }
     
     func createProperties() -> [NSPropertyDescription] {
-        let coordinator = DescriptionCacheCoordinator.shared
+        let coordinator = CacheCoordinator.shared
 
         return _allMirrors
             .compactMap { pair, key -> NSPropertyDescription? in
@@ -248,7 +250,7 @@ open class NeutralEntityObject: NSObject, Entity {
                     return nil
                 }
                 let defaultKey = createPropertyCacheKey(domain: key, name: label)
-                if let description = coordinator.getDescription(defaultKey, type: PropertyCacheType.self) {
+                if let description = coordinator.get(defaultKey, in: CacheType.property) {
                     return description
                 }
                 let description = property.emptyPropertyDescription()
@@ -265,7 +267,7 @@ open class NeutralEntityObject: NSObject, Entity {
                     }
                 }
                 
-                coordinator.setDescription(defaultKey, value: description, type: PropertyCacheType.self)
+                coordinator.set(defaultKey, value: description, in: CacheType.property)
                 return description
             }
     }

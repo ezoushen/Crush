@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'Crush'
-  s.version          = '0.1.12'
+  s.version          = '0.1.13'
   s.summary          = 'Dancing with Core Data'
   s.description      = 'Code with Core Data in a Swifty way'
   s.homepage         = 'https://github.com/ezoushen/Crush'

@@ -11,5 +11,5 @@ import CoreData
 public protocol SchemaProtocol {
     init()
     var model: ObjectModel { get }
-    var lastVersion: SchemaProtocol? { get }
+    var previousVersion: SchemaProtocol? { get }
 }

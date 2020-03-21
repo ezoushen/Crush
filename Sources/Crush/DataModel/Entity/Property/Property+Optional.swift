@@ -8,14 +8,14 @@
 
 import Foundation
 
-public protocol OptionalTypeProtocol {
+public protocol Nullability {
     static var isOptional: Bool { get }
 }
 
-public struct Nullable: OptionalTypeProtocol {
+public struct Nullable: Nullability {
     public static var isOptional: Bool { true }
 }
 
-public struct NotNull: OptionalTypeProtocol {
+public struct NotNull: Nullability {
     public static var isOptional: Bool { false }
 }

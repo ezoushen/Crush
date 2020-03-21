@@ -10,11 +10,11 @@ import XCTest
 @testable import Crush
 
 class V1: SchemaOrigin {
-    override var model: ObjectModel {
-        DataModel(version: V1(), entities: [
+    override var entities: [Entity.Type] {
+        [
             People.self,
             Man.self
-        ])
+        ]
     }
     
     class People: AbstractEntityObject {
@@ -38,7 +38,7 @@ class DataModelTests: XCTestCase {
     var sut: DataContainer!
     
     override func setUp() {
-        sut = try! DataContainer(connection: Connection(type: .inMemory, name: "test", version: V1()))
+        sut = try! DataContainer(connection: Connection(type: .sql, name: "test", version: V1()))
     }
 
     override func tearDown() {
@@ -63,10 +63,19 @@ class DataModelTests: XCTestCase {
         XCTAssert(man?.superentity == people)
     }
     
-    func test_DataModel_Index() {
-        let schema = V1()
-        let people = schema.model.rawModel.entitiesByName["People"]!
-        print(schema.model.rawModel.entities.map{ $0.indexes})
-        XCTAssert(people.indexes.count == 1)
+    func test_Transaction_objectOnMainContextShouldBeRefreshedAfterCommitted() {
+        let person: V1.People = sut.startTransaction().sync { context in
+            let people = context.create(entiy: V1.People.self)
+            people.firstName = "first name"
+            context.commit()
+            return people
+        }
+        
+        sut.startTransaction().edit(person).sync { context, person in
+            person.firstName = "FIRST NAME"
+            context.commit()
+        }
+        
+        XCTAssert(person.firstName == "FIRST NAME")
     }
 }
