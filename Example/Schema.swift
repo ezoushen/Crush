@@ -10,6 +10,18 @@ import Crush
 import Foundation
 
 class V1: SchemaOrigin {
+    override var entities: [Entity.Type] {
+        [
+            V1.TodoList.self,
+            V1.Todo.self
+        ]
+    }
+    
+    class TodoList: EntityObject {
+        @Value.String
+        var name: String! = ""
+    }
+    
     class Todo: EntityObject {
         @Value.String
         var title: String! = ""
@@ -25,7 +37,14 @@ class V1: SchemaOrigin {
     }
 }
 
-class V2: SchemaOrigin {
+class V2: Schema<V1> {
+    override var entities: [Entity.Type] {
+        [
+            V1.TodoList.self,
+            V2.Todo.self
+        ]
+    }
+    
     class Todo: EntityObject {
         @Value.String
         var content: String! = ""

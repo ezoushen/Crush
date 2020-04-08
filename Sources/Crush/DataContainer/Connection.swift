@@ -83,8 +83,8 @@ public final class Connection {
         let description = NSPersistentStoreDescription()
         description.type = type.raw
         description.url = currentUrl
-        description.shouldMigrateStoreAutomatically = false
-        description.shouldInferMappingModelAutomatically = false
+        description.shouldMigrateStoreAutomatically = true
+        description.shouldInferMappingModelAutomatically = true
         
         _coordinator = persistentStoreCoordinator
         _coordinator?.addPersistentStore(with: description) { _, _ in

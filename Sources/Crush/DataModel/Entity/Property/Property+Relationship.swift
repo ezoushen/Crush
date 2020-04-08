@@ -53,9 +53,15 @@ public protocol RelationMapping: FieldConvertible {
     static func resolveMaxCount(_ amount: Int) -> Int
 }
 
+extension RelationMapping {
+    static func getEnity(from value: ManagedObject, proxyType: PropertyProxyType) -> EntityType {
+        (value.delegate as? EntityType) ?? EntityType.init(value, proxyType: proxyType)
+    }
+}
+
 public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
     public typealias RuntimeObjectValue = EntityType?
-    public typealias ManagedObjectValue = NSManagedObject?
+    public typealias ManagedObjectValue = ManagedObject?
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return 1
@@ -64,12 +70,12 @@ public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertib
     @inline(__always)
     public static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue {
         guard let value = value else { return nil }
-        return EntityType.init(value, proxyType: proxyType)
+        return getEnity(from: value, proxyType: proxyType)
     }
     
     @inline(__always)
     public static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
-        return value?.rawObject
+        return value?.rawObject as? ManagedObject
     }
 }
 
@@ -83,7 +89,7 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     
     @inline(__always)
     public static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue {
-        return Set(value.allObjects.compactMap{ EntityType.init($0 as! NSManagedObject, proxyType: proxyType) })
+        return Set(value.allObjects.compactMap{ getEnity(from: $0 as! ManagedObject, proxyType: proxyType) })
     }
     
     @inline(__always)

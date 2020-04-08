@@ -42,6 +42,25 @@ extension _ReadWriteTransactionContext {
         }
     }
     
+    public func stash() {
+        guard context.hasChanges else {
+            return
+        }
+        withExtendedLifetime(self) { transactionContext in
+            transactionContext.context.performAndWait {
+                do {
+                    try transactionContext.context.save()
+                } catch {
+                    assertionFailure(error.localizedDescription)
+                }
+                                
+                transactionContext.readOnlyContext.performAndWait {
+                    transactionContext.readOnlyContext.refreshAllObjects()
+                }
+            }
+        }
+    }
+    
     public func commit() {
         guard context.hasChanges else {
             return
@@ -61,12 +80,9 @@ extension _ReadWriteTransactionContext {
                         assertionFailure(error.localizedDescription)
                     }
                 }
-                
-                let ids = transactionContext.targetContext.updatedObjects.map{ $0.objectID }
-                
+                                
                 transactionContext.readOnlyContext.performAndWait {
-                    let objects = ids.map{ transactionContext.readOnlyContext.object(with: $0 )}
-                    objects.forEach{ transactionContext.readOnlyContext.refresh($0, mergeChanges: true)}
+                    transactionContext.readOnlyContext.refreshAllObjects()
                 }
             }
         }

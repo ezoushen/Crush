@@ -24,3 +24,4 @@ public final class ThreadSafe<Value> {
         self._accessQueue = queue ?? DispatchQueue(label: "ThreadSafe Access Queue, \(String(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque())))", attributes: .concurrent)
     }
 }
+

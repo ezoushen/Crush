@@ -34,7 +34,7 @@ extension InsertionConfig: RequestConfig {
     func createFetchRequest(options: [String: Any]) -> NSPersistentStoreRequest {
         let entity = Target.entity()
 
-        if #available(iOS 13.0, watchOS 6.0, *) {
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
             let description = NSBatchInsertRequest(entity: entity, objects: objects)
             description.resultType = .objectIDs
             return description
@@ -93,7 +93,7 @@ extension InsertBuilder {
     
     public func exec() throws -> [NSManagedObjectID] {
         let request = _config.createFetchRequest()
-        if #available(iOS 13.0, watchOS 6.0, *) {
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
             let result: NSBatchInsertResult = try _context.execute(request: request)
             _context.context.reset()
             return result.result as! [NSManagedObjectID]
