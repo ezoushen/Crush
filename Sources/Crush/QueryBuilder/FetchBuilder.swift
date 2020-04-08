@@ -215,14 +215,15 @@ extension PartialFetchBuilder where Result: NSManagedObject, Received == NSManag
     }
 }
 
-extension PartialFetchBuilder where Result: Entity, Received == NSManagedObject {
+extension PartialFetchBuilder where Result: Entity, Received == ManagedObject {
     public func findOne() throws -> Result? {
         try limit(1).exec().first
     }
     
     public func exec() throws -> [Result] {
         try received().map {
-            Result.init(_context.receive($0), proxyType: _context.proxyType)
+            let managedObject: ManagedObject = _context.receive($0)
+            return managedObject.delegate as? Result ?? Result.init(managedObject, proxyType: _context.proxyType)
         }
     }
 }

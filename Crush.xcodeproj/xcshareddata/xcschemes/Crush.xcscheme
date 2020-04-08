@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1130"
+   LastUpgradeVersion = "1140"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "15C7AEB1241F6204007F14A3"
+               BlueprintIdentifier = "Crush::Crush"
                BuildableName = "Crush.framework"
                BlueprintName = "Crush"
                ReferencedContainer = "container:Crush.xcodeproj">
@@ -60,7 +60,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "15C7AEB1241F6204007F14A3"
+            BlueprintIdentifier = "Crush::Crush"
             BuildableName = "Crush.framework"
             BlueprintName = "Crush"
             ReferencedContainer = "container:Crush.xcodeproj">

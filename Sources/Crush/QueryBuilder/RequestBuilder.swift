@@ -8,7 +8,7 @@
 import CoreData
 
 public protocol QueryerProtocol {
-    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, NSManagedObject, T>
+    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T>
 }
 
 public protocol MutableQueryerProtocol: QueryerProtocol {

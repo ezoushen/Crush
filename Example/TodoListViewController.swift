@@ -41,7 +41,7 @@ class TodoListViewController: UIViewController {
     @IBAction func didPressCreateButton() {
         let todo = try! container.startTransaction().sync { context -> Todo in
             let todo = context.create(entiy: Todo.self)
-            context.commit()
+            context.stash()
             return todo
         }
         performSegue(withIdentifier: "TASK_DETAIL_VIEW",
@@ -116,8 +116,6 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         
         return .init(actions: todo.isFinished ? [deleteAction, undoneAction] : [deleteAction, doneAction])
     }
-    
-    
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         todos.count

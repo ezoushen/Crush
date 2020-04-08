@@ -94,7 +94,7 @@ extension Entity {
     }
 }
 
-open class NeutralEntityObject: NSObject, Entity {
+open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
     public static var renamingIdentifier: String? { renamingClass?.fetchKey }
     public class var renamingClass: Entity.Type? { nil }
 
@@ -165,6 +165,7 @@ open class NeutralEntityObject: NSObject, Entity {
         }
         
         let description = NSEntityDescription()
+        description.managedObjectClassName = "Crush.ManagedObject"
         let object = Self.init(proxy: DummyPropertyProxy())
         let mirror = Mirror(reflecting: object)
         
@@ -240,6 +241,18 @@ open class NeutralEntityObject: NSObject, Entity {
         return description
     }
     
+    
+    func willAccessValue(forKey key: String?) { }
+    func didAccessValue(forKey key: String?) { }
+    func awakeFromFetch() { }
+    func awakeFromInsert() { }
+    func awake(fromSnapshotEvents flags: NSSnapshotEventType) { }
+    func prepareForDeletion() { }
+    func willSave() { }
+    func didSave() { }
+    func willTurnIntoFault() { }
+    func didTurnIntoFault() { }
+    
     func createProperties() -> [NSPropertyDescription] {
         let coordinator = CacheCoordinator.shared
 
@@ -295,6 +308,7 @@ open class NeutralEntityObject: NSObject, Entity {
         self.proxy = proxy
         super.init()
         setProxy()
+        ((self.proxy as? ConcretePropertyProxy)?.rawObject as? ManagedObject)?.delegate = self
     }
     
     private func setProxy() {

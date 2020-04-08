@@ -88,7 +88,7 @@ extension DataContainer {
 }
 
 extension DataContainer: MutableQueryerProtocol {
-    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, NSManagedObject, T> {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T> {
         .init(config: .init(), context: fetchContext)
     }
     

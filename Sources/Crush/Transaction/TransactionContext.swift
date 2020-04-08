@@ -33,12 +33,7 @@ internal extension TransactionContextProtocol where Self: RawContextProviderProt
     }
 }
 
-public protocol ReaderTransactionContext: TransactionContextProtocol {
-    func count<T: Entity>(type: T.Type, predicate: NSPredicate?) -> Int
-    func fetch<T: Entity>(_ type: T.Type, request: NSFetchRequest<NSFetchRequestResult>) -> [T]
-    func fetch<T: TracableKeyPathProtocol>(property: T, predicate: NSPredicate?) -> [T.Value.PropertyValue?]
-    func fetch<T: TracableKeyPathProtocol>(properties: [T], predicate: NSPredicate?) -> [[String: Any]]
-}
+public protocol ReaderTransactionContext: TransactionContextProtocol { }
 
 extension ReaderTransactionContext {
     public var proxyType: PropertyProxyType {
@@ -47,7 +42,7 @@ extension ReaderTransactionContext {
 }
 
 extension ReaderTransactionContext where Self: RawContextProviderProtocol {
-    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, NSManagedObject, T> {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T> {
         .init(config: .init(), context: self)
     }
 }
@@ -57,6 +52,7 @@ public protocol WriterTransactionContext: TransactionContextProtocol {
     func delete<T: Entity>(_ object: T)
     
     func commit()
+    func stash()
 }
 
 extension WriterTransactionContext where Self: RawContextProviderProtocol & ReaderTransactionContext {

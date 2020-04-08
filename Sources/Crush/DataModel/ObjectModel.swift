@@ -12,6 +12,8 @@ public protocol ObjectModel: AnyObject {
     var rawModel: NSManagedObjectModel! { get }
     var migration: Migration? { get }
     var previousModel: ObjectModel? { get }
+    
+    func updateCacheKey()
 }
 
 public final class CoreDataModel: ObjectModel {
@@ -35,6 +37,8 @@ public final class CoreDataModel: ObjectModel {
         self.previousModel = previousModel
         precondition(rawModel != nil, "NSManagedObjectModel not found")
     }
+    
+    public func updateCacheKey() { }
 }
 
 public final class DataModel: ObjectModel {
@@ -44,11 +48,22 @@ public final class DataModel: ObjectModel {
     public let rawModel: NSManagedObjectModel!
     public let migration: Migration?
     
+    internal let entities: [Entity.Type]
+    internal let versionString: String
+    
+    public func updateCacheKey() {
+        entities.sorted{ !$1.isAbstract }.forEach {
+            let key = [versionString, String(String(describing: type(of: $0)).dropLast(5))].joined(separator: ".")
+            $0.setOverrideCacheKey(for: $0, key: key)
+        }
+    }
+    
     public init(version: DataSchema, entities: [Entity.Type]) {
         let coordinator = CacheCoordinator.shared
         let versionString = String(reflecting: version.self)
-        
-        previousModel = version.previousVersion?.model
+                
+        self.versionString = versionString
+        self.entities = entities
         
         if let model = coordinator.get(versionString, in: CacheType.objectModel) {
             rawModel = model
@@ -71,6 +86,7 @@ public final class DataModel: ObjectModel {
         coordinator.set(versionString, value: model, in: CacheType.objectModel)
         
         rawModel = model
+        previousModel = version.previousVersion?.model
         
         guard let lastVersion = version.previousVersion,
               let previousModel = self.previousModel else {

@@ -9,7 +9,10 @@
 import CoreData
 
 final public class SQLMigrator: DataMigrator {
-    let migrations: [Migration]
+    lazy var migrations: [Migration] = {
+        versions.compactMap{ $0.model.migration }
+    }()
+    
     let versions: [SchemaProtocol]
     
     public let activeVersion: SchemaProtocol
@@ -23,10 +26,17 @@ final public class SQLMigrator: DataMigrator {
         }
         
         versions = createVersionChain(version: activeVersion).reversed()
-        migrations = versions.compactMap{ $0.model.migration }
     }
     
     public func processStore(at url: URL) throws {
+        defer {
+            activeVersion.model.updateCacheKey()
+        }
+        
+        if let _ = try? indexOfCompatibleMom(at: url, models: [ activeVersion.model.rawModel ]) {
+            return
+        }
+        
         let models = versions.compactMap{ $0.model.rawModel }
         let index = try indexOfCompatibleMom(at: url, models: models)
         let remaining = models.suffix(from: (index + 1))
