@@ -104,7 +104,7 @@ extension NSCoding where Self: PrimitiveAttribute {
     public static var nativeType: NSAttributeType { .transformableAttributeType }
 }
 
-public protocol Enumerator: RawRepresentable, FieldAttribute, PredicateComparable
+public protocol Enumerator: RawRepresentable, FieldAttribute, PredicateComparable, Hashable
 where RawValue: FieldProtocol & PredicateEquatable { }
 
 extension Enumerator {

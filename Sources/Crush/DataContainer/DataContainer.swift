@@ -68,9 +68,9 @@ public class DataContainer {
         return context
     }
     
-    private func createBackgroundContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
+    private func createContext(parent: NSManagedObjectContext, concurrencyType: NSManagedObjectContextConcurrencyType) -> NSManagedObjectContext {
         autoreleasepool {
-            let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+            let context = NSManagedObjectContext(concurrencyType: concurrencyType)
             context.parent = parent
             context.stalenessInterval = 0.0
             context.retainsRegisteredObjects = false
@@ -78,12 +78,27 @@ public class DataContainer {
             return context
         }
     }
+    
+    private func createBackgroundContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
+        createContext(parent: parent, concurrencyType: .privateQueueConcurrencyType)
+    }
+    
+    private func createMainThreadContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
+        createContext(parent: parent, concurrencyType: .mainQueueConcurrencyType)
+    }
 }
 
 extension DataContainer {
     internal var executionContext: _ReadWriteTransactionContext {
         _ReadWriteTransactionContext(context: createBackgroundContext(parent: writerContext),
-                                     targetContext: writerContext, readOnlyContext: readOnlyContext)
+                                     targetContext: writerContext,
+                                     readOnlyContext: readOnlyContext)
+    }
+    
+    internal var uiContext: _ReadWriteTransactionContext {
+        _ReadWriteTransactionContext(context: createMainThreadContext(parent: writerContext),
+                                     targetContext: writerContext,
+                                     readOnlyContext: readOnlyContext)
     }
 }
 
@@ -108,6 +123,11 @@ extension DataContainer: MutableQueryerProtocol {
 extension DataContainer {
     public func startTransaction() -> Transaction {
         Transaction(presentContext: presentContext, executionContext: executionContext)
+    }
+    
+    public func startUiTransaction() -> Transaction {
+        let context = uiContext
+        return Transaction(presentContext: context, executionContext: context)
     }
     
     public func load<T: Entity>(objectID: NSManagedObjectID) -> T {

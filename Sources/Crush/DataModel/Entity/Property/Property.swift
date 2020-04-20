@@ -70,10 +70,11 @@ extension PropertyOption: MutablePropertyConfigurable {
     }
 }
 
-public protocol PropertyProtocol {
+public protocol PropertyProtocol: AnyObject {
     var defaultName: String { get set }
     var proxy: PropertyProxy! { get set }
     var propertyCacheKey: String { get set }
+    var entityObject: NeutralEntityObject? { get set }
     
     func emptyPropertyDescription() -> NSPropertyDescription
 }
@@ -94,7 +95,7 @@ public protocol MutableProperty: PropertyProtocol {
     associatedtype PredicateValue
     
     var wrappedValue: PropertyValue { get set }
-    init(wrappedValue: PropertyValue)
+    init()
 }
 
 extension MutableProperty {
