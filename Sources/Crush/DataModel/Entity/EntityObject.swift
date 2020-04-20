@@ -357,10 +357,11 @@ extension NSManagedObject: RuntimeObject {
 #if canImport(Combine)
 import Combine
 
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension NeutralEntityObject: ObservableObject { }
 
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension Entity where Self: NeutralEntityObject {
-    @available(iOS 13.0, *)
     public func observe<T: NullableProperty & ObservableObject>(_ keyPath: KeyPath<Self, T>) -> AnyPublisher<T.PropertyValue, Never>{
         let property = self[keyPath: keyPath]
         return property.objectWillChange.map{ _ in property.wrappedValue }.eraseToAnyPublisher()

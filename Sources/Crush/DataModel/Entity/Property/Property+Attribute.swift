@@ -73,7 +73,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
             #if canImport(Combine)
             let oldValue: PropertyValue = wrappedValue
             defer {
-                if #available(iOS 13.0, *), oldValue != newValue {
+                if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), oldValue != newValue {
                     objectWillChange.send()
                     entityObject?.objectWillChange.send()
                 }
