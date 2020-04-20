@@ -9,23 +9,24 @@ import Combine
 import Crush
 import SwiftUI
 
-final class TodoDetailViewModel: ObservableObject, ViewModel {
+final class TodoDetailViewModel: ViewModel, ObservableObject {
     let transaction: Crush.Transaction
     
-    @Published
+    @Submodel
     var todo: Todo
+    
+    @Published
+    private(set) var dateString: String
     
     @Published
     var isDueDateEnabled: Bool
     
     @Published
-    var dateString: String
+    var dueDate: Date
     
     @Binding
     var isPresenting: Bool
-    
-    var cancellables: Set<AnyCancellable> = []
-    
+            
     static var dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
@@ -36,32 +37,57 @@ final class TodoDetailViewModel: ObservableObject, ViewModel {
         self.transaction = transaction
         self.todo = todo
         self.isDueDateEnabled = todo.dueDate != nil
-        self.dateString = Self.dateFormatter.string(from: todo.edit(in: transaction).dueDate ?? Date())
+        self.dueDate = todo.dueDate ?? Date()
+        self.dateString = "Not set"
         self._isPresenting = isPresenting
+        
+        super.init()
+        
+        bindSubmodel()
+        setupBindings()
     }
-    
+
     func setupBindings() {
-        $isDueDateEnabled.sink { [unowned self] isEnabled in
-            try? self.transaction.edit(self.todo).sync { context, todo in
-                todo.dueDate = isEnabled ? (todo.dueDate ?? Date()) : nil
+        todo.observe(\.$dueDate)
+            .removeDuplicates()
+            .map {
+                guard let date = $0 else { return "Not set" }
+                return Self.dateFormatter.string(from: date)
             }
-        }
+            .assign(to: \.dateString, on: self)
             .store(in: &cancellables)
-        
-        let todo = self.todo.edit(in: transaction)
-        
-        todo.observe(\Todo.$dueDate) { 
-            print($0)
-        }
-//            .map {
-//                Self.dateFormatter.string(from: todo.dueDate ?? Date())
-//            }
-//            .removeDuplicates()
-//            .assign(to: \.dateString, on: self)
-//            .store(in: &cancellables)
+
+        todo.observe(\.$dueDate)
+            .compactMap{ $0 }
+            .removeDuplicates()
+            .assign(to: \.dueDate, on: self)
+            .store(in: &cancellables)
+
+        $isDueDateEnabled
+            .map { [unowned self] in
+                $0 ? (self.todo.dueDate ?? self.dueDate) : nil
+            }
+            .removeDuplicates()
+            .assign(to: \.dueDate, on: todo)
+            .store(in: &cancellables)
+
+        $dueDate
+            .dropFirst()
+            .map{ Swift.Optional.some($0) }
+            .removeDuplicates()
+            .assign(to: \.dueDate, on: todo)
+            .store(in: &cancellables)
     }
     
-    func fullDateString() -> String {
-        ""
+    func save() {
+        transaction.commit()
+    }
+}
+
+extension Publisher where Self.Failure == Never {
+    public func assign<Root: AnyObject>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: Root) -> AnyCancellable {
+        self.sink { [weak root = object] in
+            root?[keyPath: keyPath] = $0
+        }
     }
 }

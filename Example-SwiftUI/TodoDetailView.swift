@@ -18,7 +18,6 @@ struct TodoDetailView: View {
     @State
     var date: Date = Date()
     
-    
     @EnvironmentObject
     var viewModel: TodoDetailViewModel
     
@@ -26,21 +25,19 @@ struct TodoDetailView: View {
         VStack {
             HStack {
                 Button("Cancel") {
+                    
                     self.viewModel.isPresenting = false
                 }
                 Spacer()
                 Button("Save") {
-                    self.viewModel.transaction.commit()
+                    self.viewModel.save()
                     self.viewModel.isPresenting = false
                 }
             }
                 .font(.system(size: 18.0))
             TextField(
                 "Title",
-                text: viewModel.todo
-                    .edit(in: viewModel.transaction)
-                    .$content
-                    .binding() ?? ""
+                text: viewModel.todo.$content.binding() ?? ""
             )
                 .font(.system(size: 42.0))
             Divider()
@@ -52,22 +49,17 @@ struct TodoDetailView: View {
                 Text("Write down your memo")
                     .font(.system(size: 14.0))
                     .foregroundColor(.gray),
-                text: viewModel.todo
-                    .edit(in: viewModel.transaction)
-                    .$memo
-                    .binding() ?? ""
+                text: viewModel.todo.$memo.binding() ?? ""
             )
             HStack {
                 Text("Due Date: \(viewModel.dateString)")
+                    .lineLimit(1)
                 Spacer()
-                Toggle("", isOn: viewModel.binding(\.isDueDateEnabled))
+                Toggle("", isOn: viewModel.binding(\.isDueDateEnabled)).fixedSize(horizontal: true, vertical: true)
             }
             DatePicker(
                 "",
-                selection: viewModel.todo
-                    .edit(in: viewModel.transaction)
-                    .$dueDate
-                    .binding() ?? Date()
+                selection: $viewModel[keyPath: \.dueDate]
             )
                 .labelsHidden()
                 .disabled(!viewModel.isDueDateEnabled)
@@ -92,7 +84,7 @@ struct TodoDetailView_Previews: PreviewProvider {
             todo.memo = "MEMO"
             return todo
         }
-        return TodoDetailView().environmentObject(TodoDetailViewModel(todo: todo, transaction: transaction, isPresenting: State(initialValue: false).projectedValue))
+        return TodoDetailView().environmentObject( TodoDetailViewModel(todo: todo, transaction: transaction, isPresenting: State(initialValue: false).projectedValue))
     }
 }
 #endif

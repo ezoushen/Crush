@@ -37,7 +37,7 @@ struct TodoListView: View {
                     .padding(.horizontal, 10.0)
                     .frame(height: 35.0)
                     .onTapGesture {
-                        self.viewModel.detailViewModel = self.viewModel.createDetaulViewModel(todo: todo)
+                        self.viewModel.detailViewModel = self.viewModel.createDetailViewModel(todo: todo)
                         self.viewModel.isPresenting = true
                     }
             }
@@ -51,9 +51,9 @@ struct TodoListView: View {
             )
         }
             .onAppear {
-                self.viewModel.detailViewModel = nil
                 self.viewModel.loadAllTodos()
             }
+    
             .sheet(isPresented: self.viewModel.binding(\.isPresenting)) {
                 TodoDetailView()
                     .environmentObject(self.viewModel.detailViewModel!)

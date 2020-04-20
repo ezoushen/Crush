@@ -47,13 +47,13 @@ class V2: Schema<V1> {
     
     class Todo: EntityObject {
         @Value.String
-        var content: String! = ""
-        
-        @Value.Date
-        var dueDate: Date! = Date()
+        var content: String!
         
         @Value.Bool
         var isFinished: Bool! = false
+        
+        @Optional.Value.Date
+        var dueDate: Date?
         
         @Optional.Value.String
         var memo: String?

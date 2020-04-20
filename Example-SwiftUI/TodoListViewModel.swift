@@ -9,7 +9,7 @@ import SwiftUI
 import Crush
 import Combine
 
-final class TodoListViewModel: ObservableObject, ViewModel {
+final class TodoListViewModel: ViewModel, ObservableObject {
     
     @Environment(\.dataContainer)
     var dataContainer: DataContainer
@@ -22,6 +22,20 @@ final class TodoListViewModel: ObservableObject, ViewModel {
     
     @Published
     var detailViewModel: TodoDetailViewModel? = nil
+        
+    override init() {
+        super.init()
+        setupBindings()
+    }
+    
+    func setupBindings() {
+        $isPresenting
+            .filter{ !$0 }
+            .sink { [unowned self] _ in
+                self.detailViewModel = nil
+            }
+            .store(in: &cancellables)
+    }
 }
 
 extension TodoListViewModel {
@@ -30,19 +44,26 @@ extension TodoListViewModel {
     }
     
     func addTodoDetailViewModel() -> TodoDetailViewModel {
-        let transaction = dataContainer.startTransaction()
+        let transaction = dataContainer.startUiTransaction()
         let todo: Todo = try! transaction.sync { context in
-            defer {
-                context.stash()
-            }
             let todo = context.create(entiy: Todo.self)
             return todo
         }
-        return TodoDetailViewModel(todo: todo, transaction: transaction, isPresenting: binding(\.isPresenting))
+        let viewModel = TodoDetailViewModel(todo: todo, transaction: transaction, isPresenting: binding(\.isPresenting))
+        
+        viewModel
+            .didDismiss
+            .sink {
+                self.loadAllTodos()
+            }
+            .store(in: &viewModel.cancellables)
+        
+        return viewModel
     }
     
-    func createDetaulViewModel(todo: Todo) -> TodoDetailViewModel {
-        let transaction = dataContainer.startTransaction()
+    func createDetailViewModel(todo: Todo) -> TodoDetailViewModel {
+        let transaction = dataContainer.startUiTransaction()
+        let todo = transaction.receive(todo)
         return TodoDetailViewModel(todo: todo, transaction: transaction, isPresenting: binding(\.isPresenting))
     }
 }
