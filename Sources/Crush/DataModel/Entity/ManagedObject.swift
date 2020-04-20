@@ -57,75 +57,75 @@ protocol ManagedObjectProtocol: AnyObject {
 }
 
 public final class ManagedObject: NSManagedObject {
-    weak var delegate: ManagedObjectProtocol?
+    let delegates: NSHashTable<NeutralEntityObject> = .weakObjects()
     
     public override func willAccessValue(forKey key: String?) {
         super.willAccessValue(forKey: key)
-        delegate?.willAccessValue(forKey: key)
+        delegates.allObjects.forEach{ $0.willAccessValue(forKey: key) }
     }
     
     public override func didAccessValue(forKey key: String?) {
         super.didAccessValue(forKey: key)
-        delegate?.willAccessValue(forKey: key)
+        delegates.allObjects.forEach{ $0.willAccessValue(forKey: key) }
     }
     
     public override func willChangeValue(forKey key: String) {
         super.willChangeValue(forKey: key)
-        delegate?.willChangeValue(forKey: key)
+        delegates.allObjects.forEach{ $0.willChangeValue(forKey: key) }
     }
     
     public override func didChangeValue(forKey key: String) {
         super.didChangeValue(forKey: key)
-        delegate?.didChangeValue(forKey: key)
+        delegates.allObjects.forEach{ $0.didChangeValue(forKey: key) }
     }
     
     public override func willChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>) {
         super.willChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects)
-        delegate?.willChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects)
+        delegates.allObjects.forEach{ $0.willChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects) }
     }
     
     public override func didChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>) {
         super.didChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects)
-        delegate?.didChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects)
+        delegates.allObjects.forEach{ $0.didChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects) }
     }
     
     public override func awakeFromFetch() {
         super.awakeFromFetch()
-        delegate?.awakeFromFetch()
+        delegates.allObjects.forEach{ $0.awakeFromFetch() }
     }
     
     public override func awakeFromInsert() {
         super.awakeFromInsert()
-        delegate?.awakeFromInsert()
+        delegates.allObjects.forEach{ $0.awakeFromInsert() }
     }
     
     public override func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
         super.awake(fromSnapshotEvents: flags)
-        delegate?.awake(fromSnapshotEvents: flags)
+        delegates.allObjects.forEach{ $0.awake(fromSnapshotEvents: flags) }
     }
     
     public override func prepareForDeletion() {
         super.prepareForDeletion()
-        delegate?.prepareForDeletion()
+        delegates.allObjects.forEach{ $0.prepareForDeletion() }
     }
     
     public override func willSave() {
         super.willSave()
-        delegate?.willSave()
+        delegates.allObjects.forEach{ $0.willSave() }
     }
     
     public override func didSave() {
         super.didSave()
-        delegate?.didSave()
+        delegates.allObjects.forEach{ $0.didSave() }
     }
     
     public override func willTurnIntoFault() {
         super.willTurnIntoFault()
-        delegate?.willTurnIntoFault()
+        delegates.allObjects.forEach{ $0.willTurnIntoFault() }
     }
     
     public override func didTurnIntoFault() {
         super.didTurnIntoFault()
-        delegate?.didTurnIntoFault()
+        delegates.allObjects.forEach{ $0.didTurnIntoFault() }
     }
 }

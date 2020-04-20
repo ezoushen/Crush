@@ -33,6 +33,7 @@ extension AttributeOption: MutablePropertyConfigurable {
 public protocol AttributeProtocol: NullableProperty where PredicateValue: FieldProtocol{
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
+    var configuration: PropertyConfiguration { get set }
     init(wrappedValue: PropertyValue, options: PropertyConfiguration)
 }
 
@@ -53,12 +54,12 @@ extension AttributeProtocol {
 
 // MARK: - EntityAttributeType
 @propertyWrapper
-public final class Attribute<O: Nullability, FieldType: FieldAttribute>: AttributeProtocol {
+public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashable>: AttributeProtocol {
     public typealias PredicateValue = FieldType
     public typealias PropertyValue = FieldType?
     public typealias Nullability = O
     public typealias PropertyOption = AttributeOption
-        
+    
     public var wrappedValue: PropertyValue {
         get {
             let value: FieldType.ManagedObjectValue = proxy!.getValue(key: description.name)
@@ -69,6 +70,15 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute>: Attribu
                 return assertionFailure("value should not be modified with read only value mapper")
             }
             let value: FieldType.ManagedObjectValue = FieldType.convert(value: newValue, proxyType: proxy.proxyType)
+            #if canImport(Combine)
+            let oldValue: PropertyValue = wrappedValue
+            defer {
+                if #available(iOS 13.0, *), oldValue != newValue {
+                    objectWillChange.send()
+                    entityObject?.objectWillChange.send()
+                }
+            }
+            #endif
             proxy.setValue(value, key: description.name)
         }
     }
@@ -77,7 +87,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute>: Attribu
         self
     }
     
-    public weak var proxy: PropertyProxy! = nil
+    public var proxy: PropertyProxy! = nil
     
     public var defaultValue: Any? = nil
 
@@ -88,6 +98,8 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute>: Attribu
     public var configuration: PropertyConfiguration = []
     
     public var propertyCacheKey: String = ""
+    
+    public weak var entityObject: NeutralEntityObject?
     
     public init() { }
     

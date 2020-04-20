@@ -17,8 +17,8 @@ public func ??<T>(lhs: Binding<T?>, rhs: T) -> Binding<T> {
     )
 }
 
-extension Attribute {
-    @available(iOS 13.0, *)
+@available(iOS 13.0, *)
+extension Attribute: ObservableObject {
     public func binding() -> Binding<PropertyValue> {
         Binding(
             get: { self.wrappedValue },
@@ -27,22 +27,18 @@ extension Attribute {
     }
 }
 
-extension Temporary {
-    @available(iOS 13.0, *)
+@available(iOS 13.0, *)
+extension Temporary: ObservableObject {
     public func binding() -> Binding<PropertyValue> {
-        guard case var .transient(attribute) = self else {
-            fatalError("Trasient type mismatch")
-        }
-        
-        return Binding(
-            get: { attribute.wrappedValue },
-            set: { attribute.wrappedValue = $0 }
+        Binding(
+            get: { self.property.wrappedValue },
+            set: { self.property.wrappedValue = $0 }
         )
     }
 }
 
-extension Relationship {
-    @available(iOS 13.0, *)
+@available(iOS 13.0, *)
+extension Relationship: ObservableObject {
     public func binding() -> Binding<PropertyValue> {
         Binding(
             get: { self.wrappedValue },

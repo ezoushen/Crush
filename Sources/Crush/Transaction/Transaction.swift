@@ -11,11 +11,15 @@ public struct Transaction {
     public typealias ReadOnlyContext = ReaderTransactionContext
     public typealias ReadWriteContext = ReadWriteTransactionContext
     
-    internal let presentContext: _ReadOnlyTransactionContext
-    internal let executionContext: _ReadWriteTransactionContext
+    internal let presentContext: ReadOnlyContext & RawContextProviderProtocol
+    internal let executionContext: ReadWriteContext & RawContextProviderProtocol
 }
 
 extension Transaction {
+    public func receive<T: Entity>(_ entity: T) -> T {
+        presentContext.receive(entity)
+    }
+    
     public func edit<T: Entity>(_ entity: T) -> SingularEditor<T> {
         .init(entity, transaction: self)
     }
@@ -55,7 +59,7 @@ extension Transaction {
             try block(transactionContext)
         }
         
-        assert(transactionContext.context.hasChanges == false,
+        assert(transactionContext.context.hasChanges == false || transactionContext.context == presentContext.context,
                "You should commit changes in transaction before return")
 
         return presentContext.receive(result)
@@ -67,7 +71,7 @@ extension Transaction {
         let result: [T] = try transactionContext.context.performAndWait {
             try block(transactionContext)
         }
-        assert(transactionContext.context.hasChanges == false,
+        assert(transactionContext.context.hasChanges == false || transactionContext.context == presentContext.context,
                "You should commit changes in transaction before return")
         
         return result.compactMap(presentContext.receive(_:))
@@ -120,7 +124,7 @@ extension Transaction.SingularEditor {
             return try block(context, context.receive(self.value))
         }
         
-        assert(context.context.hasChanges == false,
+        assert(context.context.hasChanges == false || context.context == transaction.presentContext.context,
                "You should commit changes in transaction before return")
         
         return transaction.presentContext.receive(result)
@@ -132,7 +136,7 @@ extension Transaction.SingularEditor {
             try block(context, context.receive(self.value))
         }
         
-        assert(context.context.hasChanges == false,
+        assert(context.context.hasChanges == false || context.context == transaction.presentContext.context,
                "You should commit changes in transaction before return")
         
         return result.compactMap(transaction.presentContext.receive(_:))
@@ -184,7 +188,7 @@ extension Transaction.PluralEditor {
             return try block(context, values)
         }
         
-        assert(context.context.hasChanges == false,
+        assert(context.context.hasChanges == false || context.context == transaction.presentContext.context,
                "You should commit changes in transaction before return")
         
         return transaction.presentContext.receive(result)
@@ -197,7 +201,7 @@ extension Transaction.PluralEditor {
             return try block(context, values)
         }
         
-        assert(context.context.hasChanges == false,
+        assert(context.context.hasChanges == false || context.context == transaction.presentContext.context,
                "You should commit changes in transaction before return")
         
         return result.compactMap(transaction.presentContext.receive(_:))

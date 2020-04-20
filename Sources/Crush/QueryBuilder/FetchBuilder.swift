@@ -223,7 +223,7 @@ extension PartialFetchBuilder where Result: Entity, Received == ManagedObject {
     public func exec() throws -> [Result] {
         try received().map {
             let managedObject: ManagedObject = _context.receive($0)
-            return managedObject.delegate as? Result ?? Result.init(managedObject, proxyType: _context.proxyType)
+            return Result.init(managedObject, proxyType: _context.proxyType)
         }
     }
 }

@@ -59,7 +59,7 @@ extension Entity {
     }
     
     init(context: NSManagedObjectContext, proxyType: PropertyProxyType) {
-        let managedObject = NSManagedObject(entity: Self.entity(), insertInto: context)
+        let managedObject = ManagedObject(entity: Self.entity(), insertInto: context)
         self.init(proxy: proxyType.proxy(object: managedObject))
     }
     
@@ -241,17 +241,16 @@ open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
         return description
     }
     
-    
-    func willAccessValue(forKey key: String?) { }
-    func didAccessValue(forKey key: String?) { }
-    func awakeFromFetch() { }
-    func awakeFromInsert() { }
-    func awake(fromSnapshotEvents flags: NSSnapshotEventType) { }
-    func prepareForDeletion() { }
-    func willSave() { }
-    func didSave() { }
-    func willTurnIntoFault() { }
-    func didTurnIntoFault() { }
+    open dynamic func willAccessValue(forKey key: String?) { }
+    open dynamic func didAccessValue(forKey key: String?) { }
+    open dynamic func awakeFromFetch() { }
+    open dynamic func awakeFromInsert() { }
+    open dynamic func awake(fromSnapshotEvents flags: NSSnapshotEventType) { }
+    open dynamic func prepareForDeletion() { }
+    open dynamic func willSave() { }
+    open dynamic func didSave() { }
+    open dynamic func willTurnIntoFault() { }
+    open dynamic func didTurnIntoFault() { }
     
     func createProperties() -> [NSPropertyDescription] {
         let coordinator = CacheCoordinator.shared
@@ -308,15 +307,20 @@ open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
         self.proxy = proxy
         super.init()
         setProxy()
-        ((self.proxy as? ConcretePropertyProxy)?.rawObject as? ManagedObject)?.delegate = self
+            
+        let managedObject = (self.proxy as? ConcretePropertyProxy)?.rawObject as? ManagedObject
+        managedObject?.delegates.add(self)
+        guard managedObject?.isInserted == true else { return }
+        managedObject?.awakeFromInsert()
     }
     
     private func setProxy() {
         _allMirrors
             .forEach { pair, key in
                 let (label, value) = pair
-                guard var property = value as? PropertyProtocol else  { return }
+                guard let property = value as? PropertyProtocol else  { return }
                 property.proxy = proxy
+                property.entityObject = self
                 property.defaultName = String(label?.dropFirst() ?? "")
                 property.propertyCacheKey = createPropertyCacheKey(domain: key, name: label!)
             }
@@ -349,3 +353,17 @@ extension NSManagedObject: RuntimeObject {
         self
     }
 }
+
+#if canImport(Combine)
+import Combine
+
+extension NeutralEntityObject: ObservableObject { }
+
+extension Entity where Self: NeutralEntityObject {
+    @available(iOS 13.0, *)
+    public func observe<T: NullableProperty & ObservableObject>(_ keyPath: KeyPath<Self, T>) -> AnyPublisher<T.PropertyValue, Never>{
+        let property = self[keyPath: keyPath]
+        return property.objectWillChange.map{ _ in property.wrappedValue }.eraseToAnyPublisher()
+    }
+}
+#endif

@@ -35,19 +35,20 @@ extension RelationshipOption: MutablePropertyConfigurable {
     }
 }
 
-public protocol RelationshipProtocol: NullableProperty {
+public protocol RelationshipProtocol: NullableProperty where PropertyValue: Equatable {
     associatedtype Destination: Entity
     associatedtype Source: Entity
     associatedtype Mapping: RelationMapping
     associatedtype InverseMapping: RelationMapping
     
+    var configuration: PropertyConfiguration { get set }
     var inverseKeyPath: AnyKeyPath! { get set }
     
     init<R: RelationshipProtocol>(wrappedValue: PropertyValue?, inverse: KeyPath<Destination, R>, options: PropertyConfiguration) where R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping
 }
 
 // MARK: - EntityRelationShipType
-public protocol RelationMapping: FieldConvertible {
+public protocol RelationMapping: FieldConvertible where RuntimeObjectValue: Equatable {
     associatedtype EntityType: HashableEntity
     
     static func resolveMaxCount(_ amount: Int) -> Int
@@ -55,7 +56,7 @@ public protocol RelationMapping: FieldConvertible {
 
 extension RelationMapping {
     static func getEnity(from value: ManagedObject, proxyType: PropertyProxyType) -> EntityType {
-        (value.delegate as? EntityType) ?? EntityType.init(value, proxyType: proxyType)
+        EntityType.init(value, proxyType: proxyType)
     }
 }
 
@@ -121,7 +122,15 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
             guard let proxy = proxy as? ReadWritePropertyProxy else {
                 return assertionFailure("value should not be modified with read only value mapper")
             }
-            
+            #if canImport(Combine)
+            let oldValue: PropertyValue = wrappedValue
+            defer {
+                if #available(iOS 13.0, *), oldValue != newValue {
+                    objectWillChange.send()
+                    entityObject?.objectWillChange.send()
+                }
+            }
+            #endif
             proxy.setValue(Mapping.convert(value: newValue, proxyType: proxy.proxyType), key: description.name)
         }
     }
@@ -130,6 +139,8 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
         self
     }
             
+    public weak var entityObject: NeutralEntityObject?
+    
     public var defaultName: String = ""
             
     public var inverseRelationship: String?

@@ -20,7 +20,7 @@ public enum Optional {
     }
     
     public struct Value {
-        public typealias Transform<T: NSCoding & FieldAttribute> = Attribute<Nullable, T>
+        public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<Nullable, T>
         public typealias Int16 = Attribute<Nullable, Swift.Int16>
         public typealias Int32 = Attribute<Nullable, Swift.Int32>
         public typealias Int64 = Attribute<Nullable, Swift.Int64>
@@ -45,7 +45,7 @@ public enum Required {
     }
 
     public struct Value {
-        public typealias Transform<T: NSCoding & FieldAttribute> = Attribute<NotNull, T>
+        public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<NotNull, T>
         public typealias Int16 = Attribute<NotNull, Swift.Int16>
         public typealias Int32 = Attribute<NotNull, Swift.Int32>
         public typealias Int64 = Attribute<NotNull, Swift.Int64>
@@ -74,7 +74,7 @@ enum Transient {
         }
         
         public struct Value {
-            public typealias Transform<T: NSCoding & FieldAttribute> = Temporary<Attribute<Nullable, T>>
+            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Temporary<Attribute<Nullable, T>>
             public typealias Int16 = Temporary<Attribute<Nullable, Swift.Int16>>
             public typealias Int32 = Temporary<Attribute<Nullable, Swift.Int32>>
             public typealias Int64 = Temporary<Attribute<Nullable, Swift.Int64>>
@@ -100,7 +100,7 @@ enum Transient {
         }
 
         public struct Value {
-            public typealias Transform<T: NSCoding & FieldAttribute> = Temporary<Attribute<NotNull, T>>
+            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Temporary<Attribute<NotNull, T>>
             public typealias Int16 = Temporary<Attribute<NotNull, Swift.Int16>>
             public typealias Int32 = Temporary<Attribute<NotNull, Swift.Int32>>
             public typealias Int64 = Temporary<Attribute<NotNull, Swift.Int64>>

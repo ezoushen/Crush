@@ -48,8 +48,7 @@ where Self: ConcretePropertyProxy {
         defer {
             rawObject.didAccessValue(forKey: key)
         }
-        let value = rawObject.primitiveValue(forKey: key)
-        return (value is NSNull ? nil : value) as! T
+        return rawObject.primitiveValue(forKey: key) as! T
     }
 }
 
@@ -57,6 +56,7 @@ extension WritablePropertyProxy
 where Self: ConcretePropertyProxy {
     @inline(__always)
     func set(_ value: Any?, key: String) {
+        let value = value.isNil ? nil : value
         rawObject.willChangeValue(forKey: key)
         rawObject.setPrimitiveValue(value, forKey: key)
         rawObject.didChangeValue(forKey: key)
