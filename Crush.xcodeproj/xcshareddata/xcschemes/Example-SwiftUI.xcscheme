@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "98078517244A17A000ED04D7"
-               BuildableName = "Example-SwiftUI.app"
+               BuildableName = "Crush_Example-SwiftUI.app"
                BlueprintName = "Example-SwiftUI"
                ReferencedContainer = "container:Crush.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "98078517244A17A000ED04D7"
-            BuildableName = "Example-SwiftUI.app"
+            BuildableName = "Crush_Example-SwiftUI.app"
             BlueprintName = "Example-SwiftUI"
             ReferencedContainer = "container:Crush.xcodeproj">
          </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "98078517244A17A000ED04D7"
-            BuildableName = "Example-SwiftUI.app"
+            BuildableName = "Crush_Example-SwiftUI.app"
             BlueprintName = "Example-SwiftUI"
             ReferencedContainer = "container:Crush.xcodeproj">
          </BuildableReference>

@@ -52,6 +52,7 @@ public protocol RelationMapping: FieldConvertible where RuntimeObjectValue: Equa
     associatedtype EntityType: HashableEntity
     
     static func resolveMaxCount(_ amount: Int) -> Int
+    static func convert(value: RuntimeObjectValue, with: ManagedObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue
 }
 
 extension RelationMapping {
@@ -78,6 +79,11 @@ public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertib
     public static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
         return value?.rawObject as? ManagedObject
     }
+    
+    @inline(__always)
+    public static func convert(value: RuntimeObjectValue, with: ManagedObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
+        return convert(value: value, proxyType: proxyType)
+    }
 }
 
 public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
@@ -96,6 +102,14 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     @inline(__always)
     public static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
         return value as ManagedObjectValue
+    }
+    
+    @inline(__always)
+    public static func convert(value: RuntimeObjectValue, with nsset: ManagedObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
+        let mutableSet = nsset.mutableCopy() as! NSMutableSet
+        mutableSet.removeAllObjects()
+        mutableSet.union(Set(value.map{ $0.rawObject }))
+        return mutableSet
     }
 }
 
@@ -131,7 +145,12 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
                 }
             }
             #endif
-            proxy.setValue(Mapping.convert(value: newValue, proxyType: proxy.proxyType), key: description.name)
+            let value = R.convert(value: newValue,
+                                  with: R.convert(value: oldValue, proxyType: proxy.proxyType),
+                                  proxyType: proxy.proxyType)
+            
+            return proxy.setValue(value, key: description.name)
+            
         }
     }
 

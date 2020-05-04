@@ -94,7 +94,12 @@ extension Entity {
     }
 }
 
-open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
+public func == (lhs: NeutralEntityObject, rhs: NeutralEntityObject) -> Bool {
+    lhs.rawObject == rhs.rawObject
+}
+
+open class NeutralEntityObject: Hashable, Entity, ManagedObjectProtocol {
+    
     public static var renamingIdentifier: String? { renamingClass?.fetchKey }
     public class var renamingClass: Entity.Type? { nil }
 
@@ -103,6 +108,14 @@ open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
         return false
     }
         
+    public func hash(into hasher: inout Hasher) {
+        rawObject.hash(into: &hasher)
+    }
+    
+    public var hashValue: Int {
+        rawObject.hashValue
+    }
+    
     public class func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping? {
         var fromEntityTypeName: String? = nil
         var toEntityTypeName: String? = nil
@@ -251,6 +264,10 @@ open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
     open dynamic func didSave() { }
     open dynamic func willTurnIntoFault() { }
     open dynamic func didTurnIntoFault() { }
+    open dynamic func willChangeValue(forKey key: String) {}
+    open dynamic func didChangeValue(forKey key: String) {}
+    open dynamic func willChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>) {}
+    open dynamic func didChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>) {}
     
     func createProperties() -> [NSPropertyDescription] {
         let coordinator = CacheCoordinator.shared
@@ -305,7 +322,6 @@ open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
     
     required public init(proxy: PropertyProxy) {
         self.proxy = proxy
-        super.init()
         setProxy()
             
         let managedObject = (self.proxy as? ConcretePropertyProxy)?.rawObject as? ManagedObject
@@ -313,7 +329,7 @@ open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
         guard managedObject?.isInserted == true else { return }
         managedObject?.awakeFromInsert()
     }
-    
+        
     private func setProxy() {
         _allMirrors
             .forEach { pair, key in
@@ -329,7 +345,7 @@ open class NeutralEntityObject: NSObject, Entity, ManagedObjectProtocol {
 
 open class AbstractEntityObject: NeutralEntityObject {
     public override class var isAbstract: Bool {
-        return superclass() == AbstractEntityObject.self
+        return class_getSuperclass(Self.self) == AbstractEntityObject.self
     }
 }
 
