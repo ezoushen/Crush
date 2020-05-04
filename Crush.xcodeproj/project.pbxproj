@@ -24,9 +24,6 @@
 		15189844242DC813008F7C1D /* ManagedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15189843242DC812008F7C1D /* ManagedObject.swift */; };
 		152299552424627D00F0A2BF /* Unique.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152299542424627D00F0A2BF /* Unique.swift */; };
 		155CC5542424F5DA00CE5807 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155CC5532424F5DA00CE5807 /* RequestBuilder.swift */; };
-		158B8899244AE59900F240F1 /* Property+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158B8898244AE59900F240F1 /* Property+Binding.swift */; };
-		158B889B244B020C00F240F1 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158B889A244B020C00F240F1 /* Optional.swift */; };
-		158B889D244B271900F240F1 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158B889C244B271900F240F1 /* ViewModel.swift */; };
 		15E95EE32424C11E0048264D /* UpdateBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE22424C11E0048264D /* UpdateBuilder.swift */; };
 		15E95EE52424C9EE0048264D /* InsertBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE42424C9EE0048264D /* InsertBuilder.swift */; };
 		15E95EE72424C9F60048264D /* DeleteBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE62424C9F60048264D /* DeleteBuilder.swift */; };
@@ -52,6 +49,9 @@
 		98078535244AA72E00ED04D7 /* TodoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98078534244AA72E00ED04D7 /* TodoDetailView.swift */; };
 		98078537244AA73800ED04D7 /* TodoDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98078536244AA73800ED04D7 /* TodoDetailViewModel.swift */; };
 		98078539244AA94C00ED04D7 /* TextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98078538244AA94C00ED04D7 /* TextView.swift */; };
+		9807853B244B2DA300ED04D7 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9807853A244B2DA300ED04D7 /* Optional.swift */; };
+		9807853D244B36B700ED04D7 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9807853C244B36B700ED04D7 /* ViewModel.swift */; };
+		98078541244B36FC00ED04D7 /* Property+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98078540244B36FC00ED04D7 /* Property+Binding.swift */; };
 		OBJ_100 /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Operators.swift */; };
 		OBJ_101 /* FetchBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* FetchBuilder.swift */; };
 		OBJ_102 /* SearchString.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* SearchString.swift */; };
@@ -141,9 +141,6 @@
 		15189843242DC812008F7C1D /* ManagedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedObject.swift; sourceTree = "<group>"; };
 		152299542424627D00F0A2BF /* Unique.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Unique.swift; sourceTree = "<group>"; };
 		155CC5532424F5DA00CE5807 /* RequestBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestBuilder.swift; sourceTree = "<group>"; };
-		158B8898244AE59900F240F1 /* Property+Binding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Property+Binding.swift"; sourceTree = "<group>"; };
-		158B889A244B020C00F240F1 /* Optional.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Optional.swift; sourceTree = "<group>"; };
-		158B889C244B271900F240F1 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 		15E95EE22424C11E0048264D /* UpdateBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBuilder.swift; sourceTree = "<group>"; };
 		15E95EE42424C9EE0048264D /* InsertBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsertBuilder.swift; sourceTree = "<group>"; };
 		15E95EE62424C9F60048264D /* DeleteBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteBuilder.swift; sourceTree = "<group>"; };
@@ -158,7 +155,7 @@
 		98014DC1241FD51D00397957 /* Schema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schema.swift; sourceTree = "<group>"; };
 		98014DC8241FD57200397957 /* Assertions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assertions.swift; sourceTree = "<group>"; };
 		98014DC9241FD57200397957 /* XCTestCase+Assertions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+Assertions.swift"; sourceTree = "<group>"; };
-		98078518244A17A000ED04D7 /* Example-SwiftUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Example-SwiftUI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		98078518244A17A000ED04D7 /* Crush_Example-SwiftUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Crush_Example-SwiftUI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9807851A244A17A000ED04D7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9807851C244A17A000ED04D7 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		9807851E244A17A000ED04D7 /* TodoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoListView.swift; sourceTree = "<group>"; };
@@ -170,6 +167,9 @@
 		98078534244AA72E00ED04D7 /* TodoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoDetailView.swift; sourceTree = "<group>"; };
 		98078536244AA73800ED04D7 /* TodoDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoDetailViewModel.swift; sourceTree = "<group>"; };
 		98078538244AA94C00ED04D7 /* TextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextView.swift; sourceTree = "<group>"; };
+		9807853A244B2DA300ED04D7 /* Optional.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Optional.swift; sourceTree = "<group>"; };
+		9807853C244B36B700ED04D7 /* ViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
+		98078540244B36FC00ED04D7 /* Property+Binding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Property+Binding.swift"; sourceTree = "<group>"; };
 		"Crush::Crush::Product" /* Crush.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Crush.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Crush::CrushTests::Product" /* CrushTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = CrushTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_11 /* Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
@@ -293,7 +293,7 @@
 				98078528244A17A100ED04D7 /* Info.plist */,
 				98078522244A17A100ED04D7 /* Preview Content */,
 				98078538244AA94C00ED04D7 /* TextView.swift */,
-				158B889C244B271900F240F1 /* ViewModel.swift */,
+				9807853C244B36B700ED04D7 /* ViewModel.swift */,
 			);
 			path = "Example-SwiftUI";
 			sourceTree = "<group>";
@@ -363,7 +363,7 @@
 				OBJ_25 /* Property+Optional.swift */,
 				OBJ_26 /* Property+Relationship.swift */,
 				OBJ_27 /* Property+Trasient.swift */,
-				158B8898244AE59900F240F1 /* Property+Binding.swift */,
+				98078540244B36FC00ED04D7 /* Property+Binding.swift */,
 				OBJ_28 /* Property+Type.swift */,
 				OBJ_29 /* Property.swift */,
 			);
@@ -451,7 +451,7 @@
 				OBJ_55 /* KeyPath+helper.swift */,
 				OBJ_56 /* NSManagedObject+helper.swift */,
 				OBJ_57 /* ThreadSafe.swift */,
-				158B889A244B020C00F240F1 /* Optional.swift */,
+				9807853A244B2DA300ED04D7 /* Optional.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -480,7 +480,7 @@
 				"Crush::Crush::Product" /* Crush.framework */,
 				"Crush::CrushTests::Product" /* CrushTests.xctest */,
 				98014DAA241FD48600397957 /* Crush_Example.app */,
-				98078518244A17A000ED04D7 /* Example-SwiftUI.app */,
+				98078518244A17A000ED04D7 /* Crush_Example-SwiftUI.app */,
 			);
 			name = Products;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -544,7 +544,7 @@
 			);
 			name = "Example-SwiftUI";
 			productName = "Example-SwiftUI";
-			productReference = 98078518244A17A000ED04D7 /* Example-SwiftUI.app */;
+			productReference = 98078518244A17A000ED04D7 /* Crush_Example-SwiftUI.app */;
 			productType = "com.apple.product-type.application";
 		};
 		"Crush::Crush" /* Crush */ = {
@@ -679,7 +679,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9807851B244A17A000ED04D7 /* AppDelegate.swift in Sources */,
-				158B889D244B271900F240F1 /* ViewModel.swift in Sources */,
+				9807853D244B36B700ED04D7 /* ViewModel.swift in Sources */,
 				98078539244AA94C00ED04D7 /* TextView.swift in Sources */,
 				98078535244AA72E00ED04D7 /* TodoDetailView.swift in Sources */,
 				9807851D244A17A000ED04D7 /* SceneDelegate.swift in Sources */,
@@ -732,16 +732,16 @@
 				OBJ_91 /* EntityMapping.swift in Sources */,
 				OBJ_92 /* MappingModelMerger.swift in Sources */,
 				OBJ_93 /* MigrationModel.swift in Sources */,
+				98078541244B36FC00ED04D7 /* Property+Binding.swift in Sources */,
 				OBJ_94 /* Migrator.swift in Sources */,
 				OBJ_95 /* SQLMigrator.swift in Sources */,
 				OBJ_96 /* PropertyMapping.swift in Sources */,
-				158B889B244B020C00F240F1 /* Optional.swift in Sources */,
 				155CC5542424F5DA00CE5807 /* RequestBuilder.swift in Sources */,
 				OBJ_97 /* CoreDataSchema.swift in Sources */,
-				158B8899244AE59900F240F1 /* Property+Binding.swift in Sources */,
 				OBJ_98 /* Schema.swift in Sources */,
 				OBJ_99 /* VersionedSchema.swift in Sources */,
 				OBJ_100 /* Operators.swift in Sources */,
+				9807853B244B2DA300ED04D7 /* Optional.swift in Sources */,
 				OBJ_101 /* FetchBuilder.swift in Sources */,
 				OBJ_102 /* SearchString.swift in Sources */,
 				152299552424627D00F0A2BF /* Unique.swift in Sources */,
@@ -965,7 +965,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ezoushen.Example-SwiftUI";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Crush_Example-SwiftUI";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
@@ -1003,7 +1003,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ezoushen.Example-SwiftUI";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Crush_Example-SwiftUI";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1213,7 +1213,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 0.1.17;
+				MARKETING_VERSION = 0.1.16;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -1243,7 +1243,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 0.1.17;
+				MARKETING_VERSION = 0.1.16;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
