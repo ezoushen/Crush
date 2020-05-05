@@ -21,7 +21,7 @@ public protocol RuntimeObject: AnyObject {
     var rawObject: NSManagedObject { get }
 }
 
-public protocol Entity: RuntimeObject {
+public protocol Entity: RuntimeObject, Field {
     static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping?
     static func setOverrideCacheKey(for type: Entity.Type, key: String)
     static var isAbstract: Bool { get }
@@ -370,17 +370,143 @@ extension NSManagedObject: RuntimeObject {
     }
 }
 
+extension Entity where Self: Hashable {
+    public typealias ReadOnly = ReadOnlyObject<Self>
+}
+
+@dynamicMemberLookup
+public final class EditingObject<Value: HashableEntity> {
+    let value: Value
+    let transaction: Transaction
+    
+    init(_ value: Value, transaction: Transaction) {
+        self.value = value
+        self.transaction = transaction
+    }
+    
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    public func bindings() -> Bindable<Value> {
+        Bindable(self)
+    }
+    
+    public subscript<Subject>(dynamicMember keyPath: ReferenceWritableKeyPath<Value, Subject>) -> Subject {
+        get {
+            value[keyPath: keyPath]
+        }
+        set {
+            try! transaction.edit(value).sync { context, value in
+                value[keyPath: keyPath] = newValue
+            }
+        }
+    }
+}
+
+@dynamicMemberLookup
+public final class ReadOnlyObject<Value: HashableEntity>: ObservableObject {
+    let value: Value
+    
+    private var cancellable: Any?
+    
+    public init(_ value: Value) {
+        self.value = value
+
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
+            cancellable = (value as? NeutralEntityObject)?
+                .objectWillChange
+                .sink { [unowned self] in
+                    self.objectWillChange.send()
+                }
+        }
+    }
+    
+    public func edit(in transaction: Transaction) -> EditingObject<Value> {
+        .init(value, transaction: transaction)
+    }
+    
+    public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> Subject? {
+        value[keyPath: keyPath]
+    }
+    
+    public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject>) -> Subject {
+        value[keyPath: keyPath]
+    }
+    
+    public subscript<Subject: HashableEntity>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> ReadOnlyObject<Subject>? {
+        guard let value = value[keyPath: keyPath] else {
+            return nil
+        }
+        return ReadOnlyObject<Subject>(value)
+    }
+    
+    public subscript<Subject: HashableEntity>(dynamicMember keyPath: KeyPath<Value, Set<Subject>>) -> Set<Subject.ReadOnly> {
+        Set<Subject.ReadOnly>(value[keyPath: keyPath].map{ .init($0) })
+    }
+}
+
+extension ReadOnlyObject: Equatable where Value: Equatable {
+    public static func == (lhs: ReadOnlyObject, rhs: ReadOnlyObject) -> Bool {
+        lhs.value == rhs.value
+    }
+}
+
+extension ReadOnlyObject: Hashable where Value: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(value)
+    }
+}
+
 #if canImport(Combine)
 import Combine
+import SwiftUI
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+extension ReadOnlyObject {
+    public func observe<T: NullableProperty & ObservableObject>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false) -> AnyPublisher<T.PropertyValue, Never>{
+        let property = self.value[keyPath: keyPath]
+        guard containsCurrent else {
+            return property.objectWillChange.map{ _ in property.wrappedValue }.eraseToAnyPublisher()
+        }
+        return property.objectWillChange.map{ _ in property.wrappedValue }.append(property.wrappedValue).eraseToAnyPublisher()
+    }
+}
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+extension Entity where Self: NeutralEntityObject {
+    public func observe<T: NullableProperty & ObservableObject>(_ keyPath: KeyPath<Self, T>, containsCurrent: Bool = false) -> AnyPublisher<T.PropertyValue, Never>{
+        let property = self[keyPath: keyPath]
+        guard containsCurrent else {
+            return property.objectWillChange.map{ _ in property.wrappedValue }.eraseToAnyPublisher()
+        }
+        return property.objectWillChange.map{ _ in property.wrappedValue }.append(property.wrappedValue).eraseToAnyPublisher()
+    }
+}
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+@dynamicMemberLookup
+public struct Bindable<E: HashableEntity> {
+    public let entity: EditingObject<E>
+    
+    init(_ entity: EditingObject<E>) {
+        self.entity = entity
+    }
+    
+    public subscript<Subject: RuntimeField>(dynamicMember keyPath: ReferenceWritableKeyPath<E, Subject>) -> Binding<Subject> {
+        Binding<Subject>(
+            get: { self.entity[dynamicMember: keyPath] },
+            set: { self.entity[dynamicMember: keyPath] = $0 }
+        )
+    }
+}
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension NeutralEntityObject: ObservableObject { }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension Entity where Self: NeutralEntityObject {
-    public func observe<T: NullableProperty & ObservableObject>(_ keyPath: KeyPath<Self, T>) -> AnyPublisher<T.PropertyValue, Never>{
-        let property = self[keyPath: keyPath]
-        return property.objectWillChange.map{ _ in property.wrappedValue }.eraseToAnyPublisher()
+extension Publisher where Self.Failure == Never {
+    public func assign<Root: HashableEntity>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: EditingObject<Root>) -> AnyCancellable {
+        self.sink {
+            object[dynamicMember: keyPath] = $0
+        }
     }
 }
 #endif

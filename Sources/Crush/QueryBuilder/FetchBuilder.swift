@@ -215,6 +215,19 @@ extension PartialFetchBuilder where Result: NSManagedObject, Received == NSManag
     }
 }
 
+extension PartialFetchBuilder where Target: HashableEntity, Result: Target.ReadOnly, Received == ManagedObject {
+    public func findOne() throws -> Result? {
+        try limit(1).exec().first
+    }
+    
+    public func exec() throws -> [Result] {
+        try received().map {
+            let managedObject: ManagedObject = _context.receive($0)
+            return Result(Target.init(managedObject, proxyType: _context.proxyType))
+        }
+    }
+}
+
 extension PartialFetchBuilder where Result: Entity, Received == ManagedObject {
     public func findOne() throws -> Result? {
         try limit(1).exec().first

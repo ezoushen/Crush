@@ -24,11 +24,13 @@ public protocol TransactionContextProtocol: QueryerProtocol, ContextProtocol {
 
 internal extension TransactionContextProtocol where Self: RawContextProviderProtocol {
     func receive<T: Entity>(_ object: T) -> T {
+        guard context != object.rawObject.managedObjectContext else { return object }
         let newObject = context.receive(runtimeObject: object)
         return T.init(newObject, proxyType: proxyType)
     }
     
     func receive<T: NSManagedObject>(_ object: T) -> T {
+        guard context != object.managedObjectContext else { return object }
         return context.receive(runtimeObject: object) as! T
     }
 }

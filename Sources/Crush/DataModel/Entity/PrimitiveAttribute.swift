@@ -9,7 +9,11 @@
 import CoreData
 import Foundation
 
-public protocol FieldProtocol {
+public protocol Field { }
+
+public protocol RuntimeField { }
+
+public protocol FieldProtocol: Field {
     static var nativeType: NSAttributeType { get }
 }
 
@@ -125,6 +129,10 @@ extension RawRepresentable where Self: FieldAttribute {
     public typealias ManagedObjectValue = RawValue?
     public typealias RuntimeObjectValue = Self?
 }
+
+extension Swift.Optional: RuntimeField where Wrapped: Field { }
+
+extension Set: RuntimeField where Element: Field { }
 
 #if os(iOS) || os(watchOS)
 import UIKit.UIImage

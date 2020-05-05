@@ -32,6 +32,22 @@ extension Transaction {
         .init(entities, transaction: self)
     }
     
+    public func receive<T: HashableEntity>(_ entity: T.ReadOnly) -> T.ReadOnly {
+        ReadOnlyObject(receive(entity.value))
+    }
+    
+    public func edit<T: HashableEntity>(_ entity: T.ReadOnly) -> SingularEditor<T> {
+        .init(entity.value, transaction: self)
+    }
+    
+    public func edit<T: HashableEntity>(_ entities: [T.ReadOnly]) -> PluralEditor<T> {
+        .init(entities.map(\.value), transaction: self)
+    }
+    
+    public func edit<T: HashableEntity>(_ entities: T.ReadOnly...) -> PluralEditor<T> {
+        .init(entities.map(\.value), transaction: self)
+    }
+    
     public func commit() {
         executionContext.commit()
     }
@@ -53,7 +69,7 @@ extension Transaction {
         }
     }
     
-    public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) throws -> T) throws -> T {
+    public func sync<T: HashableEntity>(_ block: @escaping (ReadWriteContext) throws -> T) throws -> T.ReadOnly {
         let transactionContext = executionContext
         let result: T = try transactionContext.context.performAndWait {
             try block(transactionContext)
@@ -62,10 +78,10 @@ extension Transaction {
         assert(transactionContext.context.hasChanges == false || transactionContext.context == presentContext.context,
                "You should commit changes in transaction before return")
 
-        return presentContext.receive(result)
+        return T.ReadOnly(presentContext.receive(result))
     }
 
-    public func sync<T: Entity>(_ block: @escaping (ReadWriteContext) throws -> [T]) throws -> [T]{
+    public func sync<T: HashableEntity>(_ block: @escaping (ReadWriteContext) throws -> [T]) throws -> [T.ReadOnly]{
         let transactionContext = executionContext
 
         let result: [T] = try transactionContext.context.performAndWait {
@@ -74,7 +90,7 @@ extension Transaction {
         assert(transactionContext.context.hasChanges == false || transactionContext.context == presentContext.context,
                "You should commit changes in transaction before return")
         
-        return result.compactMap(presentContext.receive(_:))
+        return result.compactMap(presentContext.receive(_:)).map(T.ReadOnly.init(_:))
     }
 }
 
@@ -118,7 +134,7 @@ extension Transaction.SingularEditor {
         return result
     }
     
-    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, T) throws -> V) throws -> V {
+    public func sync<V: HashableEntity>(_ block: @escaping (Transaction.ReadWriteContext, T) throws -> V) throws -> V.ReadOnly {
         let context = transaction.executionContext
         let result: V = try context.context.performAndWait {
             return try block(context, context.receive(self.value))
@@ -127,10 +143,10 @@ extension Transaction.SingularEditor {
         assert(context.context.hasChanges == false || context.context == transaction.presentContext.context,
                "You should commit changes in transaction before return")
         
-        return transaction.presentContext.receive(result)
+        return V.ReadOnly(transaction.presentContext.receive(result))
     }
     
-    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, T) throws -> [V]) throws -> [V]  {
+    public func sync<V: HashableEntity>(_ block: @escaping (Transaction.ReadWriteContext, T) throws -> [V]) throws -> [V.ReadOnly]  {
         let context = transaction.executionContext
         let result: [V] = try context.context.performAndWait {
             try block(context, context.receive(self.value))
@@ -139,7 +155,7 @@ extension Transaction.SingularEditor {
         assert(context.context.hasChanges == false || context.context == transaction.presentContext.context,
                "You should commit changes in transaction before return")
         
-        return result.compactMap(transaction.presentContext.receive(_:))
+        return result.map(transaction.presentContext.receive(_:)).map(V.ReadOnly.init(_:))
     }
 }
 
@@ -181,7 +197,7 @@ extension Transaction.PluralEditor {
         }
     }
     
-    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) throws -> V) throws -> V {
+    public func sync<V: HashableEntity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) throws -> V) throws -> V.ReadOnly {
         let context = transaction.executionContext
         let result: V = try context.context.performAndWait {
             let values = self.values.map(context.receive(_:))
@@ -191,10 +207,10 @@ extension Transaction.PluralEditor {
         assert(context.context.hasChanges == false || context.context == transaction.presentContext.context,
                "You should commit changes in transaction before return")
         
-        return transaction.presentContext.receive(result)
+        return V.ReadOnly(transaction.presentContext.receive(result))
     }
     
-    public func sync<V: Entity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) throws -> [V]) throws -> [V] {
+    public func sync<V: HashableEntity>(_ block: @escaping (Transaction.ReadWriteContext, [T]) throws -> [V]) throws -> [V.ReadOnly] {
         let context = transaction.executionContext
         let result: [V] = try context.context.performAndWait {
             let values = self.values.map(context.receive(_:))
@@ -204,7 +220,7 @@ extension Transaction.PluralEditor {
         assert(context.context.hasChanges == false || context.context == transaction.presentContext.context,
                "You should commit changes in transaction before return")
         
-        return result.compactMap(transaction.presentContext.receive(_:))
+        return result.map(transaction.presentContext.receive(_:)).map(V.ReadOnly.init(_:))
     }
 }
 

@@ -25,7 +25,6 @@ struct TodoDetailView: View {
         VStack {
             HStack {
                 Button("Cancel") {
-                    
                     self.viewModel.isPresenting = false
                 }
                 Spacer()
@@ -37,7 +36,7 @@ struct TodoDetailView: View {
                 .font(.system(size: 18.0))
             TextField(
                 "Title",
-                text: viewModel.todo.$content.binding() ?? ""
+                text: viewModel.todo.edit(in: viewModel.transaction).bindings().content ?? ""
             )
                 .font(.system(size: 42.0))
             Divider()
@@ -49,17 +48,17 @@ struct TodoDetailView: View {
                 Text("Write down your memo")
                     .font(.system(size: 14.0))
                     .foregroundColor(.gray),
-                text: viewModel.todo.$memo.binding() ?? ""
+                text: viewModel.todo.edit(in: viewModel.transaction).bindings().memo ?? ""
             )
             HStack {
                 Text("Due Date: \(viewModel.dateString)")
                     .lineLimit(1)
                 Spacer()
-                Toggle("", isOn: viewModel.binding(\.isDueDateEnabled)).fixedSize(horizontal: true, vertical: true)
+                Toggle("", isOn: $viewModel.isDueDateEnabled).fixedSize(horizontal: true, vertical: true)
             }
             DatePicker(
                 "",
-                selection: $viewModel[keyPath: \.dueDate]
+                selection: $viewModel.dueDate
             )
                 .labelsHidden()
                 .disabled(!viewModel.isDueDateEnabled)

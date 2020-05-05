@@ -102,8 +102,8 @@ extension DataContainer {
     }
 }
 
-extension DataContainer: MutableQueryerProtocol {
-    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T> {
+extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
+    public func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T.ReadOnly> {
         .init(config: .init(), context: fetchContext)
     }
     

@@ -15,7 +15,7 @@ final class TodoListViewModel: ViewModel, ObservableObject {
     var dataContainer: DataContainer
     
     @Published
-    var todos: [Todo] = []
+    var todos: [Todo.ReadOnly] = []
     
     @Published
     var isPresenting: Bool = false
@@ -44,8 +44,8 @@ extension TodoListViewModel {
     }
     
     func addTodoDetailViewModel() -> TodoDetailViewModel {
-        let transaction = dataContainer.startUiTransaction()
-        let todo: Todo = try! transaction.sync { context in
+        let transaction = dataContainer.startTransaction()
+        let todo: Todo.ReadOnly = try! transaction.sync { context in
             let todo = context.create(entiy: Todo.self)
             return todo
         }
@@ -61,9 +61,10 @@ extension TodoListViewModel {
         return viewModel
     }
     
-    func createDetailViewModel(todo: Todo) -> TodoDetailViewModel {
-        let transaction = dataContainer.startUiTransaction()
+    func createDetailViewModel(todo: Todo.ReadOnly) -> TodoDetailViewModel {
+        let transaction = dataContainer.startTransaction()
         let todo = transaction.receive(todo)
+        print(todo)
         return TodoDetailViewModel(todo: todo, transaction: transaction, isPresenting: binding(\.isPresenting))
     }
 }

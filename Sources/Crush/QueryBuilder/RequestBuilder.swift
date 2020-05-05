@@ -11,7 +11,11 @@ public protocol QueryerProtocol {
     func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T>
 }
 
-public protocol MutableQueryerProtocol: QueryerProtocol {
+public protocol ReadOnlyQueryerProtocol {
+    func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T.ReadOnly>
+}
+
+public protocol MutableQueryerProtocol {
     func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T>
     func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T>
     func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T>
