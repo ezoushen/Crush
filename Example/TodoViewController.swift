@@ -10,8 +10,8 @@ import UIKit
 import Crush
 
 protocol TodoViewDelegate: class {
-    func didCancelModification(type: TodoEditMode, todo: Todo)
-    func didSaveModification(type: TodoEditMode, todo: Todo)
+    func didCancelModification(type: TodoEditMode, todo: Todo.ReadOnly)
+    func didSaveModification(type: TodoEditMode, todo: Todo.ReadOnly)
 }
 
 enum TodoEditMode {
@@ -42,7 +42,7 @@ class TodoViewController: UIViewController {
     var transaction: Transaction?
     weak var delegate: TodoViewDelegate?
     
-    var todo: Todo!
+    var todo: Todo.ReadOnly!
     var mode: TodoEditMode = .modify
     
     private var _observers: [Any] = []
@@ -54,12 +54,12 @@ class TodoViewController: UIViewController {
         observeValueChanged()
     }
     
-    func setupUI(by todo: Todo?) {
+    func setupUI(by todo: Todo.ReadOnly?) {
         guard let todo = todo else { return }
         titleTextField.text = todo.content
         memoTextView.text = todo.memo ?? ""
-        datePicker.date = todo.dueDate
-        dueDateLabel.text = Self._dateFormatter.string(from: todo.dueDate)
+        datePicker.date = todo.dueDate ?? Date()
+        dueDateLabel.text = todo.dueDate == nil ? "Not set" : Self._dateFormatter.string(from: todo.dueDate!)
         cancelButton.setTitle(mode.title, for: .normal)
     }
     

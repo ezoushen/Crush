@@ -7,7 +7,8 @@
 
 import CoreData
 
-protocol ManagedObjectProtocol: AnyObject {
+@objc
+protocol ManagedObjectDelegate: AnyObject {
     func willAccessValue(forKey key: String?) // read notification
 
     func didAccessValue(forKey key: String?) // read notification (together with willAccessValueForKey used to maintain inverse relationships, to fire faults, etc.) - each read access has to be wrapped in this method pair (in the same way as each write access has to be wrapped in the KVO method pair)
@@ -57,7 +58,7 @@ protocol ManagedObjectProtocol: AnyObject {
 }
 
 public final class ManagedObject: NSManagedObject {
-    let delegates: NSHashTable<NeutralEntityObject> = .weakObjects()
+    let delegates: NSHashTable<ManagedObjectDelegate> = .weakObjects()
     
     public override func willAccessValue(forKey key: String?) {
         super.willAccessValue(forKey: key)

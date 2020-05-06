@@ -22,7 +22,7 @@ class TodoListViewController: UIViewController {
         return try! DataContainer(connection: connection)
     }()
 
-    var todos: [Todo] = [] {
+    var todos: [Todo.ReadOnly] = [] {
         didSet {
             todos.sort(by: { $1.isFinished && !$0.isFinished })
         }
@@ -61,7 +61,7 @@ class TodoListViewController: UIViewController {
         case "TASK_DETAIL_VIEW":
             guard let destination = segue.destination as? TodoViewController,
                 let info = sender as? [String: Any],
-                let todo = info["value"] as? Todo,
+                let todo = info["value"] as? Todo.ReadOnly,
                 let mode = info["mode"] as? TodoEditMode else { return }
             destination.mode = mode
             destination.todo = todo
@@ -140,7 +140,7 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
 }
 
 extension TodoListViewController: TodoViewDelegate {
-    func didCancelModification(type: TodoEditMode, todo: Todo) {
+    func didCancelModification(type: TodoEditMode, todo: Todo.ReadOnly) {
         switch type {
         case .create:
             try! container.startTransaction().edit(todo).sync { context, todo in
@@ -152,7 +152,7 @@ extension TodoListViewController: TodoViewDelegate {
         }
     }
     
-    func didSaveModification(type: TodoEditMode, todo: Todo) {
+    func didSaveModification(type: TodoEditMode, todo: Todo.ReadOnly) {
         defer {
             tableView.reloadData()
         }

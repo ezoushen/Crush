@@ -40,7 +40,7 @@ class V1: SchemaOrigin {
 class V2: Schema<V1> {
     override var entities: [Entity.Type] {
         [
-            V1.TodoList.self,
+            V2.TodoList.self,
             V2.Todo.self
         ]
     }
@@ -57,6 +57,11 @@ class V2: Schema<V1> {
         
         @Optional.Value.String
         var memo: String?
+    }
+    
+    class TodoList: EntityObject {
+        @Value.String
+        var name: String! = ""
     }
 }
 

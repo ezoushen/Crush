@@ -5,9 +5,9 @@
 //  Created by ezou on 2020/4/18.
 //
 
-import Foundation
 #if canImport(SwiftUI)
 import SwiftUI
+import Combine
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 public func ??<T>(lhs: Binding<T?>, rhs: T) -> Binding<T> {
@@ -19,32 +19,25 @@ public func ??<T>(lhs: Binding<T?>, rhs: T) -> Binding<T> {
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension Attribute: ObservableObject {
-    public func binding() -> Binding<PropertyValue> {
-        Binding(
-            get: { self.wrappedValue },
-            set: { self.wrappedValue = $0 }
-        )
+    public func objectDidChange() {
+        objectWillChange.send()
+        entityObject?.objectWillChange.send()
     }
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension Temporary: ObservableObject {
-    public func binding() -> Binding<PropertyValue> {
-        Binding(
-            get: { self.property.wrappedValue },
-            set: { self.property.wrappedValue = $0 }
-        )
+    public func objectDidChange() {
+        objectWillChange.send()
+        entityObject?.objectWillChange.send()
     }
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension Relationship: ObservableObject {
-    public func binding() -> Binding<PropertyValue> {
-        Binding(
-            get: { self.wrappedValue },
-            set: { self.wrappedValue = $0 }
-        )
+    public func objectDidChange() {
+        objectWillChange.send()
+        entityObject?.objectWillChange.send()
     }
 }
-
 #endif

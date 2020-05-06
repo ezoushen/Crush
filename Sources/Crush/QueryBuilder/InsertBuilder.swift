@@ -48,9 +48,9 @@ extension InsertionConfig: RequestConfig {
 
 public final class InsertBuilder<Target: Entity>: RequestBuilder {
     var _config: InsertionConfig<Target>
-    let _context: ReadWriteContext
+    let _context: Context
     
-    required init(config: Config, context: ReadWriteContext) {
+    required init(config: Config, context: Context) {
         _context = context
         _config = config
     }
@@ -95,11 +95,11 @@ extension InsertBuilder {
         let request = _config.createFetchRequest()
         if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
             let result: NSBatchInsertResult = try _context.execute(request: request)
-            _context.context.reset()
+            _context.executionContext.reset()
             return result.result as! [NSManagedObjectID]
         } else if let request = request as? LegacyBatchInsertRequest {
             let entity = request.entity
-            let context = _context.targetContext
+            let context = _context.rootContext
             context.reset()
             return try context.performAndWait {
                 autoreleasepool { () -> [NSManagedObjectID] in

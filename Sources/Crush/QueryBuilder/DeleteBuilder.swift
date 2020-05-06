@@ -23,9 +23,9 @@ extension DeletionConfig: RequestConfig {
 
 public final class DeleteBuilder<Target: Entity> {
     var _config: DeletionConfig<Target>
-    let _context: ReadWriteContext
+    let _context: Context
     
-    required init(config: Config, context: ReadWriteContext) {
+    required init(config: Config, context: Context) {
         _config = config
         _context = context
     }

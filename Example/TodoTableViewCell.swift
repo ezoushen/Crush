@@ -23,9 +23,9 @@ class TodoTableViewCell: UITableViewCell {
         statusIndicatorView.layer.cornerRadius = statusIndicatorView.frame.height / 2.0
     }
     
-    func setup(by todo: Todo) {
+    func setup(by todo: Todo.ReadOnly) {
         titleLabel.text = todo.content
-        dateLabel.text = Self._dateFormatter.string(from: todo.dueDate)
+        dateLabel.text = todo.dueDate == nil ? "Not set" : Self._dateFormatter.string(from: todo.dueDate!)
         statusIndicatorView.backgroundColor = todo.isFinished ? .green : .red
     }
 }

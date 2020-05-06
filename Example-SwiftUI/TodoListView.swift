@@ -22,14 +22,14 @@ struct TodoListView: View {
             List(viewModel.todos, id: \.self){ todo in
                 HStack {
                     VStack(alignment: .leading, spacing: 1.0) {
-                        Text(todo.content).font(.system(size: 17.0))
+                        Text(todo.content ?? "").font(.system(size: 17.0))
                         if todo.memo != nil {
                             Text(todo.memo ?? "").font(.system(size: 12.0))
                         }
                     }
                     Spacer()
                     VStack {
-                        Color(todo.isFinished ? .green : .red)
+                        Color((todo.isFinished ?? false) ? .green : .red)
                             .frame(width: 10.0, height: 10.0)
                             .mask(Circle().frame(width: 10.0, height: 10.0))
                     }
@@ -54,7 +54,7 @@ struct TodoListView: View {
                 self.viewModel.loadAllTodos()
             }
     
-            .sheet(isPresented: self.viewModel.binding(\.isPresenting)) {
+            .sheet(isPresented: self.$viewModel.isPresenting) {
                 TodoDetailView()
                     .environmentObject(self.viewModel.detailViewModel!)
             }

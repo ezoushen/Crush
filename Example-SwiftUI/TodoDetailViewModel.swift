@@ -13,7 +13,7 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
     let transaction: Crush.Transaction
     
     @Submodel
-    var todo: Todo
+    var todo: Todo.ReadOnly
     
     @Published
     private(set) var dateString: String
@@ -33,13 +33,16 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
         return dateFormatter
     }()
     
-    init(todo: Todo, transaction: Crush.Transaction, isPresenting: Binding<Bool>) {
+    init(todo: Todo.ReadOnly, transaction: Crush.Transaction, isPresenting: Binding<Bool>) {
+        self._isPresenting = isPresenting
         self.transaction = transaction
         self.todo = todo
         self.isDueDateEnabled = todo.dueDate != nil
         self.dueDate = todo.dueDate ?? Date()
-        self.dateString = "Not set"
-        self._isPresenting = isPresenting
+        self.dateString = {
+            guard let dueDate = todo.dueDate else { return "Not set" }
+            return Self.dateFormatter.string(from: dueDate)
+        }()
         
         super.init()
         
@@ -68,14 +71,14 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
                 $0 ? (self.todo.dueDate ?? self.dueDate) : nil
             }
             .removeDuplicates()
-            .assign(to: \.dueDate, on: todo)
+            .assign(to: \.dueDate, on: todo.edit(in: transaction))
             .store(in: &cancellables)
-
+        
         $dueDate
             .dropFirst()
             .map{ Swift.Optional.some($0) }
             .removeDuplicates()
-            .assign(to: \.dueDate, on: todo)
+            .assign(to: \.dueDate, on: todo.edit(in: transaction))
             .store(in: &cancellables)
     }
     

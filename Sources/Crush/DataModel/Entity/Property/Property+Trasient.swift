@@ -90,7 +90,7 @@ extension Temporary where Property: AttributeProtocol {
 }
 
 extension Temporary where Property: RelationshipProtocol {
-    public convenience init<R: RelationshipProtocol>(inverse: KeyPath<Property.Destination, R>, options: PropertyConfiguration)
+    public convenience init<R: RelationshipProtocol>(inverse: KeyPath<Property.Destination, R>, options: PropertyConfiguration = [])
         where R.Destination == Property.Source, R.Source == Property.Destination,
         R.Mapping == Property.InverseMapping, R.InverseMapping == Property.Mapping {
         self.init()
