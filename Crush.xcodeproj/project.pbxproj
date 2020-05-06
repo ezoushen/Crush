@@ -94,6 +94,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		15C1C4BA24631A030067411F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = OBJ_1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 98014DA9241FD48600397957;
+			remoteInfo = Example;
+		};
 		98014DA4241FD21D00397957 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = OBJ_1 /* Project object */;
@@ -577,6 +584,7 @@
 			);
 			dependencies = (
 				OBJ_131 /* PBXTargetDependency */,
+				15C1C4BB24631A030067411F /* PBXTargetDependency */,
 			);
 			name = CrushTests;
 			productName = CrushTests;
@@ -766,6 +774,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		15C1C4BB24631A030067411F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 98014DA9241FD48600397957 /* Example */;
+			targetProxy = 15C1C4BA24631A030067411F /* PBXContainerItemProxy */;
+		};
 		98014DD1241FD62400397957 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "Crush::Crush" /* Crush */;
