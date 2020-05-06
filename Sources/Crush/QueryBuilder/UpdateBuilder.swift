@@ -22,10 +22,10 @@ extension UpdateConfig {
 }
 
 public final class UpdateBuilder<Target: Entity> {
-    internal let _context: ReadWriteContext
+    internal let _context: Context
     internal var _config: UpdateConfig<Target>
     
-     internal init(config: Config, context: ReadWriteContext) {
+    internal init(config: Config, context: Context) {
         self._context = context
         self._config = config
     }

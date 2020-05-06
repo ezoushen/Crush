@@ -74,11 +74,8 @@ struct TodoDetailView_Previews: PreviewProvider {
     static var previews: some View {
         let container = DataContainerKey.defaultValue
         let transaction = container.startTransaction()
-        let todo = try! transaction.sync { context -> Todo in
-            defer {
-                context.stash()
-            }
-            let todo = context.create(entiy: Todo.self)
+        let todo: Todo.ReadOnly = try! transaction.sync { backgroundTransactionContext in
+            let todo = backgroundTransactionContext.create(entiy: Todo.self)
             todo.content = "CONTENT"
             todo.memo = "MEMO"
             return todo

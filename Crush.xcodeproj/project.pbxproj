@@ -23,7 +23,10 @@
 /* Begin PBXBuildFile section */
 		15189844242DC813008F7C1D /* ManagedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15189843242DC812008F7C1D /* ManagedObject.swift */; };
 		152299552424627D00F0A2BF /* Unique.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152299542424627D00F0A2BF /* Unique.swift */; };
+		15579E9B246248C8003F32DC /* ReadOnly+HashableEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15579E9A246248C8003F32DC /* ReadOnly+HashableEntity.swift */; };
 		155CC5542424F5DA00CE5807 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155CC5532424F5DA00CE5807 /* RequestBuilder.swift */; };
+		1567714C24624AA6007BA967 /* Editable+HashableEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1567714B24624AA6007BA967 /* Editable+HashableEntity.swift */; };
+		1567714E24624B07007BA967 /* Bindable+HashableEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1567714D24624B07007BA967 /* Bindable+HashableEntity.swift */; };
 		15E95EE32424C11E0048264D /* UpdateBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE22424C11E0048264D /* UpdateBuilder.swift */; };
 		15E95EE52424C9EE0048264D /* InsertBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE42424C9EE0048264D /* InsertBuilder.swift */; };
 		15E95EE72424C9F60048264D /* DeleteBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E95EE62424C9F60048264D /* DeleteBuilder.swift */; };
@@ -55,8 +58,6 @@
 		OBJ_100 /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Operators.swift */; };
 		OBJ_101 /* FetchBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* FetchBuilder.swift */; };
 		OBJ_102 /* SearchString.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* SearchString.swift */; };
-		OBJ_103 /* ReadWriteTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_49 /* ReadWriteTransactionContext.swift */; };
-		OBJ_104 /* ReaderTransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_50 /* ReaderTransactionContext.swift */; };
 		OBJ_105 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_51 /* Transaction.swift */; };
 		OBJ_106 /* TransactionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_52 /* TransactionContext.swift */; };
 		OBJ_107 /* Data+hexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_54 /* Data+hexString.swift */; };
@@ -140,7 +141,10 @@
 /* Begin PBXFileReference section */
 		15189843242DC812008F7C1D /* ManagedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedObject.swift; sourceTree = "<group>"; };
 		152299542424627D00F0A2BF /* Unique.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Unique.swift; sourceTree = "<group>"; };
+		15579E9A246248C8003F32DC /* ReadOnly+HashableEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReadOnly+HashableEntity.swift"; sourceTree = "<group>"; };
 		155CC5532424F5DA00CE5807 /* RequestBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestBuilder.swift; sourceTree = "<group>"; };
+		1567714B24624AA6007BA967 /* Editable+HashableEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Editable+HashableEntity.swift"; sourceTree = "<group>"; };
+		1567714D24624B07007BA967 /* Bindable+HashableEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bindable+HashableEntity.swift"; sourceTree = "<group>"; };
 		15E95EE22424C11E0048264D /* UpdateBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBuilder.swift; sourceTree = "<group>"; };
 		15E95EE42424C9EE0048264D /* InsertBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsertBuilder.swift; sourceTree = "<group>"; };
 		15E95EE62424C9F60048264D /* DeleteBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteBuilder.swift; sourceTree = "<group>"; };
@@ -199,8 +203,6 @@
 		OBJ_45 /* Operators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Operators.swift; sourceTree = "<group>"; };
 		OBJ_46 /* FetchBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchBuilder.swift; sourceTree = "<group>"; };
 		OBJ_47 /* SearchString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchString.swift; sourceTree = "<group>"; };
-		OBJ_49 /* ReadWriteTransactionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadWriteTransactionContext.swift; sourceTree = "<group>"; };
-		OBJ_50 /* ReaderTransactionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderTransactionContext.swift; sourceTree = "<group>"; };
 		OBJ_51 /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 		OBJ_52 /* TransactionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionContext.swift; sourceTree = "<group>"; };
 		OBJ_54 /* Data+hexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+hexString.swift"; sourceTree = "<group>"; };
@@ -339,8 +341,11 @@
 			children = (
 				OBJ_21 /* Constraint */,
 				OBJ_23 /* Property */,
-				OBJ_19 /* EntityObject.swift */,
 				15189843242DC812008F7C1D /* ManagedObject.swift */,
+				OBJ_19 /* EntityObject.swift */,
+				1567714D24624B07007BA967 /* Bindable+HashableEntity.swift */,
+				15579E9A246248C8003F32DC /* ReadOnly+HashableEntity.swift */,
+				1567714B24624AA6007BA967 /* Editable+HashableEntity.swift */,
 				OBJ_20 /* PrimitiveAttribute.swift */,
 				OBJ_30 /* PropertyProxy.swift */,
 			);
@@ -407,11 +412,11 @@
 			children = (
 				OBJ_45 /* Operators.swift */,
 				OBJ_47 /* SearchString.swift */,
+				155CC5532424F5DA00CE5807 /* RequestBuilder.swift */,
 				OBJ_46 /* FetchBuilder.swift */,
 				15E95EE22424C11E0048264D /* UpdateBuilder.swift */,
 				15E95EE42424C9EE0048264D /* InsertBuilder.swift */,
 				15E95EE62424C9F60048264D /* DeleteBuilder.swift */,
-				155CC5532424F5DA00CE5807 /* RequestBuilder.swift */,
 			);
 			path = QueryBuilder;
 			sourceTree = "<group>";
@@ -421,8 +426,6 @@
 			children = (
 				OBJ_51 /* Transaction.swift */,
 				OBJ_52 /* TransactionContext.swift */,
-				OBJ_49 /* ReadWriteTransactionContext.swift */,
-				OBJ_50 /* ReaderTransactionContext.swift */,
 			);
 			path = Transaction;
 			sourceTree = "<group>";
@@ -743,14 +746,15 @@
 				OBJ_100 /* Operators.swift in Sources */,
 				9807853B244B2DA300ED04D7 /* Optional.swift in Sources */,
 				OBJ_101 /* FetchBuilder.swift in Sources */,
+				1567714C24624AA6007BA967 /* Editable+HashableEntity.swift in Sources */,
 				OBJ_102 /* SearchString.swift in Sources */,
 				152299552424627D00F0A2BF /* Unique.swift in Sources */,
 				15E95EE52424C9EE0048264D /* InsertBuilder.swift in Sources */,
-				OBJ_103 /* ReadWriteTransactionContext.swift in Sources */,
-				OBJ_104 /* ReaderTransactionContext.swift in Sources */,
 				OBJ_105 /* Transaction.swift in Sources */,
 				OBJ_106 /* TransactionContext.swift in Sources */,
 				98014DCC241FD57E00397957 /* Assertions.swift in Sources */,
+				15579E9B246248C8003F32DC /* ReadOnly+HashableEntity.swift in Sources */,
+				1567714E24624B07007BA967 /* Bindable+HashableEntity.swift in Sources */,
 				15E95EE72424C9F60048264D /* DeleteBuilder.swift in Sources */,
 				OBJ_107 /* Data+hexString.swift in Sources */,
 				OBJ_108 /* KeyPath+helper.swift in Sources */,

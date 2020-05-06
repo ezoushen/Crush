@@ -44,7 +44,7 @@ public protocol RelationshipProtocol: NullableProperty where PropertyValue: Equa
     var configuration: PropertyConfiguration { get set }
     var inverseKeyPath: AnyKeyPath! { get set }
     
-    init<R: RelationshipProtocol>(wrappedValue: PropertyValue?, inverse: KeyPath<Destination, R>, options: PropertyConfiguration) where R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping
+    init<R: RelationshipProtocol>(inverse: KeyPath<Destination, R>, options: PropertyConfiguration) where R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping
 }
 
 // MARK: - EntityRelationShipType
@@ -52,12 +52,12 @@ public protocol RelationMapping: FieldConvertible where RuntimeObjectValue: Equa
     associatedtype EntityType: HashableEntity
     
     static func resolveMaxCount(_ amount: Int) -> Int
-    static func convert(value: RuntimeObjectValue, with: ManagedObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue
+    static func convert(value: RuntimeObjectValue, with: ManagedObjectValue) -> ManagedObjectValue
 }
 
 extension RelationMapping {
-    static func getEnity(from value: ManagedObject, proxyType: PropertyProxyType) -> EntityType {
-        EntityType.init(value, proxyType: proxyType)
+    static func getEnity(from value: ManagedObject) -> EntityType {
+        EntityType.init(value)
     }
 }
 
@@ -70,19 +70,19 @@ public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertib
     }
     
     @inline(__always)
-    public static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue {
+    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
         guard let value = value else { return nil }
-        return getEnity(from: value, proxyType: proxyType)
+        return getEnity(from: value)
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
+    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
         return value?.rawObject as? ManagedObject
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue, with: ManagedObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
-        return convert(value: value, proxyType: proxyType)
+    public static func convert(value: RuntimeObjectValue, with: ManagedObjectValue) -> ManagedObjectValue {
+        return convert(value: value)
     }
 }
 
@@ -95,17 +95,17 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     }
     
     @inline(__always)
-    public static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue {
-        return Set(value.allObjects.compactMap{ getEnity(from: $0 as! ManagedObject, proxyType: proxyType) })
+    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
+        return Set(value.allObjects.compactMap{ getEnity(from: $0 as! ManagedObject) })
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
+    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
         return value as ManagedObjectValue
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue, with nsset: ManagedObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue {
+    public static func convert(value: RuntimeObjectValue, with nsset: ManagedObjectValue) -> ManagedObjectValue {
         let mutableSet = nsset.mutableCopy() as! NSMutableSet
         mutableSet.removeAllObjects()
         mutableSet.union(Set(value.map{ $0.rawObject }))
@@ -125,45 +125,34 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     public typealias Nullability = O
     public typealias PropertyOption = RelationshipOption
     
-    public weak var proxy: PropertyProxy! = nil
+    public var proxy: PropertyProxy! = nil
     
     public var wrappedValue: PropertyValue {
         get {
-            let value: R.ManagedObjectValue = proxy!.getValue(key: description.name)
-            return R.convert(value: value, proxyType: proxy.proxyType)
+            R.convert(value: proxy!.getValue(key: description.name))
         }
         set {
-            guard let proxy = proxy as? ReadWritePropertyProxy else {
-                return assertionFailure("value should not be modified with read only value mapper")
-            }
-            #if canImport(Combine)
             let oldValue: PropertyValue = wrappedValue
-            defer {
-                if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), oldValue != newValue {
-                    objectWillChange.send()
-                    entityObject?.objectWillChange.send()
-                }
+            
+            proxy.setValue(
+                R.convert(value: newValue, with: R.convert(value: oldValue)),
+                key: description.name
+            )
+            
+            if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), oldValue != newValue {
+                objectDidChange()
             }
-            #endif
-            let value = R.convert(value: newValue,
-                                  with: R.convert(value: oldValue, proxyType: proxy.proxyType),
-                                  proxyType: proxy.proxyType)
-            
-            return proxy.setValue(value, key: description.name)
-            
         }
     }
 
-    dynamic public var projectedValue: Crush.Relationship<Nullability, InverseMapping, Mapping> {
+    public var projectedValue: Relationship<Nullability, InverseMapping, Mapping> {
         self
     }
             
     public weak var entityObject: NeutralEntityObject?
     
     public var defaultName: String = ""
-            
-    public var inverseRelationship: String?
-    
+                
     public var inverseKeyPath: AnyKeyPath!
     
     public var configuration: PropertyConfiguration = []
@@ -176,13 +165,13 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     
     public init() { }
     
-    public init<R>(wrappedValue: PropertyValue? = nil, inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
+    public init<R>(inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
         where R: RelationshipProtocol, R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping {
         self.inverseKeyPath = inverse
         self.configuration = options
     }
     
-    public init(wrappedValue: PropertyValue? = nil, options: PropertyConfiguration) {
+    public init(options: PropertyConfiguration) {
         self.configuration = options
     }
     

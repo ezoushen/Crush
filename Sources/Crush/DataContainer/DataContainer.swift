@@ -16,10 +16,7 @@ class WriterManagedObjectContext: NSManagedObjectContext {
 
 public class DataContainer {
     internal var writerContext: NSManagedObjectContext!
-    internal var readOnlyContext: NSManagedObjectContext!
-    
-    private var fetchContext: _ReadOnlyTransactionContext!
-    private var presentContext: _ReadOnlyTransactionContext!
+    internal var uiContext: NSManagedObjectContext!
     
     let connection: Connection
         
@@ -41,14 +38,8 @@ public class DataContainer {
     }
     
     private func initializeAllContext() {
-        let writerContext = createWriterContext()
-        let readOnlyContext = createReadOnlyContext(parent: writerContext)
-        
-        self.writerContext = writerContext
-        self.readOnlyContext = readOnlyContext
-        
-        self.fetchContext = .init(context: readOnlyContext, targetContext: writerContext)
-        self.presentContext = .init(context: readOnlyContext, targetContext: readOnlyContext)
+        writerContext = createWriterContext()
+        uiContext = createUiContext(parent: writerContext)
     }
     
     private func createWriterContext() -> NSManagedObjectContext {
@@ -59,7 +50,7 @@ public class DataContainer {
         return context
     }
     
-    private func createReadOnlyContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
+    private func createUiContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         context.parent = parent
         context.stalenessInterval = 0.0
@@ -89,52 +80,52 @@ public class DataContainer {
 }
 
 extension DataContainer {
-    internal var executionContext: _ReadWriteTransactionContext {
-        _ReadWriteTransactionContext(context: createBackgroundContext(parent: writerContext),
-                                     targetContext: writerContext,
-                                     readOnlyContext: readOnlyContext)
+    internal func backgroundTransactionContext() -> _TransactionContext {
+        _TransactionContext(executionContext: createBackgroundContext(parent: writerContext),
+                            rootContext: writerContext,
+                            uiContext: uiContext)
     }
     
-    internal var uiContext: _ReadWriteTransactionContext {
-        _ReadWriteTransactionContext(context: createMainThreadContext(parent: writerContext),
-                                     targetContext: writerContext,
-                                     readOnlyContext: readOnlyContext)
+    internal func uiTransactionContext() -> _TransactionContext {
+        let context = createMainThreadContext(parent: writerContext)
+        return _TransactionContext(executionContext: context,
+                                   rootContext: writerContext,
+                                   uiContext: context)
     }
 }
 
 extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
     public func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T.ReadOnly> {
-        .init(config: .init(), context: fetchContext)
+        .init(config: .init(), context: startTransaction().context)
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
-        .init(config: .init(), context: startTransaction().executionContext)
+        .init(config: .init(), context: backgroundTransactionContext())
     }
     
     public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
-        .init(config: .init(), context: startTransaction().executionContext)
+        .init(config: .init(), context: backgroundTransactionContext())
     }
     
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
-        .init(config: .init(), context: startTransaction().executionContext)
+        .init(config: .init(), context: backgroundTransactionContext())
     }
 }
 
 extension DataContainer {
     public func startTransaction() -> Transaction {
-        Transaction(presentContext: presentContext, executionContext: executionContext)
+        Transaction(context: backgroundTransactionContext())
     }
     
     public func startUiTransaction() -> Transaction {
-        let context = uiContext
-        return Transaction(presentContext: context, executionContext: context)
+        Transaction(context: uiTransactionContext())
     }
     
-    public func load<T: Entity>(objectID: NSManagedObjectID) -> T {
-        T.init(objectID: objectID, in: readOnlyContext, proxyType: .readOnly)
+    public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly {
+        T.ReadOnly(T.init(objectID: objectID, in: uiContext))
     }
     
-    public func load<T: Entity>(objectIDs: [NSManagedObjectID]) -> [T] {
+    public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly] {
         objectIDs.map(load(objectID:))
     }
 }

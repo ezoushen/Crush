@@ -75,26 +75,12 @@ public struct FetchConfig<T: Entity>: RequestConfig {
 public class PartialFetchBuilder<Target, Received, Result> where Target: Entity {
     
     internal var _config: Config
-    internal let _context: ReadOnlyContext
+    internal let _context: Context
 
-    internal required init(config: Config, context: ReadOnlyContext) {
+    internal required init(config: Config, context: Context) {
         self._config = config
         self._context = context
     }
-}
-
-public class FetchBuilder<Target, Received, Result>: PartialFetchBuilder<Target, Received, Result> where Target: Entity { }
-
-extension FetchBuilder {
-    public func count() -> Int {
-        let newConfig = _config.updated(\.resultType, value: .countResultType)
-        let request = newConfig.createFetchRequest()
-        return _context.count(request: request)
-    }
-}
-
-extension PartialFetchBuilder: RequestBuilder {
-    typealias Config = FetchConfig<Target>
     
     public func limit(_ size: Int) -> PartialFetchBuilder<Target, Received, Result> {
         _config = _config.updated(\.limit, value: size)
@@ -190,10 +176,22 @@ extension PartialFetchBuilder: RequestBuilder {
         _config = _config.updated(\.predicate, value: newPredicate)
         return self
     }
+}
+
+extension PartialFetchBuilder: RequestBuilder {
+    typealias Config = FetchConfig<Target>
     
     private func received() throws -> [Received] {
         let request = _config.createFetchRequest()
         return try _context.execute(request: request)
+    }
+}
+
+public class FetchBuilder<Target, Received, Result>: PartialFetchBuilder<Target, Received, Result> where Target: Entity {
+    public func count() -> Int {
+        let newConfig = _config.updated(\.resultType, value: .countResultType)
+        let request = newConfig.createFetchRequest()
+        return _context.count(request: request)
     }
 }
 
@@ -203,14 +201,14 @@ extension PartialFetchBuilder where Result == Dictionary<String, Any>, Received 
     }
 }
 
-extension PartialFetchBuilder where Result: NSManagedObject, Received == NSManagedObject {
+extension PartialFetchBuilder where Result: NSManagedObject, Received: NSManagedObject {
     public func findOne() throws -> Result? {
         try limit(1).exec().first
     }
     
     public func exec() throws -> [Result] {
-        return try received().map {
-            _context.receive($0) as! Result
+        return try received().compactMap {
+            _context.present($0) as? Result
         }
     }
 }
@@ -222,8 +220,7 @@ extension PartialFetchBuilder where Target: HashableEntity, Result: Target.ReadO
     
     public func exec() throws -> [Result] {
         try received().map {
-            let managedObject: ManagedObject = _context.receive($0)
-            return Result(Target.init(managedObject, proxyType: _context.proxyType))
+            Result(_context.present($0))
         }
     }
 }
@@ -235,8 +232,7 @@ extension PartialFetchBuilder where Result: Entity, Received == ManagedObject {
     
     public func exec() throws -> [Result] {
         try received().map {
-            let managedObject: ManagedObject = _context.receive($0)
-            return Result.init(managedObject, proxyType: _context.proxyType)
+            Result(_context.receive($0))
         }
     }
 }

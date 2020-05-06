@@ -42,8 +42,7 @@ extension RequestConfig {
 }
 
 protocol RequestBuilder: AnyObject {
-    typealias ReadOnlyContext = ReaderTransactionContext & RawContextProviderProtocol
-    typealias ReadWriteContext = ReaderTransactionContext & RawContextProviderProtocol & WriterTransactionContext
+    typealias Context = Crush.TransactionContext & RawContextProviderProtocol
     
     associatedtype Config: RequestConfig
     

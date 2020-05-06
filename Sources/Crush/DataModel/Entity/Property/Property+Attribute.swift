@@ -62,24 +62,16 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     
     public var wrappedValue: PropertyValue {
         get {
-            let value: FieldType.ManagedObjectValue = proxy!.getValue(key: description.name)
-            return FieldType.convert(value: value, proxyType: proxy.proxyType)
+            FieldType.convert(value: proxy.getValue(key: description.name))
         }
         set {
-            guard let proxy = proxy as? ReadWritePropertyProxy else {
-                return assertionFailure("value should not be modified with read only value mapper")
-            }
-            let value: FieldType.ManagedObjectValue = FieldType.convert(value: newValue, proxyType: proxy.proxyType)
-            #if canImport(Combine)
             let oldValue: PropertyValue = wrappedValue
-            defer {
-                if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), oldValue != newValue {
-                    objectWillChange.send()
-                    entityObject?.objectWillChange.send()
-                }
+            
+            proxy.setValue(FieldType.convert(value: newValue), key: description.name)
+            
+            if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), oldValue != newValue {
+                objectDidChange()
             }
-            #endif
-            proxy.setValue(value, key: description.name)
         }
     }
     
@@ -92,9 +84,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     public var defaultValue: Any? = nil
 
     public var defaultName: String = ""
-    
-    public var renamingIdentifier: String?
-    
+        
     public var configuration: PropertyConfiguration = []
     
     public var propertyCacheKey: String = ""

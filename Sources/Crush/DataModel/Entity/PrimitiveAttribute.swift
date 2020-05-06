@@ -21,8 +21,8 @@ public protocol FieldConvertible {
     associatedtype RuntimeObjectValue
     associatedtype ManagedObjectValue
     
-    static func convert(value: ManagedObjectValue, proxyType: PropertyProxyType) -> RuntimeObjectValue
-    static func convert(value: RuntimeObjectValue, proxyType: PropertyProxyType) -> ManagedObjectValue
+    static func convert(value: ManagedObjectValue) -> RuntimeObjectValue
+    static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
 }
 
 public protocol PredicateEquatable {
@@ -41,7 +41,7 @@ where ManagedObjectValue == Self? { }
 extension FieldAttribute
 where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
     @inline(__always)
-    public static func convert(value: Self?, proxyType: PropertyProxyType) -> Self? {
+    public static func convert(value: Self?) -> Self? {
         value
     }
 }
@@ -112,12 +112,12 @@ public protocol Enumerator: RawRepresentable, FieldAttribute, PredicateComparabl
 where RawValue: FieldProtocol & PredicateEquatable { }
 
 extension Enumerator {
-    public static func convert(value: RawValue?, proxyType: PropertyProxyType) -> Self? {
+    public static func convert(value: RawValue?) -> Self? {
         guard let value = value else { return nil }
         return Self.init(rawValue: value)
     }
     
-    public static func convert(value: Self?, proxyType: PropertyProxyType) -> RawValue? {
+    public static func convert(value: Self?) -> RawValue? {
         value?.rawValue
     }
     
