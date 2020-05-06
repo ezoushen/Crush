@@ -22,7 +22,6 @@ public protocol RuntimeObject: AnyObject {
 }
 
 public protocol Entity: RuntimeObject, Field {
-    static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping?
     static func setOverrideCacheKey(for type: Entity.Type, key: String)
     static var isAbstract: Bool { get }
     static var renamingIdentifier: String? { get }
@@ -81,6 +80,59 @@ extension Entity {
     fileprivate func createPropertyCacheKey(domain: String, name: String) -> String {
         "\(domain).\(name)"
     }
+    
+    static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping? {
+        var fromEntityTypeName: String? = nil
+        var toEntityTypeName: String? = nil
+        
+        let attributeMappings = try entity().properties
+            .filter { $0 is NSAttributeDescription }
+            .compactMap { property -> PropertyMappingProtocol? in
+            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
+                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObject.Type,
+                  let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
+                  let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
+                else { return nil }
+                
+                if (fromEntityTypeName == nil && toEntityTypeName == nil ) {
+                    fromEntityTypeName = fromEntityType.fetchKey
+                    toEntityTypeName = toEntityType.fetchKey
+                } else if fromEntityTypeName != fromEntityType.fetchKey || toEntityTypeName != toEntityType.fetchKey {
+                    throw EntityMappingError.entityTypeMismatch
+                }
+            return AnyPropertyMapping(type: .attribute, from: fromPath, to: toPath)
+        }
+        
+        let relationshipMappings = try entity().properties
+            .filter { $0 is NSRelationshipDescription }
+            .compactMap { property -> PropertyMappingProtocol? in
+            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
+                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObject.Type,
+                  let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
+                  let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
+                else { return nil }
+                
+                if (fromEntityTypeName == nil && toEntityTypeName == nil ) {
+                    fromEntityTypeName = fromEntityType.fetchKey
+                    toEntityTypeName = toEntityType.fetchKey
+                } else if fromEntityTypeName != fromEntityType.fetchKey || toEntityTypeName != toEntityType.fetchKey {
+                    throw EntityMappingError.entityTypeMismatch
+                }
+            return AnyPropertyMapping(type: .relationship, from: fromPath, to: toPath)
+        }
+        
+        guard let sourceName = fromEntityTypeName, let destinationName = toEntityTypeName else {
+            return nil
+        }
+                
+        return try AnyEntityMapping(type: .transform,
+                                    source: sourceName,
+                                    destination: destinationName,
+                                    attributes: attributeMappings,
+                                    relations: relationshipMappings)
+            .entityMapping(sourceModel: sourceModel,
+                           destinationModel: destinationModel)
+    }
 }
 
 public func == (lhs: NeutralEntityObject, rhs: NeutralEntityObject) -> Bool {
@@ -136,6 +188,8 @@ open class NeutralEntityObject: Hashable, Entity, ManagedObjectDelegate {
         self.proxy = proxy
         
         injectProxy()
+        
+        proxy.setManagedObjectDelegate(self)
     }
         
     private func injectProxy() {
@@ -228,59 +282,6 @@ open class EntityObject: NeutralEntityObject {
 }
 
 extension NeutralEntityObject {
-    public class func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping? {
-        var fromEntityTypeName: String? = nil
-        var toEntityTypeName: String? = nil
-        
-        let attributeMappings = try entity().properties
-            .filter { $0 is NSAttributeDescription }
-            .compactMap { property -> PropertyMappingProtocol? in
-            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
-                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObject.Type,
-                  let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
-                  let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
-                else { return nil }
-                
-                if (fromEntityTypeName == nil && toEntityTypeName == nil ) {
-                    fromEntityTypeName = fromEntityType.fetchKey
-                    toEntityTypeName = toEntityType.fetchKey
-                } else if fromEntityTypeName != fromEntityType.fetchKey || toEntityTypeName != toEntityType.fetchKey {
-                    throw EntityMappingError.entityTypeMismatch
-                }
-            return AnyPropertyMapping(type: .attribute, from: fromPath, to: toPath)
-        }
-        
-        let relationshipMappings = try entity().properties
-            .filter { $0 is NSRelationshipDescription }
-            .compactMap { property -> PropertyMappingProtocol? in
-            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
-                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObject.Type,
-                  let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
-                  let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
-                else { return nil }
-                
-                if (fromEntityTypeName == nil && toEntityTypeName == nil ) {
-                    fromEntityTypeName = fromEntityType.fetchKey
-                    toEntityTypeName = toEntityType.fetchKey
-                } else if fromEntityTypeName != fromEntityType.fetchKey || toEntityTypeName != toEntityType.fetchKey {
-                    throw EntityMappingError.entityTypeMismatch
-                }
-            return AnyPropertyMapping(type: .relationship, from: fromPath, to: toPath)
-        }
-        
-        guard let sourceName = fromEntityTypeName, let destinationName = toEntityTypeName else {
-            return nil
-        }
-                
-        return try AnyEntityMapping(type: .transform,
-                                    source: sourceName,
-                                    destination: destinationName,
-                                    attributes: attributeMappings,
-                                    relations: relationshipMappings)
-            .entityMapping(sourceModel: sourceModel,
-                           destinationModel: destinationModel)
-    }
-    
     public class func entity() -> NSEntityDescription {
         let coordinator = CacheCoordinator.shared
         let entityKey = Self.entityCacheKey
@@ -389,23 +390,11 @@ import SwiftUI
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension NeutralEntityObject: ObservableObject { }
 
-
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension Entity where Self: NeutralEntityObject {
-    public func observe<T: NullableProperty & ObservableObject>(_ keyPath: KeyPath<Self, T>, containsCurrent: Bool = false) -> AnyPublisher<T.PropertyValue, Never>{
-        let property = self[keyPath: keyPath]
-        guard containsCurrent else {
-            return property.objectWillChange.map{ _ in property.wrappedValue }.eraseToAnyPublisher()
-        }
-        return property.objectWillChange.map{ _ in property.wrappedValue }.append(property.wrappedValue).eraseToAnyPublisher()
-    }
-}
-
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension Publisher where Self.Failure == Never {
-    public func assign<Root: HashableEntity>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: Editable<Root>) -> AnyCancellable {
-        self.sink {
-            object[dynamicMember: keyPath] = $0
+    public func assign<Root: HashableEntity>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: Root.ReadOnly, in transaction: Transaction) -> AnyCancellable {
+        self.sink { [unowned object] in
+            Editable(object, transaction: transaction)[dynamicMember: keyPath] = $0
         }
     }
 }

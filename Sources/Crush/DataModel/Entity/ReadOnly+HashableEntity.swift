@@ -83,7 +83,7 @@ extension ReadOnly {
         guard containsCurrent else {
             return property.objectWillChange.map{ _ in property.wrappedValue }.eraseToAnyPublisher()
         }
-        return property.objectWillChange.map{ _ in property.wrappedValue }.append(property.wrappedValue).eraseToAnyPublisher()
+        return property.objectWillChange.map{ _ in property.wrappedValue }.prepend(property.wrappedValue).eraseToAnyPublisher()
     }
 }
 #endif
