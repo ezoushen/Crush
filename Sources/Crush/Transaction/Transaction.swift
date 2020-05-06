@@ -48,9 +48,13 @@ extension Transaction {
     
     public func sync<T>(_ block: @escaping (TransactionContext) throws -> T) throws -> T {
         let transactionContext = context
-        return try transactionContext.executionContext.performAndWait {
+        let result = try transactionContext.executionContext.performAndWait {
             try block(transactionContext)
         }
+        
+        assert(!(result is EntityObject), "Return an EntityObject is not recommended")
+        
+        return result
     }
     
     public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> T) throws -> T.ReadOnly {
@@ -115,6 +119,9 @@ extension Transaction.SingularEditor {
         let result: V = try context.executionContext.performAndWait {
             try block(context, context.receive(self.value))
         }
+        
+        assert(!(result is EntityObject), "Return an EntityObject is not recommended")
+        
         return result
     }
     
@@ -176,9 +183,13 @@ extension Transaction.PluralEditor {
     }
     
     public func sync<V>(_ block: @escaping (TransactionContext, [T]) throws -> V) throws -> V {
-        try transaction.context.executionContext.performAndWait {
+        let value = try transaction.context.executionContext.performAndWait {
             try block(self.transaction.context, self.values.map(self.transaction.context.receive(_:)))
         }
+        
+        assert(!(value is EntityObject), "Return an EntityObject is not recommended")
+        
+        return value
     }
     
     public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) throws -> V) throws -> V.ReadOnly {

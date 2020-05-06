@@ -46,8 +46,7 @@ extension TodoListViewModel {
     func addTodoDetailViewModel() -> TodoDetailViewModel {
         let transaction = dataContainer.startUiTransaction()
         let todo: Todo.ReadOnly = try! transaction.sync { context in
-            let todo = context.create(entiy: Todo.self)
-            return todo
+            context.create(entiy: Todo.self)
         }
         let viewModel = TodoDetailViewModel(todo: todo, transaction: transaction, isPresenting: binding(\.isPresenting))
         

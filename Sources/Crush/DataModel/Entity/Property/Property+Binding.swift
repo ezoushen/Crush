@@ -5,7 +5,6 @@
 //  Created by ezou on 2020/4/18.
 //
 
-import Foundation
 #if canImport(SwiftUI)
 import SwiftUI
 import Combine
@@ -41,5 +40,4 @@ extension Relationship: ObservableObject {
         entityObject?.objectWillChange.send()
     }
 }
-
 #endif
