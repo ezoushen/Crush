@@ -39,9 +39,8 @@ class TodoListViewController: UIViewController {
     }
     
     @IBAction func didPressCreateButton() {
-        let todo = try! container.startTransaction().sync { context -> Todo in
+        let todo: Todo.ReadOnly = try! container.startTransaction().sync { context -> Todo in
             let todo = context.create(entiy: Todo.self)
-            context.stash()
             return todo
         }
         performSegue(withIdentifier: "TASK_DETAIL_VIEW",

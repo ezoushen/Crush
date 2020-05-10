@@ -38,7 +38,7 @@ class DataModelTests: XCTestCase {
     var sut: DataContainer!
     
     override func setUp() {
-        sut = try! DataContainer(connection: Connection(type: .sql, name: "test", version: V1()))
+        sut = try! DataContainer(connection: Connection(type: .inMemory, name: "test", version: V1()))
     }
 
     override func tearDown() {
@@ -64,14 +64,14 @@ class DataModelTests: XCTestCase {
     }
     
     func test_Transaction_objectOnMainContextShouldBeRefreshedAfterCommitted() {
-        let person: V1.People = sut.startTransaction().sync { context in
+        let person: V1.People.ReadOnly = try! sut.startTransaction().sync { context in
             let people = context.create(entiy: V1.People.self)
             people.firstName = "first name"
             context.commit()
             return people
         }
         
-        sut.startTransaction().edit(person).sync { context, person in
+        try! sut.startTransaction().edit(person).sync { context, person in
             person.firstName = "FIRST NAME"
             context.commit()
         }
