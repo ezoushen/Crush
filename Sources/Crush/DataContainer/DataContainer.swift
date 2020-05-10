@@ -128,4 +128,10 @@ extension DataContainer {
     public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly] {
         objectIDs.map(load(objectID:))
     }
+    
+    public func load<T: HashableEntity>(_ object: T.ReadOnly) -> T.ReadOnly {
+        guard uiContext != object.value.rawObject.managedObjectContext else { return object }
+        let newObject = uiContext.receive(runtimeObject: object.value)
+        return T.ReadOnly(T.init(newObject))
+    }
 }
