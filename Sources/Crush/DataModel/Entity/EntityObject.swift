@@ -165,6 +165,30 @@ open class NeutralEntityObject: Hashable, Entity, ManagedObjectDelegate {
         rawObject.hashValue
     }
     
+    public var isDeleted: Bool {
+        rawObject.isDeleted
+    }
+    
+    public var isUpdated: Bool {
+        rawObject.isUpdated
+    }
+    
+    public var isInserted: Bool {
+        rawObject.isInserted
+    }
+    
+    public func validateForDelete() throws {
+        try rawObject.validateForDelete()
+    }
+    
+    public func validateForInsert() throws {
+        try rawObject.validateForInsert()
+    }
+    
+    public func validateForUpdate() throws {
+        try rawObject.validateForUpdate()
+    }
+    
     private let proxy: PropertyProxy
     
     private lazy var _allMirrors: [(Mirror.Child, String)] = {
