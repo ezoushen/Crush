@@ -68,6 +68,20 @@ extension ReadOnly: Hashable where Value: Hashable {
     }
 }
 
+extension ReadOnly where Value: NeutralEntityObject {
+    public func validateForDelete() throws {
+        try value.validateForDelete()
+    }
+    
+    public func validateForInsert() throws {
+        try value.validateForInsert()
+    }
+    
+    public func validateForUpdate() throws {
+        try value.validateForUpdate()
+    }
+}
+
 extension Entity where Self: Hashable {
     public typealias ReadOnly = Crush.ReadOnly<Self>
 }

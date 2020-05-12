@@ -68,6 +68,11 @@ extension Transaction {
 
         return present(result)
     }
+    
+    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> T) throws -> T.ReadOnly? {
+        let result: T.ReadOnly = try sync(block)
+        return result
+    }
 
     public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> [T]) throws -> [T.ReadOnly]{
         let transactionContext = context
@@ -137,6 +142,11 @@ extension Transaction.SingularEditor {
         return transaction.present(result)
     }
     
+    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T) throws -> V) throws -> V.ReadOnly? {
+        let result: V.ReadOnly = try sync(block)
+        return result
+    }
+    
     public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T) throws -> [V]) throws -> [V.ReadOnly]  {
         let context = transaction.context
         let result: [V] = try context.executionContext.performAndWait {
@@ -203,6 +213,11 @@ extension Transaction.PluralEditor {
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
+    }
+    
+    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) throws -> V) throws -> V.ReadOnly? {
+        let result: V.ReadOnly = try sync(block)
+        return result
     }
     
     public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) throws -> [V]) throws -> [V.ReadOnly] {
