@@ -200,6 +200,12 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateComparable & Comp
     }
 }
 
+extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, Value.PredicateValue == Date {
+    public static func <> (lhs: Self, rhs: Range<Value.PredicateValue>) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) <= %@ AND \(lhs.fullPath) >= %@", rhs.upperBound.predicateValue, rhs.lowerBound.predicateValue)
+    }
+}
+
 extension KeyPath where Root: NSManagedObject, Value == String {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
