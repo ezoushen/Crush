@@ -417,9 +417,16 @@ extension NeutralEntityObject: ObservableObject { }
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension Publisher where Self.Failure == Never {
     public func assign<Root: HashableEntity>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: Root.ReadOnly, in transaction: Transaction) -> AnyCancellable {
-        self.sink { [unowned object] in
+        sink {
             Editable(object, transaction: transaction)[dynamicMember: keyPath] = $0
         }
+    }
+}
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+extension Publisher {
+    public func tryMap<T>(transaction: Crush.Transaction, _ block: @escaping (Output) -> T) -> Publishers.TryMap<Self, T> {
+        tryMap { block($0) }
     }
 }
 #endif

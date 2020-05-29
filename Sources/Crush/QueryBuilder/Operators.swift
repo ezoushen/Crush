@@ -44,6 +44,20 @@ extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, V
     public static func != (lhs: Self, rhs: Value.PredicateValue) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) != %@", rhs.predicateValue)
     }
+    
+    public static func == (lhs: Self, rhs: Value.PredicateValue?) -> NSPredicate {
+        guard let value = rhs?.predicateValue else {
+            return NSPredicate(format: "\(lhs.fullPath) == NULL")
+        }
+        return NSPredicate(format: "\(lhs.fullPath) == %@", value)
+    }
+    
+    public static func != (lhs: Self, rhs: Value.PredicateValue?) -> NSPredicate {
+        guard let value = rhs?.predicateValue else {
+            return NSPredicate(format: "\(lhs.fullPath) != NULL")
+        }
+        return NSPredicate(format: "\(lhs.fullPath) != %@", value)
+    }
 }
 
 extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, Value.PredicateValue: PredicateComparable & Comparable {
@@ -144,6 +158,20 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateEquatable & Equat
     public static func != (lhs: KeyPath, rhs: Value) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) != %@", rhs.predicateValue)
     }
+    
+    public static func == (lhs: KeyPath, rhs: Value?) -> NSPredicate {
+        guard let value = rhs?.predicateValue else {
+            return NSPredicate(format: "\(lhs.stringValue) == NULL")
+        }
+        return NSPredicate(format: "\(lhs.stringValue) == %@", value)
+    }
+    
+    public static func != (lhs: KeyPath, rhs: Value?) -> NSPredicate {
+        guard let value = rhs?.predicateValue else {
+            return NSPredicate(format: "\(lhs.stringValue) != NULL")
+        }
+        return NSPredicate(format: "\(lhs.stringValue) != %@", value)
+    }
 }
 
 // MARK: - Operator Overloading for `NSManagedObject`
@@ -197,6 +225,12 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateComparable & Comp
     
     public static func <> (lhs: KeyPath, rhs: Range<Value>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) BETWEEN '{\(rhs.lowerBound.predicateValue), \(rhs.upperBound.predicateValue)}'")
+    }
+}
+
+extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, Value.PredicateValue == Date {
+    public static func <> (lhs: Self, rhs: Range<Value.PredicateValue>) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.fullPath) <= %@ AND \(lhs.fullPath) >= %@", rhs.upperBound.predicateValue, rhs.lowerBound.predicateValue)
     }
 }
 

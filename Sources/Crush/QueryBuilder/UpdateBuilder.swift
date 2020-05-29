@@ -81,6 +81,6 @@ extension UpdateBuilder where Target: NSManagedObject {
 
 extension UpdateBuilder: RequestBuilder {
     public func exec() throws -> NSBatchUpdateResult {
-        try _context.execute(request: _config.createFetchRequest())
+        try _context.execute(request: _config.createFetchRequest(), on: \.rootContext)
     }
 }

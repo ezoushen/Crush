@@ -73,16 +73,15 @@ internal struct _TransactionContext: TransactionContext, RawContextProviderProto
         self.rootContext = rootContext
         self.uiContext = uiContext
     }
-    
 }
 
 extension TransactionContext where Self: RawContextProviderProtocol {
-    func count(request: NSFetchRequest<NSFetchRequestResult>) -> Int {
+    func count(request: NSFetchRequest<NSFetchRequestResult>, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) -> Int {
         var result: Int? = nil
-        
-        rootContext.performAndWait {
+        let context = self[keyPath: context]
+        context.performAndWait {
             do {
-                result = try rootContext.count(for: request)
+                result = try context.count(for: request)
             } catch {
                 print("Unabled to count the records, error:", error.localizedDescription)
             }
@@ -91,19 +90,19 @@ extension TransactionContext where Self: RawContextProviderProtocol {
         return result ?? 0
     }
     
-    func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) throws -> [T] {
-        rootContext.processPendingChanges()
-
-        return try rootContext.performAndWait {
-            return try self.rootContext.fetch(request) as! [T]
+    func execute<T>(request: NSFetchRequest<NSFetchRequestResult>, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) throws -> [T] {
+        let context = self[keyPath: context]
+        context.processPendingChanges()
+        return try context.performAndWait {
+            return try context.fetch(request) as! [T]
         }
     }
     
-    func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest) throws -> T {
-        rootContext.processPendingChanges()
-
-        return try rootContext.performAndWait {
-            return try self.rootContext.execute(request) as! T
+    func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) throws -> T {
+        let context = self[keyPath: context]
+        context.processPendingChanges()
+        return try context.performAndWait {
+            return try context.execute(request) as! T
         }
     }
 }
@@ -114,6 +113,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
         
         executionContext.performAndWait {
             object = entiy.init(context: executionContext)
+            executionContext.insert(object.rawObject)
         }
         
         return object

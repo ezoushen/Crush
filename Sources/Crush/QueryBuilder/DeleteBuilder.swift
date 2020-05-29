@@ -62,6 +62,6 @@ extension DeleteBuilder: RequestBuilder {
 
 extension DeleteBuilder {
     public func exec() throws -> NSBatchDeleteResult {
-        try _context.execute(request: _config.createFetchRequest())
+        try _context.execute(request: _config.createFetchRequest(), on: \.rootContext)
     }
 }

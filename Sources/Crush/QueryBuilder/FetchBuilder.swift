@@ -35,6 +35,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     private(set) var limit: Int?
     private(set) var offset: Int?
     private(set) var asFaults: Bool
+    private(set) var includePendingChanges: Bool
     
     init() {
         self.predicate = nil
@@ -45,9 +46,10 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         self.offset = nil
         self.asFaults = true
         self.resultType = .managedObjectResultType
+        self.includePendingChanges = false
     }
     
-    private init(predicate: NSPredicate?, limit: Int?, offset: Int?,  sorters: [NSSortDescriptor]?, groupBy: [Expressible]?, mapTo: [Expressible]?, asFaults: Bool, resultType: NSFetchRequestResultType) {
+    private init(predicate: NSPredicate?, limit: Int?, offset: Int?,  sorters: [NSSortDescriptor]?, groupBy: [Expressible]?, mapTo: [Expressible]?, asFaults: Bool, resultType: NSFetchRequestResultType, includePendingChanges: Bool) {
         self.predicate = predicate
         self.sorters = sorters
         self.resultType = resultType
@@ -56,6 +58,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         self.limit = limit
         self.asFaults = asFaults
         self.offset = offset
+        self.includePendingChanges = includePendingChanges
     }
     
     func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
@@ -68,6 +71,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         request.fetchLimit = limit ?? 0
         request.fetchOffset = offset ?? 0
         request.returnsObjectsAsFaults = asFaults
+        request.includesPendingChanges = true
         return request
     }
 }
@@ -89,6 +93,11 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
 
     public func offset(_ step: Int) -> PartialFetchBuilder<Target, Received, Result> {
         _config = _config.updated(\.offset, value: step)
+        return self
+    }
+    
+    public func includePendingChanges() -> Self {
+        _config = _config.updated(\.includePendingChanges, value: true)
         return self
     }
     
@@ -183,7 +192,7 @@ extension PartialFetchBuilder: RequestBuilder {
     
     private func received() throws -> [Received] {
         let request = _config.createFetchRequest()
-        return try _context.execute(request: request)
+        return try _context.execute(request: request, on: _config.includePendingChanges ? \.executionContext : \.rootContext)
     }
 }
 
@@ -191,7 +200,7 @@ public class FetchBuilder<Target, Received, Result>: PartialFetchBuilder<Target,
     public func count() -> Int {
         let newConfig = _config.updated(\.resultType, value: .countResultType)
         let request = newConfig.createFetchRequest()
-        return _context.count(request: request)
+        return _context.count(request: request, on: _config.includePendingChanges ? \.executionContext : \.rootContext)
     }
 }
 
@@ -213,7 +222,7 @@ extension PartialFetchBuilder where Result: NSManagedObject, Received: NSManaged
     }
 }
 
-extension PartialFetchBuilder where Target: HashableEntity, Result: Target.ReadOnly, Received == ManagedObject {
+extension PartialFetchBuilder where Target: HashableEntity, Result == Target.ReadOnly, Received == ManagedObject {
     public func findOne() throws -> Result? {
         try limit(1).exec().first
     }
