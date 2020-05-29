@@ -8,28 +8,20 @@
 import CoreData
 
 @dynamicMemberLookup
-public final class ReadOnly<Value: HashableEntity>: ObservableObject {
+public struct ReadOnly<Value: HashableEntity> {
     public let value: Value
-    
-    private var cancellable: Any?
+        
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    public func getPublisher() -> ObservableObjectPublisher {
+        (value as! NeutralEntityObject).objectWillChange
+    }
     
     public init(_ rawObject: NSManagedObject) {
         self.value = Value.init(rawObject)
-        setupBindings()
     }
     
     public init(_ value: Value) {
         self.value = value
-        setupBindings()
-    }
-    
-    func setupBindings() {
-        guard #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) else { return }
-        cancellable = (value as? NeutralEntityObject)?
-            .objectWillChange
-            .sink { [unowned self] in
-                self.objectWillChange.send()
-            }
     }
     
     public func edit(in transaction: Transaction) -> Editable<Value> {
