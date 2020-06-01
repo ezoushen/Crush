@@ -425,8 +425,28 @@ extension Publisher where Self.Failure == Never {
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension Publisher {
-    public func tryMap<T>(transaction: Crush.Transaction, _ block: @escaping (Output) -> T) -> Publishers.TryMap<Self, T> {
-        tryMap { block($0) }
+    public func tryMap<T>(transaction: Crush.Transaction, _ block: @escaping (TransactionContext, Output) throws -> T) -> Publishers.TryMap<Self, T> {
+        tryMap { value in
+            try transaction.sync { context in
+                try block(context, value)
+            }
+        }
+    }
+    
+    public func tryMap<T: HashableEntity>(transaction: Crush.Transaction, _ block: @escaping (TransactionContext, Output) throws -> T) -> Publishers.TryMap<Self, T.ReadOnly> {
+        tryMap { value in
+            try transaction.sync { context in
+                try block(context, value)
+            }
+        }
+    }
+    
+    public func tryMap<T: HashableEntity>(transaction: Crush.Transaction, _ block: @escaping (TransactionContext, Output) throws -> [T]) -> Publishers.TryMap<Self, [T.ReadOnly]> {
+        tryMap { value in
+            try transaction.sync { context in
+                try block(context, value)
+            }
+        }
     }
 }
 #endif
