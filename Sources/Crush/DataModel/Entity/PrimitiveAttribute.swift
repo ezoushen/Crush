@@ -37,13 +37,36 @@ where Self? == RuntimeObjectValue { }
 public protocol PrimitiveAttribute: FieldAttribute
 where ManagedObjectValue == Self? { }
 
-
 extension FieldAttribute
 where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
     @inline(__always)
     public static func convert(value: Self?) -> Self? {
         value
     }
+}
+
+public protocol CodableProperty: PrimitiveAttribute, PredicateEquatable, Codable, Hashable {
+    var data: Data { get set }
+    var encoder: JSONEncoder { get }
+    var decoder: JSONDecoder { get }
+}
+
+extension CodableProperty {
+    public var encoder: JSONEncoder { JSONEncoder() }
+    
+    public var decoder: JSONDecoder { JSONDecoder() }
+    
+    public var data: Data {
+        get {
+            try! encoder.encode(self)
+        }
+        mutating set {
+            self = try! decoder.decode(Self.self, from: newValue)
+        }
+    }
+    
+    public static var nativeType: NSAttributeType { .dateAttributeType }
+    public var predicateValue: NSObject { data as NSData }
 }
 
 extension Int64: PrimitiveAttribute, PredicateComparable {
