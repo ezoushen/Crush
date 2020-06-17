@@ -12,7 +12,6 @@ import SwiftUI
 final class TodoDetailViewModel: ViewModel, ObservableObject {
     let transaction: Crush.Transaction
     
-    @Submodel
     var todo: Todo.ReadOnly
     
     @Published
@@ -51,6 +50,12 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
     }
 
     func setupBindings() {
+        todo.value.objectWillChange
+            .sink {[unowned self] in
+                self.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+        
         todo.observe(\.$dueDate)
             .removeDuplicates()
             .map {
@@ -84,13 +89,5 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
     
     func save() {
         transaction.commit()
-    }
-}
-
-extension Publisher where Self.Failure == Never {
-    public func assign<Root: AnyObject>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: Root) -> AnyCancellable {
-        self.sink { [weak root = object] in
-            root?[keyPath: keyPath] = $0
-        }
     }
 }
