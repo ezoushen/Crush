@@ -45,13 +45,17 @@ where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
     }
 }
 
-public protocol CodableProperty: PrimitiveAttribute, PredicateEquatable, Codable, Hashable {
+public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable {
     var data: Data { get set }
     var encoder: JSONEncoder { get }
     var decoder: JSONDecoder { get }
 }
 
 extension CodableProperty {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(data)
+    }
+    
     public var encoder: JSONEncoder { JSONEncoder() }
     
     public var decoder: JSONDecoder { JSONDecoder() }
@@ -132,9 +136,13 @@ extension NSCoding where Self: PrimitiveAttribute {
 }
 
 public protocol Enumerator: RawRepresentable, FieldAttribute, PredicateComparable, Hashable
-where RawValue: FieldProtocol & PredicateEquatable { }
+where RawValue: FieldProtocol & PredicateEquatable & Hashable { }
 
 extension Enumerator {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(rawValue)
+    }
+    
     public static func convert(value: RawValue?) -> Self? {
         guard let value = value else { return nil }
         return Self.init(rawValue: value)

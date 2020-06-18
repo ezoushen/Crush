@@ -10,10 +10,14 @@ import CoreData
 @dynamicMemberLookup
 public struct ReadOnly<Value: HashableEntity> {
     public let value: Value
-        
+    
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-    public func getPublisher() -> ObservableObjectPublisher {
-        (value as! NeutralEntityObject).objectWillChange
+    public var objectWillChange: AnyPublisher<Void, Never> {
+        value.rawObject.objectWillChange
+            .map{ [unowned value = self.value] in value.contentHashValue }
+            .removeDuplicates()
+            .map{ _ in Void() }
+            .eraseToAnyPublisher()
     }
     
     public init(_ rawObject: NSManagedObject) {
@@ -74,7 +78,7 @@ extension ReadOnly where Value: NeutralEntityObject {
     }
 }
 
-extension Entity where Self: Hashable {
+extension HashableEntity {
     public typealias ReadOnly = Crush.ReadOnly<Self>
 }
 
@@ -84,12 +88,9 @@ import SwiftUI
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension ReadOnly {
-    public func observe<T: NullableProperty & ObservableObject>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false) -> AnyPublisher<T.PropertyValue, Never>{
-        let property = self.value[keyPath: keyPath]
-        guard containsCurrent else {
-            return property.objectWillChange.map{ _ in property.wrappedValue }.eraseToAnyPublisher()
-        }
-        return property.objectWillChange.map{ _ in property.wrappedValue }.prepend(property.wrappedValue).eraseToAnyPublisher()
+    public func observe<T: NullableProperty>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false) -> AnyPublisher<T.PropertyValue, Never>{
+        let name = self.value[keyPath: keyPath].description.name
+        return KVOPublisher<NSManagedObject, T.PropertyValue>(subject: value.rawObject, keyPath: name, options: containsCurrent ? [.initial, .new] : [.new]).eraseToAnyPublisher()
     }
 }
 #endif

@@ -21,7 +21,7 @@ extension PropertyProxy {
     }
     
     func setManagedObjectDelegate(_ delegate: ManagedObjectDelegate) {
-        managedObject?.delegates.add(delegate)
+        managedObject?.delegates.append(Weak(element: delegate))
         
         if managedObject?.isInserted == true {
             managedObject?.awakeFromInsert()

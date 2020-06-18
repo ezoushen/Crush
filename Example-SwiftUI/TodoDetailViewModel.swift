@@ -12,7 +12,6 @@ import SwiftUI
 final class TodoDetailViewModel: ViewModel, ObservableObject {
     let transaction: Crush.Transaction
     
-    @Submodel
     var todo: Todo.ReadOnly
     
     @Published
@@ -46,11 +45,18 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
         
         super.init()
         
-        bindSubmodel()
         setupBindings()
     }
 
     func setupBindings() {
+        todo.objectWillChange
+            .print("\(Date())")
+
+            .sink {[unowned self] in
+                self.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+        
         todo.observe(\.$dueDate)
             .removeDuplicates()
             .map {
@@ -70,6 +76,7 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
             .map { [unowned self] in
                 $0 ? (self.todo.dueDate ?? self.dueDate) : nil
             }
+    .print("isDueDateEnabled")
             .removeDuplicates()
             .assign(to: \.dueDate, on: todo.edit(in: transaction))
             .store(in: &cancellables)
@@ -77,6 +84,7 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
         $dueDate
             .dropFirst()
             .map{ Swift.Optional.some($0) }
+            .print("dueDate")
             .removeDuplicates()
             .assign(to: \.dueDate, on: todo.edit(in: transaction))
             .store(in: &cancellables)
@@ -84,13 +92,5 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
     
     func save() {
         transaction.commit()
-    }
-}
-
-extension Publisher where Self.Failure == Never {
-    public func assign<Root: AnyObject>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: Root) -> AnyCancellable {
-        self.sink { [weak root = object] in
-            root?[keyPath: keyPath] = $0
-        }
     }
 }
