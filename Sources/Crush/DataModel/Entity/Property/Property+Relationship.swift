@@ -35,7 +35,7 @@ extension RelationshipOption: MutablePropertyConfigurable {
     }
 }
 
-public protocol RelationshipProtocol: NullableProperty where PropertyValue: Equatable {
+public protocol RelationshipProtocol: NullableProperty {
     associatedtype Destination: Entity
     associatedtype Source: Entity
     associatedtype Mapping: RelationMapping
@@ -48,7 +48,7 @@ public protocol RelationshipProtocol: NullableProperty where PropertyValue: Equa
 }
 
 // MARK: - EntityRelationShipType
-public protocol RelationMapping: FieldConvertible where RuntimeObjectValue: Equatable {
+public protocol RelationMapping: FieldConvertible {
     associatedtype EntityType: HashableEntity
     
     static func resolveMaxCount(_ amount: Int) -> Int
@@ -114,7 +114,7 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
 }
 
 @propertyWrapper
-public final class Relationship<O: Nullability, I: RelationMapping, R: RelationMapping>: RelationshipProtocol {
+public final class Relationship<O: Nullability, I: RelationMapping, R: RelationMapping>: RelationshipProtocol where R.RuntimeObjectValue: Hashable {
 
     public typealias PredicateValue = Destination
     public typealias PropertyValue = R.RuntimeObjectValue
@@ -138,10 +138,6 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
                 R.convert(value: newValue, with: R.convert(value: oldValue)),
                 key: description.name
             )
-            
-            if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), oldValue != newValue {
-                objectDidChange()
-            }
         }
     }
 

@@ -74,6 +74,7 @@ public protocol PropertyProtocol: AnyObject {
     var defaultName: String { get set }
     var proxy: PropertyProxy! { get set }
     var propertyCacheKey: String { get set }
+    var anyHashable: AnyHashable { get }
     var entityObject: NeutralEntityObject? { get set }
     
     func emptyPropertyDescription() -> NSPropertyDescription
@@ -91,7 +92,7 @@ extension PropertyProtocol {
 
 public protocol MutableProperty: PropertyProtocol {
     associatedtype PropertyOption: MutablePropertyConfigurable
-    associatedtype PropertyValue
+    associatedtype PropertyValue: Hashable
     associatedtype PredicateValue
     
     var wrappedValue: PropertyValue { get set }
@@ -101,6 +102,10 @@ public protocol MutableProperty: PropertyProtocol {
 extension MutableProperty {
     public var value: Any {
         return wrappedValue
+    }
+    
+    public var anyHashable: AnyHashable {
+        AnyHashable(wrappedValue)
     }
 }
 

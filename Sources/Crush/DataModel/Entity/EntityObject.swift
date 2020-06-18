@@ -30,7 +30,9 @@ public protocol Entity: RuntimeObject, Field {
     init(proxy: PropertyProxy)
 }
 
-public typealias HashableEntity = Hashable & Entity
+public protocol HashableEntity: Entity, Hashable {
+    var contentHashValue: Int { get }
+}
 
 extension RuntimeObject {
     static var fetchKey: String {
@@ -139,7 +141,7 @@ public func == (lhs: NeutralEntityObject, rhs: NeutralEntityObject) -> Bool {
     lhs.rawObject == rhs.rawObject
 }
 
-open class NeutralEntityObject: Hashable, Entity, ManagedObjectDelegate {
+open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
 
     public class var isAbstract: Bool {
         return false
@@ -163,6 +165,15 @@ open class NeutralEntityObject: Hashable, Entity, ManagedObjectDelegate {
     
     public var hashValue: Int {
         rawObject.hashValue
+    }
+    
+    public var contentHashValue: Int {
+        var hasher = Hasher()
+        for (property, _) in _allMirrors {
+            guard let value = property.value as? PropertyProtocol else { continue }
+            hasher.combine(value.anyHashable)
+        }
+        return hasher.finalize()
     }
     
     public var isDeleted: Bool {
@@ -410,9 +421,6 @@ extension NSManagedObject: RuntimeObject {
 #if canImport(Combine)
 import Combine
 import SwiftUI
-
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension NeutralEntityObject: ObservableObject { }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension Publisher where Self.Failure == Never {

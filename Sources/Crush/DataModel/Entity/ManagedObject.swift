@@ -57,76 +57,80 @@ protocol ManagedObjectDelegate: AnyObject {
     func didTurnIntoFault()
 }
 
+struct Weak<Element: AnyObject> {
+    weak var element: Element?
+}
+
 public final class ManagedObject: NSManagedObject {
-    let delegates: NSHashTable<ManagedObjectDelegate> = .weakObjects()
+    var delegates: [Weak<ManagedObjectDelegate>] = []
     
     public override func willAccessValue(forKey key: String?) {
         super.willAccessValue(forKey: key)
-        delegates.allObjects.forEach{ $0.willAccessValue(forKey: key) }
+        delegates.forEach{ $0.element?.willAccessValue(forKey: key) }
     }
     
     public override func didAccessValue(forKey key: String?) {
         super.didAccessValue(forKey: key)
-        delegates.allObjects.forEach{ $0.willAccessValue(forKey: key) }
+        delegates.forEach{ $0.element?.willAccessValue(forKey: key) }
     }
     
     public override func willChangeValue(forKey key: String) {
         super.willChangeValue(forKey: key)
-        delegates.allObjects.forEach{ $0.willChangeValue(forKey: key) }
+        delegates.forEach{ $0.element?.willChangeValue(forKey: key) }
     }
     
     public override func didChangeValue(forKey key: String) {
         super.didChangeValue(forKey: key)
-        delegates.allObjects.forEach{ $0.didChangeValue(forKey: key) }
+        delegates.forEach{ $0.element?.didChangeValue(forKey: key) }
     }
     
     public override func willChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>) {
         super.willChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects)
-        delegates.allObjects.forEach{ $0.willChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects) }
+        delegates.forEach{ $0.element?.willChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects) }
     }
     
     public override func didChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>) {
         super.didChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects)
-        delegates.allObjects.forEach{ $0.didChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects) }
+        delegates.forEach{ $0.element?.didChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects) }
     }
     
     public override func awakeFromFetch() {
         super.awakeFromFetch()
-        delegates.allObjects.forEach{ $0.awakeFromFetch() }
+        delegates.forEach{ $0.element?.awakeFromFetch() }
     }
     
     public override func awakeFromInsert() {
         super.awakeFromInsert()
-        delegates.allObjects.forEach{ $0.awakeFromInsert() }
+        delegates.forEach{ $0.element?.awakeFromInsert() }
     }
     
     public override func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
         super.awake(fromSnapshotEvents: flags)
-        delegates.allObjects.forEach{ $0.awake(fromSnapshotEvents: flags) }
+        delegates.forEach{ $0.element?.awake(fromSnapshotEvents: flags) }
     }
     
     public override func prepareForDeletion() {
         super.prepareForDeletion()
-        delegates.allObjects.forEach{ $0.prepareForDeletion() }
+        delegates.forEach{ $0.element?.prepareForDeletion() }
     }
     
     public override func willSave() {
         super.willSave()
-        delegates.allObjects.forEach{ $0.willSave() }
+        delegates.forEach{ $0.element?.willSave() }
     }
     
     public override func didSave() {
         super.didSave()
-        delegates.allObjects.forEach{ $0.didSave() }
+        delegates.forEach{ $0.element?.didSave() }
     }
     
     public override func willTurnIntoFault() {
         super.willTurnIntoFault()
-        delegates.allObjects.forEach{ $0.willTurnIntoFault() }
+        delegates.forEach{ $0.element?.willTurnIntoFault() }
     }
     
     public override func didTurnIntoFault() {
         super.didTurnIntoFault()
-        delegates.allObjects.forEach{ $0.didTurnIntoFault() }
+        delegates.forEach{ $0.element?.didTurnIntoFault() }
     }
 }

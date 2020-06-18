@@ -57,6 +57,10 @@ class V2: Schema<V1> {
         
         @Optional.Value.String
         var memo: String?
+        
+        override func awakeFromInsert() {
+            dueDate = Date()
+        }
     }
     
     class TodoList: EntityObject {

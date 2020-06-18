@@ -65,13 +65,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
             FieldType.convert(value: proxy.getValue(key: description.name))
         }
         set {
-            let oldValue: PropertyValue = wrappedValue
-            
             proxy.setValue(FieldType.convert(value: newValue), key: description.name)
-            
-            if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), oldValue != newValue {
-                objectDidChange()
-            }
         }
     }
     

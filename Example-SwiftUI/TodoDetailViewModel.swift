@@ -45,12 +45,13 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
         
         super.init()
         
-        bindSubmodel()
         setupBindings()
     }
 
     func setupBindings() {
-        todo.value.objectWillChange
+        todo.objectWillChange
+            .print("\(Date())")
+
             .sink {[unowned self] in
                 self.objectWillChange.send()
             }
@@ -75,6 +76,7 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
             .map { [unowned self] in
                 $0 ? (self.todo.dueDate ?? self.dueDate) : nil
             }
+    .print("isDueDateEnabled")
             .removeDuplicates()
             .assign(to: \.dueDate, on: todo.edit(in: transaction))
             .store(in: &cancellables)
@@ -82,6 +84,7 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
         $dueDate
             .dropFirst()
             .map{ Swift.Optional.some($0) }
+            .print("dueDate")
             .removeDuplicates()
             .assign(to: \.dueDate, on: todo.edit(in: transaction))
             .store(in: &cancellables)
