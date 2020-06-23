@@ -271,10 +271,6 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
             }
     }
     
-    open dynamic func willAccessValue(forKey key: String?) { }
-    
-    open dynamic func didAccessValue(forKey key: String?) { }
-    
     open dynamic func awakeFromFetch() { }
     
     open dynamic func awakeFromInsert() { }
@@ -290,18 +286,6 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
     open dynamic func willTurnIntoFault() { }
     
     open dynamic func didTurnIntoFault() { }
-    
-    open dynamic func willChangeValue(forKey key: String) { }
-    
-    open dynamic func didChangeValue(forKey key: String) { }
-    
-    open dynamic func willChangeValue(forKey inKey: String,
-                                      withSetMutation inMutationKind: NSKeyValueSetMutationKind,
-                                      using inObjects: Set<AnyHashable>) { }
-    
-    open dynamic func didChangeValue(forKey inKey: String,
-                                     withSetMutation inMutationKind: NSKeyValueSetMutationKind,
-                                     using inObjects: Set<AnyHashable>) { }
 }
 
 open class AbstractEntityObject: NeutralEntityObject {

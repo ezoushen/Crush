@@ -21,7 +21,8 @@ extension PropertyProxy {
     }
     
     func setManagedObjectDelegate(_ delegate: ManagedObjectDelegate) {
-        managedObject?.delegates.append(Weak(element: delegate))
+        let proxy = ManagedObjectDelegateProxy(delegate: delegate, parent: managedObject?.delegate)
+        managedObject?.delegate = proxy
         
         if managedObject?.isInserted == true {
             managedObject?.awakeFromInsert()
@@ -55,7 +56,11 @@ struct ReadWritePropertyProxy: PropertyProxy {
     func setValue(_ value: Any?, key: String) {
         let value = value.isNil ? nil : value
         rawObject.willChangeValue(forKey: key)
+        defer {
+            rawObject.didChangeValue(forKey: key)
+        }
         rawObject.setPrimitiveValue(value, forKey: key)
-        rawObject.didChangeValue(forKey: key)
+    }
+    
     }
 }
