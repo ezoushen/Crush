@@ -61,6 +61,4 @@ struct ReadWritePropertyProxy: PropertyProxy {
         }
         rawObject.setPrimitiveValue(value, forKey: key)
     }
-    
-    }
 }
