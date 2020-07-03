@@ -101,7 +101,7 @@ extension InsertBuilder {
             let entity = request.entity
             let context = _context.rootContext
             context.reset()
-            return try context.performAndWait {
+            return context.performAndWait {
                 autoreleasepool { () -> [NSManagedObjectID] in
                     request.objects.map { object -> NSManagedObjectID in
                         let rawObject = NSManagedObject(entity: entity, insertInto: context)
