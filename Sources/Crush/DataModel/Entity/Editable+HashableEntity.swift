@@ -24,12 +24,12 @@ public final class Editable<Value: HashableEntity> {
     
     public subscript<Subject>(dynamicMember keyPath: ReferenceWritableKeyPath<Value, Subject>) -> Subject {
         get {
-            try! transaction.edit(value).sync { context, value in
+            transaction.edit(value).sync { context, value in
                 value[keyPath: keyPath]
             }
         }
         set {
-            try! transaction.edit(value).sync { context, value in
+            transaction.edit(value).sync { context, value in
                 value[keyPath: keyPath] = newValue
             }
         }
