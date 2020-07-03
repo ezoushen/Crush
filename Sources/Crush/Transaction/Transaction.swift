@@ -183,6 +183,8 @@ extension Transaction.PluralEditor {
         }
     }
     
+    // MARK: - throwable PluralEditor
+    
     public func sync(_ block: @escaping (TransactionContext, [T]) throws -> Void) throws {
         let context = transaction.context
         
@@ -232,6 +234,58 @@ extension Transaction.PluralEditor {
         
         return result.map(transaction.present(_:))
     }
+    
+    // MARK: - Non-throwable PluralEditor
+    
+    public func sync(_ block: @escaping (TransactionContext, [T]) -> Void) {
+        let context = transaction.context
+        
+        context.executionContext.performAndWait {
+            let values = self.values.map(context.receive(_:))
+            block(context, values)
+        }
+    }
+    
+    public func sync<V>(_ block: @escaping (TransactionContext, [T]) -> V) -> V {
+        let value = transaction.context.executionContext.performAndWait {
+            block(self.transaction.context, self.values.map(self.transaction.context.receive(_:)))
+        }
+        
+        assert(!(value is EntityObject), "Return an EntityObject is not recommended")
+        
+        return value
+    }
+    
+    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T])  -> V) -> V.ReadOnly {
+        let context = transaction.context
+        let result: V = context.executionContext.performAndWait {
+            let values = self.values.map(context.receive(_:))
+            return block(context, values)
+        }
+        
+        assert(context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+               "You should commit changes in transaction before return")
+        
+        return transaction.present(result)
+    }
+    
+    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) -> V) -> V.ReadOnly? {
+        let result: V.ReadOnly = sync(block)
+        return result
+    }
+    
+    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) -> [V]) -> [V.ReadOnly] {
+        let context = transaction.context
+        let result: [V] = context.executionContext.performAndWait {
+            let values = self.values.map(context.receive(_:))
+            return block(context, values)
+        }
+        
+        assert(context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+               "You should commit changes in transaction before return")
+        
+        return result.map(transaction.present(_:))
+    }
 }
 
 extension Transaction {
@@ -257,6 +311,8 @@ extension Transaction.DualEditor {
             block(context, context.receive(self.value1), context.receive(self.value2))
         }
     }
+    
+    // MARK: - throwable DualEditor
     
     public func sync(_ block: @escaping (TransactionContext, T, S) throws -> Void) throws {
         let context = transaction.context
@@ -300,6 +356,51 @@ extension Transaction.DualEditor {
         
         return result.map(transaction.present(_:))
     }
+    
+    // MARK: - non-throwable DualEditor
+    
+    public func sync(_ block: @escaping (TransactionContext, T, S) -> Void) {
+        let context = transaction.context
+        
+        context.executionContext.performAndWait {
+            block(context, context.receive(self.value1), context.receive(self.value2))
+        }
+    }
+    
+    public func sync<V>(_ block: @escaping (TransactionContext, T, S) -> V) -> V {
+        let context = transaction.context
+        let value = transaction.context.executionContext.performAndWait {
+            block(self.transaction.context, context.receive(self.value1), context.receive(self.value2))
+        }
+        
+        assert(!(value is EntityObject), "Return an EntityObject is not recommended")
+        
+        return value
+    }
+    
+    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T, S) -> V) -> V.ReadOnly {
+        let context = transaction.context
+        let result: V = context.executionContext.performAndWait {
+            block(context, context.receive(self.value1), context.receive(self.value2))
+        }
+        
+        assert(context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+               "You should commit changes in transaction before return")
+        
+        return transaction.present(result)
+    }
+    
+    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T, S) -> [V]) -> [V.ReadOnly] {
+        let context = transaction.context
+        let result: [V] = context.executionContext.performAndWait {
+            block(context, context.receive(self.value1), context.receive(self.value2))
+        }
+        
+        assert(context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+               "You should commit changes in transaction before return")
+        
+        return result.map(transaction.present(_:))
+    }
 }
 
 extension NSManagedObjectContext {
@@ -315,6 +416,14 @@ extension NSManagedObjectContext {
         }
         if let error = error {
             throw error
+        }
+        return result
+    }
+    
+    func performAndWait<T>(_ block: @escaping () -> T) -> T {
+        var result: T!
+        performAndWait {
+            result = block()
         }
         return result
     }

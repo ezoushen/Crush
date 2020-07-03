@@ -133,15 +133,15 @@ extension TransactionContext where Self: RawContextProviderProtocol {
             transactionContext.executionContext.performAndWait {
                 do {
                     try transactionContext.executionContext.save()
-                } catch {
-                    assertionFailure(error.localizedDescription)
+                } catch let error as NSError {
+                    assertionFailure(error.description)
                 }
 
                 transactionContext.rootContext.perform {
                     do {
                         try transactionContext.rootContext.save()
-                    } catch {
-                        assertionFailure(error.localizedDescription)
+                    } catch let error as NSError {
+                        assertionFailure(error.description)
                     }
                 }
                                 
