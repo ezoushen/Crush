@@ -7,22 +7,7 @@
 
 import CoreData
 
-@objc
 protocol ManagedObjectDelegate: AnyObject {
-    func willAccessValue(forKey key: String?) // read notification
-
-    func didAccessValue(forKey key: String?) // read notification (together with willAccessValueForKey used to maintain inverse relationships, to fire faults, etc.) - each read access has to be wrapped in this method pair (in the same way as each write access has to be wrapped in the KVO method pair)
-
-    
-    // KVO change notification
-    func willChangeValue(forKey key: String)
-
-    func didChangeValue(forKey key: String)
-
-    func willChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>)
-
-    func didChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>)
-
     
     // invoked after a fetch or after unfaulting (commonly used for computing derived values from the persisted properties)
     func awakeFromFetch()
@@ -57,80 +42,102 @@ protocol ManagedObjectDelegate: AnyObject {
     func didTurnIntoFault()
 }
 
-struct Weak<Element: AnyObject> {
-    weak var element: Element?
+final class ManagedObjectDelegateProxy: ManagedObjectDelegate {
+    
+    weak var parent: ManagedObjectDelegate?
+    
+    let delegate: ManagedObjectDelegate
+
+    init(delegate: ManagedObjectDelegate, parent: ManagedObjectDelegate?) {
+        self.delegate = delegate
+        self.parent = parent
+    }
+    
+    func awakeFromFetch() {
+        parent?.awakeFromFetch()
+        delegate.awakeFromFetch()
+    }
+    
+    func awakeFromInsert() {
+        parent?.awakeFromInsert()
+        delegate.awakeFromInsert()
+    }
+    
+    func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
+        parent?.awake(fromSnapshotEvents: flags)
+        delegate.awake(fromSnapshotEvents: flags)
+    }
+    
+    func prepareForDeletion() {
+        parent?.prepareForDeletion()
+        delegate.prepareForDeletion()
+    }
+    
+    func willSave() {
+        parent?.willSave()
+        delegate.willSave()
+    }
+    
+    func didSave() {
+        parent?.didSave()
+        delegate.willSave()
+    }
+    
+    func willTurnIntoFault() {
+        parent?.willTurnIntoFault()
+        delegate.willTurnIntoFault()
+    }
+    
+    func didTurnIntoFault() {
+        parent?.didTurnIntoFault()
+        delegate.didTurnIntoFault()
+    }
 }
 
 public final class ManagedObject: NSManagedObject {
-    var delegates: [Weak<ManagedObjectDelegate>] = []
     
-    public override func willAccessValue(forKey key: String?) {
-        super.willAccessValue(forKey: key)
-        delegates.forEach{ $0.element?.willAccessValue(forKey: key) }
-    }
-    
-    public override func didAccessValue(forKey key: String?) {
-        super.didAccessValue(forKey: key)
-        delegates.forEach{ $0.element?.willAccessValue(forKey: key) }
-    }
-    
-    public override func willChangeValue(forKey key: String) {
-        super.willChangeValue(forKey: key)
-        delegates.forEach{ $0.element?.willChangeValue(forKey: key) }
-    }
-    
-    public override func didChangeValue(forKey key: String) {
-        super.didChangeValue(forKey: key)
-        delegates.forEach{ $0.element?.didChangeValue(forKey: key) }
-    }
-    
-    public override func willChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>) {
-        super.willChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects)
-        delegates.forEach{ $0.element?.willChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects) }
-    }
-    
-    public override func didChangeValue(forKey inKey: String, withSetMutation inMutationKind: NSKeyValueSetMutationKind, using inObjects: Set<AnyHashable>) {
-        super.didChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects)
-        delegates.forEach{ $0.element?.didChangeValue(forKey: inKey, withSetMutation: inMutationKind, using: inObjects) }
-    }
+    var delegate: ManagedObjectDelegate?
     
     public override func awakeFromFetch() {
         super.awakeFromFetch()
-        delegates.forEach{ $0.element?.awakeFromFetch() }
+        delegate?.awakeFromFetch()
     }
     
     public override func awakeFromInsert() {
         super.awakeFromInsert()
-        delegates.forEach{ $0.element?.awakeFromInsert() }
+        delegate?.awakeFromInsert()
     }
     
     public override func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
         super.awake(fromSnapshotEvents: flags)
-        delegates.forEach{ $0.element?.awake(fromSnapshotEvents: flags) }
+        delegate?.awake(fromSnapshotEvents: flags)
     }
     
     public override func prepareForDeletion() {
         super.prepareForDeletion()
-        delegates.forEach{ $0.element?.prepareForDeletion() }
+        delegate?.prepareForDeletion()
     }
     
     public override func willSave() {
         super.willSave()
-        delegates.forEach{ $0.element?.willSave() }
+        delegate?.willSave()
     }
     
     public override func didSave() {
         super.didSave()
-        delegates.forEach{ $0.element?.didSave() }
+        delegate?.didSave()
     }
     
     public override func willTurnIntoFault() {
         super.willTurnIntoFault()
-        delegates.forEach{ $0.element?.willTurnIntoFault() }
+        delegate?.willTurnIntoFault()
     }
     
     public override func didTurnIntoFault() {
         super.didTurnIntoFault()
-        delegates.forEach{ $0.element?.didTurnIntoFault() }
+        delegate?.didTurnIntoFault()
+        if let delegate = delegate, CFGetRetainCount(delegate) <= 3 {
+            self.delegate = nil
+        }
     }
 }

@@ -131,11 +131,9 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
         get {
             R.convert(value: proxy!.getValue(key: description.name))
         }
-        set {
-            let oldValue: PropertyValue = wrappedValue
-            
+        set {            
             proxy.setValue(
-                R.convert(value: newValue, with: R.convert(value: oldValue)),
+                R.convert(value: newValue, with: proxy!.getValue(key: description.name)),
                 key: description.name
             )
         }
