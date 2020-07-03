@@ -45,32 +45,46 @@ where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
     }
 }
 
-public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable {
+public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable
+where ManagedObjectValue == Data {
     var data: Data { get set }
-    var encoder: JSONEncoder { get }
-    var decoder: JSONDecoder { get }
+    static var encoder: JSONEncoder { get }
+    static var decoder: JSONDecoder { get }
 }
 
 extension CodableProperty {
+    public typealias RuntimeObjectValue = Self?
+    
+    public typealias ManagedObjectValue = Data
+    
+    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
+        try! Self.decoder.decode(Self.self, from: value)
+    }
+    
+    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
+        try! Self.encoder.encode(value)
+    }
+    
     public func hash(into hasher: inout Hasher) {
         hasher.combine(data)
     }
     
-    public var encoder: JSONEncoder { JSONEncoder() }
+    public static var encoder: JSONEncoder { JSONEncoder() }
     
-    public var decoder: JSONDecoder { JSONDecoder() }
+    public static var decoder: JSONDecoder { JSONDecoder() }
+    
+    public static var nativeType: NSAttributeType { .binaryDataAttributeType }
+    
+    public var predicateValue: NSObject { data as NSData }
     
     public var data: Data {
         get {
-            try! encoder.encode(self)
+            try! Self.encoder.encode(self)
         }
         mutating set {
-            self = try! decoder.decode(Self.self, from: newValue)
+            self = try! Self.decoder.decode(Self.self, from: newValue)
         }
     }
-    
-    public static var nativeType: NSAttributeType { .dateAttributeType }
-    public var predicateValue: NSObject { data as NSData }
 }
 
 extension Int64: PrimitiveAttribute, PredicateComparable {

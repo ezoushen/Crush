@@ -185,6 +185,11 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
         _config = _config.updated(\.predicate, value: newPredicate)
         return self
     }
+    
+    public func asFaults(_ flag: Bool) -> Self {
+        _config = _config.updated(\.asFaults, value: flag)
+        return self
+    }
 }
 
 extension PartialFetchBuilder: RequestBuilder {
