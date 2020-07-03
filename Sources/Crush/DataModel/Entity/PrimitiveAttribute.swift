@@ -32,36 +32,29 @@ public protocol PredicateEquatable {
 public protocol PredicateComparable: PredicateEquatable { }
 
 public protocol FieldAttribute: FieldProtocol, FieldConvertible
-where Self? == RuntimeObjectValue { }
+where RuntimeObjectValue == Self? { }
 
 public protocol PrimitiveAttribute: FieldAttribute
 where ManagedObjectValue == Self? { }
 
-extension FieldAttribute
-where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
-    @inline(__always)
-    public static func convert(value: Self?) -> Self? {
-        value
-    }
-}
-
-public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable
-where ManagedObjectValue == Data {
+public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable {
+    
+    associatedtype ManagedObjectValue = Data
+    
     var data: Data { get set }
+    
     static var encoder: JSONEncoder { get }
     static var decoder: JSONDecoder { get }
 }
 
 extension CodableProperty {
-    public typealias RuntimeObjectValue = Self?
-    
-    public typealias ManagedObjectValue = Data
-    
-    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
+    @inline(__always)
+    public static func convert(value: Data) -> Self? {
         try! Self.decoder.decode(Self.self, from: value)
     }
     
-    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
+    @inline(__always)
+    public static func convert(value: Self?) -> Data {
         try! Self.encoder.encode(value)
     }
     
@@ -84,6 +77,14 @@ extension CodableProperty {
         mutating set {
             self = try! Self.decoder.decode(Self.self, from: newValue)
         }
+    }
+}
+
+extension FieldAttribute
+where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
+    @inline(__always)
+    public static func convert(value: Self?) -> Self? {
+        value
     }
 }
 

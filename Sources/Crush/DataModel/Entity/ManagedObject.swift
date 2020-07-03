@@ -7,6 +7,7 @@
 
 import CoreData
 
+@objc
 protocol ManagedObjectDelegate: AnyObject {
     
     // invoked after a fetch or after unfaulting (commonly used for computing derived values from the persisted properties)
