@@ -11,6 +11,5 @@ Pod::Spec.new do |s|
   s.ios.deployment_target       = '11.0'
   s.source_files                = 'Sources/Crush/**/*'
   s.frameworks                  = 'CoreData'
-  s.dependency                  'Sourcery'
   s.platforms = { :ios => "11.0", :watchos => "4.0"}
 end
