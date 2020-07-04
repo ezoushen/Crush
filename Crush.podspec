@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                        = 'Crush'
-  s.version                     = '0.3.5'
+  s.version                     = '0.3.6'
   s.summary                     = 'Dancing with Core Data'
   s.description                 = 'Code with Core Data in a Swifty way'
   s.homepage                    = 'https://github.com/ezoushen/Crush'
@@ -11,6 +11,5 @@ Pod::Spec.new do |s|
   s.ios.deployment_target       = '11.0'
   s.source_files                = 'Sources/Crush/**/*'
   s.frameworks                  = 'CoreData'
-  s.dependency                  'Sourcery'
   s.platforms = { :ios => "11.0", :watchos => "4.0"}
 end
