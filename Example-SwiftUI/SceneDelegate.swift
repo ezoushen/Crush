@@ -35,11 +35,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Create the SwiftUI view that provides the window contents.
         let container = DataContainerKey.defaultValue
-        try! container.startTransaction().sync { context in
+        container.startTransaction().sync { context in
             let todo = context.create(entiy: Todo.self)
             todo.content = "CONTENT1"
             todo.memo = "MEMO"
-            context.commit()
+            try! context.commit()
         }
 
         let viewModel = TodoListViewModel()

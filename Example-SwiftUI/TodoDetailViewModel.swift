@@ -91,6 +91,6 @@ final class TodoDetailViewModel: ViewModel, ObservableObject {
     }
     
     func save() {
-        transaction.commit()
+        try? transaction.commit()
     }
 }
