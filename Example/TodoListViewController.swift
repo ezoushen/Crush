@@ -82,9 +82,9 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
             let todo = self.todos.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .automatic)
             
-            self.container.startTransaction().edit(todo).async{ context, todo in
+            self.container.startTransaction().edit(todo).async { context, todo in
                 context.delete(todo)
-                context.commit()
+                try! context.commit()
             }
             completion(true)
         }
@@ -92,7 +92,7 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         let doneAction = UIContextualAction(style: .normal, title: "Done") { (action, view, completion) in
             try! self.container.startTransaction().edit(todo).sync { context, todo in
                 todo.isFinished = true
-                context.commit()
+                try context.commit()
             }
             let todo = self.todos.remove(at: indexPath.row)
             self.todos.append(todo)
@@ -104,7 +104,7 @@ extension TodoListViewController: UITableViewDelegate, UITableViewDataSource {
         let undoneAction = UIContextualAction(style: .normal, title: "Undone") { (action, view, completion) in
             try! self.container.startTransaction().edit(todo).sync { context, todo in
                 todo.isFinished = false
-                context.commit()
+                try context.commit()
             }
             let todo = self.todos.remove(at: indexPath.row)
             self.todos.insert(todo, at: 0)
@@ -144,7 +144,7 @@ extension TodoListViewController: TodoViewDelegate {
         case .create:
             try! container.startTransaction().edit(todo).sync { context, todo in
                 context.delete(todo)
-                context.commit()
+                try context.commit()
             }
         case .modify:
             tableView.reloadData()

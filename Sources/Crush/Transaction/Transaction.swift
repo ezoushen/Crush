@@ -28,8 +28,8 @@ extension Transaction {
         .init(entity1.value, entity2.value, transaction: self)
     }
     
-    public func commit() {
-        context.commit()
+    public func commit() throws {
+        try context.commit()
     }
     
     func present<T: HashableEntity>(_ entity: T) -> T.ReadOnly {
@@ -38,11 +38,22 @@ extension Transaction {
 }
 
 extension Transaction {
-    public func async(_ block: @escaping (TransactionContext) -> Void) {
+    
+    // MARK: throwable
+    
+    public func async(_ block: @escaping (TransactionContext) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let transactionContext = context
         
         transactionContext.executionContext.perform {
-            block(transactionContext)
+            do {
+                try block(transactionContext)
+            } catch {
+                guard let catchBlock = `catch` else {
+                    assertionFailure("unhandled error occured")
+                    return
+                }
+                catchBlock(error)
+            }
         }
     }
     
@@ -85,6 +96,56 @@ extension Transaction {
         
         return result.map(present(_:))
     }
+    
+    // MARK: non-throwable
+    
+    public func async(_ block: @escaping (TransactionContext) -> Void) {
+        let transactionContext = context
+        
+        transactionContext.executionContext.perform {
+            block(transactionContext)
+        }
+    }
+    
+    public func sync<T>(_ block: @escaping (TransactionContext) -> T) -> T {
+        let transactionContext = context
+        let result = transactionContext.executionContext.performAndWait {
+            block(transactionContext)
+        }
+        
+        assert(!(result is EntityObject), "Return an EntityObject is not recommended")
+        
+        return result
+    }
+    
+    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> T) -> T.ReadOnly {
+        let transactionContext = context
+        let result: T = transactionContext.executionContext.performAndWait {
+            block(transactionContext)
+        }
+        
+        assert(transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+               "You should commit changes in transaction before return")
+
+        return present(result)
+    }
+    
+    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> T) -> T.ReadOnly? {
+        let result: T.ReadOnly = sync(block)
+        return result
+    }
+
+    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> [T]) -> [T.ReadOnly]{
+        let transactionContext = context
+
+        let result: [T] = transactionContext.executionContext.performAndWait {
+            block(transactionContext)
+        }
+        assert(transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+               "You should commit changes in transaction before return")
+        
+        return result.map(present(_:))
+    }
 }
 
 extension Transaction {
@@ -101,16 +162,25 @@ extension Transaction {
 }
     
 extension Transaction.SingularEditor {
-    public func async(_ block: @escaping (TransactionContext, T) -> Void) {
+    
+    // MARK: - throwable SigularEditor
+    
+    public func async(_ block: @escaping (TransactionContext, T) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let context = transaction.context
 
         context.executionContext.perform {
             let value = context.receive(self.value)
-            block(context, value)
+            do {
+                try block(context, value)
+            } catch {
+                guard let catchBlock = `catch` else {
+                    assertionFailure("unhandled error occured")
+                    return
+                }
+                catchBlock(error)
+            }
         }
     }
-    
-    // MARK: - throwable SigularEditor
     
     public func sync(_ block: @escaping (TransactionContext, T) throws -> Void) throws {
         let context = transaction.context
@@ -162,6 +232,15 @@ extension Transaction.SingularEditor {
     }
     
     // MARK: - non-throwable SingularEditor
+    
+    public func async(_ block: @escaping (TransactionContext, T) -> Void) {
+        let context = transaction.context
+
+        context.executionContext.perform {
+            let value = context.receive(self.value)
+            block(context, value)
+        }
+    }
     
     public func sync(_ block: @escaping (TransactionContext, T) -> Void) {
         let context = transaction.context
@@ -227,16 +306,25 @@ extension Transaction {
 }
     
 extension Transaction.PluralEditor {
-    public func async(_ block: @escaping (TransactionContext, [T]) -> Void) {
+    
+    // MARK: - throwable PluralEditor
+    
+    public func async(_ block: @escaping (TransactionContext, [T]) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let context = transaction.context
         
         context.executionContext.perform {
             let values = self.values.map(context.receive(_:))
-            block(context, values)
+            do {
+                try block(context, values)
+            } catch {
+                guard let catchBlock = `catch` else {
+                    assertionFailure("unhandled error occured")
+                    return
+                }
+                catchBlock(error)
+            }
         }
     }
-    
-    // MARK: - throwable PluralEditor
     
     public func sync(_ block: @escaping (TransactionContext, [T]) throws -> Void) throws {
         let context = transaction.context
@@ -289,6 +377,15 @@ extension Transaction.PluralEditor {
     }
     
     // MARK: - Non-throwable PluralEditor
+    
+    public func async(_ block: @escaping (TransactionContext, [T]) -> Void) {
+        let context = transaction.context
+        
+        context.executionContext.perform {
+            let values = self.values.map(context.receive(_:))
+            block(context, values)
+        }
+    }
     
     public func sync(_ block: @escaping (TransactionContext, [T]) -> Void) {
         let context = transaction.context
@@ -357,15 +454,24 @@ extension Transaction {
 }
     
 extension Transaction.DualEditor {
-    public func async(_ block: @escaping (TransactionContext, T, S) -> Void) {
+    
+    // MARK: - throwable DualEditor
+    
+    public func async(_ block: @escaping (TransactionContext, T, S) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let context = transaction.context
         
         context.executionContext.perform {
-            block(context, context.receive(self.value1), context.receive(self.value2))
+            do {
+                try block(context, context.receive(self.value1), context.receive(self.value2))
+            } catch {
+               guard let catchBlock = `catch` else {
+                   assertionFailure("unhandled error occured")
+                   return
+               }
+               catchBlock(error)
+           }
         }
     }
-    
-    // MARK: - throwable DualEditor
     
     public func sync(_ block: @escaping (TransactionContext, T, S) throws -> Void) throws {
         let context = transaction.context
@@ -411,6 +517,14 @@ extension Transaction.DualEditor {
     }
     
     // MARK: - non-throwable DualEditor
+    
+    public func async(_ block: @escaping (TransactionContext, T, S) -> Void) {
+        let context = transaction.context
+        
+        context.executionContext.perform {
+            block(context, context.receive(self.value1), context.receive(self.value2))
+        }
+    }
     
     public func sync(_ block: @escaping (TransactionContext, T, S) -> Void) {
         let context = transaction.context

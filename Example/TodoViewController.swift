@@ -87,7 +87,7 @@ class TodoViewController: UIViewController {
     }
     
     @IBAction func didPressSaveButton() {
-        transaction?.commit()
+        try! transaction?.commit()
         delegate?.didSaveModification(type: mode, todo: todo)
         dismiss(animated: true, completion: nil)
     }
