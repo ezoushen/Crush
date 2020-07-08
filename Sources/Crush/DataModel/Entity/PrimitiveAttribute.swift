@@ -39,7 +39,7 @@ where ManagedObjectValue == Self? { }
 
 public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable {
     
-    associatedtype ManagedObjectValue = Data
+    associatedtype ManagedObjectValue = Data?
     
     var data: Data { get set }
     
@@ -49,12 +49,13 @@ public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Ha
 
 extension CodableProperty {
     @inline(__always)
-    public static func convert(value: Data) -> Self? {
-        try! Self.decoder.decode(Self.self, from: value)
+    public static func convert(value: Data?) -> Self? {
+        guard let value = value else { return nil }
+        return try! Self.decoder.decode(Self.self, from: value)
     }
     
     @inline(__always)
-    public static func convert(value: Self?) -> Data {
+    public static func convert(value: Self?) -> Data? {
         try! Self.encoder.encode(value)
     }
     

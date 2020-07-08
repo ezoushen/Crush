@@ -76,6 +76,7 @@ public protocol PropertyProtocol: AnyObject {
     var propertyCacheKey: String { get set }
     var anyHashable: AnyHashable { get }
     var entityObject: NeutralEntityObject? { get set }
+    var value: Any { get }
     
     func emptyPropertyDescription() -> NSPropertyDescription
 }
