@@ -16,6 +16,14 @@ extension Transaction {
         present(entity.value)
     }
     
+    public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly {
+        T.ReadOnly(T.init(objectID: objectID, in: context.uiContext))
+    }
+    
+    public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly] {
+        objectIDs.map(load(objectID:))
+    }
+    
     public func edit<T: HashableEntity>(_ entity: T.ReadOnly) -> SingularEditor<T> {
         .init(entity.value, transaction: self)
     }
