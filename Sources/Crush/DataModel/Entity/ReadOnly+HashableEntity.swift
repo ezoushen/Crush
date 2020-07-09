@@ -11,6 +11,10 @@ import CoreData
 public struct ReadOnly<Value: HashableEntity> {
     public let value: Value
     
+    public var managedObjectID: NSManagedObjectID {
+        value.rawObject.objectID
+    }
+    
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
     public var objectWillChange: AnyPublisher<Void, Never> {
         value.rawObject.objectWillChange

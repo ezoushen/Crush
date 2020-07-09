@@ -8,10 +8,8 @@
 
 import CoreData
 
-class WriterManagedObjectContext: NSManagedObjectContext {
-    override func save() throws {
-        try super.save()
-    }
+extension Notification.Name {
+    public static let DataContainerDidRefreshUiContext: Notification.Name = .init("Notification.Name.DataContainerDidRefreshUiContext")
 }
 
 public class DataContainer {
@@ -40,6 +38,27 @@ public class DataContainer {
     private func initializeAllContext() {
         writerContext = createWriterContext()
         uiContext = createUiContext(parent: writerContext)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(writerContextDidSave), name: Notification.Name.NSManagedObjectContextDidSave, object: nil)
+    }
+    
+    @objc private func writerContextDidSave(notification: Notification) {
+        guard let context = notification.object as? NSManagedObjectContext,
+                  context == writerContext else { return }
+        
+        DispatchQueue.main.async {
+            self.uiContext.refreshAllObjects()
+            
+            let ids = (notification.userInfo?["updated"] as? NSSet)?.allObjects.compactMap {
+                ($0 as? NSManagedObject)?.objectID
+            } ?? []
+
+            NotificationCenter.default.post(
+                name: .DataContainerDidRefreshUiContext,
+                object: self,
+                userInfo: ["objectIDs": ids]
+            )
+        }
     }
     
     private func createWriterContext() -> NSManagedObjectContext {
@@ -54,7 +73,7 @@ public class DataContainer {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         context.parent = parent
         context.stalenessInterval = 0.0
-        context.automaticallyMergesChangesFromParent = true
+        context.automaticallyMergesChangesFromParent = false
         context.shouldDeleteInaccessibleFaults = true
         return context
     }
@@ -76,6 +95,10 @@ public class DataContainer {
     
     private func createMainThreadContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
         createContext(parent: parent, concurrencyType: .mainQueueConcurrencyType)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
