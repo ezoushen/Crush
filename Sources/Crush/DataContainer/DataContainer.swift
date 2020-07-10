@@ -97,6 +97,11 @@ public class DataContainer {
         createContext(parent: parent, concurrencyType: .mainQueueConcurrencyType)
     }
     
+    public func reduceMemoryUsage() {
+        uiContext.reset()
+        writerContext.reset()
+    }
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
