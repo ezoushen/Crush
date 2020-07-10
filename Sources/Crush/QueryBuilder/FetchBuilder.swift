@@ -34,6 +34,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     private(set) var mapTo: [Expressible]?
     private(set) var limit: Int?
     private(set) var offset: Int?
+    private(set) var batch: Int
     private(set) var asFaults: Bool
     private(set) var includePendingChanges: Bool
     
@@ -44,18 +45,20 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         self.mapTo = nil
         self.limit = nil
         self.offset = nil
+        self.batch = 0
         self.asFaults = true
         self.resultType = .managedObjectResultType
         self.includePendingChanges = false
     }
     
-    private init(predicate: NSPredicate?, limit: Int?, offset: Int?,  sorters: [NSSortDescriptor]?, groupBy: [Expressible]?, mapTo: [Expressible]?, asFaults: Bool, resultType: NSFetchRequestResultType, includePendingChanges: Bool) {
+    private init(predicate: NSPredicate?, limit: Int?, offset: Int?, batch: Int, sorters: [NSSortDescriptor]?, groupBy: [Expressible]?, mapTo: [Expressible]?, asFaults: Bool, resultType: NSFetchRequestResultType, includePendingChanges: Bool) {
         self.predicate = predicate
         self.sorters = sorters
         self.resultType = resultType
         self.groupBy = groupBy
         self.mapTo = mapTo
         self.limit = limit
+        self.batch = batch
         self.asFaults = asFaults
         self.offset = offset
         self.includePendingChanges = includePendingChanges
@@ -72,6 +75,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         request.fetchOffset = offset ?? 0
         request.returnsObjectsAsFaults = asFaults
         request.includesPendingChanges = true
+        request.fetchBatchSize = batch
         return request
     }
 }
@@ -93,6 +97,11 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
 
     public func offset(_ step: Int) -> PartialFetchBuilder<Target, Received, Result> {
         _config = _config.updated(\.offset, value: step)
+        return self
+    }
+    
+    public func batch(_ size: Int) -> PartialFetchBuilder<Target, Received, Result> {
+        _config = _config.updated(\.batch, value: size)
         return self
     }
     
