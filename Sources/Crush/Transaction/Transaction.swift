@@ -32,7 +32,7 @@ extension Transaction {
         .init(entities.map(\.value), transaction: self)
     }
     
-    public func edit<T: HashableEntity, S: HashableEntity>(_ entities: [T.ReadOnly], _ entity: S) -> ArrayPairEditor<T, S> {
+    public func edit<T: HashableEntity, S: HashableEntity>(_ entities: [T.ReadOnly], _ entity: S.ReadOnly) -> ArrayPairEditor<T, S> {
         .init(entities.map(\.value), entity, transaction: self)
     }
     
