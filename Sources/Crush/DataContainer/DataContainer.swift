@@ -66,6 +66,7 @@ public class DataContainer {
         context.persistentStoreCoordinator = connection.persistentStoreCoordinator
         context.shouldDeleteInaccessibleFaults = true
         context.automaticallyMergesChangesFromParent = false
+        context.retainsRegisteredObjects = false
         return context
     }
     
@@ -75,6 +76,7 @@ public class DataContainer {
         context.stalenessInterval = 0.0
         context.automaticallyMergesChangesFromParent = false
         context.shouldDeleteInaccessibleFaults = true
+        context.retainsRegisteredObjects = false
         return context
     }
     
