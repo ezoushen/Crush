@@ -46,7 +46,7 @@ public class DataContainer {
         guard let context = notification.object as? NSManagedObjectContext,
                   context == writerContext else { return }
         
-        DispatchQueue.main.async {
+        let block: () -> Void =  {
             self.uiContext.refreshAllObjects()
             
             let ids = (notification.userInfo?["updated"] as? NSSet)?.allObjects.compactMap {
@@ -58,6 +58,12 @@ public class DataContainer {
                 object: self,
                 userInfo: ["objectIDs": ids]
             )
+        }
+        
+        if Thread.current == .main {
+            block()
+        } else {
+            DispatchQueue.main.async(execute: block)
         }
     }
     

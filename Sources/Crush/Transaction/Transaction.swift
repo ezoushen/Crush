@@ -44,6 +44,10 @@ extension Transaction {
         try context.commit()
     }
     
+    public func commitAndWait() throws {
+        try context.commitAndWait()
+    }
+    
     func present<T: HashableEntity>(_ entity: T) -> T.ReadOnly {
         T.ReadOnly(context.present(entity))
     }

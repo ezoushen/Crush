@@ -19,6 +19,7 @@ public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
     func delete<T: Entity>(_ object: T)
     
     func commit() throws
+    func commitAndWait() throws
 }
 
 extension TransactionContext where Self: RawContextProviderProtocol {
@@ -142,6 +143,44 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                 }
 
                 transactionContext.rootContext.perform {
+                    do {
+                        try transactionContext.rootContext.save()
+                    } catch let error as NSError {
+                        assertionFailure(error.description)
+                        err = error
+                    }
+                }
+                                
+                transactionContext.uiContext.performAndWait {
+                    transactionContext.uiContext.refreshAllObjects()
+                }
+            }
+            
+            return err
+        }
+        
+        guard let error = err else { return }
+        
+        throw error
+    }
+    
+    public func commitAndWait() throws {
+        guard executionContext.hasChanges else {
+            return
+        }
+        
+        let err: NSError? = withExtendedLifetime(self) { transactionContext in
+            var err: NSError?
+
+            transactionContext.executionContext.performAndWait {
+                do {
+                    try transactionContext.executionContext.save()
+                } catch let error as NSError {
+                    assertionFailure(error.description)
+                    err = error
+                }
+
+                transactionContext.rootContext.performAndWait {
                     do {
                         try transactionContext.rootContext.save()
                     } catch let error as NSError {
