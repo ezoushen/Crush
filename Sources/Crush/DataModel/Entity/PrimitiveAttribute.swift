@@ -56,7 +56,8 @@ extension CodableProperty {
     
     @inline(__always)
     public static func convert(value: Self?) -> Data? {
-        try! Self.encoder.encode(value)
+        guard let value = value else { return nil }
+        return try! Self.encoder.encode(value)
     }
     
     public func hash(into hasher: inout Hasher) {
