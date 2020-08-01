@@ -76,6 +76,7 @@
 		9807853B244B2DA300ED04D7 /* Optional.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9807853A244B2DA300ED04D7 /* Optional.swift */; };
 		9807853D244B36B700ED04D7 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9807853C244B36B700ED04D7 /* ViewModel.swift */; };
 		98078541244B36FC00ED04D7 /* Property+Binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98078540244B36FC00ED04D7 /* Property+Binding.swift */; };
+		98E14FA724D5172D0093CDB9 /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98E14FA624D5172D0093CDB9 /* Validation.swift */; };
 		OBJ_100 /* Operators.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_45 /* Operators.swift */; };
 		OBJ_101 /* FetchBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_46 /* FetchBuilder.swift */; };
 		OBJ_102 /* SearchString.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_47 /* SearchString.swift */; };
@@ -266,6 +267,7 @@
 		9807853A244B2DA300ED04D7 /* Optional.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Optional.swift; sourceTree = "<group>"; };
 		9807853C244B36B700ED04D7 /* ViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 		98078540244B36FC00ED04D7 /* Property+Binding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Property+Binding.swift"; sourceTree = "<group>"; };
+		98E14FA624D5172D0093CDB9 /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 		"Crush::Crush::Product" /* Crush.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Crush.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Crush::CrushTests::Product" /* CrushTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = CrushTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_11 /* Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
@@ -511,6 +513,7 @@
 			children = (
 				OBJ_22 /* Index.swift */,
 				152299542424627D00F0A2BF /* Unique.swift */,
+				98E14FA624D5172D0093CDB9 /* Validation.swift */,
 			);
 			path = Constraint;
 			sourceTree = "<group>";
@@ -1001,6 +1004,7 @@
 				OBJ_100 /* Operators.swift in Sources */,
 				15B1F7E0249B1248007CD717 /* KVOPublisher.swift in Sources */,
 				9807853B244B2DA300ED04D7 /* Optional.swift in Sources */,
+				98E14FA724D5172D0093CDB9 /* Validation.swift in Sources */,
 				OBJ_101 /* FetchBuilder.swift in Sources */,
 				1567714C24624AA6007BA967 /* Editable+HashableEntity.swift in Sources */,
 				OBJ_102 /* SearchString.swift in Sources */,

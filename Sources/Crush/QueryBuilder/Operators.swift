@@ -21,6 +21,48 @@ extension NSPredicate {
     }
 }
 
+// MARK: - Validation
+
+public func BETWEEN<T: PredicateComparable>(_ rhs: Range<T>) -> NSPredicate {
+    return NSPredicate(format: "SELF BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
+}
+
+public func BETWEEN<T: PredicateEquatable>(_ rhs: Array<T>) -> NSPredicate {
+    return NSPredicate(format: "SELF IN %@", NSArray(array: rhs))
+}
+
+public func BETWEEN<T: PredicateEquatable>(_ rhs: Set<T>) -> NSPredicate {
+    return NSPredicate(format: "SELF IN %@", NSSet(set: rhs))
+}
+
+public func LARGER(_ rhs: PredicateComparable) -> NSPredicate {
+    return NSPredicate(format: "SELF >= \(rhs)")
+}
+
+public func SMALLER(_ rhs: PredicateComparable) -> NSPredicate {
+    return NSPredicate(format: "SELF <= \(rhs)")
+}
+
+public func ENDSWITH(_ rhs: SearchString) -> NSPredicate {
+    return NSPredicate(format: "SELF ENDSWITH\(rhs.type.modifier) %@", rhs.string)
+}
+
+public func BEGINSWITH(_ rhs: SearchString) -> NSPredicate {
+    return NSPredicate(format: "SELF BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
+}
+
+public func LIKE(_ rhs: SearchString) -> NSPredicate {
+    return NSPredicate(format: "SELF LIKE\(rhs.type.modifier) %@", rhs.string)
+}
+
+public func MATCHES(_ rhs: SearchString) -> NSPredicate {
+    return NSPredicate(format: "SELF MATCHES\(rhs.type.modifier) %@", rhs.string)
+}
+
+public func CONTAINS(_ rhs: SearchString) -> NSPredicate {
+    return NSPredicate(format: "SELF CONTAINS\(rhs.type.modifier) %@", rhs.string)
+}
+
 // MARK: - Operators
 
 // CONTAINS, BETWEEN operator
@@ -78,7 +120,7 @@ extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, V
     }
     
     public static func <> (lhs: Self, rhs: Range<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) BETWEEN '{\(rhs.lowerBound.predicateValue), \(rhs.upperBound.predicateValue)}'")
+        return NSPredicate(format: "\(lhs.fullPath) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 }
 
@@ -224,7 +266,7 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateComparable & Comp
     }
     
     public static func <> (lhs: KeyPath, rhs: Range<Value>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) BETWEEN '{\(rhs.lowerBound.predicateValue), \(rhs.upperBound.predicateValue)}'")
+        return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 }
 
@@ -286,7 +328,7 @@ extension KeyPath where Root: NSManagedObject {
     }
     
     public static func <> <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: Range<E>) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) BETWEEN '{\(rhs.lowerBound.predicateValue), \(rhs.upperBound.predicateValue)}'")
+        return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 }
 
