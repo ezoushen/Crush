@@ -17,12 +17,16 @@ public class DataContainer {
     internal var uiContext: NSManagedObjectContext!
     
     let connection: Connection
+    
+    let mergePolicy: NSMergePolicy
         
     public init(
         connection: Connection,
+        mergePolicy: NSMergePolicy = .error,
         completion: @escaping () -> Void = {}
     ) throws {
         self.connection = connection
+        self.mergePolicy = mergePolicy
         
         let block = { [weak self] in
             guard let `self` = self else { return }
@@ -70,6 +74,7 @@ public class DataContainer {
     private func createWriterContext() -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         context.persistentStoreCoordinator = connection.persistentStoreCoordinator
+        context.mergePolicy = mergePolicy
         context.shouldDeleteInaccessibleFaults = true
         context.automaticallyMergesChangesFromParent = false
         context.retainsRegisteredObjects = false
