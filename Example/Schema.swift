@@ -73,6 +73,9 @@ extension V2.Todo {
     class Constraint: NSObject, ConstraintSet {
         @CompositeFetchIndex
         var title = [AscendingIndex(\V2.Todo.$content), AscendingIndex(\V2.Todo.$isFinished)]
+        
+        @Validation(\Todo.$dueDate)
+        var dueDate: (NSPredicate, String) = (BETWEEN(Range<Date>.init(uncheckedBounds: (Date(), Date().addingTimeInterval(123)))), "123")
     }
 }
 

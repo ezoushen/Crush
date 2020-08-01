@@ -381,6 +381,19 @@ extension NeutralEntityObject {
             ).map{ $0 as [Any]}
             description.indexes = indexes
             description.uniquenessConstraints = uniquenessConstarints
+            
+            indexChildren.forEach { (label, value) in
+                guard let value = value as? ValidationProtocol,
+                    let description = (object[keyPath: value.anyKeyPath] as? PropertyProtocol)?.description else { return }
+                
+                var warnings = description.validationWarnings
+                var predicates = description.validationPredicates
+                
+                warnings.append(value.wrappedValue.1)
+                predicates.append(value.wrappedValue.0)
+                
+                description.setValidationPredicates(predicates, withValidationWarnings: warnings as? [String])
+            }
         }
         
         return description

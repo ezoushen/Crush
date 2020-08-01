@@ -8,7 +8,7 @@
 import Foundation
 
 public struct SearchString {
-    enum Category {
+    public enum Category {
         case caseInsensitive, diacriticInsensitive, caseDiacriticInsensitive, plain
         
         var modifier: String {
@@ -21,14 +21,19 @@ public struct SearchString {
         }
     }
     
-    let type: Category
-    let string: String
+    public let type: Category
+    public let string: String
 }
 
 extension SearchString: ExpressibleByStringLiteral {
     public typealias StringLiteralType = String
     
     public init(stringLiteral value: String) {
+        self.string = value
+        self.type = .plain
+    }
+    
+    public init(_ value: String) {
         self.string = value
         self.type = .plain
     }
