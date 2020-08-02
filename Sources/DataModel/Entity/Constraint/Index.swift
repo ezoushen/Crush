@@ -30,16 +30,18 @@ public protocol IndexElementProtocol {
 fileprivate let DEFAULT_KEY = "defaultKey"
 
 extension ConstraintSet {
-    static func setDefaultKeys(mirror: Mirror?) {
-        guard let mirror = mirror, let type = mirror.subjectType as? Entity.Type else { return }
+    static func setDefaultKeys(mirror: Mirror?, firstKey: String? = nil) {
+        guard let mirror = mirror, let type = mirror.subjectType as? Entity.Type, let superClassMirror = mirror.superclassMirror else { return }
                 
         mirror.children.forEach { label, value in
             guard let value = value as? PropertyProtocol else { return }
             value.description.userInfo = value.description.userInfo ?? [:]
-            value.description.userInfo![DEFAULT_KEY] = type.entityCacheKey+"."+label!
+            value.description.userInfo![DEFAULT_KEY] = (superClassMirror.subjectType.self == AbstractEntityObject.self
+                ?  type.entityCacheKey
+                : (firstKey ?? type.entityCacheKey))+"."+label!
         }
         
-        return setDefaultKeys(mirror: mirror.superclassMirror)
+        return setDefaultKeys(mirror: superClassMirror, firstKey: firstKey ?? type.entityCacheKey)
     }
 }
 
@@ -124,6 +126,6 @@ extension TargetedIndexProtocol {
         }.map{ (index, description) -> NSFetchIndexElementDescription in
             return index.fetchIndexElementDescription(property: description)
         }
-        return NSFetchIndexDescription(name: name, elements: indcies)
+        return NSFetchIndexDescription(name: String(name.dropFirst()), elements: indcies)
     }
 }
