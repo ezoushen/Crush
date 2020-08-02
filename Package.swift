@@ -26,9 +26,10 @@ let package = Package(
         .target(
             name: "Crush",
             dependencies: [],
-            path: "./Sources/Crush"),
+            path: "./Sources"),
         .testTarget(
             name: "CrushTests",
-            dependencies: ["Crush"]),
+            dependencies: ["Crush"],
+            path: "./Tests"),
     ]
 )
