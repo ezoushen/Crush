@@ -40,7 +40,7 @@ final class TodoListViewModel: ViewModel, ObservableObject {
 
 extension TodoListViewModel {
     func loadAllTodos() {
-        todos = try! dataContainer.fetch(for: Todo.self).exec()
+        todos = dataContainer.fetch(for: Todo.self).exec()
     }
     
     func addTodoDetailViewModel() -> TodoDetailViewModel {
