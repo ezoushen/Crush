@@ -210,8 +210,10 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
                 return []
             }
             
-            guard let subjectType = mirror.subjectType as? Entity.Type else { return [] }
-            return [(mirror, subjectType.entityCacheKey)] + findAllMirrors(mirror.superclassMirror)
+            guard let subjectType = mirror.subjectType as? Entity.Type,
+                let superClassMirror = mirror.superclassMirror else { return [] }
+            
+            return [(mirror, superClassMirror.subjectType.self == AbstractEntityObject.self ? subjectType.entityCacheKey : Self.entityCacheKey)] + findAllMirrors(superClassMirror)
         }
         
         return findAllMirrors(Mirror(reflecting: self)).flatMap{
