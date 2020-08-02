@@ -67,13 +67,13 @@ class DataModelTests: XCTestCase {
         let person: V1.People.ReadOnly = try! sut.startTransaction().sync { context in
             let people = context.create(entiy: V1.People.self)
             people.firstName = "first name"
-            context.commit()
+            try context.commit()
             return people
         }
         
         try! sut.startTransaction().edit(person).sync { context, person in
             person.firstName = "FIRST NAME"
-            context.commit()
+            try context.commit()
         }
         
         XCTAssert(person.firstName == "FIRST NAME")
