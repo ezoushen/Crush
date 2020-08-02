@@ -204,9 +204,9 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
 extension PartialFetchBuilder: RequestBuilder {
     typealias Config = FetchConfig<Target>
     
-    private func received() throws -> [Received] {
+    private func received() -> [Received] {
         let request = _config.createFetchRequest()
-        return try _context.execute(request: request, on: _config.includePendingChanges ? \.executionContext : \.rootContext)
+        return try! _context.execute(request: request, on: _config.includePendingChanges ? \.executionContext : \.rootContext)
     }
 }
 
@@ -219,50 +219,62 @@ public class FetchBuilder<Target, Received, Result>: PartialFetchBuilder<Target,
 }
 
 extension PartialFetchBuilder where Result == Dictionary<String, Any>, Received == Result {
-    public func exec() throws -> [Result] {
-        try received()
+    public func exec() -> [Result] {
+        received()
     }
 }
 
 extension PartialFetchBuilder where Result: NSManagedObject, Received: NSManagedObject {
-    public func findOne() throws -> Result? {
-        try limit(1).exec().first
+    public func exists() -> Bool {
+        findOne() != nil
     }
     
-    public func exec() throws -> [Result] {
-        return try received().compactMap {
+    public func findOne() -> Result? {
+        limit(1).exec().first
+    }
+    
+    public func exec() -> [Result] {
+        return received().compactMap {
             _context.present($0) as? Result
         }
     }
 }
 
 extension PartialFetchBuilder where Target: HashableEntity, Result == Target.ReadOnly, Received == ManagedObject {
-    public func findOne() throws -> Result? {
-        try limit(1).exec().first
+    public func exists() -> Bool {
+        findOne() != nil
     }
     
-    public func exec() throws -> [Result] {
-        try received().map {
+    public func findOne() -> Result? {
+        limit(1).exec().first
+    }
+    
+    public func exec() -> [Result] {
+        received().map {
             Result(_context.present($0))
         }
     }
 }
 
 extension PartialFetchBuilder where Result: Entity, Received == ManagedObject {
-    public func findOne() throws -> Result? {
-        try limit(1).exec().first
+    public func exists() -> Bool {
+        findOne() != nil
     }
     
-    public func exec() throws -> [Result] {
-        try received().map {
+    public func findOne() -> Result? {
+        limit(1).exec().first
+    }
+    
+    public func exec() -> [Result] {
+        received().map {
             Result(_context.receive($0))
         }
     }
 }
 
 extension PartialFetchBuilder where Received == Dictionary<String, Any> {
-    public func exec() throws -> [Result] {
-        try received().flatMap{ $0.values }.compactMap{ $0 as? Result }
+    public func exec() -> [Result] {
+        received().flatMap{ $0.values }.compactMap{ $0 as? Result }
     }
 }
 
