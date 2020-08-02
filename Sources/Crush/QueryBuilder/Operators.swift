@@ -35,12 +35,20 @@ public func BETWEEN<T: PredicateEquatable>(_ rhs: Set<T>) -> NSPredicate {
     return NSPredicate(format: "SELF IN %@", NSSet(set: rhs))
 }
 
-public func LARGER(_ rhs: PredicateComparable) -> NSPredicate {
+public func LARGER_THAN_OR_EQUALS_TO(_ rhs: PredicateComparable) -> NSPredicate {
     return NSPredicate(format: "SELF >= \(rhs)")
 }
 
-public func SMALLER(_ rhs: PredicateComparable) -> NSPredicate {
+public func SMALLER_THAN_OR_EQUALS_TO(_ rhs: PredicateComparable) -> NSPredicate {
     return NSPredicate(format: "SELF <= \(rhs)")
+}
+
+public func LARGER_THAN(_ rhs: PredicateComparable) -> NSPredicate {
+    return NSPredicate(format: "SELF > \(rhs)")
+}
+
+public func SMALLER_THAN(_ rhs: PredicateComparable) -> NSPredicate {
+    return NSPredicate(format: "SELF < \(rhs)")
 }
 
 public func ENDSWITH(_ rhs: SearchString) -> NSPredicate {
@@ -267,12 +275,6 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateComparable & Comp
     
     public static func <> (lhs: KeyPath, rhs: Range<Value>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
-    }
-}
-
-extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, Value.PredicateValue == Date {
-    public static func <> (lhs: Self, rhs: Range<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) <= %@ AND \(lhs.fullPath) >= %@", rhs.upperBound.predicateValue, rhs.lowerBound.predicateValue)
     }
 }
 
