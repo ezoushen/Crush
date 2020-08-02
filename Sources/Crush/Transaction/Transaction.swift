@@ -84,10 +84,14 @@ extension Transaction {
         return result
     }
     
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> T) throws -> T.ReadOnly {
+    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> T?) throws -> T.ReadOnly? {
         let transactionContext = context
-        let result: T = try transactionContext.executionContext.performAndWait {
+        let optionalResult: T? = try transactionContext.executionContext.performAndWait {
             try block(transactionContext)
+        }
+        
+        guard let result = optionalResult else {
+            return nil
         }
         
         assert(transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
@@ -96,9 +100,12 @@ extension Transaction {
         return present(result)
     }
     
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> T) throws -> T.ReadOnly? {
-        let result: T.ReadOnly = try sync(block)
-        return result
+    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> T) throws -> T.ReadOnly {
+        let result: T.ReadOnly? = try sync {
+            let value: T? = try block($0)
+            return value
+        }
+        return result!
     }
 
     public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> [T]) throws -> [T.ReadOnly]{
@@ -134,10 +141,14 @@ extension Transaction {
         return result
     }
     
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> T) -> T.ReadOnly {
+    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> T?) -> T.ReadOnly? {
         let transactionContext = context
-        let result: T = transactionContext.executionContext.performAndWait {
+        let optionalResult: T? = transactionContext.executionContext.performAndWait {
             block(transactionContext)
+        }
+
+        guard let result = optionalResult else {
+            return nil
         }
         
         assert(transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
@@ -146,9 +157,12 @@ extension Transaction {
         return present(result)
     }
     
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> T) -> T.ReadOnly? {
-        let result: T.ReadOnly = sync(block)
-        return result
+    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> T) -> T.ReadOnly {
+        let result: T.ReadOnly? = sync {
+            let value: T? = block($0)
+            return value
+        }
+        return result!
     }
 
     public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> [T]) -> [T.ReadOnly]{
