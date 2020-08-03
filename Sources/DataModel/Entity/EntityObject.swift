@@ -18,6 +18,7 @@ fileprivate enum _Shared {
 
 public protocol RuntimeObject: AnyObject {
     static func entity() -> NSEntityDescription
+    static func createConstraints(description: NSEntityDescription)
     var rawObject: NSManagedObject { get }
 }
 
@@ -366,67 +367,95 @@ extension NeutralEntityObject {
             }
         }
         
-        // Setup Constraints
+        return description
+    }
+    
+    public class func createConstraints(description: NSEntityDescription) {
+        let object = Self.init(proxy: ReadWritePropertyProxy.dummy())
+        let mirror = Mirror(reflecting: object)
         
         func createIndexClassFromMirror(_ mirror: Mirror) -> ConstraintSet.Type? {
             return NSClassFromString((NSStringFromClass(mirror.subjectType.self as! AnyClass)+"10Constraint").replacingOccurrences(of: "_TtC", with: "_TtCC")) as? ConstraintSet.Type
         }
+
+        var allIndexes: [NSFetchIndexDescription] = []
+        var allUniquenessConstraints: [[Any]] = []
         
-        if let constraintClass = createIndexClassFromMirror(mirror) {
-            constraintClass.setDefaultKeys(mirror: mirror)
-            
-            var allIndexes: [NSFetchIndexDescription] = []
-            var allUniquenessConstraints: [[Any]] = []
-            
-            func resolveIndexes(objectMirror mirror: Mirror?, constraintClass: ConstraintSet.Type?) {
-                guard let mirror = mirror,
-                      let constraintClass = constraintClass ?? createIndexClassFromMirror(mirror)
-                    else { return }
-                let indexClassMirror = Mirror(reflecting: constraintClass.init())
-                let indexChildren = indexClassMirror.children
-                let indexes: [NSFetchIndexDescription] = indexChildren.compactMap{ (label, value) in
-                    guard let index = value as? IndexProtocol else { return nil }
-                    return index.fetchIndexDescription(name: label ?? "", in: object)
-                }
-                
-                let uniquenessConstarints: [[Any]] = Set<[String]>(
-                    indexChildren.compactMap { (label, value) -> [String]? in
-                        guard let constraint = value as? UniqueConstraintProtocol else{ return nil }
-                        return constraint.uniquenessConstarints
-                    }
-                ).map{ $0 as [Any]}
-                
-                allIndexes.append(contentsOf: indexes)
-                allUniquenessConstraints.append(contentsOf: uniquenessConstarints)
-                
-                indexChildren.forEach { (label, value) in
-                    guard let value = value as? ValidationProtocol,
-                        let description = (object[keyPath: value.anyKeyPath] as? PropertyProtocol)?.description else { return }
-                    
-                    var warnings = description.validationWarnings
-                    var predicates = description.validationPredicates
-                    
-                    warnings.append(value.wrappedValue.1)
-                    predicates.append(value.wrappedValue.0)
-                    
-                    description.setValidationPredicates(predicates, withValidationWarnings: warnings as? [String])
-                }
-                
-                return resolveIndexes(objectMirror: mirror.superclassMirror, constraintClass: nil)
+        func resolveIndexes(objectMirror mirror: Mirror?, constraintClass: ConstraintSet.Type?) {
+            guard let mirror = mirror,
+                  let constraintClass = constraintClass ?? createIndexClassFromMirror(mirror),
+                  mirror.superclassMirror?.subjectType != AbstractEntityObject.self || mirror.subjectType == Self.self
+                else { return }
+            let indexClassMirror = Mirror(reflecting: constraintClass.init())
+            let indexChildren = indexClassMirror.children
+            let indexes: [NSFetchIndexDescription] = indexChildren.compactMap{ (label, value) in
+                guard let index = value as? IndexProtocol else { return nil }
+                return index.fetchIndexDescription(name: label ?? "", in: object)
             }
             
-            resolveIndexes(objectMirror: mirror, constraintClass: constraintClass)
+            if description.superentity != nil {
+                indexes
+                    .filter{ $0.elements.count > 1 }
+                    .forEach {
+                        let expression = NSExpressionDescription()
+                        expression.expression = .init(format: "entity")
+                        expression.expressionResultType = .stringAttributeType
+                        expression.name = "Expression"
+                        let collationType = $0.elements.first!.collationType
+                        let entIndex = NSFetchIndexElementDescription(property: expression, collationType: collationType)
+                        $0.elements.append(entIndex)
+                    }
+            }
             
-            description.indexes = allIndexes
-            description.uniquenessConstraints = allUniquenessConstraints
+            let uniquenessConstarints: [[Any]] = Set<[String]>(
+                indexChildren.compactMap { (label, value) -> [String]? in
+                    guard let constraint = value as? UniqueConstraintProtocol else{ return nil }
+                    return constraint.uniquenessConstarints
+                }
+            ).map{ $0 as [Any]}
+            
+            allIndexes.append(contentsOf: indexes)
+            allUniquenessConstraints.append(contentsOf: uniquenessConstarints)
+            
+            indexChildren.forEach { (label, value) in
+                guard let value = value as? ValidationProtocol,
+                    let description = (object[keyPath: value.anyKeyPath] as? PropertyProtocol)?.description else { return }
+                
+                var warnings = description.validationWarnings
+                var predicates = description.validationPredicates
+                
+                warnings.append(value.wrappedValue.1)
+                predicates.append(value.wrappedValue.0)
+                
+                description.setValidationPredicates(predicates, withValidationWarnings: warnings as? [String])
+            }
+            
+            return resolveIndexes(objectMirror: mirror.superclassMirror, constraintClass: nil)
         }
         
-        return description
+        func traverseConstraints(from rootMirror: Mirror, atMirror mirror: Mirror? = nil) {
+            guard let mirror = mirror else { return }
+            
+            if let constraintClass = createIndexClassFromMirror(mirror) {
+                constraintClass.setDefaultKeys(mirror: rootMirror)
+                resolveIndexes(objectMirror: mirror, constraintClass: constraintClass)
+            } else {
+                traverseConstraints(from: rootMirror, atMirror: mirror.superclassMirror)
+            }
+        }
+        
+        traverseConstraints(from: mirror, atMirror: mirror)
+
+        description.indexes.append(contentsOf: allIndexes)
+        description.uniquenessConstraints.append(contentsOf: allUniquenessConstraints)
     }
-    
 }
 
 extension NSManagedObject: RuntimeObject {
+    public class func createConstraints(description: NSEntityDescription) {
+        
+    }
+    
     public convenience init(context: TransactionContext) {
         if let transactionContext = context as? _TransactionContext {
             self.init(context: transactionContext.executionContext)
