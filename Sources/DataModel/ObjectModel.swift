@@ -41,6 +41,8 @@ public final class CoreDataModel: ObjectModel {
     public func updateCacheKey() { }
 }
 
+var firstDescription: NSEntityDescription!
+
 public final class DataModel: ObjectModel {
     
     public weak var previousModel: ObjectModel?
@@ -64,7 +66,7 @@ public final class DataModel: ObjectModel {
                 
         self.versionString = versionString
         self.entities = entities
-        
+
         if let model = coordinator.get(versionString, in: CacheType.objectModel) {
             rawModel = model
             migration = coordinator.get(versionString, in: CacheType.migration)
@@ -80,9 +82,10 @@ public final class DataModel: ObjectModel {
         }
         
         let model = NSManagedObjectModel()
+        let entities: [NSEntityDescription] = sorted.map { $0.entity() }
+        zip(sorted, entities).forEach { $0.0.createConstraints(description: $0.1) }
         model.versionIdentifiers = [versionHashModifier]
-        model.entities = sorted.map { $0.self.entity() }
-        
+        model.entities = entities
         coordinator.set(versionString, value: model, in: CacheType.objectModel)
         
         rawModel = model
