@@ -403,7 +403,7 @@ extension NeutralEntityObject {
                         expression.name = "Expression"
                         let collationType = $0.elements.first!.collationType
                         let entIndex = NSFetchIndexElementDescription(property: expression, collationType: collationType)
-                        $0.elements.append(entIndex)
+                        $0.elements.insert(entIndex, at: 0)
                     }
             }
             

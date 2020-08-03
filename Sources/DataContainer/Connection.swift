@@ -88,6 +88,8 @@ public final class Connection {
         
         _coordinator = persistentStoreCoordinator
         _coordinator?.addPersistentStore(with: description) { _, _ in
+            let cacheCoordinator = CacheCoordinator.shared
+            cacheCoordinator.cleanCallbacks()
             completion()
         }
     }
