@@ -29,6 +29,12 @@ class CacheCoordinator {
     func cleanCache<T: Cache>(in store: T) {
         store.clean()
     }
+    
+    func cleanCallbacks() {
+        EntityCache.callbackStore = [:]
+        PropertyCache.callbackStore = [:]
+        InverseRelationshipCache.callbackStore = [:]
+    }
 }
 
 // MARK: - Cache Protocol
@@ -94,6 +100,7 @@ extension Cache {
     
     fileprivate func clean() {
         Store.reset()
+        Self.callbackStore = [:]
     }
 }
 
