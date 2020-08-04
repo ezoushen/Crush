@@ -17,6 +17,7 @@ extension DeletionConfig: RequestConfig {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: name)
         fetchRequest.predicate = predicate
         let description = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        description.resultType = .resultTypeObjectIDs
         return description
     }
 }

@@ -53,10 +53,10 @@ public class DataContainer {
         let block: () -> Void =  {
             self.uiContext.refreshAllObjects()
             
-            let ids = (notification.userInfo?["updated"] as? NSSet)?.allObjects.compactMap {
+            let ids = (notification.userInfo?[NSUpdatedObjectsKey] as? NSSet)?.allObjects.compactMap {
                 ($0 as? NSManagedObject)?.objectID
             } ?? []
-
+            
             NotificationCenter.default.post(
                 name: .DataContainerDidRefreshUiContext,
                 object: self,

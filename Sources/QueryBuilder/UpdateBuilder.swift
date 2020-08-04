@@ -17,6 +17,7 @@ extension UpdateConfig {
         let description = NSBatchUpdateRequest(entity: Target.entity())
         description.predicate = predicate
         description.propertiesToUpdate = propertiesToUpdate
+        description.resultType = .updatedObjectIDsResultType
         return description
     }
 }

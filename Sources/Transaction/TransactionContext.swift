@@ -103,7 +103,30 @@ extension TransactionContext where Self: RawContextProviderProtocol {
         let context = self[keyPath: context]
         context.processPendingChanges()
         return try context.performAndWait {
-            return try context.execute(request) as! T
+            let result = try context.execute(request) as! T
+            
+            if let changes: [AnyHashable: Any] = {
+                if let result = result as? NSBatchDeleteResult {
+                    return [
+                        NSDeletedObjectsKey: result.result ?? []
+                    ]
+                } else if let result = result as? NSBatchUpdateResult {
+                    return [
+                        NSUpdatedObjectsKey: result.result ?? []
+                    ]
+                }
+                return nil
+            }() {
+                let contexts = [
+                    self.rootContext,
+                    self.uiContext,
+                    self.executionContext
+                ]
+                
+                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: contexts)
+            }
+            
+            return result
         }
     }
 }
