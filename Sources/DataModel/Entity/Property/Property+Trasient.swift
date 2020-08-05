@@ -10,7 +10,7 @@ import CoreData
 
 // MARK: - Transient Property
 @propertyWrapper
-public class Temporary<Property: NullableProperty>: NullableProperty {
+public final class Temporary<Property: NullableProperty>: NullableProperty {
         
     var property: Property!
     
@@ -59,7 +59,7 @@ public class Temporary<Property: NullableProperty>: NullableProperty {
         }
     }
     
-    public var projectedValue: Self {
+    public var projectedValue: Temporary<Property> {
         self
     }
     
