@@ -149,6 +149,18 @@ extension TransactionContext where Self: RawContextProviderProtocol {
         }
     }
     
+    private func reset() {
+        rootContext.performAndWait {
+            rootContext.reset()
+        }
+        
+        executionContext.performAndWait {
+            executionContext.registeredObjects.forEach {
+                executionContext.refresh($0, mergeChanges: true)
+            }
+        }
+    }
+    
     public func commit() throws {
         guard executionContext.hasChanges else {
             return
@@ -161,7 +173,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                 do {
                     try transactionContext.executionContext.save()
                 } catch let error as NSError {
-                    assertionFailure(error.description)
+                    NSLog("A saving error occurred while merging changes to the writer context.\n %@", error)
                     err = error
                 }
 
@@ -169,8 +181,10 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                     do {
                         try transactionContext.rootContext.save()
                     } catch let error as NSError {
-                        assertionFailure(error.description)
+                        NSLog("A saving error occurred while merging changes to the persistent container.\n %@", error)
                         err = error
+                        
+                        transactionContext.reset()
                     }
                 }
                                 
@@ -199,17 +213,23 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                 do {
                     try transactionContext.executionContext.save()
                 } catch let error as NSError {
-                    assertionFailure(error.description)
+                    NSLog("A saving error occurred while merging changes to the writer context.\n %@", error)
                     err = error
                 }
+                
+                guard err == nil else { return }
 
                 transactionContext.rootContext.performAndWait {
                     do {
                         try transactionContext.rootContext.save()
                     } catch let error as NSError {
-                        assertionFailure(error.description)
+                        NSLog("A saving error occurred while merging changes to the persistent container.\n %@", error)
                         err = error
                     }
+                }
+                
+                guard err == nil else {
+                    return transactionContext.reset()
                 }
                                 
                 transactionContext.uiContext.performAndWait {
