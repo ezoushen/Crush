@@ -43,9 +43,13 @@ public class KVOSubscription<SubscribeType: Subscriber, Output>: NSObject, Subsc
     }
     
     public override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        guard self.keyPath == keyPath,
-            let value = change?[.newKey] as? Output else { return }
-        _ = subscriber?.receive(value)
+        guard self.keyPath == keyPath else { return }
+        if Output.self is OptionalProtocol.Type {
+            let value = change?[.newKey] as? Output
+            _ = subscriber?.receive(value ?? (value as OptionalProtocol).null as! Output)
+        } else if let value = change?[.newKey] as? Output {
+            _ = subscriber?.receive(value)
+        }
     }
     
     func subscribe() {

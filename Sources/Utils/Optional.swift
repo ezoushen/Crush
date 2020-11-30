@@ -9,6 +9,7 @@ import Foundation
 
 protocol OptionalProtocol {
     var isNil: Bool { get }
+    var null: OptionalProtocol { get }
 }
 
 extension Swift.Optional: OptionalProtocol {
@@ -19,4 +20,6 @@ extension Swift.Optional: OptionalProtocol {
         default: return true
         }
     }
+    
+    var null: OptionalProtocol { Swift.Optional<Wrapped>.none as OptionalProtocol }
 }
