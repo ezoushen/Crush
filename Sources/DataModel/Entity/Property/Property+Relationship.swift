@@ -114,8 +114,8 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
 }
 
 @propertyWrapper
-public final class Relationship<O: Nullability, I: RelationMapping, R: RelationMapping>: RelationshipProtocol where R.RuntimeObjectValue: Hashable {
-
+public final class Relationship<O: Nullability, I: RelationMapping, R: RelationMapping>: RelationshipProtocol, ObservableProtocol where R.RuntimeObjectValue: Hashable {
+    public typealias ObservableType = Mapping
     public typealias PredicateValue = Destination
     public typealias PropertyValue = R.RuntimeObjectValue
     public typealias InverseMapping = I

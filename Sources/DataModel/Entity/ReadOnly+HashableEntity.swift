@@ -86,19 +86,21 @@ extension HashableEntity {
     public typealias ReadOnly = Crush.ReadOnly<Self>
 }
 
+public protocol ObservableProtocol {
+    associatedtype ObservableType: FieldConvertible
+}
+
 #if canImport(Combine)
 import Combine
 import SwiftUI
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension ReadOnly {
-    public func observe<T: AttributeProtocol>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false)
+    public func observe<T: NullableProperty & ObservableProtocol>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false)
     -> AnyPublisher<T.PropertyValue, Never>
-    where T.PredicateValue: FieldConvertible,
-          T.PropertyValue == T.PredicateValue.RuntimeObjectValue,
-          T.PredicateValue? == T.PredicateValue.RuntimeObjectValue {
+    where T.PropertyValue == T.ObservableType.RuntimeObjectValue {
         let name = self.value[keyPath: keyPath].description.name
-        return KVOPublisher<NSManagedObject, T.PredicateValue.ManagedObjectValue?>(
+        return KVOPublisher<NSManagedObject, T.ObservableType.ManagedObjectValue>(
             subject: value.rawObject,
             keyPath: name,
             options: containsCurrent ? [.initial, .new] : [.new]
@@ -106,30 +108,7 @@ extension ReadOnly {
             .filter { _ in
                 value.rawObject.faultingState == 0
             }
-            .map { value -> T.PredicateValue? in
-                guard let value = value else { return nil }
-                return T.PredicateValue.convert(value: value)
-            }
-            .eraseToAnyPublisher()
-    }
-    
-    public func observe<T: RelationshipProtocol>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false)
-    -> AnyPublisher<T.PropertyValue, Never>
-    where T.PropertyValue == T.Mapping.RuntimeObjectValue,
-          T.PredicateValue? == T.Mapping.RuntimeObjectValue {
-        let name = self.value[keyPath: keyPath].description.name
-        return KVOPublisher<NSManagedObject, T.Mapping.ManagedObjectValue?>(
-            subject: value.rawObject,
-            keyPath: name,
-            options: containsCurrent ? [.initial, .new] : [.new]
-        )
-            .filter { _ in
-                value.rawObject.faultingState == 0
-            }
-            .map { value -> T.PredicateValue? in
-                guard let value = value else { return nil }
-                return T.Mapping.convert(value: value)
-            }
+            .map(T.ObservableType.convert(value:))
             .eraseToAnyPublisher()
     }
 }
