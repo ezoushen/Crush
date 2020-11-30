@@ -98,13 +98,14 @@ extension ReadOnly {
           T.PropertyValue == T.PredicateValue.RuntimeObjectValue,
           T.PredicateValue? == T.PredicateValue.RuntimeObjectValue {
         let name = self.value[keyPath: keyPath].description.name
-        return KVOPublisher<NSManagedObject, T.PredicateValue.ManagedObjectValue>(
+        return KVOPublisher<NSManagedObject, T.PredicateValue.ManagedObjectValue?>(
             subject: value.rawObject,
             keyPath: name,
             options: containsCurrent ? [.initial, .new] : [.new]
         )
-            .map { value -> T.PredicateValue.RuntimeObjectValue in
-                T.PredicateValue.convert(value: value)
+            .map { value -> T.PredicateValue? in
+                guard let value = value else { return nil }
+                return T.PredicateValue.convert(value: value)
             }
             .eraseToAnyPublisher()
     }
@@ -114,13 +115,14 @@ extension ReadOnly {
     where T.PropertyValue == T.Mapping.RuntimeObjectValue,
           T.PredicateValue? == T.Mapping.RuntimeObjectValue {
         let name = self.value[keyPath: keyPath].description.name
-        return KVOPublisher<NSManagedObject, T.Mapping.ManagedObjectValue>(
+        return KVOPublisher<NSManagedObject, T.Mapping.ManagedObjectValue?>(
             subject: value.rawObject,
             keyPath: name,
             options: containsCurrent ? [.initial, .new] : [.new]
         )
-            .map { value -> T.Mapping.RuntimeObjectValue in
-                T.Mapping.convert(value: value)
+            .map { value -> T.PredicateValue? in
+                guard let value = value else { return nil }
+                return T.Mapping.convert(value: value)
             }
             .eraseToAnyPublisher()
     }
