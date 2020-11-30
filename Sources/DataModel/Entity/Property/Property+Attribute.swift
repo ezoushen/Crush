@@ -54,7 +54,8 @@ extension AttributeProtocol {
 
 // MARK: - EntityAttributeType
 @propertyWrapper
-public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashable>: AttributeProtocol {
+public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashable>: AttributeProtocol, ObservableProtocol {
+    public typealias ObservableType = PredicateValue
     public typealias PredicateValue = FieldType
     public typealias PropertyValue = FieldType?
     public typealias Nullability = O
