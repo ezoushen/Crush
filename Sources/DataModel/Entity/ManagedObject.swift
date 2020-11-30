@@ -47,7 +47,7 @@ final class ManagedObjectDelegateProxy: ManagedObjectDelegate {
     
     weak var parent: ManagedObjectDelegate?
     
-    let delegate: ManagedObjectDelegate
+    weak var delegate: ManagedObjectDelegate!
 
     init(delegate: ManagedObjectDelegate, parent: ManagedObjectDelegate?) {
         self.delegate = delegate
@@ -56,42 +56,42 @@ final class ManagedObjectDelegateProxy: ManagedObjectDelegate {
     
     func awakeFromFetch() {
         parent?.awakeFromFetch()
-        delegate.awakeFromFetch()
+        delegate?.awakeFromFetch()
     }
     
     func awakeFromInsert() {
         parent?.awakeFromInsert()
-        delegate.awakeFromInsert()
+        delegate?.awakeFromInsert()
     }
     
     func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
         parent?.awake(fromSnapshotEvents: flags)
-        delegate.awake(fromSnapshotEvents: flags)
+        delegate?.awake(fromSnapshotEvents: flags)
     }
     
     func prepareForDeletion() {
         parent?.prepareForDeletion()
-        delegate.prepareForDeletion()
+        delegate?.prepareForDeletion()
     }
     
     func willSave() {
         parent?.willSave()
-        delegate.willSave()
+        delegate?.willSave()
     }
     
     func didSave() {
         parent?.didSave()
-        delegate.willSave()
+        delegate?.didSave()
     }
     
     func willTurnIntoFault() {
         parent?.willTurnIntoFault()
-        delegate.willTurnIntoFault()
+        delegate?.willTurnIntoFault()
     }
     
     func didTurnIntoFault() {
         parent?.didTurnIntoFault()
-        delegate.didTurnIntoFault()
+        delegate?.didTurnIntoFault()
     }
 }
 
