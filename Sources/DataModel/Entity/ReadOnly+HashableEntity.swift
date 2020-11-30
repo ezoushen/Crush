@@ -92,9 +92,37 @@ import SwiftUI
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension ReadOnly {
-    public func observe<T: NullableProperty>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false) -> AnyPublisher<T.PropertyValue, Never>{
+    public func observe<T: AttributeProtocol>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false)
+    -> AnyPublisher<T.PropertyValue, Never>
+    where T.PredicateValue: FieldConvertible,
+          T.PropertyValue == T.PredicateValue.RuntimeObjectValue,
+          T.PredicateValue? == T.PredicateValue.RuntimeObjectValue {
         let name = self.value[keyPath: keyPath].description.name
-        return KVOPublisher<NSManagedObject, T.PropertyValue>(subject: value.rawObject, keyPath: name, options: containsCurrent ? [.initial, .new] : [.new]).eraseToAnyPublisher()
+        return KVOPublisher<NSManagedObject, T.PredicateValue.ManagedObjectValue>(
+            subject: value.rawObject,
+            keyPath: name,
+            options: containsCurrent ? [.initial, .new] : [.new]
+        )
+            .map { value -> T.PredicateValue.RuntimeObjectValue in
+                T.PredicateValue.convert(value: value)
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    public func observe<T: RelationshipProtocol>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false)
+    -> AnyPublisher<T.PropertyValue, Never>
+    where T.PropertyValue == T.Mapping.RuntimeObjectValue,
+          T.PredicateValue? == T.Mapping.RuntimeObjectValue {
+        let name = self.value[keyPath: keyPath].description.name
+        return KVOPublisher<NSManagedObject, T.Mapping.ManagedObjectValue>(
+            subject: value.rawObject,
+            keyPath: name,
+            options: containsCurrent ? [.initial, .new] : [.new]
+        )
+            .map { value -> T.Mapping.RuntimeObjectValue in
+                T.Mapping.convert(value: value)
+            }
+            .eraseToAnyPublisher()
     }
 }
 #endif
