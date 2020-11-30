@@ -103,6 +103,9 @@ extension ReadOnly {
             keyPath: name,
             options: containsCurrent ? [.initial, .new] : [.new]
         )
+            .filter { _ in
+                value.rawObject.faultingState == 0
+            }
             .map { value -> T.PredicateValue? in
                 guard let value = value else { return nil }
                 return T.PredicateValue.convert(value: value)
@@ -120,6 +123,9 @@ extension ReadOnly {
             keyPath: name,
             options: containsCurrent ? [.initial, .new] : [.new]
         )
+            .filter { _ in
+                value.rawObject.faultingState == 0
+            }
             .map { value -> T.PredicateValue? in
                 guard let value = value else { return nil }
                 return T.Mapping.convert(value: value)
