@@ -88,7 +88,7 @@ extension Transaction {
             try block(transactionContext)
         }
         
-        warning(enabledWarningForUnsavedChanges && !(result is EntityObject), "Return an EntityObject is not recommended")
+        warning(enabledWarningForUnsavedChanges == false || !(result is EntityObject), "Return an EntityObject is not recommended")
         
         return result
     }
@@ -103,7 +103,7 @@ extension Transaction {
             return nil
         }
         
-        warning(enabledWarningForUnsavedChanges && transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
 
         return present(result)
@@ -123,7 +123,7 @@ extension Transaction {
         let result: [T] = try transactionContext.executionContext.performAndWait {
             try block(transactionContext)
         }
-        warning(enabledWarningForUnsavedChanges && transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(present(_:))
@@ -145,7 +145,7 @@ extension Transaction {
             block(transactionContext)
         }
         
-        warning(enabledWarningForUnsavedChanges && !(result is EntityObject), "Return an EntityObject is not recommended")
+        warning(enabledWarningForUnsavedChanges == false || !(result is EntityObject), "Return an EntityObject is not recommended")
         
         return result
     }
@@ -160,7 +160,7 @@ extension Transaction {
             return nil
         }
         
-        warning(enabledWarningForUnsavedChanges && transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
 
         return present(result)
@@ -180,7 +180,7 @@ extension Transaction {
         let result: [T] = transactionContext.executionContext.performAndWait {
             block(transactionContext)
         }
-        warning(enabledWarningForUnsavedChanges && transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(present(_:))
@@ -239,7 +239,7 @@ extension Transaction.ArrayPairEditor {
             try block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && !(result is EntityObject), "Return an EntityObject is not recommended")
+        warning(transaction.enabledWarningForUnsavedChanges == false || !(result is EntityObject), "Return an EntityObject is not recommended")
         
         return result
     }
@@ -250,7 +250,7 @@ extension Transaction.ArrayPairEditor {
             return try block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
@@ -267,7 +267,7 @@ extension Transaction.ArrayPairEditor {
             try block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(transaction.present(_:))
@@ -301,7 +301,7 @@ extension Transaction.ArrayPairEditor {
             block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && !(result is EntityObject), "Return an EntityObject is not recommended")
+        warning(transaction.enabledWarningForUnsavedChanges == false || !(result is EntityObject), "Return an EntityObject is not recommended")
         
         return result
     }
@@ -312,7 +312,7 @@ extension Transaction.ArrayPairEditor {
             return block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges &&  context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false ||  context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
@@ -329,7 +329,7 @@ extension Transaction.ArrayPairEditor {
             block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges &&  context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false ||  context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(transaction.present(_:))
@@ -386,7 +386,7 @@ extension Transaction.SingularEditor {
             try block(context, context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && !(result is EntityObject), "Return an EntityObject is not recommended")
+        warning(transaction.enabledWarningForUnsavedChanges == false || !(result is EntityObject), "Return an EntityObject is not recommended")
         
         return result
     }
@@ -397,7 +397,7 @@ extension Transaction.SingularEditor {
             return try block(context, context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
@@ -414,7 +414,7 @@ extension Transaction.SingularEditor {
             try block(context, context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(transaction.present(_:))
@@ -446,7 +446,7 @@ extension Transaction.SingularEditor {
             block(context, context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && !(result is EntityObject), "Return an EntityObject is not recommended")
+        warning(transaction.enabledWarningForUnsavedChanges == false || !(result is EntityObject), "Return an EntityObject is not recommended")
         
         return result
     }
@@ -457,7 +457,7 @@ extension Transaction.SingularEditor {
             return block(context, context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
@@ -474,7 +474,7 @@ extension Transaction.SingularEditor {
             block(context, context.receive(self.value))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(transaction.present(_:))
@@ -529,7 +529,7 @@ extension Transaction.PluralEditor {
             try block(self.transaction.context, self.values.map(self.transaction.context.receive(_:)))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && !(value is EntityObject), "Return an EntityObject is not recommended")
+        warning(transaction.enabledWarningForUnsavedChanges == false || !(value is EntityObject), "Return an EntityObject is not recommended")
         
         return value
     }
@@ -541,7 +541,7 @@ extension Transaction.PluralEditor {
             return try block(context, values)
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
@@ -559,7 +559,7 @@ extension Transaction.PluralEditor {
             return try block(context, values)
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(transaction.present(_:))
@@ -590,7 +590,7 @@ extension Transaction.PluralEditor {
             block(self.transaction.context, self.values.map(self.transaction.context.receive(_:)))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && !(value is EntityObject), "Return an EntityObject is not recommended")
+        warning(transaction.enabledWarningForUnsavedChanges == false || !(value is EntityObject), "Return an EntityObject is not recommended")
         
         return value
     }
@@ -602,7 +602,7 @@ extension Transaction.PluralEditor {
             return block(context, values)
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
@@ -620,7 +620,7 @@ extension Transaction.PluralEditor {
             return block(context, values)
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(transaction.present(_:))
@@ -676,7 +676,7 @@ extension Transaction.DualEditor {
             try block(self.transaction.context, context.receive(self.value1), context.receive(self.value2))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && !(value is EntityObject), "Return an EntityObject is not recommended")
+        warning(transaction.enabledWarningForUnsavedChanges == false || !(value is EntityObject), "Return an EntityObject is not recommended")
         
         return value
     }
@@ -687,7 +687,7 @@ extension Transaction.DualEditor {
             try block(context, context.receive(self.value1), context.receive(self.value2))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
@@ -699,7 +699,7 @@ extension Transaction.DualEditor {
             try block(context, context.receive(self.value1), context.receive(self.value2))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(transaction.present(_:))
@@ -729,7 +729,7 @@ extension Transaction.DualEditor {
             block(self.transaction.context, context.receive(self.value1), context.receive(self.value2))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && !(value is EntityObject), "Return an EntityObject is not recommended")
+        warning(transaction.enabledWarningForUnsavedChanges == false || !(value is EntityObject), "Return an EntityObject is not recommended")
         
         return value
     }
@@ -740,7 +740,7 @@ extension Transaction.DualEditor {
             block(context, context.receive(self.value1), context.receive(self.value2))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return transaction.present(result)
@@ -752,7 +752,7 @@ extension Transaction.DualEditor {
             block(context, context.receive(self.value1), context.receive(self.value2))
         }
         
-        warning(transaction.enabledWarningForUnsavedChanges && context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(transaction.enabledWarningForUnsavedChanges == false || context.executionContext.hasChanges == false || context.executionContext.concurrencyType == .mainQueueConcurrencyType,
                "You should commit changes in transaction before return")
         
         return result.map(transaction.present(_:))
