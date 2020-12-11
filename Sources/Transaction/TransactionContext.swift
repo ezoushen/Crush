@@ -137,7 +137,6 @@ extension TransactionContext where Self: RawContextProviderProtocol {
         
         executionContext.performAndWait {
             object = entiy.init(context: executionContext)
-            executionContext.insert(object.rawObject)
         }
         
         return object

@@ -45,7 +45,7 @@ protocol ManagedObjectDelegate: AnyObject {
 
 final class ManagedObjectDelegateProxy: ManagedObjectDelegate {
     
-    weak var parent: ManagedObjectDelegate?
+    var parent: ManagedObjectDelegate?
     
     weak var delegate: ManagedObjectDelegate!
 
@@ -99,46 +99,53 @@ public final class ManagedObject: NSManagedObject {
     
     var delegate: ManagedObjectDelegate?
     
+    private lazy var dummyDelegate: ManagedObjectDelegate? = {
+        guard let typeString = entity.userInfo?[kEntityTypeKey] as? String,
+              let type = NSClassFromString(typeString) as? EntityObject.Type else { return nil }
+        return type.init(proxy: UnownedReadWritePropertyProxy(rawObject: self))
+    }()
+    
+    private func getDelegate() -> ManagedObjectDelegate? {
+        delegate ?? dummyDelegate
+    }
+    
     public override func awakeFromFetch() {
         super.awakeFromFetch()
-        delegate?.awakeFromFetch()
+        getDelegate()?.awakeFromFetch()
     }
     
     public override func awakeFromInsert() {
         super.awakeFromInsert()
-        delegate?.awakeFromInsert()
+        getDelegate()?.awakeFromInsert()
     }
     
     public override func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
         super.awake(fromSnapshotEvents: flags)
-        delegate?.awake(fromSnapshotEvents: flags)
+        getDelegate()?.awake(fromSnapshotEvents: flags)
     }
     
     public override func prepareForDeletion() {
         super.prepareForDeletion()
-        delegate?.prepareForDeletion()
+        getDelegate()?.prepareForDeletion()
     }
     
     public override func willSave() {
         super.willSave()
-        delegate?.willSave()
+        getDelegate()?.willSave()
     }
     
     public override func didSave() {
         super.didSave()
-        delegate?.didSave()
+        getDelegate()?.didSave()
     }
     
     public override func willTurnIntoFault() {
         super.willTurnIntoFault()
-        delegate?.willTurnIntoFault()
+        getDelegate()?.willTurnIntoFault()
     }
     
     public override func didTurnIntoFault() {
         super.didTurnIntoFault()
-        delegate?.didTurnIntoFault()
-        if let delegate = delegate, CFGetRetainCount(delegate) <= 3 {
-            self.delegate = nil
-        }
+        getDelegate()?.didTurnIntoFault()
     }
 }

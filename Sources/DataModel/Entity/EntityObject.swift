@@ -8,6 +8,8 @@
 
 import CoreData
 
+let kEntityTypeKey: String = "entity.type"
+
 fileprivate enum _Shared {
     @ThreadSafe
     static var dummyObjects: [String: RuntimeObject] = [:]
@@ -367,6 +369,7 @@ extension NeutralEntityObject {
             }
         }
         
+        description.userInfo?[kEntityTypeKey] = NSStringFromClass(Self.self)
         return description
     }
     
