@@ -43,61 +43,13 @@ protocol ManagedObjectDelegate: AnyObject {
     func didTurnIntoFault()
 }
 
-final class ManagedObjectDelegateProxy: ManagedObjectDelegate {
-    
-    weak var parent: ManagedObjectDelegate?
-    
-    weak var delegate: ManagedObjectDelegate!
-
-    init(delegate: ManagedObjectDelegate, parent: ManagedObjectDelegate?) {
-        self.delegate = delegate
-        self.parent = parent
-    }
-    
-    func awakeFromFetch() {
-        parent?.awakeFromFetch()
-        delegate?.awakeFromFetch()
-    }
-    
-    func awakeFromInsert() {
-        parent?.awakeFromInsert()
-        delegate?.awakeFromInsert()
-    }
-    
-    func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
-        parent?.awake(fromSnapshotEvents: flags)
-        delegate?.awake(fromSnapshotEvents: flags)
-    }
-    
-    func prepareForDeletion() {
-        parent?.prepareForDeletion()
-        delegate?.prepareForDeletion()
-    }
-    
-    func willSave() {
-        parent?.willSave()
-        delegate?.willSave()
-    }
-    
-    func didSave() {
-        parent?.didSave()
-        delegate?.didSave()
-    }
-    
-    func willTurnIntoFault() {
-        parent?.willTurnIntoFault()
-        delegate?.willTurnIntoFault()
-    }
-    
-    func didTurnIntoFault() {
-        parent?.didTurnIntoFault()
-        delegate?.didTurnIntoFault()
-    }
-}
-
 public final class ManagedObject: NSManagedObject {
     
-    var delegate: ManagedObjectDelegate?
+    lazy var delegate: ManagedObjectDelegate? = {
+        guard let typeString = entity.userInfo?[kEntityTypeKey] as? String,
+              let type = NSClassFromString(typeString) as? EntityObject.Type else { return nil }
+        return type.init(proxy: UnownedReadWritePropertyProxy(rawObject: self))
+    }()
     
     public override func awakeFromFetch() {
         super.awakeFromFetch()
@@ -137,8 +89,5 @@ public final class ManagedObject: NSManagedObject {
     public override func didTurnIntoFault() {
         super.didTurnIntoFault()
         delegate?.didTurnIntoFault()
-        if let delegate = delegate, CFGetRetainCount(delegate) <= 3 {
-            self.delegate = nil
-        }
     }
 }

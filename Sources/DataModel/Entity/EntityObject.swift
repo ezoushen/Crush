@@ -8,6 +8,8 @@
 
 import CoreData
 
+let kEntityTypeKey: String = "entity.type"
+
 fileprivate enum _Shared {
     @ThreadSafe
     static var dummyObjects: [String: RuntimeObject] = [:]
@@ -226,8 +228,6 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
         self.proxy = proxy
         
         injectProxy()
-        
-        proxy.setManagedObjectDelegate(self)
     }
         
     private func injectProxy() {
@@ -367,6 +367,7 @@ extension NeutralEntityObject {
             }
         }
         
+        description.userInfo?[kEntityTypeKey] = NSStringFromClass(Self.self)
         return description
     }
     

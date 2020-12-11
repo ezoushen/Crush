@@ -28,8 +28,36 @@ final public class SQLMigrator: DataMigrator {
         versions = createVersionChain(version: activeVersion).reversed()
     }
     
+    private func persistActiveDataModel(name: String) {
+        let model = activeVersion.model.rawModel!
+        model.entities.forEach {
+            $0.properties.forEach {
+                $0.userInfo = [:]
+            }
+        }
+        let data = NSKeyedArchiver.archivedData(withRootObject: model)
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let path = url.path+"/\(name).crushmodel"
+        
+        if FileManager.default.fileExists(atPath: path) {
+            try? FileManager.default.removeItem(atPath: path)
+        }
+        
+        FileManager.default.createFile(atPath: path, contents: data, attributes: nil)
+    }
+    
+    private func loadLastActiveDataModel(name: String) -> NSManagedObjectModel? {
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let path = url.path+"/\(name).crushmodel"
+        
+        guard FileManager.default.fileExists(atPath: path) else { return nil }
+        
+        return NSKeyedUnarchiver.unarchiveObject(withFile: path) as? NSManagedObjectModel
+    }
+    
     public func processStore(at url: URL) throws {
         defer {
+            persistActiveDataModel(name: url.lastPathComponent)
             activeVersion.model.updateCacheKey()
         }
         
@@ -37,19 +65,29 @@ final public class SQLMigrator: DataMigrator {
             return
         }
         
-        let models = versions.compactMap{ $0.model.rawModel }
-        let index = try indexOfCompatibleMom(at: url, models: models)
-        let remaining = models.suffix(from: (index + 1))
-        
-        guard remaining.count > 0 else {
-            return
-        }
-        
-        forceWALCheckpointingForStore(at: url)
-        
-        _ = try remaining.reduce(models[index]) { source, destination in
-            try migrateStore(at: url, from: source, to: destination)
-            return destination
+        do {
+            let models = versions.compactMap{ $0.model.rawModel }
+            let index = try indexOfCompatibleMom(at: url, models: models)
+            let remaining = models.suffix(from: (index + 1))
+            
+            guard remaining.count > 0 else {
+                return
+            }
+            
+            forceWALCheckpointingForStore(at: url)
+            
+            _ = try remaining.reduce(models[index]) { source, destination in
+                try migrateStore(at: url, from: source, to: destination)
+                return destination
+            }
+        } catch {
+            guard let lastActiveModel = loadLastActiveDataModel(name: url.lastPathComponent) else {
+                throw MigratorError.incompatibleModels
+            }
+            
+            forceWALCheckpointingForStore(at: url)
+
+            return try migrateStore(at: url, from: lastActiveModel, to: activeVersion.model.rawModel)
         }
     }
     
