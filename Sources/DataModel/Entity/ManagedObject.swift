@@ -43,109 +43,51 @@ protocol ManagedObjectDelegate: AnyObject {
     func didTurnIntoFault()
 }
 
-final class ManagedObjectDelegateProxy: ManagedObjectDelegate {
-    
-    var parent: ManagedObjectDelegate?
-    
-    weak var delegate: ManagedObjectDelegate!
-
-    init(delegate: ManagedObjectDelegate, parent: ManagedObjectDelegate?) {
-        self.delegate = delegate
-        self.parent = parent
-    }
-    
-    func awakeFromFetch() {
-        parent?.awakeFromFetch()
-        delegate?.awakeFromFetch()
-    }
-    
-    func awakeFromInsert() {
-        parent?.awakeFromInsert()
-        delegate?.awakeFromInsert()
-    }
-    
-    func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
-        parent?.awake(fromSnapshotEvents: flags)
-        delegate?.awake(fromSnapshotEvents: flags)
-    }
-    
-    func prepareForDeletion() {
-        parent?.prepareForDeletion()
-        delegate?.prepareForDeletion()
-    }
-    
-    func willSave() {
-        parent?.willSave()
-        delegate?.willSave()
-    }
-    
-    func didSave() {
-        parent?.didSave()
-        delegate?.didSave()
-    }
-    
-    func willTurnIntoFault() {
-        parent?.willTurnIntoFault()
-        delegate?.willTurnIntoFault()
-    }
-    
-    func didTurnIntoFault() {
-        parent?.didTurnIntoFault()
-        delegate?.didTurnIntoFault()
-    }
-}
-
 public final class ManagedObject: NSManagedObject {
     
-    var delegate: ManagedObjectDelegate?
-    
-    private lazy var dummyDelegate: ManagedObjectDelegate? = {
+    lazy var delegate: ManagedObjectDelegate? = {
         guard let typeString = entity.userInfo?[kEntityTypeKey] as? String,
               let type = NSClassFromString(typeString) as? EntityObject.Type else { return nil }
         return type.init(proxy: UnownedReadWritePropertyProxy(rawObject: self))
     }()
     
-    private func getDelegate() -> ManagedObjectDelegate? {
-        delegate ?? dummyDelegate
-    }
-    
     public override func awakeFromFetch() {
         super.awakeFromFetch()
-        getDelegate()?.awakeFromFetch()
+        delegate?.awakeFromFetch()
     }
     
     public override func awakeFromInsert() {
         super.awakeFromInsert()
-        getDelegate()?.awakeFromInsert()
+        delegate?.awakeFromInsert()
     }
     
     public override func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
         super.awake(fromSnapshotEvents: flags)
-        getDelegate()?.awake(fromSnapshotEvents: flags)
+        delegate?.awake(fromSnapshotEvents: flags)
     }
     
     public override func prepareForDeletion() {
         super.prepareForDeletion()
-        getDelegate()?.prepareForDeletion()
+        delegate?.prepareForDeletion()
     }
     
     public override func willSave() {
         super.willSave()
-        getDelegate()?.willSave()
+        delegate?.willSave()
     }
     
     public override func didSave() {
         super.didSave()
-        getDelegate()?.didSave()
+        delegate?.didSave()
     }
     
     public override func willTurnIntoFault() {
         super.willTurnIntoFault()
-        getDelegate()?.willTurnIntoFault()
+        delegate?.willTurnIntoFault()
     }
     
     public override func didTurnIntoFault() {
         super.didTurnIntoFault()
-        getDelegate()?.didTurnIntoFault()
+        delegate?.didTurnIntoFault()
     }
 }

@@ -19,11 +19,6 @@ extension PropertyProxy {
     var managedObject: ManagedObject? {
         rawObject as? ManagedObject
     }
-    
-    func setManagedObjectDelegate(_ delegate: ManagedObjectDelegate) {
-        let proxy = ManagedObjectDelegateProxy(delegate: delegate, parent: managedObject?.delegate)
-        managedObject?.delegate = proxy
-    }
 }
 
 struct ReadWritePropertyProxy: PropertyProxy {

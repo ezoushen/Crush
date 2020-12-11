@@ -228,8 +228,6 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
         self.proxy = proxy
         
         injectProxy()
-        
-        proxy.setManagedObjectDelegate(self)
     }
         
     private func injectProxy() {
