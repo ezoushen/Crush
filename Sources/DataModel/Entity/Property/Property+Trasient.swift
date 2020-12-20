@@ -32,15 +32,6 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
         }
     }
     
-    public var propertyCacheKey: String {
-        get {
-            property.propertyCacheKey
-        }
-        set {
-            property.propertyCacheKey = newValue
-        }
-    }
-    
     public var wrappedValue: PropertyValue {
         get {
 //            property.wrappedValue

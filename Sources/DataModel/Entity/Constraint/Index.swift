@@ -11,7 +11,7 @@ import CoreData
 public protocol ConstraintSet: NSObject { }
 
 protocol IndexProtocol {
-    func fetchIndexDescription<R: RuntimeObject>(name: String, in object: R) -> NSFetchIndexDescription
+    func fetchIndexDescription<R: Entity>(name: String, in object: R) -> NSFetchIndexDescription
 }
 
 protocol TargetedIndexProtocol: IndexProtocol {
@@ -25,24 +25,6 @@ public protocol IndexElementProtocol {
     var keyPath: AnyKeyPath? { get set }
     var type: NSFetchIndexElementType { get set }
     func fetchIndexElementDescription(property: NSPropertyDescription) -> NSFetchIndexElementDescription
-}
-
-fileprivate let DEFAULT_KEY = "defaultKey"
-
-extension ConstraintSet {
-    static func setDefaultKeys(mirror: Mirror?, firstKey: String? = nil) {
-        guard let mirror = mirror, let type = mirror.subjectType as? Entity.Type, let superClassMirror = mirror.superclassMirror else { return }
-                
-        mirror.children.forEach { label, value in
-            guard let value = value as? PropertyProtocol else { return }
-            value.description.userInfo = value.description.userInfo ?? [:]
-            value.description.userInfo![DEFAULT_KEY] = (superClassMirror.subjectType.self == AbstractEntityObject.self
-                ?  type.entityCacheKey
-                : (firstKey ?? type.entityCacheKey))+"."+label!
-        }
-        
-        return setDefaultKeys(mirror: superClassMirror, firstKey: firstKey ?? type.entityCacheKey)
-    }
 }
 
 extension IndexElementProtocol {
@@ -113,15 +95,14 @@ public struct FetchIndex<Target: RuntimeObject>: TargetedIndexProtocol {
 }
 
 extension TargetedIndexProtocol {
-    func fetchIndexDescription<R: RuntimeObject>(name: String, in object: R) -> NSFetchIndexDescription {
+    func fetchIndexDescription<R: Entity>(name: String, in object: R) -> NSFetchIndexDescription {
         let indcies = indexes.compactMap{ index -> (IndexElementProtocol, AnyKeyPath)? in
             guard let keyPath = index.keyPath else { return nil }
             return (index, keyPath)
         }.compactMap{ (index, keyPath) -> (IndexElementProtocol, NSPropertyDescription)? in
-            guard let property = object[keyPath: keyPath] as? PropertyProtocol,
-                  let defaultKey = property.description.userInfo?[DEFAULT_KEY] as? String else { return nil }
             let coordinator = CacheCoordinator.shared
-            let description = coordinator.get(defaultKey, in: CacheType.property)!
+            guard let property = object[keyPath: keyPath] as? PropertyProtocol,
+                  let description = coordinator.get(R.createPropertyCacheKey(domain: R.entityCacheKey, name: property.name), in: CacheType.property) else { return nil }
             return (index, description)
         }.map{ (index, description) -> NSFetchIndexElementDescription in
             return index.fetchIndexElementDescription(property: description)

@@ -15,15 +15,6 @@ public struct ReadOnly<Value: HashableEntity> {
         value.rawObject.objectID
     }
     
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-    public var objectWillChange: AnyPublisher<Void, Never> {
-        value.rawObject.objectWillChange
-            .map{ [unowned value = self.value] in value.contentHashValue }
-            .removeDuplicates()
-            .map{ _ in Void() }
-            .eraseToAnyPublisher()
-    }
-    
     public init(_ value: Value) {
         self.value = value
     }

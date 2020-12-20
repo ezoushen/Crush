@@ -43,7 +43,7 @@ extension PartailTracableKeyPathProtocol {
     public var fullPath: String {
         let path = allPaths.compactMap{ keyPath -> String? in
             let runtimeObject = keyPath.rootType.dummy()
-            return ((runtimeObject[keyPath: keyPath.keyPath] as? PropertyProtocol)?.description)?.name
+            return (runtimeObject[keyPath: keyPath.keyPath] as? PropertyProtocol)?.name
         }.joined(separator: ".")
         return path
     }

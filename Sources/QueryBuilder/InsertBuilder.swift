@@ -32,7 +32,7 @@ extension InsertionConfig: RequestConfig {
     }
     
     func createFetchRequest(options: [String: Any]) -> NSPersistentStoreRequest {
-        let entity = Target.entity()
+        let entity = Target.entityDescription()
 
         if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
             let description = NSBatchInsertRequest(entity: entity, objects: objects)

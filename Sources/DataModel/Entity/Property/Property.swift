@@ -69,18 +69,12 @@ extension PropertyOption: MutablePropertyConfigurable {
 }
 
 public protocol PropertyProtocol: AnyObject {
-    var name: String { get set }
-    var propertyCacheKey: String { get set }
-    
+    var name: String { get set }    
     func emptyPropertyDescription() -> NSPropertyDescription
 }
 
 extension PropertyProtocol {
     public var isTransient: Bool { false }
-    
-    var description: NSPropertyDescription {
-        CacheCoordinator.shared.get(propertyCacheKey, in: CacheType.property)!
-    }
 }
 
 // MARK: - Entity Property

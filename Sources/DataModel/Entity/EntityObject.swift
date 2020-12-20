@@ -8,8 +8,6 @@
 
 import CoreData
 
-let kEntityTypeKey: String = "entity.type"
-
 fileprivate enum _Shared {
     @ThreadSafe
     static var dummyObjects: [String: RuntimeObject] = [:]
@@ -19,16 +17,11 @@ fileprivate enum _Shared {
 }
 
 public protocol RuntimeObject: AnyObject {
-    static func entity() -> NSEntityDescription
-    static func createConstraints(description: NSEntityDescription)
     var rawObject: NSManagedObject { get }
 }
 
-extension RuntimeObject {
-    public static func createConstraints(description: NSEntityDescription) { }
-}
-
 public protocol Entity: RuntimeObject, Field {
+    static func entityDescription() -> NSEntityDescription
     static func setOverrideCacheKey(for type: Entity.Type, key: String)
     static var isAbstract: Bool { get }
     static var renamingIdentifier: String? { get }
@@ -38,9 +31,7 @@ public protocol Entity: RuntimeObject, Field {
     init(context: NSManagedObjectContext)
 }
 
-public protocol HashableEntity: NSManagedObject ,Entity, PropertyProxy {
-    var contentHashValue: Int { get }
-}
+public protocol HashableEntity: NSManagedObject ,Entity { }
 
 extension RuntimeObject {
     static var fetchKey: String {
@@ -57,7 +48,6 @@ extension Entity {
         let key = Self.entityCacheKey
         return _Shared.dummyObjects[key] as? Self ?? {
             let dummyObject = Self.init()
-            (dummyObject as? NeutralEntityObject)?.insertDefautCacheKey()
             _Shared.dummyObjects[key] = dummyObject
             return dummyObject
         }()
@@ -75,15 +65,96 @@ extension Entity {
         String(reflecting: Self.self)
     }
     
-    fileprivate func createPropertyCacheKey(domain: String, name: String) -> String {
+    static func createPropertyCacheKey(domain: String, name: String) -> String {
         "\(domain).\(name)"
+    }
+    
+    static func createConstraints(description: NSEntityDescription) {
+        let object = Self.init()
+        let mirror = Mirror(reflecting: object)
+        
+        func createIndexClassFromMirror(_ mirror: Mirror) -> ConstraintSet.Type? {
+            NSClassFromString((NSStringFromClass(mirror.subjectType.self as! AnyClass)+"10Constraint").replacingOccurrences(of: "_TtC", with: "_TtCC")) as? ConstraintSet.Type
+        }
+
+        var allIndexes: [NSFetchIndexDescription] = []
+        var allUniquenessConstraints: [[Any]] = []
+        
+        func resolveIndexes(objectMirror mirror: Mirror?, constraintClass: ConstraintSet.Type?) {
+            guard let mirror = mirror,
+                  let constraintClass = constraintClass ?? createIndexClassFromMirror(mirror),
+                  mirror.superclassMirror?.subjectType != AbstractEntityObject.self || mirror.subjectType == Self.self
+                else { return }
+            let indexClassMirror = Mirror(reflecting: constraintClass.init())
+            let indexChildren = indexClassMirror.children
+            let indexes: [NSFetchIndexDescription] = indexChildren.compactMap{ (label, value) in
+                guard let index = value as? IndexProtocol else { return nil }
+                return index.fetchIndexDescription(name: label ?? "", in: object)
+            }
+            
+            if description.superentity != nil {
+                indexes
+                    .filter{ $0.elements.count > 1 }
+                    .forEach {
+                        let expression = NSExpressionDescription()
+                        expression.expression = .init(format: "entity")
+                        expression.expressionResultType = .stringAttributeType
+                        expression.name = "Expression"
+                        let collationType = $0.elements.first!.collationType
+                        let entIndex = NSFetchIndexElementDescription(property: expression, collationType: collationType)
+                        $0.elements.insert(entIndex, at: 0)
+                    }
+            }
+            
+            let uniquenessConstarints: [[Any]] = Set<[String]>(
+                indexChildren.compactMap { (label, value) -> [String]? in
+                    guard let constraint = value as? UniqueConstraintProtocol else{ return nil }
+                    return constraint.uniquenessConstarints
+                }
+            ).map{ $0 as [Any]}
+            
+            allIndexes.append(contentsOf: indexes)
+            allUniquenessConstraints.append(contentsOf: uniquenessConstarints)
+            
+            indexChildren.forEach { (label, value) in
+                guard let value = value as? ValidationProtocol,
+                    let property = (object[keyPath: value.anyKeyPath] as? PropertyProtocol),
+                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(domain: Self.entityCacheKey, name: property.name), in: CacheType.property)
+                else { return }
+                
+                var warnings = description.validationWarnings
+                var predicates = description.validationPredicates
+                
+                warnings.append(value.wrappedValue.1)
+                predicates.append(value.wrappedValue.0)
+                
+                description.setValidationPredicates(predicates, withValidationWarnings: warnings as? [String])
+            }
+            
+            return resolveIndexes(objectMirror: mirror.superclassMirror, constraintClass: nil)
+        }
+        
+        func traverseConstraints(from rootMirror: Mirror, atMirror mirror: Mirror? = nil) {
+            guard let mirror = mirror else { return }
+            
+            if let constraintClass = createIndexClassFromMirror(mirror) {
+                resolveIndexes(objectMirror: mirror, constraintClass: constraintClass)
+            } else {
+                traverseConstraints(from: rootMirror, atMirror: mirror.superclassMirror)
+            }
+        }
+        
+        traverseConstraints(from: mirror, atMirror: mirror)
+
+        description.indexes.append(contentsOf: allIndexes)
+        description.uniquenessConstraints.append(contentsOf: allUniquenessConstraints)
     }
     
     static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping? {
         var fromEntityTypeName: String? = nil
         var toEntityTypeName: String? = nil
         
-        let attributeMappings = try entity().properties
+        let attributeMappings = try entityDescription().properties
             .filter { $0 is NSAttributeDescription }
             .compactMap { property -> PropertyMappingProtocol? in
             guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
@@ -101,7 +172,7 @@ extension Entity {
             return AnyPropertyMapping(type: .attribute, from: fromPath, to: toPath)
         }
         
-        let relationshipMappings = try entity().properties
+        let relationshipMappings = try entityDescription().properties
             .filter { $0 is NSRelationshipDescription }
             .compactMap { property -> PropertyMappingProtocol? in
             guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
@@ -147,89 +218,7 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
         renamingClass?.fetchKey
     }
     
-    public var contentHashValue: Int {
-        let names = rawObject.entity.attributesByName.keys.map { $0 }
-        return rawObject.dictionaryWithValues(forKeys: names)
-            .map { $0 }
-            .sorted { $0.key < $1.key }
-            .description
-            .hash
-    }
-    
-    private lazy var _allMirrors: [(Mirror.Child, String)] = {
-        func findAllMirrors(_ mirror: Mirror?) -> [(Mirror, String)] {
-            guard let mirror = mirror else { return [] }
-            
-            if mirror.subjectType == EntityObject.self || mirror.subjectType == AbstractEntityObject.self {
-                return []
-            }
-            
-            guard let subjectType = mirror.subjectType as? Entity.Type,
-                let superClassMirror = mirror.superclassMirror else { return [] }
-            
-            return [(mirror, superClassMirror.subjectType.self == AbstractEntityObject.self ? subjectType.entityCacheKey : Self.entityCacheKey)] + findAllMirrors(superClassMirror)
-        }
-        
-        return findAllMirrors(Mirror(reflecting: self)).flatMap{
-            zip($0.0.children, repeatElement($0.1, count: $0.0.children.count))
-        }
-    }()
-    
-    func insertDefautCacheKey() {
-        _allMirrors
-            .forEach { pair, key in
-                let (label, value) = pair
-                guard let property = value as? PropertyProtocol else  { return }
-                property.propertyCacheKey = createPropertyCacheKey(domain: key, name: label!)
-            }
-    }
-    
-    func createProperties() -> [NSPropertyDescription] {
-        _allMirrors
-            .compactMap { pair, key -> NSPropertyDescription? in
-                let (_label, value) = pair
-                guard key == Self.entityCacheKey,
-                    let property = value as? PropertyProtocol,
-                    let label = _label else {
-                    return nil
-                }
-                let defaultKey = createPropertyCacheKey(domain: key, name: label)
-                if let description = CacheCoordinator.shared.get(defaultKey, in: CacheType.property) {
-                    return description
-                }
-                let description = property.emptyPropertyDescription()
-                
-                if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
-                    if mapping.fullPath.contains(".") {
-                        description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
-                        description.userInfo?[UserInfoKey.propertyMappingDestination] = property.name
-                        description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
-                        description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
-                    } else {
-                        description.renamingIdentifier = mapping.fullPath
-                    }
-                }
-                
-                CacheCoordinator.shared.set(defaultKey, value: description, in: CacheType.property)
-                return description
-            }
-    }
-}
-
-open class AbstractEntityObject: NeutralEntityObject {
-    public override class var isAbstract: Bool {
-        return class_getSuperclass(Self.self) == AbstractEntityObject.self
-    }
-}
-
-open class EntityObject: NeutralEntityObject {
-    public override class var isAbstract: Bool {
-        return false
-    }
-}
-
-extension NeutralEntityObject {
-    public override class func entity() -> NSEntityDescription {
+    public class func entityDescription() -> NSEntityDescription {
         let coordinator = CacheCoordinator.shared
         let entityKey = Self.entityCacheKey
 
@@ -249,8 +238,8 @@ extension NeutralEntityObject {
         coordinator.getAndWait(entityKey, in: CacheType.inverseRelationship) { pairs in
             pairs.forEach { (keyPath, relationship) in
                 if let prop = object[keyPath: keyPath] as? PropertyProtocol {
-                    prop.propertyCacheKey = object.createPropertyCacheKey(domain: entityKey, name: "_\(prop.name)")
-                    if let description = prop.description as? NSRelationshipDescription {
+                    let key = Self.createPropertyCacheKey(domain: entityKey, name: prop.name)
+                    if let description = coordinator.get(key, in: CacheType.property) as? NSRelationshipDescription {
                         relationship.inverseRelationship = description
                         
                         if let flag = relationship.userInfo?[UserInfoKey.inverseUnidirectional] as? Bool, flag { return }
@@ -289,93 +278,87 @@ extension NeutralEntityObject {
             superMirror.subjectType != EntityObject.self,
             superMirror.subjectType != AbstractEntityObject.self,
             let superType = superMirror.subjectType as? Entity.Type {
-            coordinator.getAndWait(superType.entityCacheKey, in: CacheType.entity) {
-                $0.subentities.append(description)
+            coordinator.getAndWait(superType.entityCacheKey, in: CacheType.entity) { entity in
+                entity.subentities.append(description)
+                
+                func registerAllProperties(description: NSEntityDescription) {
+                    description.propertiesByName.forEach {
+                        coordinator.set(createPropertyCacheKey(domain: entityCacheKey, name: $0.value.name), value: $0.value, in: CacheType.property)
+                    }
+                    
+                    guard let superentity = description.superentity else {
+                        return
+                    }
+                    
+                    registerAllProperties(description: superentity)
+                }
+                
+                registerAllProperties(description: entity)
             }
         }
         
-        description.userInfo?[kEntityTypeKey] = NSStringFromClass(Self.self)
         return description
     }
     
-    public class func createConstraints(description: NSEntityDescription) {
-        let object = Self.init()
-        let mirror = Mirror(reflecting: object)
-        
-        func createIndexClassFromMirror(_ mirror: Mirror) -> ConstraintSet.Type? {
-            return NSClassFromString((NSStringFromClass(mirror.subjectType.self as! AnyClass)+"10Constraint").replacingOccurrences(of: "_TtC", with: "_TtCC")) as? ConstraintSet.Type
+    private lazy var _allMirrors: [(Mirror.Child, String)] = {
+        func findAllMirrors(_ mirror: Mirror?) -> [(Mirror, String)] {
+            guard let mirror = mirror else { return [] }
+            
+            if mirror.subjectType == EntityObject.self || mirror.subjectType == AbstractEntityObject.self {
+                return []
+            }
+            
+            guard let subjectType = mirror.subjectType as? Entity.Type,
+                let superClassMirror = mirror.superclassMirror else { return [] }
+            
+            return [(mirror, superClassMirror.subjectType.self == AbstractEntityObject.self ? subjectType.entityCacheKey : Self.entityCacheKey)] + findAllMirrors(superClassMirror)
         }
-
-        var allIndexes: [NSFetchIndexDescription] = []
-        var allUniquenessConstraints: [[Any]] = []
         
-        func resolveIndexes(objectMirror mirror: Mirror?, constraintClass: ConstraintSet.Type?) {
-            guard let mirror = mirror,
-                  let constraintClass = constraintClass ?? createIndexClassFromMirror(mirror),
-                  mirror.superclassMirror?.subjectType != AbstractEntityObject.self || mirror.subjectType == Self.self
-                else { return }
-            let indexClassMirror = Mirror(reflecting: constraintClass.init())
-            let indexChildren = indexClassMirror.children
-            let indexes: [NSFetchIndexDescription] = indexChildren.compactMap{ (label, value) in
-                guard let index = value as? IndexProtocol else { return nil }
-                return index.fetchIndexDescription(name: label ?? "", in: object)
-            }
-            
-            if description.superentity != nil {
-                indexes
-                    .filter{ $0.elements.count > 1 }
-                    .forEach {
-                        let expression = NSExpressionDescription()
-                        expression.expression = .init(format: "entity")
-                        expression.expressionResultType = .stringAttributeType
-                        expression.name = "Expression"
-                        let collationType = $0.elements.first!.collationType
-                        let entIndex = NSFetchIndexElementDescription(property: expression, collationType: collationType)
-                        $0.elements.insert(entIndex, at: 0)
-                    }
-            }
-            
-            let uniquenessConstarints: [[Any]] = Set<[String]>(
-                indexChildren.compactMap { (label, value) -> [String]? in
-                    guard let constraint = value as? UniqueConstraintProtocol else{ return nil }
-                    return constraint.uniquenessConstarints
+        return findAllMirrors(Mirror(reflecting: self)).flatMap{
+            zip($0.0.children, repeatElement($0.1, count: $0.0.children.count))
+        }
+    }()
+    
+    func createProperties() -> [NSPropertyDescription] {
+        _allMirrors
+            .compactMap { pair, key -> NSPropertyDescription? in
+                let (_, value) = pair
+                guard key == Self.entityCacheKey,
+                    let property = value as? PropertyProtocol  else {
+                    return nil
                 }
-            ).map{ $0 as [Any]}
-            
-            allIndexes.append(contentsOf: indexes)
-            allUniquenessConstraints.append(contentsOf: uniquenessConstarints)
-            
-            indexChildren.forEach { (label, value) in
-                guard let value = value as? ValidationProtocol,
-                    let description = (object[keyPath: value.anyKeyPath] as? PropertyProtocol)?.description else { return }
+                let defaultKey = Self.createPropertyCacheKey(domain: key, name: property.name)
+                if let description = CacheCoordinator.shared.get(defaultKey, in: CacheType.property) {
+                    return description
+                }
+                let description = property.emptyPropertyDescription()
                 
-                var warnings = description.validationWarnings
-                var predicates = description.validationPredicates
+                if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
+                    if mapping.fullPath.contains(".") {
+                        description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
+                        description.userInfo?[UserInfoKey.propertyMappingDestination] = property.name
+                        description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
+                        description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
+                    } else {
+                        description.renamingIdentifier = mapping.fullPath
+                    }
+                }
                 
-                warnings.append(value.wrappedValue.1)
-                predicates.append(value.wrappedValue.0)
-                
-                description.setValidationPredicates(predicates, withValidationWarnings: warnings as? [String])
+                CacheCoordinator.shared.set(defaultKey, value: description, in: CacheType.property)
+                return description
             }
-            
-            return resolveIndexes(objectMirror: mirror.superclassMirror, constraintClass: nil)
-        }
-        
-        func traverseConstraints(from rootMirror: Mirror, atMirror mirror: Mirror? = nil) {
-            guard let mirror = mirror else { return }
-            
-            if let constraintClass = createIndexClassFromMirror(mirror) {
-                constraintClass.setDefaultKeys(mirror: rootMirror)
-                resolveIndexes(objectMirror: mirror, constraintClass: constraintClass)
-            } else {
-                traverseConstraints(from: rootMirror, atMirror: mirror.superclassMirror)
-            }
-        }
-        
-        traverseConstraints(from: mirror, atMirror: mirror)
+    }
+}
 
-        description.indexes.append(contentsOf: allIndexes)
-        description.uniquenessConstraints.append(contentsOf: allUniquenessConstraints)
+open class AbstractEntityObject: NeutralEntityObject {
+    public override class var isAbstract: Bool {
+        return class_getSuperclass(Self.self) == AbstractEntityObject.self
+    }
+}
+
+open class EntityObject: NeutralEntityObject {
+    public override class var isAbstract: Bool {
+        return false
     }
 }
 

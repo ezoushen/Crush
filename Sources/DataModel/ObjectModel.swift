@@ -82,7 +82,7 @@ public final class DataModel: ObjectModel {
         }
         
         let model = NSManagedObjectModel()
-        let entities: [NSEntityDescription] = sorted.map { $0.entity() }
+        let entities: [NSEntityDescription] = sorted.map { $0.entityDescription() }
         zip(sorted, entities).forEach { $0.0.createConstraints(description: $0.1) }
         model.versionIdentifiers = [versionHashModifier]
         model.entities = entities

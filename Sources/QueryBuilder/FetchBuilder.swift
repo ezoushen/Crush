@@ -65,7 +65,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     }
     
     func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entity().name ?? String(describing: T.self))
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entityDescription().name ?? String(describing: T.self))
         request.sortDescriptors = sorters
         request.predicate = predicate
         request.propertiesToFetch = mapTo?.map{ $0.asExpression() }
