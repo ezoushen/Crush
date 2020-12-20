@@ -88,7 +88,7 @@ public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertib
 
 public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
     public typealias RuntimeObjectValue = Set<EntityType>
-    public typealias ManagedObjectValue = NSSet
+    public typealias ManagedObjectValue = NSSet?
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return amount == 1 ? 0 : amount
@@ -96,7 +96,7 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     
     @inline(__always)
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return Set(value.allObjects.compactMap{ getEnity(from: $0 as! ManagedObject) })
+        return Set(value?.allObjects.compactMap{ getEnity(from: $0 as! ManagedObject) } ?? [])
     }
     
     @inline(__always)
@@ -106,7 +106,7 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     
     @inline(__always)
     public static func convert(value: RuntimeObjectValue, with nsset: ManagedObjectValue) -> ManagedObjectValue {
-        let mutableSet = nsset.mutableCopy() as! NSMutableSet
+        let mutableSet = nsset?.mutableCopy() as? NSMutableSet ?? NSMutableSet()
         mutableSet.removeAllObjects()
         mutableSet.union(Set(value.map{ $0.rawObject }))
         return mutableSet
