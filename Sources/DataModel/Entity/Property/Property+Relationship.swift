@@ -124,19 +124,10 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     public typealias Destination = R.EntityType
     public typealias Nullability = O
     public typealias PropertyOption = RelationshipOption
-    
-    public var proxy: PropertyProxy! = nil
-    
+        
     public var wrappedValue: PropertyValue {
-        get {
-            R.convert(value: proxy!.getValue(key: defaultName))
-        }
-        set {            
-            proxy.setValue(
-                R.convert(value: newValue, with: proxy!.getValue(key: defaultName)),
-                key: defaultName
-            )
-        }
+        get { fatalError() }
+        set { fatalError() }
     }
     
     public static subscript<EnclosingSelf: HashableEntity>(
@@ -146,22 +137,21 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     ) -> PropertyValue {
         get {
             let property = observed[keyPath: storageKeyPath]
-            property.proxy = property.proxy ?? ReadWritePropertyProxy(rawObject: observed)
-            return property.wrappedValue
+            return R.convert(value: observed.getValue(key: property.defaultName))
         }
         set {
             let property = observed[keyPath: storageKeyPath]
-            property.proxy = property.proxy ?? ReadWritePropertyProxy(rawObject: observed)
-            observed[keyPath: storageKeyPath].wrappedValue = newValue
+            observed.setValue(
+                R.convert(value: newValue, with: observed.getValue(key: property.defaultName)),
+                key: property.defaultName
+            )
         }
     }
 
     public var projectedValue: Relationship<Nullability, InverseMapping, Mapping> {
         self
     }
-            
-    public weak var entityObject: NeutralEntityObject?
-    
+                
     public var defaultName: String = ""
                 
     public var inverseKeyPath: AnyKeyPath!

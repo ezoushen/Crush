@@ -38,7 +38,7 @@ public protocol Entity: RuntimeObject, Field {
     init(context: NSManagedObjectContext)
 }
 
-public protocol HashableEntity: NSManagedObject ,Entity {
+public protocol HashableEntity: NSManagedObject ,Entity, PropertyProxy {
     var contentHashValue: Int { get }
 }
 
@@ -180,7 +180,6 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
             .forEach { pair, key in
                 let (label, value) = pair
                 guard let property = value as? PropertyProtocol else  { return }
-                property.entityObject = self
                 property.propertyCacheKey = createPropertyCacheKey(domain: key, name: label!)
             }
     }
@@ -380,7 +379,7 @@ extension NeutralEntityObject {
     }
 }
 
-extension NSManagedObject: RuntimeObject {
+extension NSManagedObject: RuntimeObject, PropertyProxy {
     public convenience init(context: TransactionContext) {
         if let transactionContext = context as? _TransactionContext {
             self.init(context: transactionContext.executionContext)

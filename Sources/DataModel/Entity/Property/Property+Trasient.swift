@@ -23,15 +23,6 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
     public typealias PropertyOption = Property.PropertyOption
     public typealias Nullability = Property.Nullability
 
-    public var entityObject: NeutralEntityObject? {
-        get {
-            property.entityObject
-        }
-        set {
-            property.entityObject = newValue
-        }
-    }
-    
     public var defaultName: String {
         get {
             property.defaultName

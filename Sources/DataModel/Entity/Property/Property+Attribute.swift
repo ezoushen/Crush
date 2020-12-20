@@ -62,12 +62,8 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     public typealias PropertyOption = AttributeOption
         
     public var wrappedValue: PropertyValue {
-        get {
-            FieldType.convert(value: proxy.getValue(key: defaultName))
-        }
-        set {
-            proxy.setValue(FieldType.convert(value: newValue), key: defaultName)
-        }
+        get { fatalError() }
+        set { fatalError() }
     }
     
     public static subscript<EnclosingSelf: HashableEntity>(
@@ -77,13 +73,11 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     ) -> PropertyValue {
         get {
             let property = observed[keyPath: storageKeyPath]
-            property.proxy = property.proxy ?? ReadWritePropertyProxy(rawObject: observed)
-            return property.wrappedValue
+            return FieldType.convert(value: observed.getValue(key: property.defaultName))
         }
         set {
             let property = observed[keyPath: storageKeyPath]
-            property.proxy = property.proxy ?? ReadWritePropertyProxy(rawObject: observed)
-            observed[keyPath: storageKeyPath].wrappedValue = newValue
+            observed.setValue(FieldType.convert(value: newValue), key: property.defaultName)
         }
     }
     

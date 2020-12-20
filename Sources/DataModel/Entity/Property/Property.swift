@@ -71,7 +71,6 @@ extension PropertyOption: MutablePropertyConfigurable {
 public protocol PropertyProtocol: AnyObject {
     var defaultName: String { get set }
     var propertyCacheKey: String { get set }
-    var entityObject: NeutralEntityObject? { get set }
     
     func emptyPropertyDescription() -> NSPropertyDescription
 }
