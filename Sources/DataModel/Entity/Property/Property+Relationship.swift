@@ -56,14 +56,14 @@ public protocol RelationMapping: FieldConvertible {
 }
 
 extension RelationMapping {
-    static func getEnity(from value: ManagedObject) -> EntityType {
-        EntityType.init(value)
+    static func getEnity(from value: NSManagedObject) -> EntityType {
+        value as! EntityType
     }
 }
 
 public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
     public typealias RuntimeObjectValue = EntityType?
-    public typealias ManagedObjectValue = ManagedObject?
+    public typealias ManagedObjectValue = NSManagedObject?
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return 1
@@ -77,7 +77,7 @@ public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertib
     
     @inline(__always)
     public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        return value?.rawObject as? ManagedObject
+        return value?.rawObject
     }
     
     @inline(__always)
@@ -96,7 +96,7 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     
     @inline(__always)
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return Set(value?.allObjects.compactMap{ getEnity(from: $0 as! ManagedObject) } ?? [])
+        return Set(value?.allObjects.compactMap{ getEnity(from: $0 as! NSManagedObject) } ?? [])
     }
     
     @inline(__always)

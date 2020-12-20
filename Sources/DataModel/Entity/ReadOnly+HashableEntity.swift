@@ -24,10 +24,6 @@ public struct ReadOnly<Value: HashableEntity> {
             .eraseToAnyPublisher()
     }
     
-    public init(_ rawObject: NSManagedObject) {
-        self.value = Value.init(rawObject)
-    }
-    
     public init(_ value: Value) {
         self.value = value
     }

@@ -240,7 +240,7 @@ extension PartialFetchBuilder where Result: NSManagedObject, Received: NSManaged
     }
 }
 
-extension PartialFetchBuilder where Target: HashableEntity, Result == Target.ReadOnly, Received == ManagedObject {
+extension PartialFetchBuilder where Target: HashableEntity, Result == Target.ReadOnly, Received == Target {
     public func exists() -> Bool {
         findOne() != nil
     }
@@ -256,7 +256,7 @@ extension PartialFetchBuilder where Target: HashableEntity, Result == Target.Rea
     }
 }
 
-extension PartialFetchBuilder where Result: Entity, Received == ManagedObject {
+extension PartialFetchBuilder where Result: Entity, Received: NSManagedObject {
     public func exists() -> Bool {
         findOne() != nil
     }
@@ -267,7 +267,7 @@ extension PartialFetchBuilder where Result: Entity, Received == ManagedObject {
     
     public func exec() -> [Result] {
         received().map {
-            Result(_context.receive($0))
+            _context.receive($0) as! Result
         }
     }
 }

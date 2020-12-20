@@ -23,21 +23,9 @@ public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
 }
 
 extension TransactionContext where Self: RawContextProviderProtocol {
-    func receive<T: Entity>(_ object: T) -> T {
-        guard executionContext != object.rawObject.managedObjectContext else { return object }
-        let newObject = executionContext.receive(runtimeObject: object)
-        return T.init(newObject)
-    }
-    
     func receive<T: NSManagedObject>(_ object: T) -> T {
         guard executionContext != object.managedObjectContext else { return object }
         return executionContext.receive(runtimeObject: object) as! T
-    }
-    
-    func present<T: Entity>(_ object: T) -> T {
-        guard uiContext != object.rawObject.managedObjectContext else { return object }
-        let newObject = uiContext.receive(runtimeObject: object)
-        return T.init(newObject)
     }
     
     func present<T: NSManagedObject>(_ object: T) -> T {
@@ -47,7 +35,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
 }
 
 extension TransactionContext where Self: RawContextProviderProtocol {
-    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T> {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, T, T> {
         .init(config: .init(), context: self)
     }
     

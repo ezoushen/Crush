@@ -15,12 +15,6 @@ public protocol PropertyProxy {
     func setValue(_ value: Any?, key: String)
 }
 
-extension PropertyProxy {
-    var managedObject: ManagedObject? {
-        rawObject as? ManagedObject
-    }
-}
-
 struct ReadWritePropertyProxy: PropertyProxy {
     private static var dummyObject: NSManagedObject = {
         let description = NSEntityDescription()

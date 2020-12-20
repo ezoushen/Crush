@@ -24,12 +24,12 @@ class V1: SchemaOrigin {
         }
         
         @Value.String
-        var firstName: String?
+        var firstName: String!
     }
     
     class Man: People {
         @Value.Int64
-        var strength: Int64?
+        var strength: Int64!
     }
 }
 

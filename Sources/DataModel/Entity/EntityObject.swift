@@ -24,16 +24,21 @@ public protocol RuntimeObject: AnyObject {
     var rawObject: NSManagedObject { get }
 }
 
+extension RuntimeObject {
+    public static func createConstraints(description: NSEntityDescription) { }
+}
+
 public protocol Entity: RuntimeObject, Field {
     static func setOverrideCacheKey(for type: Entity.Type, key: String)
     static var isAbstract: Bool { get }
     static var renamingIdentifier: String? { get }
     static var entityCacheKey: String { get }
     
-    init(proxy: PropertyProxy)
+    init()
+    init(context: NSManagedObjectContext)
 }
 
-public protocol HashableEntity: Entity, Hashable {
+public protocol HashableEntity: NSManagedObject ,Entity {
     var contentHashValue: Int { get }
 }
 
@@ -48,23 +53,10 @@ extension RuntimeObject {
 }
 
 extension Entity {
-    init(_ object: NSManagedObject) {
-        self.init(proxy: ReadWritePropertyProxy(rawObject: object))
-    }
-    
-    init(objectID: NSManagedObjectID, in context: NSManagedObjectContext) {
-        self.init(proxy: ReadWritePropertyProxy(rawObject: context.object(with: objectID)))
-    }
-    
-    init(context: NSManagedObjectContext) {
-        let managedObject = ManagedObject(entity: Self.entity(), insertInto: context)
-        self.init(proxy: ReadWritePropertyProxy(rawObject: managedObject))
-    }
-    
     internal static func dummy() -> Self {
         let key = Self.entityCacheKey
         return _Shared.dummyObjects[key] as? Self ?? {
-            let dummyObject = Self.init(proxy: ReadWritePropertyProxy.dummy())
+            let dummyObject = Self.init()
             _Shared.dummyObjects[key] = dummyObject
             return dummyObject
         }()
@@ -140,11 +132,7 @@ extension Entity {
     }
 }
 
-public func == (lhs: NeutralEntityObject, rhs: NeutralEntityObject) -> Bool {
-    lhs.rawObject == rhs.rawObject
-}
-
-open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
+open class NeutralEntityObject: NSManagedObject, HashableEntity {
 
     public class var isAbstract: Bool {
         return false
@@ -157,18 +145,6 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
     public class var renamingIdentifier: String? {
         renamingClass?.fetchKey
     }
-        
-    public var rawObject: NSManagedObject {
-        proxy.rawObject
-    }
-        
-    public func hash(into hasher: inout Hasher) {
-        rawObject.hash(into: &hasher)
-    }
-    
-    public var hashValue: Int {
-        rawObject.hashValue
-    }
     
     public var contentHashValue: Int {
         var hasher = Hasher()
@@ -178,32 +154,6 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
         }
         return hasher.finalize()
     }
-    
-    public var isDeleted: Bool {
-        rawObject.isDeleted
-    }
-    
-    public var isUpdated: Bool {
-        rawObject.isUpdated
-    }
-    
-    public var isInserted: Bool {
-        rawObject.isInserted
-    }
-    
-    public func validateForDelete() throws {
-        try rawObject.validateForDelete()
-    }
-    
-    public func validateForInsert() throws {
-        try rawObject.validateForInsert()
-    }
-    
-    public func validateForUpdate() throws {
-        try rawObject.validateForUpdate()
-    }
-    
-    private let proxy: PropertyProxy
     
     private lazy var _allMirrors: [(Mirror.Child, String)] = {
         func findAllMirrors(_ mirror: Mirror?) -> [(Mirror, String)] {
@@ -224,12 +174,14 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
         }
     }()
     
-    required public init(proxy: PropertyProxy) {
-        self.proxy = proxy
-        
+    private lazy var proxy: PropertyProxy = ReadWritePropertyProxy.dummy()
+    
+    public override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
+        super.init(entity: entity, insertInto: context)
+        proxy = ReadWritePropertyProxy(rawObject: self)
         injectProxy()
     }
-        
+    
     private func injectProxy() {
         _allMirrors
             .forEach { pair, key in
@@ -256,6 +208,7 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
                     return description
                 }
                 let description = property.emptyPropertyDescription()
+                description.name = description.name.isEmpty ? String(label.dropFirst()) : description.name
                 description.versionHashModifier = description.name
                 
                 if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
@@ -273,22 +226,6 @@ open class NeutralEntityObject: HashableEntity, ManagedObjectDelegate {
                 return description
             }
     }
-    
-    open dynamic func awakeFromFetch() { }
-    
-    open dynamic func awakeFromInsert() { }
-    
-    open dynamic func awake(fromSnapshotEvents flags: NSSnapshotEventType) { }
-    
-    open dynamic func prepareForDeletion() { }
-    
-    open dynamic func willSave() { }
-    
-    open dynamic func didSave() { }
-    
-    open dynamic func willTurnIntoFault() { }
-    
-    open dynamic func didTurnIntoFault() { }
 }
 
 open class AbstractEntityObject: NeutralEntityObject {
@@ -304,7 +241,7 @@ open class EntityObject: NeutralEntityObject {
 }
 
 extension NeutralEntityObject {
-    public class func entity() -> NSEntityDescription {
+    public override class func entity() -> NSEntityDescription {
         let coordinator = CacheCoordinator.shared
         let entityKey = Self.entityCacheKey
 
@@ -313,8 +250,8 @@ extension NeutralEntityObject {
         }
         
         let description = NSEntityDescription()
-        description.managedObjectClassName = String(reflecting: ManagedObject.self)
-        let object = Self.init(proxy: ReadWritePropertyProxy.dummy())
+        description.managedObjectClassName = NSStringFromClass(Self.self)
+        let object = Self.init()
         let mirror = Mirror(reflecting: object)
         
         // Setup properties
@@ -372,7 +309,7 @@ extension NeutralEntityObject {
     }
     
     public class func createConstraints(description: NSEntityDescription) {
-        let object = Self.init(proxy: ReadWritePropertyProxy.dummy())
+        let object = Self.init()
         let mirror = Mirror(reflecting: object)
         
         func createIndexClassFromMirror(_ mirror: Mirror) -> ConstraintSet.Type? {
@@ -453,10 +390,6 @@ extension NeutralEntityObject {
 }
 
 extension NSManagedObject: RuntimeObject {
-    public class func createConstraints(description: NSEntityDescription) {
-        
-    }
-    
     public convenience init(context: TransactionContext) {
         if let transactionContext = context as? _TransactionContext {
             self.init(context: transactionContext.executionContext)

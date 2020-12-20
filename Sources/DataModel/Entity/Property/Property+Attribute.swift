@@ -30,7 +30,7 @@ extension AttributeOption: MutablePropertyConfigurable {
     }
 }
 
-public protocol AttributeProtocol: NullableProperty where PredicateValue: FieldProtocol{
+public protocol AttributeProtocol: NullableProperty where PredicateValue: FieldAttribute & FieldConvertible {
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
     var configuration: PropertyConfiguration { get set }

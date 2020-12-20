@@ -26,7 +26,7 @@ extension Transaction {
     }
     
     public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly {
-        T.ReadOnly(T.init(objectID: objectID, in: context.uiContext))
+        T.ReadOnly(context.uiContext.object(with: objectID) as! T)
     }
     
     public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly] {
@@ -188,7 +188,7 @@ extension Transaction {
 }
 
 extension Transaction {
-    public struct ArrayPairEditor<T: Entity, S: Entity> {
+    public struct ArrayPairEditor<T: HashableEntity, S: HashableEntity> {
         private let array: [T]
         private let value: S
         private let transaction: Transaction
@@ -338,7 +338,7 @@ extension Transaction.ArrayPairEditor {
 
 
 extension Transaction {
-    public struct SingularEditor<T: Entity> {
+    public struct SingularEditor<T: HashableEntity> {
         
         private let value: T
         private let transaction: Transaction
@@ -482,7 +482,7 @@ extension Transaction.SingularEditor {
 }
 
 extension Transaction {
-    public struct PluralEditor<T: Entity> {
+    public struct PluralEditor<T: HashableEntity> {
     
         private let values: [T]
         private let transaction: Transaction
@@ -628,7 +628,7 @@ extension Transaction.PluralEditor {
 }
 
 extension Transaction {
-    public struct DualEditor<T: Entity, S: Entity> {
+    public struct DualEditor<T: HashableEntity, S: HashableEntity> {
     
         private let value1: T
         private let value2: S
