@@ -224,7 +224,7 @@ extension PartialFetchBuilder where Result == Dictionary<String, Any>, Received 
     }
 }
 
-extension PartialFetchBuilder where Result: NSManagedObject, Received: NSManagedObject {
+extension PartialFetchBuilder where Result: HashableEntity, Received: NSManagedObject {
     public func exists() -> Bool {
         findOne() != nil
     }
@@ -252,22 +252,6 @@ extension PartialFetchBuilder where Target: HashableEntity, Result == Target.Rea
     public func exec() -> [Result] {
         received().map {
             Result(_context.present($0))
-        }
-    }
-}
-
-extension PartialFetchBuilder where Result: Entity, Received: NSManagedObject {
-    public func exists() -> Bool {
-        findOne() != nil
-    }
-    
-    public func findOne() -> Result? {
-        limit(1).exec().first
-    }
-    
-    public func exec() -> [Result] {
-        received().map {
-            _context.receive($0) as! Result
         }
     }
 }

@@ -23,12 +23,12 @@ class V1: SchemaOrigin {
             var firstName = AscendingIndex(\V1.People.$firstName)
         }
         
-        @Value.String
+        @Value.String("first_name")
         var firstName: String!
     }
     
     class Man: People {
-        @Value.Int64
+        @Value.Int64("strength")
         var strength: Int64!
     }
 }

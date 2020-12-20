@@ -34,7 +34,7 @@ public protocol AttributeProtocol: NullableProperty where PredicateValue: FieldA
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
     var configuration: PropertyConfiguration { get set }
-    init(wrappedValue: PropertyValue, options: PropertyConfiguration)
+    init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration)
 }
 
 extension AttributeProtocol {
@@ -60,13 +60,30 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     public typealias PropertyValue = FieldType?
     public typealias Nullability = O
     public typealias PropertyOption = AttributeOption
-    
+        
     public var wrappedValue: PropertyValue {
         get {
-            FieldType.convert(value: proxy.getValue(key: description.name))
+            FieldType.convert(value: proxy.getValue(key: defaultName))
         }
         set {
-            proxy.setValue(FieldType.convert(value: newValue), key: description.name)
+            proxy.setValue(FieldType.convert(value: newValue), key: defaultName)
+        }
+    }
+    
+    public static subscript<EnclosingSelf: HashableEntity>(
+        _enclosingInstance observed: EnclosingSelf,
+        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, PropertyValue>,
+        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Attribute<O, FieldType>>
+    ) -> PropertyValue {
+        get {
+            let property = observed[keyPath: storageKeyPath]
+            property.proxy = property.proxy ?? ReadWritePropertyProxy(rawObject: observed)
+            return property.wrappedValue
+        }
+        set {
+            let property = observed[keyPath: storageKeyPath]
+            property.proxy = property.proxy ?? ReadWritePropertyProxy(rawObject: observed)
+            observed[keyPath: storageKeyPath].wrappedValue = newValue
         }
     }
     
@@ -74,7 +91,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         self
     }
     
-    public var proxy: PropertyProxy! = nil
+    private var proxy: PropertyProxy! = nil
     
     public var defaultValue: Any? = nil
 
@@ -86,7 +103,9 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     
     public weak var entityObject: NeutralEntityObject?
     
-    public init() { }
+    public init(_ name: String) {
+        self.defaultName = name
+    }
     
     public func emptyPropertyDescription() -> NSPropertyDescription {
         let description = NSAttributeDescription()
@@ -95,7 +114,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
 
         description.isTransient = isTransient
         description.valueTransformerName = valueTransformerName
-        description.name = description.name.isEmpty ? defaultName : description.name
+        description.name = defaultName
         description.defaultValue = defaultValue
         description.versionHashModifier = description.name
         description.isOptional = O.isOptional
@@ -108,11 +127,12 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         return description
     }
     
-    public convenience init(wrappedValue: PropertyValue) {
-        self.init(wrappedValue: wrappedValue, options: [])
+    public convenience init(wrappedValue: PropertyValue, _ name: String) {
+        self.init(wrappedValue: wrappedValue, name, options: [])
     }
     
-    public init(wrappedValue: PropertyValue, options: PropertyConfiguration) {
+    public init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
+        self.defaultName = name
         self.defaultValue = wrappedValue
         self.configuration = options
     }

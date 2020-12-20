@@ -44,7 +44,7 @@ public protocol RelationshipProtocol: NullableProperty {
     var configuration: PropertyConfiguration { get set }
     var inverseKeyPath: AnyKeyPath! { get set }
     
-    init<R: RelationshipProtocol>(inverse: KeyPath<Destination, R>, options: PropertyConfiguration) where R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping
+    init<R: RelationshipProtocol>(_ name: String, inverse: KeyPath<Destination, R>, options: PropertyConfiguration) where R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping
 }
 
 // MARK: - EntityRelationShipType
@@ -129,13 +129,30 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     
     public var wrappedValue: PropertyValue {
         get {
-            R.convert(value: proxy!.getValue(key: description.name))
+            R.convert(value: proxy!.getValue(key: defaultName))
         }
         set {            
             proxy.setValue(
-                R.convert(value: newValue, with: proxy!.getValue(key: description.name)),
-                key: description.name
+                R.convert(value: newValue, with: proxy!.getValue(key: defaultName)),
+                key: defaultName
             )
+        }
+    }
+    
+    public static subscript<EnclosingSelf: HashableEntity>(
+        _enclosingInstance observed: EnclosingSelf,
+        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, PropertyValue>,
+        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Relationship<O, I, R>>
+    ) -> PropertyValue {
+        get {
+            let property = observed[keyPath: storageKeyPath]
+            property.proxy = property.proxy ?? ReadWritePropertyProxy(rawObject: observed)
+            return property.wrappedValue
+        }
+        set {
+            let property = observed[keyPath: storageKeyPath]
+            property.proxy = property.proxy ?? ReadWritePropertyProxy(rawObject: observed)
+            observed[keyPath: storageKeyPath].wrappedValue = newValue
         }
     }
 
@@ -153,19 +170,23 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     
     public var propertyCacheKey: String = ""
     
-    public convenience init(wrappedValue: PropertyValue) {
-        self.init()
+    public convenience init(wrappedValue: PropertyValue, _ name: String) {
+        self.init(name)
     }
     
-    public init() { }
+    public init(_ name: String) {
+        defaultName = name
+    }
     
-    public init<R>(inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
+    public init<R>(_ name: String, inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
         where R: RelationshipProtocol, R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping {
+        self.defaultName = name
         self.inverseKeyPath = inverse
         self.configuration = options
     }
     
-    public init(options: PropertyConfiguration) {
+    public init(_ name: String, options: PropertyConfiguration) {
+        self.defaultName = name
         self.configuration = options
     }
     
@@ -176,7 +197,7 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
 
         description.isOptional = O.isOptional
         description.isTransient = isTransient
-        description.name = description.name.isEmpty ? defaultName : description.name
+        description.name = defaultName
         description.userInfo = description.userInfo ?? [:]
         description.userInfo?[UserInfoKey.relationshipDestination] = Destination.entityCacheKey
         description.maxCount = Mapping.resolveMaxCount(description.maxCount)

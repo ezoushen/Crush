@@ -14,8 +14,8 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
         
     var property: Property!
     
-    required public init() {
-        property = Property()
+    required public init(_ name: String) {
+        property = Property(name)
     }
     
     public typealias PredicateValue = Property.PredicateValue
@@ -52,25 +52,16 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
     
     public var wrappedValue: PropertyValue {
         get {
-            property.wrappedValue
+//            property.wrappedValue
+            fatalError()
         }
         set {
-            property.wrappedValue = newValue
+//            property.wrappedValue = newValue
         }
     }
     
     public var projectedValue: Temporary<Property> {
         self
-    }
-    
-    
-    public var proxy: PropertyProxy! {
-        get {
-            property.proxy
-        }
-        set {
-            property.proxy = newValue
-        }
     }
     
     public func emptyPropertyDescription() -> NSPropertyDescription {
@@ -82,18 +73,18 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
 }
 
 extension Temporary where Property: AttributeProtocol {
-    public convenience init(wrappedValue: PropertyValue, options: PropertyConfiguration) {
-        self.init()
+    public convenience init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
+        self.init(name)
         self.property.defaultValue = wrappedValue
         self.property.configuration = options
     }
 }
 
 extension Temporary where Property: RelationshipProtocol {
-    public convenience init<R: RelationshipProtocol>(inverse: KeyPath<Property.Destination, R>, options: PropertyConfiguration = [])
+    public convenience init<R: RelationshipProtocol>(_ name: String, inverse: KeyPath<Property.Destination, R>, options: PropertyConfiguration = [])
         where R.Destination == Property.Source, R.Source == Property.Destination,
         R.Mapping == Property.InverseMapping, R.InverseMapping == Property.Mapping {
-        self.init()
+        self.init(name)
         self.property.inverseKeyPath = inverse
         self.property.configuration = options
     }

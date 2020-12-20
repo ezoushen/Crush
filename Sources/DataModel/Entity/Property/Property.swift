@@ -33,7 +33,6 @@ public protocol MutablePropertyConfigurable: PropertyConfigurable {
 }
 
 public enum PropertyOption {
-    case name(String)
     case mapping(RootTracableKeyPathProtocol)
     case isIndexedBySpotlight(Bool)
     case validationPredicatesWithWarnings([(NSPredicate, String)])
@@ -62,7 +61,6 @@ extension PropertyOption: MutablePropertyConfigurable {
         case .isIndexedBySpotlight(let flag): description.isIndexedBySpotlight = flag
         case .validationPredicatesWithWarnings(let tuples):
             description.setValidationPredicates(tuples.map{$0.0}, withValidationWarnings: tuples.map{$0.1})
-        case .name(let name): description.name = name
         case .mapping(let keyPath):
             description.userInfo = (description.userInfo ?? [:])
             description.userInfo?[UserInfoKey.propertyMappingKeyPath] = keyPath
@@ -72,11 +70,8 @@ extension PropertyOption: MutablePropertyConfigurable {
 
 public protocol PropertyProtocol: AnyObject {
     var defaultName: String { get set }
-    var proxy: PropertyProxy! { get set }
     var propertyCacheKey: String { get set }
-    var anyHashable: AnyHashable { get }
     var entityObject: NeutralEntityObject? { get set }
-    var value: Any { get }
     
     func emptyPropertyDescription() -> NSPropertyDescription
 }
@@ -96,18 +91,7 @@ public protocol MutableProperty: PropertyProtocol {
     associatedtype PropertyValue: Hashable
     associatedtype PredicateValue
     
-    var wrappedValue: PropertyValue { get set }
-    init()
-}
-
-extension MutableProperty {
-    public var value: Any {
-        return wrappedValue
-    }
-    
-    public var anyHashable: AnyHashable {
-        AnyHashable(wrappedValue)
-    }
+    init(_ name: String)
 }
 
 public protocol NullableProperty: MutableProperty {

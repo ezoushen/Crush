@@ -57,6 +57,7 @@ extension Entity {
         let key = Self.entityCacheKey
         return _Shared.dummyObjects[key] as? Self ?? {
             let dummyObject = Self.init()
+            (dummyObject as? NeutralEntityObject)?.insertDefautCacheKey()
             _Shared.dummyObjects[key] = dummyObject
             return dummyObject
         }()
@@ -147,12 +148,12 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
     }
     
     public var contentHashValue: Int {
-        var hasher = Hasher()
-        for (property, _) in _allMirrors {
-            guard let value = property.value as? PropertyProtocol else { continue }
-            hasher.combine(value.anyHashable)
-        }
-        return hasher.finalize()
+        let names = rawObject.entity.attributesByName.keys.map { $0 }
+        return rawObject.dictionaryWithValues(forKeys: names)
+            .map { $0 }
+            .sorted { $0.key < $1.key }
+            .description
+            .hash
     }
     
     private lazy var _allMirrors: [(Mirror.Child, String)] = {
@@ -174,22 +175,12 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
         }
     }()
     
-    private lazy var proxy: PropertyProxy = ReadWritePropertyProxy.dummy()
-    
-    public override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?) {
-        super.init(entity: entity, insertInto: context)
-        proxy = ReadWritePropertyProxy(rawObject: self)
-        injectProxy()
-    }
-    
-    private func injectProxy() {
+    func insertDefautCacheKey() {
         _allMirrors
             .forEach { pair, key in
                 let (label, value) = pair
                 guard let property = value as? PropertyProtocol else  { return }
-                property.proxy = proxy
                 property.entityObject = self
-                property.defaultName = String(label?.dropFirst() ?? "")
                 property.propertyCacheKey = createPropertyCacheKey(domain: key, name: label!)
             }
     }
@@ -208,13 +199,11 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
                     return description
                 }
                 let description = property.emptyPropertyDescription()
-                description.name = description.name.isEmpty ? String(label.dropFirst()) : description.name
-                description.versionHashModifier = description.name
                 
                 if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
                     if mapping.fullPath.contains(".") {
                         description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
-                        description.userInfo?[UserInfoKey.propertyMappingDestination] = description.name
+                        description.userInfo?[UserInfoKey.propertyMappingDestination] = property.defaultName
                         description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
                         description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
                     } else {
@@ -260,13 +249,15 @@ extension NeutralEntityObject {
         // Setup related inverse relationship
         coordinator.getAndWait(entityKey, in: CacheType.inverseRelationship) { pairs in
             pairs.forEach { (keyPath, relationship) in
-                if let prop = object[keyPath: keyPath] as? PropertyProtocol,
-                    let description = prop.description as? NSRelationshipDescription {
-                    relationship.inverseRelationship = description
-                    
-                    if let flag = relationship.userInfo?[UserInfoKey.inverseUnidirectional] as? Bool, flag { return }
-                    
-                    description.inverseRelationship = relationship
+                if let prop = object[keyPath: keyPath] as? PropertyProtocol {
+                    prop.propertyCacheKey = object.createPropertyCacheKey(domain: entityKey, name: "_\(prop.defaultName)")
+                    if let description = prop.description as? NSRelationshipDescription {
+                        relationship.inverseRelationship = description
+                        
+                        if let flag = relationship.userInfo?[UserInfoKey.inverseUnidirectional] as? Bool, flag { return }
+                        
+                        description.inverseRelationship = relationship
+                    }
                 }
             }
         }
