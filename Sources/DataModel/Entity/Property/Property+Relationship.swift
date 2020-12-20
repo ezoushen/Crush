@@ -137,13 +137,13 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     ) -> PropertyValue {
         get {
             let property = observed[keyPath: storageKeyPath]
-            return R.convert(value: observed.getValue(key: property.defaultName))
+            return R.convert(value: observed.getValue(key: property.name))
         }
         set {
             let property = observed[keyPath: storageKeyPath]
             observed.setValue(
-                R.convert(value: newValue, with: observed.getValue(key: property.defaultName)),
-                key: property.defaultName
+                R.convert(value: newValue, with: observed.getValue(key: property.name)),
+                key: property.name
             )
         }
     }
@@ -152,7 +152,7 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
         self
     }
                 
-    public var defaultName: String = ""
+    public var name: String = ""
                 
     public var inverseKeyPath: AnyKeyPath!
     
@@ -165,18 +165,18 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     }
     
     public init(_ name: String) {
-        defaultName = name
+        self.name = name
     }
     
     public init<R>(_ name: String, inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
         where R: RelationshipProtocol, R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping {
-        self.defaultName = name
+        self.name = name
         self.inverseKeyPath = inverse
         self.configuration = options
     }
     
     public init(_ name: String, options: PropertyConfiguration) {
-        self.defaultName = name
+        self.name = name
         self.configuration = options
     }
     
@@ -187,7 +187,7 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
 
         description.isOptional = O.isOptional
         description.isTransient = isTransient
-        description.name = defaultName
+        description.name = name
         description.userInfo = description.userInfo ?? [:]
         description.userInfo?[UserInfoKey.relationshipDestination] = Destination.entityCacheKey
         description.maxCount = Mapping.resolveMaxCount(description.maxCount)

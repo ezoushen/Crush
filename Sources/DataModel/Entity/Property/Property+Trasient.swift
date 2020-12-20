@@ -23,12 +23,12 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
     public typealias PropertyOption = Property.PropertyOption
     public typealias Nullability = Property.Nullability
 
-    public var defaultName: String {
+    public var name: String {
         get {
-            property.defaultName
+            property.name
         }
         set {
-            property.defaultName = newValue
+            property.name = newValue
         }
     }
     

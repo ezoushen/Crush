@@ -202,7 +202,7 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
                 if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
                     if mapping.fullPath.contains(".") {
                         description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
-                        description.userInfo?[UserInfoKey.propertyMappingDestination] = property.defaultName
+                        description.userInfo?[UserInfoKey.propertyMappingDestination] = property.name
                         description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
                         description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
                     } else {
@@ -249,7 +249,7 @@ extension NeutralEntityObject {
         coordinator.getAndWait(entityKey, in: CacheType.inverseRelationship) { pairs in
             pairs.forEach { (keyPath, relationship) in
                 if let prop = object[keyPath: keyPath] as? PropertyProtocol {
-                    prop.propertyCacheKey = object.createPropertyCacheKey(domain: entityKey, name: "_\(prop.defaultName)")
+                    prop.propertyCacheKey = object.createPropertyCacheKey(domain: entityKey, name: "_\(prop.name)")
                     if let description = prop.description as? NSRelationshipDescription {
                         relationship.inverseRelationship = description
                         

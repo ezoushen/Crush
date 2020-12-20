@@ -73,11 +73,11 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     ) -> PropertyValue {
         get {
             let property = observed[keyPath: storageKeyPath]
-            return FieldType.convert(value: observed.getValue(key: property.defaultName))
+            return FieldType.convert(value: observed.getValue(key: property.name))
         }
         set {
             let property = observed[keyPath: storageKeyPath]
-            observed.setValue(FieldType.convert(value: newValue), key: property.defaultName)
+            observed.setValue(FieldType.convert(value: newValue), key: property.name)
         }
     }
     
@@ -89,7 +89,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     
     public var defaultValue: Any? = nil
 
-    public var defaultName: String = ""
+    public var name: String = ""
         
     public var configuration: PropertyConfiguration = []
     
@@ -98,7 +98,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     public weak var entityObject: NeutralEntityObject?
     
     public init(_ name: String) {
-        self.defaultName = name
+        self.name = name
     }
     
     public func emptyPropertyDescription() -> NSPropertyDescription {
@@ -108,7 +108,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
 
         description.isTransient = isTransient
         description.valueTransformerName = valueTransformerName
-        description.name = defaultName
+        description.name = name
         description.defaultValue = defaultValue
         description.versionHashModifier = description.name
         description.isOptional = O.isOptional
@@ -126,7 +126,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     }
     
     public init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
-        self.defaultName = name
+        self.name = name
         self.defaultValue = wrappedValue
         self.configuration = options
     }

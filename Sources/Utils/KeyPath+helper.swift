@@ -89,7 +89,7 @@ extension KeyPath: Expressible where Root: RuntimeObject {
     
     private var stringValueAsEntityObject: String {
         let dummy = (Root.self as! Entity.Type).dummy()
-        return ((dummy[keyPath: self as AnyKeyPath] as? PropertyProtocol)?.defaultName)!
+        return ((dummy[keyPath: self as AnyKeyPath] as? PropertyProtocol)?.name)!
     }
     
     private var stringValueAsNSManagedObject: String {
@@ -108,7 +108,7 @@ extension KeyPath: RootTracableKeyPathProtocol where Root: NeutralEntityObject, 
     
     public var fullPath: String {
         let dummy = Root.dummy()
-        return dummy[keyPath: self].defaultName
+        return dummy[keyPath: self].name
     }
 }
 

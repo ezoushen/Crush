@@ -95,7 +95,7 @@ extension ReadOnly {
     public func observe<T: NullableProperty & ObservableProtocol>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false)
     -> AnyPublisher<T.PropertyValue, Never>
     where T.PropertyValue == T.ObservableType.RuntimeObjectValue {
-        let name = self.value[keyPath: keyPath].defaultName
+        let name = self.value[keyPath: keyPath].name
         return KVOPublisher<NSManagedObject, T.ObservableType.ManagedObjectValue>(
             subject: value.rawObject,
             keyPath: name,
