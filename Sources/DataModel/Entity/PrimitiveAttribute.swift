@@ -37,10 +37,11 @@ public protocol PredicateEquatable {
 
 public protocol PredicateComparable: PredicateEquatable { }
 
-public protocol FieldAttribute: FieldProtocol, FieldConvertible { }
+public protocol FieldAttribute: FieldProtocol, FieldConvertible
+where RuntimeObjectValue == Self? { }
 
 public protocol PrimitiveAttribute: FieldAttribute
-where ManagedObjectValue == Self?, RuntimeObjectValue == Self? { }
+where ManagedObjectValue == Self? { }
 
 public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable {
     
@@ -88,14 +89,6 @@ extension CodableProperty {
 }
 
 extension FieldAttribute
-where RuntimeObjectValue == ManagedObjectValue {
-    @inline(__always)
-    public static func convert(value: Self) -> Self {
-        value
-    }
-}
-
-extension PrimitiveAttribute
 where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
     @inline(__always)
     public static func convert(value: Self?) -> Self? {
