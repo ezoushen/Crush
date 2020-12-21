@@ -22,6 +22,7 @@ public protocol Entity: RuntimeObject, Field {
     static var isAbstract: Bool { get }
     static var renamingIdentifier: String? { get }
     static var entityCacheKey: String { get }
+    static dynamic func getKeyPathString(_ keyPath: AnyKeyPath) -> String?
     
     init()
     init(context: NSManagedObjectContext)
@@ -193,7 +194,10 @@ extension Entity {
 }
 
 open class NeutralEntityObject: NSManagedObject, HashableEntity {
-
+    open class dynamic func getKeyPathString(_ keyPath: AnyKeyPath) -> String? {
+        return nil
+    }
+    
     public class var isAbstract: Bool {
         return false
     }
