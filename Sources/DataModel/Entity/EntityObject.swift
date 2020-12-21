@@ -11,9 +11,6 @@ import CoreData
 fileprivate enum _Shared {
     @ThreadSafe
     static var dummyObjects: [String: RuntimeObject] = [:]
-    
-    @ThreadSafe
-    static var overrideCacheKeyDict: [String: String] = [:]
 }
 
 public protocol RuntimeObject: AnyObject {
@@ -22,7 +19,6 @@ public protocol RuntimeObject: AnyObject {
 
 public protocol Entity: RuntimeObject, Field {
     static func entityDescription() -> NSEntityDescription
-    static func setOverrideCacheKey(for type: Entity.Type, key: String)
     static var isAbstract: Bool { get }
     static var renamingIdentifier: String? { get }
     static var entityCacheKey: String { get }
@@ -53,19 +49,11 @@ extension Entity {
         }()
     }
     
-    public static func setOverrideCacheKey(for type: Entity.Type, key: String) {
-        _Shared.overrideCacheKeyDict[type.defaultCacheKey] = key
-    }
-
     public static var entityCacheKey: String {
-        _Shared.overrideCacheKeyDict[defaultCacheKey] ?? defaultCacheKey
-    }
-    
-    static var defaultCacheKey: String {
         String(reflecting: Self.self)
     }
     
-    static func createPropertyCacheKey(domain: String, name: String) -> String {
+    static func createPropertyCacheKey(domain: String = entityCacheKey, name: String) -> String {
         "\(domain).\(name)"
     }
     
@@ -119,7 +107,7 @@ extension Entity {
             indexChildren.forEach { (label, value) in
                 guard let value = value as? ValidationProtocol,
                     let property = (object[keyPath: value.anyKeyPath] as? PropertyProtocol),
-                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(domain: Self.entityCacheKey, name: property.name), in: CacheType.property)
+                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(name: property.name), in: CacheType.property)
                 else { return }
                 
                 var warnings = description.validationWarnings
@@ -283,7 +271,7 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
                 
                 func registerAllProperties(description: NSEntityDescription) {
                     description.propertiesByName.forEach {
-                        coordinator.set(createPropertyCacheKey(domain: entityCacheKey, name: $0.value.name), value: $0.value, in: CacheType.property)
+                        coordinator.set(createPropertyCacheKey(name: $0.value.name), value: $0.value, in: CacheType.property)
                     }
                     
                     guard let superentity = description.superentity else {

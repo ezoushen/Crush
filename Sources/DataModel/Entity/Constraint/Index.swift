@@ -102,7 +102,7 @@ extension TargetedIndexProtocol {
         }.compactMap{ (index, keyPath) -> (IndexElementProtocol, NSPropertyDescription)? in
             let coordinator = CacheCoordinator.shared
             guard let property = object[keyPath: keyPath] as? PropertyProtocol,
-                  let description = coordinator.get(R.createPropertyCacheKey(domain: R.entityCacheKey, name: property.name), in: CacheType.property) else { return nil }
+                  let description = coordinator.get(R.createPropertyCacheKey(name: property.name), in: CacheType.property) else { return nil }
             return (index, description)
         }.map{ (index, description) -> NSFetchIndexElementDescription in
             return index.fetchIndexElementDescription(property: description)
