@@ -33,7 +33,7 @@ public protocol MutablePropertyConfigurable: PropertyConfigurable {
 }
 
 public enum PropertyOption {
-    case mapping(RootTracableKeyPathProtocol)
+    case mapping(AnyKeyPath)
     case isIndexedBySpotlight(Bool)
     case validationPredicatesWithWarnings([(NSPredicate, String)])
 }
@@ -81,7 +81,7 @@ extension PropertyProtocol {
 
 public protocol MutableProperty: PropertyProtocol {
     associatedtype PropertyOption: MutablePropertyConfigurable
-    associatedtype PropertyValue: Hashable
+    associatedtype PropertyValue
     associatedtype PredicateValue
     
     init(_ name: String)
@@ -89,4 +89,8 @@ public protocol MutableProperty: PropertyProtocol {
 
 public protocol NullableProperty: MutableProperty {
     associatedtype Nullability: Crush.Nullability
+    associatedtype FieldConvertor: FieldConvertible
+    where FieldConvertor.RuntimeObjectValue == PropertyValue
+    
+    var isAttribute: Bool { get }
 }

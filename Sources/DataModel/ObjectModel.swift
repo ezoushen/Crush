@@ -11,7 +11,7 @@ import CoreData
 public protocol ObjectModel: AnyObject {
     var rawModel: NSManagedObjectModel! { get }
     var migration: Migration? { get }
-    var previousModel: ObjectModel? { get }    
+    var previousModel: ObjectModel? { get }
 }
 
 public final class CoreDataModel: ObjectModel {

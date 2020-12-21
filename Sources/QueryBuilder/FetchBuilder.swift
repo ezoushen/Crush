@@ -110,7 +110,7 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
         return self
     }
     
-    public func groupAndCount<T>(col name: T) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> where T : TracableKeyPathProtocol, T.Root == Target {
+    public func groupAndCount<V>(col name: KeyPath<Target, V>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let keypathExp = NSExpression(forKeyPath: name.fullPath)
         let countDesc = NSExpressionDescription()
         countDesc.name = "count"
@@ -124,13 +124,13 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
         return .init(config: newConfig, context: _context)
     }
     
-    public func ascendingSort<T>(_ keyPath: T, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
+    public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
         let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: true, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
     
-    public func descendingSort<T>(_ keyPath: T, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> where T : TracableKeyPathProtocol, T.Root == Target {
+    public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
         let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: false, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
@@ -148,22 +148,12 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
         return self
     }
     
-    public func map<T: TracableKeyPathProtocol>(_ keyPath: T) -> PartialFetchBuilder<Target, Dictionary<String, Any>, T.Value.PropertyValue> {
+    public func map<V>(_ keyPath: KeyPath<Target, V>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, V> {
         let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }
     
-    public func map<T: TracableKeyPathProtocol>(_ keyPaths: [T]) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
-        let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
-        return .init(config: newConfig, context: _context)
-    }
-    
-    public func map<E: NSManagedObject, T: FieldProtocol>(_ keyPath: KeyPath<E, T>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, T> {
-        let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
-        return .init(config: newConfig, context: _context)
-    }
-    
-    public func map<E: NSManagedObject, T: FieldProtocol>(_ keyPaths: [KeyPath<E, T>]) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
+    public func map<V>(_ keyPaths: [KeyPath<Target, V>]) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context)
     }

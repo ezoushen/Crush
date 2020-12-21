@@ -8,11 +8,6 @@
 
 import CoreData
 
-fileprivate enum _Shared {
-    @ThreadSafe
-    static var dummyObjects: [String: RuntimeObject] = [:]
-}
-
 public protocol RuntimeObject: AnyObject {
     var rawObject: NSManagedObject { get }
 }
@@ -22,7 +17,6 @@ public protocol Entity: RuntimeObject, Field {
     static var isAbstract: Bool { get }
     static var renamingIdentifier: String? { get }
     static var entityCacheKey: String { get }
-    static dynamic func getKeyPathString(_ keyPath: AnyKeyPath) -> String?
     
     init()
     init(context: NSManagedObjectContext)
@@ -41,15 +35,6 @@ extension RuntimeObject {
 }
 
 extension Entity {
-    internal static func dummy() -> Self {
-        let key = Self.entityCacheKey
-        return _Shared.dummyObjects[key] as? Self ?? {
-            let dummyObject = Self.init()
-            _Shared.dummyObjects[key] = dummyObject
-            return dummyObject
-        }()
-    }
-    
     public static var entityCacheKey: String {
         String(reflecting: Self.self)
     }
@@ -101,14 +86,13 @@ extension Entity {
                     return constraint.uniquenessConstarints
                 }
             ).map{ $0 as [Any]}
-            
+
             allIndexes.append(contentsOf: indexes)
             allUniquenessConstraints.append(contentsOf: uniquenessConstarints)
             
             indexChildren.forEach { (label, value) in
                 guard let value = value as? ValidationProtocol,
-                    let property = (object[keyPath: value.anyKeyPath] as? PropertyProtocol),
-                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(name: property.name), in: CacheType.property)
+                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(name: value.anyKeyPath.fullPath), in: CacheType.property)
                 else { return }
                 
                 var warnings = description.validationWarnings
@@ -194,10 +178,6 @@ extension Entity {
 }
 
 open class NeutralEntityObject: NSManagedObject, HashableEntity {
-    open class dynamic func getKeyPathString(_ keyPath: AnyKeyPath) -> String? {
-        return nil
-    }
-    
     public class var isAbstract: Bool {
         return false
     }

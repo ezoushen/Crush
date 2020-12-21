@@ -22,7 +22,7 @@ protocol TargetedIndexProtocol: IndexProtocol {
 
 public protocol IndexElementProtocol {
     var isAscending: Bool { get }
-    var keyPath: AnyKeyPath? { get set }
+    var keyPath: String { get set }
     var type: NSFetchIndexElementType { get set }
     func fetchIndexElementDescription(property: NSPropertyDescription) -> NSFetchIndexElementDescription
 }
@@ -41,12 +41,12 @@ public class IndexElement<Target: RuntimeObject>: IndexElementProtocol {
         fatalError("Do not use abstract directly")
     }
     
-    public var keyPath: AnyKeyPath?
+    public var keyPath: String
     
     public var type: NSFetchIndexElementType
     
-    public init<Value: NullableProperty>(_ keyPath: KeyPath<Target, Value>, type: NSFetchIndexElementType = .binary) {
-        self.keyPath = keyPath
+    public init<Value: Field>(_ keyPath: ReferenceWritableKeyPath<Target, Value>, type: NSFetchIndexElementType = .binary) {
+        self.keyPath = keyPath.fullPath
         self.type = type
     }
 }
@@ -96,13 +96,9 @@ public struct FetchIndex<Target: RuntimeObject>: TargetedIndexProtocol {
 
 extension TargetedIndexProtocol {
     func fetchIndexDescription<R: Entity>(name: String, in object: R) -> NSFetchIndexDescription {
-        let indcies = indexes.compactMap{ index -> (IndexElementProtocol, AnyKeyPath)? in
-            guard let keyPath = index.keyPath else { return nil }
-            return (index, keyPath)
-        }.compactMap{ (index, keyPath) -> (IndexElementProtocol, NSPropertyDescription)? in
+        let indcies = indexes.compactMap{ index -> (IndexElementProtocol, NSPropertyDescription)? in
             let coordinator = CacheCoordinator.shared
-            guard let property = object[keyPath: keyPath] as? PropertyProtocol,
-                  let description = coordinator.get(R.createPropertyCacheKey(name: property.name), in: CacheType.property) else { return nil }
+            guard let description = coordinator.get(R.createPropertyCacheKey(name: index.keyPath), in: CacheType.property) else {  return nil }
             return (index, description)
         }.map{ (index, description) -> NSFetchIndexElementDescription in
             return index.fetchIndexElementDescription(property: description)

@@ -11,8 +11,6 @@ import Foundation
 
 public protocol Field { }
 
-public protocol RuntimeField { }
-
 public protocol FieldProtocol: Field {
     static var nativeType: NSAttributeType { get }
 }
@@ -23,6 +21,14 @@ public protocol FieldConvertible {
     
     static func convert(value: ManagedObjectValue) -> RuntimeObjectValue
     static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
+    static func convert(value: RuntimeObjectValue, with: @autoclosure () -> ManagedObjectValue) -> ManagedObjectValue
+}
+
+extension FieldConvertible {
+    @inline(__always)
+    public static func convert(value: RuntimeObjectValue, with: @autoclosure () -> ManagedObjectValue) -> ManagedObjectValue {
+        convert(value: value)
+    }
 }
 
 public protocol PredicateEquatable {
@@ -31,11 +37,10 @@ public protocol PredicateEquatable {
 
 public protocol PredicateComparable: PredicateEquatable { }
 
-public protocol FieldAttribute: FieldProtocol, FieldConvertible
-where RuntimeObjectValue == Self? { }
+public protocol FieldAttribute: FieldProtocol, FieldConvertible { }
 
 public protocol PrimitiveAttribute: FieldAttribute
-where ManagedObjectValue == Self? { }
+where ManagedObjectValue == Self?, RuntimeObjectValue == Self? { }
 
 public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable {
     
@@ -83,6 +88,14 @@ extension CodableProperty {
 }
 
 extension FieldAttribute
+where RuntimeObjectValue == ManagedObjectValue {
+    @inline(__always)
+    public static func convert(value: Self) -> Self {
+        value
+    }
+}
+
+extension PrimitiveAttribute
 where RuntimeObjectValue == Self?, RuntimeObjectValue == ManagedObjectValue {
     @inline(__always)
     public static func convert(value: Self?) -> Self? {
@@ -178,9 +191,9 @@ extension RawRepresentable where Self: FieldAttribute {
     public typealias RuntimeObjectValue = Self?
 }
 
-extension Swift.Optional: RuntimeField where Wrapped: Field { }
+extension Swift.Optional: Field where Wrapped: Field { }
 
-extension Set: RuntimeField where Element: Field { }
+extension Set: Field where Element: Field { }
 
 #if os(iOS) || os(watchOS)
 import UIKit.UIImage
