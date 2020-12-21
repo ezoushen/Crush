@@ -57,10 +57,11 @@ extension AttributeProtocol {
 public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashable>: AttributeProtocol, ObservableProtocol {
     public typealias ObservableType = PredicateValue
     public typealias PredicateValue = FieldType
-    public typealias PropertyValue = FieldType?
+    public typealias PropertyValue = FieldType.RuntimeObjectValue
     public typealias Nullability = O
     public typealias PropertyOption = AttributeOption
-        
+    public typealias FieldConvertor = FieldType
+    
     @available(*, unavailable)
     public var wrappedValue: PropertyValue {
       get { fatalError("only works on instance properties of classes") }
@@ -86,6 +87,10 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         self
     }
         
+    public var isAttribute: Bool {
+        true
+    }
+    
     public var defaultValue: Any? = nil
 
     public var name: String = ""
@@ -96,6 +101,16 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         
     public init(_ name: String) {
         self.name = name
+    }
+    
+    public convenience init(wrappedValue: PropertyValue, _ name: String) {
+        self.init(wrappedValue: wrappedValue, name, options: [])
+    }
+    
+    public init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
+        self.name = name
+        self.defaultValue = wrappedValue
+        self.configuration = options
     }
     
     public func emptyPropertyDescription() -> NSPropertyDescription {
@@ -116,15 +131,5 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         }
         
         return description
-    }
-    
-    public convenience init(wrappedValue: PropertyValue, _ name: String) {
-        self.init(wrappedValue: wrappedValue, name, options: [])
-    }
-    
-    public init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
-        self.name = name
-        self.defaultValue = wrappedValue
-        self.configuration = options
     }
 }

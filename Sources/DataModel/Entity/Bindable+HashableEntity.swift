@@ -17,7 +17,7 @@ public struct Bindable<E: HashableEntity> {
         self.entity = entity
     }
     
-    public subscript<Subject: RuntimeField>(dynamicMember keyPath: ReferenceWritableKeyPath<E, Subject>) -> Binding<Subject> {
+    public subscript<Subject: Field>(dynamicMember keyPath: ReferenceWritableKeyPath<E, Subject>) -> Binding<Subject> {
         Binding<Subject>(
             get: { self.entity[dynamicMember: keyPath] },
             set: { self.entity[dynamicMember: keyPath] = $0 }

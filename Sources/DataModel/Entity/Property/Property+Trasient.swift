@@ -22,7 +22,12 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
     public typealias PropertyValue = Property.PropertyValue
     public typealias PropertyOption = Property.PropertyOption
     public typealias Nullability = Property.Nullability
-
+    public typealias FieldConvertor = Property.FieldConvertor
+    
+    public var isAttribute: Bool {
+        property.isAttribute
+    }
+    
     public var name: String {
         get {
             property.name
@@ -32,13 +37,27 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
         }
     }
     
+    @available(*, unavailable)
     public var wrappedValue: PropertyValue {
+      get { fatalError("only works on instance properties of classes") }
+      set { fatalError("only works on instance properties of classes") }
+    }
+    
+    public static subscript<EnclosingSelf: HashableEntity>(
+        _enclosingInstance observed: EnclosingSelf,
+        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, PropertyValue>,
+        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Temporary<Property>>
+    ) -> PropertyValue {
         get {
-//            property.wrappedValue
-            fatalError()
+            let property = observed[keyPath: storageKeyPath]
+            return FieldConvertor.convert(value: observed.getValue(key: property.name))
         }
         set {
-//            property.wrappedValue = newValue
+            let property = observed[keyPath: storageKeyPath]
+            observed.setValue(
+                FieldConvertor.convert(value: newValue, with: observed.getValue(key: property.name)),
+                key: property.name
+            )
         }
     }
     

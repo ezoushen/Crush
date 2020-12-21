@@ -52,7 +52,6 @@ public protocol RelationMapping: FieldConvertible {
     associatedtype EntityType: HashableEntity
     
     static func resolveMaxCount(_ amount: Int) -> Int
-    static func convert(value: RuntimeObjectValue, with: ManagedObjectValue) -> ManagedObjectValue
 }
 
 extension RelationMapping {
@@ -79,11 +78,6 @@ public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertib
     public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
         return value?.rawObject
     }
-    
-    @inline(__always)
-    public static func convert(value: RuntimeObjectValue, with: ManagedObjectValue) -> ManagedObjectValue {
-        return convert(value: value)
-    }
 }
 
 public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
@@ -105,7 +99,8 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue, with nsset: ManagedObjectValue) -> ManagedObjectValue {
+    public static func convert(value: RuntimeObjectValue, with: @autoclosure () -> ManagedObjectValue) -> ManagedObjectValue {
+        let nsset = with()
         let mutableSet = nsset?.mutableCopy() as? NSMutableSet ?? NSMutableSet()
         mutableSet.removeAllObjects()
         mutableSet.union(Set(value.map{ $0.rawObject }))
@@ -124,10 +119,10 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     public typealias Destination = R.EntityType
     public typealias Nullability = O
     public typealias PropertyOption = RelationshipOption
-    public typealias Value = PropertyValue
+    public typealias FieldConvertor = R
     
     @available(*, unavailable)
-    public var wrappedValue: Value {
+    public var wrappedValue: PropertyValue {
       get { fatalError("only works on instance properties of classes") }
       set { fatalError("only works on instance properties of classes") }
     }
@@ -152,6 +147,10 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
 
     public var projectedValue: Relationship<Nullability, InverseMapping, Mapping> {
         self
+    }
+    
+    public var isAttribute: Bool {
+        false
     }
                 
     public var name: String = ""

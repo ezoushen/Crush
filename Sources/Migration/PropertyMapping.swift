@@ -98,7 +98,7 @@ struct AttributeMapping<T: Entity, S: Entity>: PropertyMappingProtocol {
         destinationKeyPath = destination
     }
     
-    init<D: TracableKeyPathProtocol, W: TracableKeyPathProtocol>(fromKeyPath: D, toKeyPath: W) where D.Root == T, W.Root == S, D.Value: AttributeProtocol, W.Value: AttributeProtocol {
+    init<D: Field, W: Field>(fromKeyPath: KeyPath<T, D>, toKeyPath: KeyPath<S, W>) {
         sourceKeyPath = fromKeyPath.fullPath
         destinationKeyPath = toKeyPath.fullPath
     }
@@ -125,8 +125,7 @@ struct RelationshipMapping<T: Entity, S: Entity>: PropertyMappingProtocol {
         destinationKeyPath = destination
     }
     
-    init<D: TracableKeyPathProtocol, W: TracableKeyPathProtocol>(fromKeyPath: D, toKeyPath: W) where D.Root == T, W.Root == S, D.Value: RelationshipProtocol, W.Value: RelationshipProtocol {
-        
+    init<D: Field, W: Field>(fromKeyPath: KeyPath<T, D>, toKeyPath: KeyPath<S, W>) {
         sourceKeyPath = fromKeyPath.fullPath
         destinationKeyPath = toKeyPath.fullPath
     }

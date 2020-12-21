@@ -8,11 +8,6 @@
 
 import CoreData
 
-fileprivate enum _Shared {
-    @ThreadSafe
-    static var dummyObjects: [String: RuntimeObject] = [:]
-}
-
 public protocol RuntimeObject: AnyObject {
     var rawObject: NSManagedObject { get }
 }
@@ -40,15 +35,6 @@ extension RuntimeObject {
 }
 
 extension Entity {
-    internal static func dummy() -> Self {
-        let key = Self.entityCacheKey
-        return _Shared.dummyObjects[key] as? Self ?? {
-            let dummyObject = Self.init()
-            _Shared.dummyObjects[key] = dummyObject
-            return dummyObject
-        }()
-    }
-    
     public static var entityCacheKey: String {
         String(reflecting: Self.self)
     }
@@ -100,14 +86,13 @@ extension Entity {
                     return constraint.uniquenessConstarints
                 }
             ).map{ $0 as [Any]}
-            
+
             allIndexes.append(contentsOf: indexes)
             allUniquenessConstraints.append(contentsOf: uniquenessConstarints)
             
             indexChildren.forEach { (label, value) in
                 guard let value = value as? ValidationProtocol,
-                    let property = (object[keyPath: value.anyKeyPath] as? PropertyProtocol),
-                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(name: property.name), in: CacheType.property)
+                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(name: value.anyKeyPath.fullPath), in: CacheType.property)
                 else { return }
                 
                 var warnings = description.validationWarnings
@@ -193,7 +178,6 @@ extension Entity {
 }
 
 open class NeutralEntityObject: NSManagedObject, HashableEntity {
-
     public class var isAbstract: Bool {
         return false
     }

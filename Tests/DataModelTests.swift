@@ -65,7 +65,7 @@ class DataModelTests: XCTestCase {
     
     func test_Transaction_objectOnMainContextShouldBeRefreshedAfterCommitted() {
         let person: V1.People.ReadOnly = try! sut.startTransaction().sync { context in
-            let people = context.create(entiy: V1.People.self)
+            let people = context.create(entity: V1.People.self)
             people.firstName = "first name"
             try context.commit()
             return people
