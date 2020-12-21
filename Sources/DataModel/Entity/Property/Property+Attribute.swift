@@ -61,9 +61,10 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     public typealias Nullability = O
     public typealias PropertyOption = AttributeOption
         
+    @available(*, unavailable)
     public var wrappedValue: PropertyValue {
-        get { fatalError() }
-        set { fatalError() }
+      get { fatalError("only works on instance properties of classes") }
+      set { fatalError("only works on instance properties of classes") }
     }
     
     public static subscript<EnclosingSelf: HashableEntity>(
@@ -84,9 +85,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     public var projectedValue: Attribute<O, FieldType> {
         self
     }
-    
-    private var proxy: PropertyProxy! = nil
-    
+        
     public var defaultValue: Any? = nil
 
     public var name: String = ""
@@ -94,9 +93,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     public var configuration: PropertyConfiguration = []
     
     public var propertyCacheKey: String = ""
-    
-    public weak var entityObject: NeutralEntityObject?
-    
+        
     public init(_ name: String) {
         self.name = name
     }

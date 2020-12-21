@@ -124,10 +124,12 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     public typealias Destination = R.EntityType
     public typealias Nullability = O
     public typealias PropertyOption = RelationshipOption
-        
-    public var wrappedValue: PropertyValue {
-        get { fatalError() }
-        set { fatalError() }
+    public typealias Value = PropertyValue
+    
+    @available(*, unavailable)
+    public var wrappedValue: Value {
+      get { fatalError("only works on instance properties of classes") }
+      set { fatalError("only works on instance properties of classes") }
     }
     
     public static subscript<EnclosingSelf: HashableEntity>(
