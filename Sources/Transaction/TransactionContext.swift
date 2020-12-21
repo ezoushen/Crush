@@ -15,7 +15,7 @@ public protocol RawContextProviderProtocol {
 }
 
 public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
-    func create<T: Entity>(entiy: T.Type) -> T
+    func create<T: Entity>(entity: T.Type) -> T
     func delete<T: Entity>(_ object: T)
     
     func commit() throws
@@ -120,11 +120,11 @@ extension TransactionContext where Self: RawContextProviderProtocol {
 }
 
 extension TransactionContext where Self: RawContextProviderProtocol {
-    public func create<T: Entity>(entiy: T.Type) -> T {
+    public func create<T: Entity>(entity: T.Type) -> T {
         var object: T!
         
         executionContext.performAndWait {
-            object = entiy.init(context: executionContext)
+            object = entity.init(context: executionContext)
         }
         
         return object
