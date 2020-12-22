@@ -20,6 +20,8 @@ public protocol Entity: RuntimeObject, Field {
     
     init()
     init(context: NSManagedObjectContext)
+    
+    func createProperties() -> [NSPropertyDescription]
 }
 
 public protocol HashableEntity: NSManagedObject ,Entity { }
@@ -35,12 +37,105 @@ extension RuntimeObject {
 }
 
 extension Entity {
+    private static func dummyDescription() -> NSEntityDescription {
+        let entity = NSEntityDescription()
+        entity.name = "DUMMY_ENTITY"
+        let property = NSAttributeDescription()
+        property.attributeType = .integer16AttributeType
+        property.defaultValue = 0
+        property.name = "DUMMY"
+        entity.properties = [property]
+        return entity
+    }
+    
     public static var entityCacheKey: String {
         String(reflecting: Self.self)
     }
     
     static func createPropertyCacheKey(domain: String = entityCacheKey, name: String) -> String {
         "\(domain).\(name)"
+    }
+    
+    public static func entityDescription() -> NSEntityDescription {
+        let coordinator = CacheCoordinator.shared
+        let entityKey = Self.entityCacheKey
+
+        if let description = coordinator.get(entityKey, in: CacheType.entity) {
+            return description
+        }
+        
+        let description = NSEntityDescription()
+        description.managedObjectClassName = NSStringFromClass(Self.self)
+        let object = Self.init()
+        let mirror = Mirror(reflecting: object)
+        print(object, type(of: object))
+        // Setup properties
+        let properties: [NSPropertyDescription] = object.createProperties()
+        
+        // Setup related inverse relationship
+        coordinator.getAndWait(entityKey, in: CacheType.inverseRelationship) { pairs in
+            pairs.forEach { (keyPath, relationship) in
+                if let prop = object[keyPath: keyPath] as? PropertyProtocol {
+                    let key = Self.createPropertyCacheKey(domain: entityKey, name: prop.name)
+                    if let description = coordinator.get(key, in: CacheType.property) as? NSRelationshipDescription {
+                        relationship.inverseRelationship = description
+                        
+                        if let flag = relationship.userInfo?[UserInfoKey.inverseUnidirectional] as? Bool, flag { return }
+                        
+                        description.inverseRelationship = relationship
+                    }
+                }
+            }
+        }
+        
+        description.name = String(describing: Self.self)
+        description.properties = properties
+        description.isAbstract = isAbstract
+        description.renamingIdentifier = renamingIdentifier
+        
+        // Setup relationship
+        coordinator.set(entityKey, value: description, in: CacheType.entity)
+        description.relationshipsByName.forEach { name, relationship in
+            guard let destinationKey = relationship.userInfo?[UserInfoKey.relationshipDestination] as? String else { return }
+            
+            if let inverseKey = relationship.userInfo?[UserInfoKey.inverseRelationship] as? AnyKeyPath,
+                let inverseType = relationship.userInfo?[UserInfoKey.relationshipDestination] as? String {
+                let arr = coordinator.get(inverseType, in: CacheType.inverseRelationship) ?? []
+                coordinator.set(inverseType, value: arr + [(inverseKey, relationship)], in: CacheType.inverseRelationship)
+            }
+            
+            coordinator.getAndWait(destinationKey, in: CacheType.entity) {
+                relationship.destinationEntity = $0
+            }
+        }
+        
+        // Setup parent entity
+        if let superMirror = mirror.superclassMirror,
+            superMirror.subjectType is Entity.Type,
+            superMirror.subjectType != NeutralEntityObject.self,
+            superMirror.subjectType != EntityObject.self,
+            superMirror.subjectType != AbstractEntityObject.self,
+            let superType = superMirror.subjectType as? Entity.Type {
+            coordinator.getAndWait(superType.entityCacheKey, in: CacheType.entity) { entity in
+                entity.subentities.append(description)
+                
+                func registerAllProperties(description: NSEntityDescription) {
+                    description.propertiesByName.forEach {
+                        coordinator.set(createPropertyCacheKey(name: $0.value.name), value: $0.value, in: CacheType.property)
+                    }
+                    
+                    guard let superentity = description.superentity else {
+                        return
+                    }
+                    
+                    registerAllProperties(description: superentity)
+                }
+                
+                registerAllProperties(description: entity)
+            }
+        }
+        
+        return description
     }
     
     static func createConstraints(description: NSEntityDescription) {
@@ -178,6 +273,14 @@ extension Entity {
 }
 
 open class NeutralEntityObject: NSManagedObject, HashableEntity {
+//    public required init(context: NSManagedObjectContext) {
+//        super.init(entity: Self.entity(), insertInto: context)
+//    }
+//
+//    public required init(entity: NSEntityDescription, insertInto: NSManagedObjectContext) {
+//        super.init(entity: entity, insertInto: insertInto)
+//    }
+    
     public class var isAbstract: Bool {
         return false
     }
@@ -188,88 +291,6 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
     
     public class var renamingIdentifier: String? {
         renamingClass?.fetchKey
-    }
-    
-    public class func entityDescription() -> NSEntityDescription {
-        let coordinator = CacheCoordinator.shared
-        let entityKey = Self.entityCacheKey
-
-        if let description = coordinator.get(entityKey, in: CacheType.entity) {
-            return description
-        }
-        
-        let description = NSEntityDescription()
-        description.managedObjectClassName = NSStringFromClass(Self.self)
-        let object = Self.init()
-        let mirror = Mirror(reflecting: object)
-        
-        // Setup properties
-        let properties: [NSPropertyDescription] = object.createProperties()
-        
-        // Setup related inverse relationship
-        coordinator.getAndWait(entityKey, in: CacheType.inverseRelationship) { pairs in
-            pairs.forEach { (keyPath, relationship) in
-                if let prop = object[keyPath: keyPath] as? PropertyProtocol {
-                    let key = Self.createPropertyCacheKey(domain: entityKey, name: prop.name)
-                    if let description = coordinator.get(key, in: CacheType.property) as? NSRelationshipDescription {
-                        relationship.inverseRelationship = description
-                        
-                        if let flag = relationship.userInfo?[UserInfoKey.inverseUnidirectional] as? Bool, flag { return }
-                        
-                        description.inverseRelationship = relationship
-                    }
-                }
-            }
-        }
-        
-        description.name = String(describing: Self.self)
-        description.properties = properties
-        description.isAbstract = isAbstract
-        description.renamingIdentifier = renamingIdentifier
-        
-        // Setup relationship
-        coordinator.set(entityKey, value: description, in: CacheType.entity)
-        description.relationshipsByName.forEach { name, relationship in
-            guard let destinationKey = relationship.userInfo?[UserInfoKey.relationshipDestination] as? String else { return }
-            
-            if let inverseKey = relationship.userInfo?[UserInfoKey.inverseRelationship] as? AnyKeyPath,
-                let inverseType = relationship.userInfo?[UserInfoKey.relationshipDestination] as? String {
-                let arr = coordinator.get(inverseType, in: CacheType.inverseRelationship) ?? []
-                coordinator.set(inverseType, value: arr + [(inverseKey, relationship)], in: CacheType.inverseRelationship)
-            }
-            
-            coordinator.getAndWait(destinationKey, in: CacheType.entity) {
-                relationship.destinationEntity = $0
-            }
-        }
-        
-        // Setup parent entity
-        if let superMirror = mirror.superclassMirror,
-            superMirror.subjectType is Entity.Type,
-            superMirror.subjectType != NeutralEntityObject.self,
-            superMirror.subjectType != EntityObject.self,
-            superMirror.subjectType != AbstractEntityObject.self,
-            let superType = superMirror.subjectType as? Entity.Type {
-            coordinator.getAndWait(superType.entityCacheKey, in: CacheType.entity) { entity in
-                entity.subentities.append(description)
-                
-                func registerAllProperties(description: NSEntityDescription) {
-                    description.propertiesByName.forEach {
-                        coordinator.set(createPropertyCacheKey(name: $0.value.name), value: $0.value, in: CacheType.property)
-                    }
-                    
-                    guard let superentity = description.superentity else {
-                        return
-                    }
-                    
-                    registerAllProperties(description: superentity)
-                }
-                
-                registerAllProperties(description: entity)
-            }
-        }
-        
-        return description
     }
     
     private lazy var _allMirrors: [(Mirror.Child, String)] = {
@@ -291,7 +312,7 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
         }
     }()
     
-    func createProperties() -> [NSPropertyDescription] {
+    public func createProperties() -> [NSPropertyDescription] {
         _allMirrors
             .compactMap { pair, key -> NSPropertyDescription? in
                 let (_, value) = pair
