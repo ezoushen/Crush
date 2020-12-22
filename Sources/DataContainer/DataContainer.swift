@@ -155,11 +155,11 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
 
 extension DataContainer {
     public func startTransaction() -> Transaction {
-        Transaction(context: backgroundTransactionContext())
+        Transaction(context: backgroundTransactionContext(), mergePolicy: mergePolicy)
     }
     
     public func startUiTransaction() -> Transaction {
-        Transaction(context: uiTransactionContext())
+        Transaction(context: uiTransactionContext(), mergePolicy: mergePolicy)
     }
     
     public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly {
