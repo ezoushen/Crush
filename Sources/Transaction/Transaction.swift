@@ -18,6 +18,11 @@ fileprivate func warning(_ condition: @autoclosure () -> Bool, _ message: @autoc
 public struct Transaction {
     internal let context: _TransactionContext
     public var enabledWarningForUnsavedChanges: Bool = true
+    public var mergePolicy: NSMergePolicy {
+        didSet {
+            context.executionContext.mergePolicy = mergePolicy
+        }
+    }
 }
 
 extension Transaction {
