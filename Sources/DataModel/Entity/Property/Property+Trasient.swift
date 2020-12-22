@@ -14,63 +14,55 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
         
     var property: Property!
     
-    required public init() {
-        property = Property()
+    required public init(_ name: String) {
+        property = Property(name)
     }
     
     public typealias PredicateValue = Property.PredicateValue
     public typealias PropertyValue = Property.PropertyValue
     public typealias PropertyOption = Property.PropertyOption
     public typealias Nullability = Property.Nullability
-
-    public var entityObject: NeutralEntityObject? {
+    public typealias FieldConvertor = Property.FieldConvertor
+    
+    public var isAttribute: Bool {
+        property.isAttribute
+    }
+    
+    public var name: String {
         get {
-            property.entityObject
+            property.name
         }
         set {
-            property.entityObject = newValue
+            property.name = newValue
         }
     }
     
-    public var defaultName: String {
-        get {
-            property.defaultName
-        }
-        set {
-            property.defaultName = newValue
-        }
-    }
-    
-    public var propertyCacheKey: String {
-        get {
-            property.propertyCacheKey
-        }
-        set {
-            property.propertyCacheKey = newValue
-        }
-    }
-    
+    @available(*, unavailable)
     public var wrappedValue: PropertyValue {
+      get { fatalError("only works on instance properties of classes") }
+      set { fatalError("only works on instance properties of classes") }
+    }
+    
+    public static subscript<EnclosingSelf: HashableEntity>(
+        _enclosingInstance observed: EnclosingSelf,
+        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, PropertyValue>,
+        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Temporary<Property>>
+    ) -> PropertyValue {
         get {
-            property.wrappedValue
+            let property = observed[keyPath: storageKeyPath]
+            return FieldConvertor.convert(value: observed.getValue(key: property.name))
         }
         set {
-            property.wrappedValue = newValue
+            let property = observed[keyPath: storageKeyPath]
+            observed.setValue(
+                FieldConvertor.convert(value: newValue, with: observed.getValue(key: property.name)),
+                key: property.name
+            )
         }
     }
     
     public var projectedValue: Temporary<Property> {
         self
-    }
-    
-    
-    public var proxy: PropertyProxy! {
-        get {
-            property.proxy
-        }
-        set {
-            property.proxy = newValue
-        }
     }
     
     public func emptyPropertyDescription() -> NSPropertyDescription {
@@ -82,18 +74,18 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
 }
 
 extension Temporary where Property: AttributeProtocol {
-    public convenience init(wrappedValue: PropertyValue, options: PropertyConfiguration) {
-        self.init()
+    public convenience init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
+        self.init(name)
         self.property.defaultValue = wrappedValue
         self.property.configuration = options
     }
 }
 
 extension Temporary where Property: RelationshipProtocol {
-    public convenience init<R: RelationshipProtocol>(inverse: KeyPath<Property.Destination, R>, options: PropertyConfiguration = [])
+    public convenience init<R: RelationshipProtocol>(_ name: String, inverse: KeyPath<Property.Destination, R>, options: PropertyConfiguration = [])
         where R.Destination == Property.Source, R.Source == Property.Destination,
         R.Mapping == Property.InverseMapping, R.InverseMapping == Property.Mapping {
-        self.init()
+        self.init(name)
         self.property.inverseKeyPath = inverse
         self.property.configuration = options
     }

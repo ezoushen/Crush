@@ -84,98 +84,6 @@ infix operator |~|
 // MATCHES operator
 infix operator |*|
 
-// MARK: - Operator Overloading for `RuntimeObject`
-
-extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, Value.PredicateValue: PredicateEquatable & Equatable {
-    public static func == (lhs: Self, rhs: Value.PredicateValue) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) == %@", rhs.predicateValue)
-    }
-    
-    public static func != (lhs: Self, rhs: Value.PredicateValue) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) != %@", rhs.predicateValue)
-    }
-    
-    public static func == (lhs: Self, rhs: Value.PredicateValue?) -> NSPredicate {
-        guard let value = rhs?.predicateValue else {
-            return NSPredicate(format: "\(lhs.fullPath) == NULL")
-        }
-        return NSPredicate(format: "\(lhs.fullPath) == %@", value)
-    }
-    
-    public static func != (lhs: Self, rhs: Value.PredicateValue?) -> NSPredicate {
-        guard let value = rhs?.predicateValue else {
-            return NSPredicate(format: "\(lhs.fullPath) != NULL")
-        }
-        return NSPredicate(format: "\(lhs.fullPath) != %@", value)
-    }
-}
-
-extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, Value.PredicateValue: PredicateComparable & Comparable {
-    public static func > (lhs: Self, rhs: Value.PredicateValue) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) > %@", rhs.predicateValue)
-    }
-    
-    public static func < (lhs: Self, rhs: Value.PredicateValue) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) < %@", rhs.predicateValue)
-    }
-    
-    public static func >= (lhs: Self, rhs: Value.PredicateValue) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) >= %@", rhs.predicateValue)
-    }
-    
-    public static func <= (lhs: Self, rhs: Value.PredicateValue) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) <= %@", rhs.predicateValue)
-    }
-    
-    public static func <> (lhs: Self, rhs: Range<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
-    }
-}
-
-extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty, Value.PredicateValue == String {
-    public static func |~ (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
-    }
-    
-    public static func ~| (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
-    }
-    
-    public static func <> (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) CONTAINS\(rhs.type.modifier) %@", rhs.string)
-    }
-    
-    public static func |~| (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) LIKE\(rhs.type.modifier) %@", rhs.string)
-    }
-    
-    public static func |*| (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) MATCHES\(rhs.type.modifier) %@", rhs.string)
-    }
-}
-
-extension TracableKeyPathProtocol where Root: Entity, Value: NullableProperty {
-    public static func |~ (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath).stringValue BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
-    }
-    
-    public static func ~| (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath).stringValue ENDSWITH\(rhs.type.modifier) %@", rhs.string)
-    }
-    
-    public static func <> (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath).stringValue CONTAINS\(rhs.type.modifier) %@", rhs.string)
-    }
-    
-    public static func |~| (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath).stringValue LIKE\(rhs.type.modifier) %@", rhs.string)
-    }
-    
-    public static func |*| (lhs: Self, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath).stringValue MATCHES\(rhs.type.modifier) %@", rhs.string)
-    }
-}
-
 extension KeyPath where Root: NeutralEntityObject, Value: NullableProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
     public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.fullPath) IN %@", NSSet(set: rhs))
@@ -188,27 +96,7 @@ extension KeyPath where Root: NeutralEntityObject, Value: NullableProperty, Valu
     }
 }
 
-extension TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullableProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
-    public static func <> (lhs: Self, rhs: Set<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) IN %@", NSSet(set: rhs))
-    }
-}
-
-extension TracableKeyPathProtocol where Root: NeutralEntityObject, Value: NullableProperty, Value.PredicateValue: PredicateEquatable & Equatable {
-    public static func <> (lhs: Self, rhs: Array<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) IN %@", NSArray(array: rhs))
-    }
-}
-
 extension KeyPath where Root: NSManagedObject, Value: PredicateEquatable & Equatable {
-    public static func == (lhs: KeyPath, rhs: Value) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) == %@", rhs.predicateValue)
-    }
-    
-    public static func != (lhs: KeyPath, rhs: Value) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) != %@", rhs.predicateValue)
-    }
-    
     public static func == (lhs: KeyPath, rhs: Value?) -> NSPredicate {
         guard let value = rhs?.predicateValue else {
             return NSPredicate(format: "\(lhs.stringValue) == NULL")
@@ -222,25 +110,31 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateEquatable & Equat
         }
         return NSPredicate(format: "\(lhs.stringValue) != %@", value)
     }
+    
+    public static func == (lhs: KeyPath, rhs: Value) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.stringValue) == %@", rhs.predicateValue)
+    }
+    
+    public static func != (lhs: KeyPath, rhs: Value) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.stringValue) != %@", rhs.predicateValue)
+    }
 }
 
 // MARK: - Operator Overloading for `NSManagedObject`
 
 extension KeyPath where Root: NSManagedObject {
     public static func == <E: PredicateEquatable & Equatable>(lhs: KeyPath, rhs: Value) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) == %@", rhs?.predicateValue ?? "NULL")
+        guard let value = rhs?.predicateValue else {
+            return NSPredicate(format: "\(lhs.stringValue) == NULL")
+        }
+        return NSPredicate(format: "\(lhs.stringValue) == %@", value)
     }
-    
+
     public static func != <E: PredicateEquatable & Equatable>(lhs: KeyPath, rhs: Value) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) != %@", rhs?.predicateValue ?? "NULL")
-    }
-    
-    public static func == <E: NSManagedObject>(lhs: KeyPath, rhs: Value) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) == NULL")
-    }
-    
-    public static func != <E: NSManagedObject>(lhs: KeyPath, rhs: Value) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) != NULL")
+        guard let value = rhs?.predicateValue else {
+            return NSPredicate(format: "\(lhs.stringValue) != NULL")
+        }
+        return NSPredicate(format: "\(lhs.stringValue) != %@", value)
     }
 }
 
@@ -260,19 +154,19 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateComparable & Comp
     public static func > (lhs: KeyPath, rhs: Value) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) > %@", rhs.predicateValue)
     }
-    
+
     public static func < (lhs: KeyPath, rhs: Value) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) < %@", rhs.predicateValue)
     }
-    
+
     public static func >= (lhs: KeyPath, rhs: Value) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) >= %@", rhs.predicateValue)
     }
-    
+
     public static func <= (lhs: KeyPath, rhs: Value) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) <= %@", rhs.predicateValue)
     }
-    
+
     public static func <> (lhs: KeyPath, rhs: Range<Value>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
@@ -282,19 +176,19 @@ extension KeyPath where Root: NSManagedObject, Value == String {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) CONTAINS\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) LIKE\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) MATCHES\(rhs.type.modifier) %@", rhs.string)
     }
@@ -316,19 +210,19 @@ extension KeyPath where Root: NSManagedObject {
     public static func > <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: E) -> NSPredicate where Value == Swift.Optional<E> {
         return NSPredicate(format: "\(lhs.stringValue) > %@", rhs.predicateValue)
     }
-    
+
     public static func < <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: E) -> NSPredicate where Value == Swift.Optional<E> {
         return NSPredicate(format: "\(lhs.stringValue) < %@", rhs.predicateValue)
     }
-    
+
     public static func >= <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: E) -> NSPredicate where Value == Swift.Optional<E> {
         return NSPredicate(format: "\(lhs.stringValue) >= %@", rhs.predicateValue)
     }
-    
+
     public static func <= <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: E) -> NSPredicate where Value == Swift.Optional<E> {
         return NSPredicate(format: "\(lhs.stringValue) <= %@", rhs.predicateValue)
     }
-    
+
     public static func <> <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: Range<E>) -> NSPredicate where Value == Swift.Optional<E> {
         return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
@@ -338,19 +232,19 @@ extension KeyPath where Root: NSManagedObject, Value == Swift.Optional<String> {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) CONTAINS\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) LIKE\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) MATCHES\(rhs.type.modifier) %@", rhs.string)
     }
@@ -360,19 +254,19 @@ extension KeyPath where Root: NSManagedObject {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue).stringValue BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue).stringValue ENDSWITH\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue).stringValue CONTAINS\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue).stringValue LIKE\(rhs.type.modifier) %@", rhs.string)
     }
-    
+
     public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue).stringValue MATCHES\(rhs.type.modifier) %@", rhs.string)
     }

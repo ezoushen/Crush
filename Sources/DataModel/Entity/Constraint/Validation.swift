@@ -13,7 +13,7 @@ public protocol ValidationProtocol {
 }
 
 @propertyWrapper
-public struct Validation<E: Entity, A: AttributeProtocol>: ValidationProtocol {
+public struct Validation<E: Entity, A: Field>: ValidationProtocol {
     public let keyPath: KeyPath<E, A>
     
     public var anyKeyPath: AnyKeyPath {

@@ -30,11 +30,11 @@ extension AttributeOption: MutablePropertyConfigurable {
     }
 }
 
-public protocol AttributeProtocol: NullableProperty where PredicateValue: FieldProtocol{
+public protocol AttributeProtocol: NullableProperty where PredicateValue: FieldAttribute & FieldConvertible {
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
     var configuration: PropertyConfiguration { get set }
-    init(wrappedValue: PropertyValue, options: PropertyConfiguration)
+    init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration)
 }
 
 extension AttributeProtocol {
@@ -57,36 +57,61 @@ extension AttributeProtocol {
 public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashable>: AttributeProtocol, ObservableProtocol {
     public typealias ObservableType = PredicateValue
     public typealias PredicateValue = FieldType
-    public typealias PropertyValue = FieldType?
+    public typealias PropertyValue = FieldType.RuntimeObjectValue
     public typealias Nullability = O
     public typealias PropertyOption = AttributeOption
+    public typealias FieldConvertor = FieldType
     
+    @available(*, unavailable)
     public var wrappedValue: PropertyValue {
+      get { fatalError("only works on instance properties of classes") }
+      set { fatalError("only works on instance properties of classes") }
+    }
+    
+    public static subscript<EnclosingSelf: HashableEntity>(
+        _enclosingInstance observed: EnclosingSelf,
+        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, PropertyValue>,
+        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Attribute<O, FieldType>>
+    ) -> PropertyValue {
         get {
-            FieldType.convert(value: proxy.getValue(key: description.name))
+            let property = observed[keyPath: storageKeyPath]
+            return FieldType.convert(value: observed.getValue(key: property.name))
         }
         set {
-            proxy.setValue(FieldType.convert(value: newValue), key: description.name)
+            let property = observed[keyPath: storageKeyPath]
+            observed.setValue(FieldType.convert(value: newValue), key: property.name)
         }
     }
     
     public var projectedValue: Attribute<O, FieldType> {
         self
     }
-    
-    public var proxy: PropertyProxy! = nil
+        
+    public var isAttribute: Bool {
+        true
+    }
     
     public var defaultValue: Any? = nil
 
-    public var defaultName: String = ""
+    public var name: String = ""
         
     public var configuration: PropertyConfiguration = []
     
     public var propertyCacheKey: String = ""
+        
+    public init(_ name: String) {
+        self.name = name
+    }
     
-    public weak var entityObject: NeutralEntityObject?
+    public convenience init(wrappedValue: PropertyValue, _ name: String) {
+        self.init(wrappedValue: wrappedValue, name, options: [])
+    }
     
-    public init() { }
+    public init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
+        self.name = name
+        self.defaultValue = wrappedValue
+        self.configuration = options
+    }
     
     public func emptyPropertyDescription() -> NSPropertyDescription {
         let description = NSAttributeDescription()
@@ -95,7 +120,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
 
         description.isTransient = isTransient
         description.valueTransformerName = valueTransformerName
-        description.name = description.name.isEmpty ? defaultName : description.name
+        description.name = name
         description.defaultValue = defaultValue
         description.versionHashModifier = description.name
         description.isOptional = O.isOptional
@@ -106,14 +131,5 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         }
         
         return description
-    }
-    
-    public convenience init(wrappedValue: PropertyValue) {
-        self.init(wrappedValue: wrappedValue, options: [])
-    }
-    
-    public init(wrappedValue: PropertyValue, options: PropertyConfiguration) {
-        self.defaultValue = wrappedValue
-        self.configuration = options
     }
 }

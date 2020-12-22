@@ -136,7 +136,7 @@ extension DataContainer {
 }
 
 extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
-    public func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, ManagedObject, T.ReadOnly> {
+    public func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, T, T.ReadOnly> {
         .init(config: .init(), context: startTransaction().context)
     }
     
@@ -155,15 +155,15 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
 
 extension DataContainer {
     public func startTransaction() -> Transaction {
-        Transaction(context: backgroundTransactionContext())
+        Transaction(context: backgroundTransactionContext(), mergePolicy: mergePolicy)
     }
     
     public func startUiTransaction() -> Transaction {
-        Transaction(context: uiTransactionContext())
+        Transaction(context: uiTransactionContext(), mergePolicy: mergePolicy)
     }
     
     public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly {
-        T.ReadOnly(T.init(objectID: objectID, in: uiContext))
+        T.ReadOnly(uiContext.object(with: objectID) as! T)
     }
     
     public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly] {
@@ -172,7 +172,7 @@ extension DataContainer {
     
     public func load<T: HashableEntity>(_ object: T.ReadOnly) -> T.ReadOnly {
         guard uiContext != object.value.rawObject.managedObjectContext else { return object }
-        let newObject = uiContext.receive(runtimeObject: object.value)
-        return T.ReadOnly(T.init(newObject))
+        let newObject = uiContext.receive(runtimeObject: object.value) as! T
+        return T.ReadOnly(newObject)
     }
 }

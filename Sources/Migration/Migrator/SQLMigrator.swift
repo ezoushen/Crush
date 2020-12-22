@@ -58,7 +58,6 @@ final public class SQLMigrator: DataMigrator {
     public func processStore(at url: URL) throws {
         defer {
             persistActiveDataModel(name: url.lastPathComponent)
-            activeVersion.model.updateCacheKey()
         }
         
         if let _ = try? indexOfCompatibleMom(at: url, models: [ activeVersion.model.rawModel ]) {

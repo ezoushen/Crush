@@ -14,7 +14,7 @@ struct UpdateConfig<Target: Entity>: RequestConfig {
 
 extension UpdateConfig {
     func createFetchRequest() -> NSBatchUpdateRequest {
-        let description = NSBatchUpdateRequest(entity: Target.entity())
+        let description = NSBatchUpdateRequest(entity: Target.entityDescription())
         description.predicate = predicate
         description.propertiesToUpdate = propertiesToUpdate
         description.resultType = .updatedObjectIDsResultType
