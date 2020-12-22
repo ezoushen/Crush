@@ -44,7 +44,7 @@ public protocol RelationshipProtocol: NullableProperty {
     var configuration: PropertyConfiguration { get set }
     var inverseKeyPath: AnyKeyPath! { get set }
     
-    init<R: RelationshipProtocol>(inverse: KeyPath<Destination, R>, options: PropertyConfiguration) where R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping
+    init<R: RelationshipProtocol>(_ name: String, inverse: KeyPath<Destination, R>, options: PropertyConfiguration) where R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping
 }
 
 // MARK: - EntityRelationShipType
@@ -52,18 +52,17 @@ public protocol RelationMapping: FieldConvertible {
     associatedtype EntityType: HashableEntity
     
     static func resolveMaxCount(_ amount: Int) -> Int
-    static func convert(value: RuntimeObjectValue, with: ManagedObjectValue) -> ManagedObjectValue
 }
 
 extension RelationMapping {
-    static func getEnity(from value: ManagedObject) -> EntityType {
-        EntityType.init(value)
+    static func getEnity(from value: NSManagedObject) -> EntityType {
+        value as! EntityType
     }
 }
 
 public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
     public typealias RuntimeObjectValue = EntityType?
-    public typealias ManagedObjectValue = ManagedObject?
+    public typealias ManagedObjectValue = NSManagedObject?
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return 1
@@ -77,18 +76,13 @@ public struct ToOne<EntityType: HashableEntity>: RelationMapping, FieldConvertib
     
     @inline(__always)
     public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        return value?.rawObject as? ManagedObject
-    }
-    
-    @inline(__always)
-    public static func convert(value: RuntimeObjectValue, with: ManagedObjectValue) -> ManagedObjectValue {
-        return convert(value: value)
+        return value?.rawObject
     }
 }
 
 public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConvertible {
     public typealias RuntimeObjectValue = Set<EntityType>
-    public typealias ManagedObjectValue = NSSet
+    public typealias ManagedObjectValue = NSSet?
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return amount == 1 ? 0 : amount
@@ -96,7 +90,7 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     
     @inline(__always)
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return Set(value.allObjects.compactMap{ getEnity(from: $0 as! ManagedObject) })
+        return Set(value?.allObjects.compactMap{ getEnity(from: $0 as! NSManagedObject) } ?? [])
     }
     
     @inline(__always)
@@ -105,8 +99,9 @@ public struct ToMany<EntityType: HashableEntity>: RelationMapping, FieldConverti
     }
     
     @inline(__always)
-    public static func convert(value: RuntimeObjectValue, with nsset: ManagedObjectValue) -> ManagedObjectValue {
-        let mutableSet = nsset.mutableCopy() as! NSMutableSet
+    public static func convert(value: RuntimeObjectValue, with: @autoclosure () -> ManagedObjectValue) -> ManagedObjectValue {
+        let nsset = with()
+        let mutableSet = nsset?.mutableCopy() as? NSMutableSet ?? NSMutableSet()
         mutableSet.removeAllObjects()
         mutableSet.union(Set(value.map{ $0.rawObject }))
         return mutableSet
@@ -124,17 +119,28 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     public typealias Destination = R.EntityType
     public typealias Nullability = O
     public typealias PropertyOption = RelationshipOption
+    public typealias FieldConvertor = R
     
-    public var proxy: PropertyProxy! = nil
-    
+    @available(*, unavailable)
     public var wrappedValue: PropertyValue {
+      get { fatalError("only works on instance properties of classes") }
+      set { fatalError("only works on instance properties of classes") }
+    }
+    
+    public static subscript<EnclosingSelf: HashableEntity>(
+        _enclosingInstance observed: EnclosingSelf,
+        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, PropertyValue>,
+        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Relationship<O, I, R>>
+    ) -> PropertyValue {
         get {
-            R.convert(value: proxy!.getValue(key: description.name))
+            let property = observed[keyPath: storageKeyPath]
+            return R.convert(value: observed.getValue(key: property.name))
         }
-        set {            
-            proxy.setValue(
-                R.convert(value: newValue, with: proxy!.getValue(key: description.name)),
-                key: description.name
+        set {
+            let property = observed[keyPath: storageKeyPath]
+            observed.setValue(
+                R.convert(value: newValue, with: observed.getValue(key: property.name)),
+                key: property.name
             )
         }
     }
@@ -142,10 +148,12 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     public var projectedValue: Relationship<Nullability, InverseMapping, Mapping> {
         self
     }
-            
-    public weak var entityObject: NeutralEntityObject?
     
-    public var defaultName: String = ""
+    public var isAttribute: Bool {
+        false
+    }
+                
+    public var name: String = ""
                 
     public var inverseKeyPath: AnyKeyPath!
     
@@ -153,19 +161,23 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     
     public var propertyCacheKey: String = ""
     
-    public convenience init(wrappedValue: PropertyValue) {
-        self.init()
+    public convenience init(wrappedValue: PropertyValue, _ name: String) {
+        self.init(name)
     }
     
-    public init() { }
+    public init(_ name: String) {
+        self.name = name
+    }
     
-    public init<R>(inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
+    public init<R>(_ name: String, inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
         where R: RelationshipProtocol, R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping {
+        self.name = name
         self.inverseKeyPath = inverse
         self.configuration = options
     }
     
-    public init(options: PropertyConfiguration) {
+    public init(_ name: String, options: PropertyConfiguration) {
+        self.name = name
         self.configuration = options
     }
     
@@ -176,7 +188,7 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
 
         description.isOptional = O.isOptional
         description.isTransient = isTransient
-        description.name = description.name.isEmpty ? defaultName : description.name
+        description.name = name
         description.userInfo = description.userInfo ?? [:]
         description.userInfo?[UserInfoKey.relationshipDestination] = Destination.entityCacheKey
         description.maxCount = Mapping.resolveMaxCount(description.maxCount)

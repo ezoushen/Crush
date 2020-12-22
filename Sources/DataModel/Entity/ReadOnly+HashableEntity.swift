@@ -15,19 +15,6 @@ public struct ReadOnly<Value: HashableEntity> {
         value.rawObject.objectID
     }
     
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-    public var objectWillChange: AnyPublisher<Void, Never> {
-        value.rawObject.objectWillChange
-            .map{ [unowned value = self.value] in value.contentHashValue }
-            .removeDuplicates()
-            .map{ _ in Void() }
-            .eraseToAnyPublisher()
-    }
-    
-    public init(_ rawObject: NSManagedObject) {
-        self.value = Value.init(rawObject)
-    }
-    
     public init(_ value: Value) {
         self.value = value
     }
@@ -99,7 +86,7 @@ extension ReadOnly {
     public func observe<T: NullableProperty & ObservableProtocol>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false)
     -> AnyPublisher<T.PropertyValue, Never>
     where T.PropertyValue == T.ObservableType.RuntimeObjectValue {
-        let name = self.value[keyPath: keyPath].description.name
+        let name = self.value[keyPath: keyPath].name
         return KVOPublisher<NSManagedObject, T.ObservableType.ManagedObjectValue>(
             subject: value.rawObject,
             keyPath: name,

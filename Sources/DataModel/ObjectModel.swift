@@ -12,8 +12,6 @@ public protocol ObjectModel: AnyObject {
     var rawModel: NSManagedObjectModel! { get }
     var migration: Migration? { get }
     var previousModel: ObjectModel? { get }
-    
-    func updateCacheKey()
 }
 
 public final class CoreDataModel: ObjectModel {
@@ -53,13 +51,6 @@ public final class DataModel: ObjectModel {
     internal let entities: [Entity.Type]
     internal let versionString: String
     
-    public func updateCacheKey() {
-        entities.sorted{ !$1.isAbstract }.forEach {
-            let key = [versionString, String(String(describing: type(of: $0)).dropLast(5))].joined(separator: ".")
-            $0.setOverrideCacheKey(for: $0, key: key)
-        }
-    }
-    
     public init(version: DataSchema, entities: [Entity.Type]) {
         let coordinator = CacheCoordinator.shared
         let versionString = String(reflecting: version.self)
@@ -76,13 +67,8 @@ public final class DataModel: ObjectModel {
         let sorted = entities.sorted { !$1.isAbstract }
         let versionHashModifier = String(reflecting: version)
         
-        sorted.forEach {
-            let key = [versionString, String(String(describing: type(of: $0)).dropLast(5))].joined(separator: ".")
-            $0.setOverrideCacheKey(for: $0, key: key)
-        }
-        
         let model = NSManagedObjectModel()
-        let entities: [NSEntityDescription] = sorted.map { $0.entity() }
+        let entities: [NSEntityDescription] = sorted.map { $0.entityDescription() }
         zip(sorted, entities).forEach { $0.0.createConstraints(description: $0.1) }
         model.versionIdentifiers = [versionHashModifier]
         model.entities = entities

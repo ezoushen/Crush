@@ -32,9 +32,8 @@ public struct CompositeUniqueConstraint<Target: Entity>: UniqueConstraintProtoco
 
 extension CompositeUniqueConstraint {
     var uniquenessConstarints: [String] {
-        let entity = Target.dummy()
-        return wrappedValue.constraints.compactMap {
-            (entity[keyPath: $0] as? PropertyProtocol)?.description.name
+        wrappedValue.constraints.compactMap {
+            $0.fullPath
         }
     }
 }
@@ -51,6 +50,6 @@ public struct UniqueConstraint<Target: Entity>: UniqueConstraintProtocol {
 
 extension UniqueConstraint {
     var uniquenessConstarints: [String] {
-        [(Target.dummy()[keyPath: wrappedValue] as? PropertyProtocol)?.description.name].compactMap{ $0 }
+        [wrappedValue.fullPath].compactMap{ $0 }
     }
 }

@@ -32,7 +32,7 @@ extension InsertionConfig: RequestConfig {
     }
     
     func createFetchRequest(options: [String: Any]) -> NSPersistentStoreRequest {
-        let entity = Target.entity()
+        let entity = Target.entityDescription()
 
         if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
             let description = NSBatchInsertRequest(entity: entity, objects: objects)
@@ -105,9 +105,8 @@ extension InsertBuilder {
                 autoreleasepool { () -> [NSManagedObjectID] in
                     request.objects.map { object -> NSManagedObjectID in
                         let rawObject = NSManagedObject(entity: entity, insertInto: context)
-                        let proxy = ReadWritePropertyProxy(rawObject: rawObject)
                         object.forEach {
-                            proxy.setValue($0.1, key: $0.0)
+                            rawObject.setValue($0.1, key: $0.0)
                         }
                         return rawObject.objectID
                     }

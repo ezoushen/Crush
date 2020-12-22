@@ -13,7 +13,7 @@ struct DeletionConfig<Target: Entity> {
 
 extension DeletionConfig: RequestConfig {
     func createFetchRequest() -> NSBatchDeleteRequest {
-        let name = Target.entity().name ?? String(describing: Self.self)
+        let name = Target.entityDescription().name ?? String(describing: Self.self)
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: name)
         fetchRequest.predicate = predicate
         let description = NSBatchDeleteRequest(fetchRequest: fetchRequest)
