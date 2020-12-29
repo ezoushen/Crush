@@ -162,11 +162,12 @@ extension DataContainer {
         Transaction(context: uiTransactionContext(), mergePolicy: mergePolicy)
     }
     
-    public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly {
-        T.ReadOnly(uiContext.object(with: objectID) as! T)
+    public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
+        guard let object = uiContext.object(with: objectID) as? T else { return nil }
+        return T.ReadOnly(object)
     }
     
-    public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly] {
+    public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
         objectIDs.map(load(objectID:))
     }
     
