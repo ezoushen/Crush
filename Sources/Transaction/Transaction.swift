@@ -23,6 +23,32 @@ public struct Transaction {
             context.executionContext.mergePolicy = mergePolicy
         }
     }
+    
+    public func enableUndoManager() {
+        context.executionContext.undoManager = UndoManager()
+    }
+    
+    public func disableUndoManager() {
+        context.executionContext.undoManager = nil
+    }
+    
+    public func undo() {
+        checkUndoManager()
+        context.executionContext.undoManager?.undo()
+    }
+    
+    public func redo() {
+        checkUndoManager()
+        context.executionContext.undoManager?.redo()
+    }
+    
+    internal func checkUndoManager() {
+        #if DEBUG
+        if context.executionContext.undoManager == nil {
+            NSLog("Please enable undo manager first.")
+        }
+        #endif
+    }
 }
 
 extension Transaction {
@@ -30,11 +56,12 @@ extension Transaction {
         present(entity.value)
     }
     
-    public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly {
-        T.ReadOnly(context.uiContext.object(with: objectID) as! T)
+    public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
+        guard let object = context.uiContext.object(with: objectID) as? T else { return nil }
+        return T.ReadOnly(object)
     }
     
-    public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly] {
+    public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
         objectIDs.map(load(objectID:))
     }
     
@@ -74,7 +101,7 @@ extension Transaction {
     public func async(_ block: @escaping (TransactionContext) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let transactionContext = context
         
-        transactionContext.executionContext.perform {
+        transactionContext.executionContext.performAsync {
             do {
                 try block(transactionContext)
             } catch {
@@ -139,7 +166,7 @@ extension Transaction {
     public func async(_ block: @escaping (TransactionContext) -> Void) {
         let transactionContext = context
         
-        transactionContext.executionContext.perform {
+        transactionContext.executionContext.performAsync {
             block(transactionContext)
         }
     }
@@ -213,7 +240,7 @@ extension Transaction.ArrayPairEditor {
     public func async(_ block: @escaping (TransactionContext, [T], S) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let context = transaction.context
 
-        context.executionContext.perform {
+        context.executionContext.performAsync {
             let array = self.array.map(context.receive)
             let value = context.receive(self.value)
             do {
@@ -283,7 +310,7 @@ extension Transaction.ArrayPairEditor {
     public func async(_ block: @escaping (TransactionContext, [T], S) -> Void) {
         let context = transaction.context
 
-        context.executionContext.perform {
+        context.executionContext.performAsync {
             let array = self.array.map(context.receive)
             let value = context.receive(self.value)
             block(context, array, value)
@@ -362,7 +389,7 @@ extension Transaction.SingularEditor {
     public func async(_ block: @escaping (TransactionContext, T) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let context = transaction.context
 
-        context.executionContext.perform {
+        context.executionContext.performAsync {
             let value = context.receive(self.value)
             do {
                 try block(context, value)
@@ -430,7 +457,7 @@ extension Transaction.SingularEditor {
     public func async(_ block: @escaping (TransactionContext, T) -> Void) {
         let context = transaction.context
 
-        context.executionContext.perform {
+        context.executionContext.performAsync {
             let value = context.receive(self.value)
             block(context, value)
         }
@@ -506,7 +533,7 @@ extension Transaction.PluralEditor {
     public func async(_ block: @escaping (TransactionContext, [T]) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let context = transaction.context
         
-        context.executionContext.perform {
+        context.executionContext.performAsync {
             let values = self.values.map(context.receive(_:))
             do {
                 try block(context, values)
@@ -575,7 +602,7 @@ extension Transaction.PluralEditor {
     public func async(_ block: @escaping (TransactionContext, [T]) -> Void) {
         let context = transaction.context
         
-        context.executionContext.perform {
+        context.executionContext.performAsync {
             let values = self.values.map(context.receive(_:))
             block(context, values)
         }
@@ -654,7 +681,7 @@ extension Transaction.DualEditor {
     public func async(_ block: @escaping (TransactionContext, T, S) throws -> Void, catch: ((Error) -> Void)? = nil) {
         let context = transaction.context
         
-        context.executionContext.perform {
+        context.executionContext.performAsync {
             do {
                 try block(context, context.receive(self.value1), context.receive(self.value2))
             } catch {
@@ -715,7 +742,7 @@ extension Transaction.DualEditor {
     public func async(_ block: @escaping (TransactionContext, T, S) -> Void) {
         let context = transaction.context
         
-        context.executionContext.perform {
+        context.executionContext.performAsync {
             block(context, context.receive(self.value1), context.receive(self.value2))
         }
     }
@@ -765,10 +792,24 @@ extension Transaction.DualEditor {
 }
 
 extension NSManagedObjectContext {
+    func performAsync(_ block: @escaping () -> Void) {
+        perform {
+            self.undoManager?.beginUndoGrouping()
+            defer {
+                self.undoManager?.endUndoGrouping()
+            }
+            block()
+        }
+    }
+    
     func performAndWait<T>(_ block: @escaping () throws -> T) throws -> T {
         var result: T!
         var error: Error?
         performAndWait {
+            self.undoManager?.beginUndoGrouping()
+            defer {
+                self.undoManager?.endUndoGrouping()
+            }
             do {
                 result = try block()
             } catch(let err) {
@@ -784,6 +825,10 @@ extension NSManagedObjectContext {
     func performAndWait<T>(_ block: @escaping () -> T) -> T {
         var result: T!
         performAndWait {
+            self.undoManager?.beginUndoGrouping()
+            defer {
+                self.undoManager?.endUndoGrouping()
+            }
             result = block()
         }
         return result
