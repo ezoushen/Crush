@@ -23,7 +23,7 @@ extension NSPredicate {
 
 // MARK: - Validation
 
-public func BETWEEN<T: PredicateComparable>(_ rhs: Range<T>) -> NSPredicate {
+public func BETWEEN<T: PredicateComparable>(_ rhs: ClosedRange<T>) -> NSPredicate {
     return NSPredicate(format: "SELF BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
 }
 
@@ -167,7 +167,7 @@ extension KeyPath where Root: NSManagedObject, Value: PredicateComparable & Comp
         return NSPredicate(format: "\(lhs.stringValue) <= %@", rhs.predicateValue)
     }
 
-    public static func <> (lhs: KeyPath, rhs: Range<Value>) -> NSPredicate {
+    public static func <> (lhs: KeyPath, rhs: ClosedRange<Value>) -> NSPredicate {
         return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 }
@@ -223,7 +223,7 @@ extension KeyPath where Root: NSManagedObject {
         return NSPredicate(format: "\(lhs.stringValue) <= %@", rhs.predicateValue)
     }
 
-    public static func <> <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: Range<E>) -> NSPredicate where Value == Swift.Optional<E> {
+    public static func <> <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: ClosedRange<E>) -> NSPredicate where Value == Swift.Optional<E> {
         return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 }
