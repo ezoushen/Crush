@@ -111,7 +111,7 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
     }
     
     public func groupAndCount<V>(col name: KeyPath<Target, V>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
-        let keypathExp = NSExpression(forKeyPath: name.fullPath)
+        let keypathExp = NSExpression(forKeyPath: name.stringValue)
         let countDesc = NSExpressionDescription()
         countDesc.name = "count"
         countDesc.expressionResultType = .integer64AttributeType
@@ -125,13 +125,13 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
     }
     
     public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: true, selector: type.selector)
+        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: true, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }
     
     public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.fullPath, ascending: false, selector: type.selector)
+        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: false, selector: type.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }

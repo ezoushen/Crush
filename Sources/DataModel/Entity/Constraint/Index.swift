@@ -46,7 +46,7 @@ public class IndexElement<Target: RuntimeObject>: IndexElementProtocol {
     public var type: NSFetchIndexElementType
     
     public init<Value: Field>(_ keyPath: ReferenceWritableKeyPath<Target, Value>, type: NSFetchIndexElementType = .binary) {
-        self.keyPath = keyPath.fullPath
+        self.keyPath = keyPath.stringValue
         self.type = type
     }
 }

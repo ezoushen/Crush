@@ -18,12 +18,8 @@ public enum KeyPathProviderContainer {
 }
 
 extension AnyKeyPath {
-    var stringValue: String {
+    public var stringValue: String {
         KeyPathProviderContainer.provider.getKeyPathString(self)!
-    }
-    
-    public var fullPath: String {
-        stringValue
     }
 }
 
@@ -34,7 +30,7 @@ public protocol Expressible {
 public protocol RootTracableKeyPathProtocol: Expressible {
     var rootType: Entity.Type { get }
     var keyPath: AnyKeyPath { get }
-    var fullPath: String { get }
+    var stringValue: String { get }
 }
 
 extension KeyPath: Expressible where Root: RuntimeObject {

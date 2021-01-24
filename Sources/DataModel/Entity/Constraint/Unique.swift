@@ -33,7 +33,7 @@ public struct CompositeUniqueConstraint<Target: Entity>: UniqueConstraintProtoco
 extension CompositeUniqueConstraint {
     var uniquenessConstarints: [String] {
         wrappedValue.constraints.compactMap {
-            $0.fullPath
+            $0.stringValue
         }
     }
 }
@@ -50,6 +50,6 @@ public struct UniqueConstraint<Target: Entity>: UniqueConstraintProtocol {
 
 extension UniqueConstraint {
     var uniquenessConstarints: [String] {
-        [wrappedValue.fullPath].compactMap{ $0 }
+        [wrappedValue.stringValue].compactMap{ $0 }
     }
 }
