@@ -84,10 +84,12 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
     
     internal var _config: Config
     internal let _context: Context
-
-    internal required init(config: Config, context: Context) {
+    internal let _onUiContext: Bool
+    
+    internal required init(config: Config, context: Context, onUiContext: Bool) {
         self._config = config
         self._context = context
+        self._onUiContext = onUiContext
     }
     
     public func limit(_ size: Int) -> PartialFetchBuilder<Target, Received, Result> {
@@ -121,7 +123,7 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
             .updated(\.groupBy, value: (_config.groupBy ?? []) + [name])
             .updated(\.mapTo, value: [name, countDesc])
             .updated(\.resultType, value: .dictionaryResultType)
-        return .init(config: newConfig, context: _context)
+        return .init(config: newConfig, context: _context, onUiContext: _onUiContext)
     }
     
     public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
@@ -150,12 +152,12 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
     
     public func map<V>(_ keyPath: KeyPath<Target, V>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, V> {
         let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
-        return .init(config: newConfig, context: _context)
+        return .init(config: newConfig, context: _context, onUiContext: _onUiContext)
     }
     
     public func map<V>(_ keyPaths: [KeyPath<Target, V>]) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
-        return .init(config: newConfig, context: _context)
+        return .init(config: newConfig, context: _context, onUiContext: _onUiContext)
     }
 
     public func `where`(_ predicate: NSPredicate) -> Self {
@@ -224,8 +226,14 @@ extension PartialFetchBuilder where Result: HashableEntity, Received: NSManagedO
     }
     
     public func exec() -> [Result] {
-        return received().compactMap {
-            _context.present($0) as? Result
+        if _onUiContext {
+            return received().compactMap {
+                _context.present($0) as? Result
+            }
+        } else {
+            return received().compactMap {
+                _context.receive($0) as? Result
+            }
         }
     }
 }
@@ -240,8 +248,14 @@ extension PartialFetchBuilder where Target: HashableEntity, Result == Target.Rea
     }
     
     public func exec() -> [Result] {
-        received().map {
-            Result(_context.present($0))
+        if _onUiContext {
+            return received().map {
+                Result(_context.present($0))
+            }
+        } else {
+            return received().map {
+                Result(_context.receive($0))
+            }
         }
     }
 }

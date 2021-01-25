@@ -36,7 +36,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
 
 extension TransactionContext where Self: RawContextProviderProtocol {
     public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, T, T> {
-        .init(config: .init(), context: self)
+        .init(config: .init(), context: self, onUiContext: false)
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
