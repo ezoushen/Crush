@@ -68,12 +68,6 @@ extension UpdateBuilder {
     }
 }
 
-extension UpdateBuilder where Target: NeutralEntityObject {
-    public func update<Value: AttributeProtocol>(_ keyPath: KeyPath<Target, Value>, value: Value.PropertyValue) -> Self {
-        update(key: keyPath.fullPath, value: value)
-    }
-}
-
 extension UpdateBuilder where Target: NSManagedObject {
     public func update<Value: AttributeProtocol>(_ keyPath: KeyPath<Target, Value>, value: Value.PropertyValue) -> Self {
         update(key: keyPath.stringValue, value: value)

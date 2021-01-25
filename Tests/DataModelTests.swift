@@ -20,14 +20,16 @@ class V1: SchemaOrigin {
     class People: AbstractEntityObject {
         class Index: NSObject, ConstraintSet {
             @FetchIndex
-            var firstName = AscendingIndex(\V1.People.$firstName)
+            var firstName = AscendingIndex(\V1.People.firstName)
         }
         
-        @Value.String("first_name")
+        @Value.String("firstName")
         var firstName: String!
     }
     
     class Man: People {
+        static var asd: Int = 0
+        
         @Value.Int64("strength")
         var strength: Int64!
     }

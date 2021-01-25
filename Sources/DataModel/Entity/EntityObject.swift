@@ -24,7 +24,7 @@ public protocol Entity: RuntimeObject, Field {
     func createProperties() -> [NSPropertyDescription]
 }
 
-public protocol HashableEntity: NSManagedObject ,Entity { }
+public protocol HashableEntity: NSManagedObject, Entity { }
 
 extension RuntimeObject {
     static var fetchKey: String {
@@ -37,17 +37,6 @@ extension RuntimeObject {
 }
 
 extension Entity {
-    private static func dummyDescription() -> NSEntityDescription {
-        let entity = NSEntityDescription()
-        entity.name = "DUMMY_ENTITY"
-        let property = NSAttributeDescription()
-        property.attributeType = .integer16AttributeType
-        property.defaultValue = 0
-        property.name = "DUMMY"
-        entity.properties = [property]
-        return entity
-    }
-    
     public static var entityCacheKey: String {
         String(reflecting: Self.self)
     }
@@ -66,9 +55,10 @@ extension Entity {
         
         let description = NSEntityDescription()
         description.managedObjectClassName = NSStringFromClass(Self.self)
+        
         let object = Self.init()
         let mirror = Mirror(reflecting: object)
-        print(object, type(of: object))
+        
         // Setup properties
         let properties: [NSPropertyDescription] = object.createProperties()
         
@@ -187,7 +177,7 @@ extension Entity {
             
             indexChildren.forEach { (label, value) in
                 guard let value = value as? ValidationProtocol,
-                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(name: value.anyKeyPath.fullPath), in: CacheType.property)
+                    let description = CacheCoordinator.shared.get(Self.createPropertyCacheKey(name: value.anyKeyPath.stringValue), in: CacheType.property)
                 else { return }
                 
                 var warnings = description.validationWarnings
@@ -273,14 +263,6 @@ extension Entity {
 }
 
 open class NeutralEntityObject: NSManagedObject, HashableEntity {
-//    public required init(context: NSManagedObjectContext) {
-//        super.init(entity: Self.entity(), insertInto: context)
-//    }
-//
-//    public required init(entity: NSEntityDescription, insertInto: NSManagedObjectContext) {
-//        super.init(entity: entity, insertInto: insertInto)
-//    }
-    
     public class var isAbstract: Bool {
         return false
     }
@@ -327,13 +309,13 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
                 let description = property.emptyPropertyDescription()
                 
                 if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
-                    if mapping.fullPath.contains(".") {
-                        description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.fullPath
+                    if mapping.stringValue.contains(".") {
+                        description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.stringValue
                         description.userInfo?[UserInfoKey.propertyMappingDestination] = property.name
                         description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
                         description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
                     } else {
-                        description.renamingIdentifier = mapping.fullPath
+                        description.renamingIdentifier = mapping.stringValue
                     }
                 }
                 

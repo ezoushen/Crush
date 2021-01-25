@@ -99,8 +99,8 @@ struct AttributeMapping<T: Entity, S: Entity>: PropertyMappingProtocol {
     }
     
     init<D: Field, W: Field>(fromKeyPath: KeyPath<T, D>, toKeyPath: KeyPath<S, W>) {
-        sourceKeyPath = fromKeyPath.fullPath
-        destinationKeyPath = toKeyPath.fullPath
+        sourceKeyPath = fromKeyPath.stringValue
+        destinationKeyPath = toKeyPath.stringValue
     }
     
     func extractProperties(entityDescription: NSEntityDescription) -> [String: NSPropertyDescription] {
@@ -126,8 +126,8 @@ struct RelationshipMapping<T: Entity, S: Entity>: PropertyMappingProtocol {
     }
     
     init<D: Field, W: Field>(fromKeyPath: KeyPath<T, D>, toKeyPath: KeyPath<S, W>) {
-        sourceKeyPath = fromKeyPath.fullPath
-        destinationKeyPath = toKeyPath.fullPath
+        sourceKeyPath = fromKeyPath.stringValue
+        destinationKeyPath = toKeyPath.stringValue
     }
     
     func extractProperties(entityDescription: NSEntityDescription) -> [String: NSPropertyDescription] {

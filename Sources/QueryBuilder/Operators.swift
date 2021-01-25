@@ -86,13 +86,13 @@ infix operator |*|
 
 extension KeyPath where Root: NeutralEntityObject, Value: NullableProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
     public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) IN %@", NSSet(set: rhs))
+        return NSPredicate(format: "\(lhs.stringValue) IN %@", NSSet(set: rhs))
     }
 }
 
 extension KeyPath where Root: NeutralEntityObject, Value: NullableProperty, Value.PredicateValue: PredicateEquatable & Equatable {
     public static func <> (lhs: KeyPath, rhs: Array<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.fullPath) IN %@", NSArray(array: rhs))
+        return NSPredicate(format: "\(lhs.stringValue) IN %@", NSArray(array: rhs))
     }
 }
 
