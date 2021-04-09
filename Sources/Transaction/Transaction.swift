@@ -114,9 +114,9 @@ extension Transaction {
         }
     }
     
-    public func sync<T>(_ block: @escaping (TransactionContext) throws -> T) throws -> T {
+    public func sync<T>(_ block: (TransactionContext) throws -> T) throws -> T {
         let transactionContext = context
-        let result = try transactionContext.executionContext.performAndWait {
+        let result = try transactionContext.executionContext.performSync {
             try block(transactionContext)
         }
         
@@ -125,9 +125,9 @@ extension Transaction {
         return result
     }
     
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> T?) throws -> T.ReadOnly? {
+    public func sync<T: HashableEntity>(_ block: (TransactionContext) throws -> T?) throws -> T.ReadOnly? {
         let transactionContext = context
-        let optionalResult: T? = try transactionContext.executionContext.performAndWait {
+        let optionalResult: T? = try transactionContext.executionContext.performSync {
             try block(transactionContext)
         }
         
@@ -141,7 +141,7 @@ extension Transaction {
         return present(result)
     }
     
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> T) throws -> T.ReadOnly {
+    public func sync<T: HashableEntity>(_ block: (TransactionContext) throws -> T) throws -> T.ReadOnly {
         let result: T.ReadOnly? = try sync {
             let value: T? = try block($0)
             return value
@@ -149,10 +149,10 @@ extension Transaction {
         return result!
     }
 
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) throws -> [T]) throws -> [T.ReadOnly]{
+    public func sync<T: HashableEntity>(_ block: (TransactionContext) throws -> [T]) throws -> [T.ReadOnly]{
         let transactionContext = context
 
-        let result: [T] = try transactionContext.executionContext.performAndWait {
+        let result: [T] = try transactionContext.executionContext.performSync {
             try block(transactionContext)
         }
         warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
@@ -171,9 +171,9 @@ extension Transaction {
         }
     }
     
-    public func sync<T>(_ block: @escaping (TransactionContext) -> T) -> T {
+    public func sync<T>(_ block: (TransactionContext) -> T) -> T {
         let transactionContext = context
-        let result = transactionContext.executionContext.performAndWait {
+        let result = transactionContext.executionContext.performSync {
             block(transactionContext)
         }
         
@@ -182,9 +182,9 @@ extension Transaction {
         return result
     }
     
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> T?) -> T.ReadOnly? {
+    public func sync<T: HashableEntity>(_ block: (TransactionContext) -> T?) -> T.ReadOnly? {
         let transactionContext = context
-        let optionalResult: T? = transactionContext.executionContext.performAndWait {
+        let optionalResult: T? = transactionContext.executionContext.performSync {
             block(transactionContext)
         }
 
@@ -198,7 +198,7 @@ extension Transaction {
         return present(result)
     }
     
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> T) -> T.ReadOnly {
+    public func sync<T: HashableEntity>(_ block: (TransactionContext) -> T) -> T.ReadOnly {
         let result: T.ReadOnly? = sync {
             let value: T? = block($0)
             return value
@@ -206,10 +206,10 @@ extension Transaction {
         return result!
     }
 
-    public func sync<T: HashableEntity>(_ block: @escaping (TransactionContext) -> [T]) -> [T.ReadOnly]{
+    public func sync<T: HashableEntity>(_ block: (TransactionContext) -> [T]) -> [T.ReadOnly]{
         let transactionContext = context
 
-        let result: [T] = transactionContext.executionContext.performAndWait {
+        let result: [T] = transactionContext.executionContext.performSync {
             block(transactionContext)
         }
         warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
@@ -255,19 +255,19 @@ extension Transaction.ArrayPairEditor {
         }
     }
     
-    public func sync(_ block: @escaping (TransactionContext, [T], S) throws -> Void) throws {
+    public func sync(_ block: (TransactionContext, [T], S) throws -> Void) throws {
         let context = transaction.context
         
-        try context.executionContext.performAndWait {
+        try context.executionContext.performSync {
             let array = self.array.map(context.receive)
             let value = context.receive(self.value)
             try block(context, array, value)
         }
     }
     
-    public func sync<V>(_ block: @escaping (TransactionContext, [T], S) throws -> V) throws -> V {
+    public func sync<V>(_ block: (TransactionContext, [T], S) throws -> V) throws -> V {
         let context = transaction.context
-        let result: V = try context.executionContext.performAndWait {
+        let result: V = try context.executionContext.performSync {
             try block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
@@ -276,9 +276,9 @@ extension Transaction.ArrayPairEditor {
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T], S) throws -> V) throws -> V.ReadOnly {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T], S) throws -> V) throws -> V.ReadOnly {
         let context = transaction.context
-        let result: V = try context.executionContext.performAndWait {
+        let result: V = try context.executionContext.performSync {
             return try block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
@@ -288,14 +288,14 @@ extension Transaction.ArrayPairEditor {
         return transaction.present(result)
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T], S) throws -> V) throws -> V.ReadOnly? {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T], S) throws -> V) throws -> V.ReadOnly? {
         let result: V.ReadOnly = try sync(block)
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T], S) throws -> [V]) throws -> [V.ReadOnly]  {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T], S) throws -> [V]) throws -> [V.ReadOnly]  {
         let context = transaction.context
-        let result: [V] = try context.executionContext.performAndWait {
+        let result: [V] = try context.executionContext.performSync {
             try block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
@@ -317,7 +317,7 @@ extension Transaction.ArrayPairEditor {
         }
     }
     
-    public func sync(_ block: @escaping (TransactionContext, [T], S) -> Void) {
+    public func sync(_ block: (TransactionContext, [T], S) -> Void) {
         let context = transaction.context
         
         context.executionContext.performAndWait {
@@ -327,9 +327,9 @@ extension Transaction.ArrayPairEditor {
         }
     }
     
-    public func sync<V>(_ block: @escaping (TransactionContext, [T], S) -> V) -> V {
+    public func sync<V>(_ block: (TransactionContext, [T], S) -> V) -> V {
         let context = transaction.context
-        let result: V = context.executionContext.performAndWait {
+        let result: V = context.executionContext.performSync {
             block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
@@ -338,9 +338,9 @@ extension Transaction.ArrayPairEditor {
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T], S) -> V) -> V.ReadOnly {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T], S) -> V) -> V.ReadOnly {
         let context = transaction.context
-        let result: V = context.executionContext.performAndWait {
+        let result: V = context.executionContext.performSync {
             return block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
@@ -350,14 +350,14 @@ extension Transaction.ArrayPairEditor {
         return transaction.present(result)
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T], S) -> V) -> V.ReadOnly? {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T], S) -> V) -> V.ReadOnly? {
         let result: V.ReadOnly = sync(block)
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T], S) -> [V]) -> [V.ReadOnly]  {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T], S) -> [V]) -> [V.ReadOnly]  {
         let context = transaction.context
-        let result: [V] = context.executionContext.performAndWait {
+        let result: [V] = context.executionContext.performSync {
             block(context, self.array.map(context.receive), context.receive(self.value))
         }
         
@@ -403,18 +403,18 @@ extension Transaction.SingularEditor {
         }
     }
     
-    public func sync(_ block: @escaping (TransactionContext, T) throws -> Void) throws {
+    public func sync(_ block: (TransactionContext, T) throws -> Void) throws {
         let context = transaction.context
         
-        try context.executionContext.performAndWait {
+        try context.executionContext.performSync {
             let value = context.receive(self.value)
             try block(context, value)
         }
     }
     
-    public func sync<V>(_ block: @escaping (TransactionContext, T) throws -> V) throws -> V {
+    public func sync<V>(_ block: (TransactionContext, T) throws -> V) throws -> V {
         let context = transaction.context
-        let result: V = try context.executionContext.performAndWait {
+        let result: V = try context.executionContext.performSync {
             try block(context, context.receive(self.value))
         }
         
@@ -423,9 +423,9 @@ extension Transaction.SingularEditor {
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T) throws -> V) throws -> V.ReadOnly {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T) throws -> V) throws -> V.ReadOnly {
         let context = transaction.context
-        let result: V = try context.executionContext.performAndWait {
+        let result: V = try context.executionContext.performSync {
             return try block(context, context.receive(self.value))
         }
         
@@ -435,14 +435,14 @@ extension Transaction.SingularEditor {
         return transaction.present(result)
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T) throws -> V) throws -> V.ReadOnly? {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T) throws -> V) throws -> V.ReadOnly? {
         let result: V.ReadOnly = try sync(block)
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T) throws -> [V]) throws -> [V.ReadOnly]  {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T) throws -> [V]) throws -> [V.ReadOnly]  {
         let context = transaction.context
-        let result: [V] = try context.executionContext.performAndWait {
+        let result: [V] = try context.executionContext.performSync {
             try block(context, context.receive(self.value))
         }
         
@@ -463,7 +463,7 @@ extension Transaction.SingularEditor {
         }
     }
     
-    public func sync(_ block: @escaping (TransactionContext, T) -> Void) {
+    public func sync(_ block: (TransactionContext, T) -> Void) {
         let context = transaction.context
         
         context.executionContext.performAndWait {
@@ -472,9 +472,9 @@ extension Transaction.SingularEditor {
         }
     }
     
-    public func sync<V>(_ block: @escaping (TransactionContext, T) -> V) -> V {
+    public func sync<V>(_ block: (TransactionContext, T) -> V) -> V {
         let context = transaction.context
-        let result: V = context.executionContext.performAndWait {
+        let result: V = context.executionContext.performSync {
             block(context, context.receive(self.value))
         }
         
@@ -483,9 +483,9 @@ extension Transaction.SingularEditor {
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T) -> V) -> V.ReadOnly {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T) -> V) -> V.ReadOnly {
         let context = transaction.context
-        let result: V = context.executionContext.performAndWait {
+        let result: V = context.executionContext.performSync {
             return block(context, context.receive(self.value))
         }
         
@@ -495,14 +495,14 @@ extension Transaction.SingularEditor {
         return transaction.present(result)
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T) -> V) -> V.ReadOnly? {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T) -> V) -> V.ReadOnly? {
         let result: V.ReadOnly = sync(block)
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T) -> [V]) -> [V.ReadOnly]  {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T) -> [V]) -> [V.ReadOnly]  {
         let context = transaction.context
-        let result: [V] = context.executionContext.performAndWait {
+        let result: [V] = context.executionContext.performSync {
             block(context, context.receive(self.value))
         }
         
@@ -547,17 +547,17 @@ extension Transaction.PluralEditor {
         }
     }
     
-    public func sync(_ block: @escaping (TransactionContext, [T]) throws -> Void) throws {
+    public func sync(_ block: (TransactionContext, [T]) throws -> Void) throws {
         let context = transaction.context
         
-        try context.executionContext.performAndWait {
+        try context.executionContext.performSync {
             let values = self.values.map(context.receive(_:))
             try block(context, values)
         }
     }
     
-    public func sync<V>(_ block: @escaping (TransactionContext, [T]) throws -> V) throws -> V {
-        let value = try transaction.context.executionContext.performAndWait {
+    public func sync<V>(_ block: (TransactionContext, [T]) throws -> V) throws -> V {
+        let value = try transaction.context.executionContext.performSync {
             try block(self.transaction.context, self.values.map(self.transaction.context.receive(_:)))
         }
         
@@ -566,9 +566,9 @@ extension Transaction.PluralEditor {
         return value
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) throws -> V) throws -> V.ReadOnly {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T]) throws -> V) throws -> V.ReadOnly {
         let context = transaction.context
-        let result: V = try context.executionContext.performAndWait {
+        let result: V = try context.executionContext.performSync {
             let values = self.values.map(context.receive(_:))
             return try block(context, values)
         }
@@ -579,14 +579,14 @@ extension Transaction.PluralEditor {
         return transaction.present(result)
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) throws -> V) throws -> V.ReadOnly? {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T]) throws -> V) throws -> V.ReadOnly? {
         let result: V.ReadOnly = try sync(block)
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) throws -> [V]) throws -> [V.ReadOnly] {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T]) throws -> [V]) throws -> [V.ReadOnly] {
         let context = transaction.context
-        let result: [V] = try context.executionContext.performAndWait {
+        let result: [V] = try context.executionContext.performSync {
             let values = self.values.map(context.receive(_:))
             return try block(context, values)
         }
@@ -608,7 +608,7 @@ extension Transaction.PluralEditor {
         }
     }
     
-    public func sync(_ block: @escaping (TransactionContext, [T]) -> Void) {
+    public func sync(_ block: (TransactionContext, [T]) -> Void) {
         let context = transaction.context
         
         context.executionContext.performAndWait {
@@ -617,8 +617,8 @@ extension Transaction.PluralEditor {
         }
     }
     
-    public func sync<V>(_ block: @escaping (TransactionContext, [T]) -> V) -> V {
-        let value = transaction.context.executionContext.performAndWait {
+    public func sync<V>(_ block: (TransactionContext, [T]) -> V) -> V {
+        let value = transaction.context.executionContext.performSync {
             block(self.transaction.context, self.values.map(self.transaction.context.receive(_:)))
         }
         
@@ -627,9 +627,9 @@ extension Transaction.PluralEditor {
         return value
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T])  -> V) -> V.ReadOnly {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T])  -> V) -> V.ReadOnly {
         let context = transaction.context
-        let result: V = context.executionContext.performAndWait {
+        let result: V = context.executionContext.performSync {
             let values = self.values.map(context.receive(_:))
             return block(context, values)
         }
@@ -640,14 +640,14 @@ extension Transaction.PluralEditor {
         return transaction.present(result)
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) -> V) -> V.ReadOnly? {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T]) -> V) -> V.ReadOnly? {
         let result: V.ReadOnly = sync(block)
         return result
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, [T]) -> [V]) -> [V.ReadOnly] {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, [T]) -> [V]) -> [V.ReadOnly] {
         let context = transaction.context
-        let result: [V] = context.executionContext.performAndWait {
+        let result: [V] = context.executionContext.performSync {
             let values = self.values.map(context.receive(_:))
             return block(context, values)
         }
@@ -694,17 +694,17 @@ extension Transaction.DualEditor {
         }
     }
     
-    public func sync(_ block: @escaping (TransactionContext, T, S) throws -> Void) throws {
+    public func sync(_ block: (TransactionContext, T, S) throws -> Void) throws {
         let context = transaction.context
         
-        try context.executionContext.performAndWait {
+        try context.executionContext.performSync {
             try block(context, context.receive(self.value1), context.receive(self.value2))
         }
     }
     
-    public func sync<V>(_ block: @escaping (TransactionContext, T, S) throws -> V) throws -> V {
+    public func sync<V>(_ block: (TransactionContext, T, S) throws -> V) throws -> V {
         let context = transaction.context
-        let value = try transaction.context.executionContext.performAndWait {
+        let value = try transaction.context.executionContext.performSync {
             try block(self.transaction.context, context.receive(self.value1), context.receive(self.value2))
         }
         
@@ -713,9 +713,9 @@ extension Transaction.DualEditor {
         return value
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T, S) throws -> V) throws -> V.ReadOnly {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T, S) throws -> V) throws -> V.ReadOnly {
         let context = transaction.context
-        let result: V = try context.executionContext.performAndWait {
+        let result: V = try context.executionContext.performSync {
             try block(context, context.receive(self.value1), context.receive(self.value2))
         }
         
@@ -725,9 +725,9 @@ extension Transaction.DualEditor {
         return transaction.present(result)
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T, S) throws -> [V]) throws -> [V.ReadOnly] {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T, S) throws -> [V]) throws -> [V.ReadOnly] {
         let context = transaction.context
-        let result: [V] = try context.executionContext.performAndWait {
+        let result: [V] = try context.executionContext.performSync {
             try block(context, context.receive(self.value1), context.receive(self.value2))
         }
         
@@ -747,7 +747,7 @@ extension Transaction.DualEditor {
         }
     }
     
-    public func sync(_ block: @escaping (TransactionContext, T, S) -> Void) {
+    public func sync(_ block: (TransactionContext, T, S) -> Void) {
         let context = transaction.context
         
         context.executionContext.performAndWait {
@@ -755,9 +755,9 @@ extension Transaction.DualEditor {
         }
     }
     
-    public func sync<V>(_ block: @escaping (TransactionContext, T, S) -> V) -> V {
+    public func sync<V>(_ block: (TransactionContext, T, S) -> V) -> V {
         let context = transaction.context
-        let value = transaction.context.executionContext.performAndWait {
+        let value = transaction.context.executionContext.performSync {
             block(self.transaction.context, context.receive(self.value1), context.receive(self.value2))
         }
         
@@ -766,9 +766,9 @@ extension Transaction.DualEditor {
         return value
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T, S) -> V) -> V.ReadOnly {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T, S) -> V) -> V.ReadOnly {
         let context = transaction.context
-        let result: V = context.executionContext.performAndWait {
+        let result: V = context.executionContext.performSync {
             block(context, context.receive(self.value1), context.receive(self.value2))
         }
         
@@ -778,9 +778,9 @@ extension Transaction.DualEditor {
         return transaction.present(result)
     }
     
-    public func sync<V: HashableEntity>(_ block: @escaping (TransactionContext, T, S) -> [V]) -> [V.ReadOnly] {
+    public func sync<V: HashableEntity>(_ block: (TransactionContext, T, S) -> [V]) -> [V.ReadOnly] {
         let context = transaction.context
-        let result: [V] = context.executionContext.performAndWait {
+        let result: [V] = context.executionContext.performSync {
             block(context, context.receive(self.value1), context.receive(self.value2))
         }
         
@@ -802,13 +802,13 @@ extension NSManagedObjectContext {
         }
     }
     
-    func performAndWait<T>(_ block: @escaping () throws -> T) throws -> T {
+    func performSync<T>(_ block: () throws -> T) throws -> T {
         var result: T!
         var error: Error?
         performAndWait {
-            self.undoManager?.beginUndoGrouping()
+            undoManager?.beginUndoGrouping()
             defer {
-                self.undoManager?.endUndoGrouping()
+                undoManager?.endUndoGrouping()
             }
             do {
                 result = try block()
@@ -822,12 +822,12 @@ extension NSManagedObjectContext {
         return result
     }
     
-    func performAndWait<T>(_ block: @escaping () -> T) -> T {
+    func performSync<T>(_ block: () -> T) -> T {
         var result: T!
         performAndWait {
-            self.undoManager?.beginUndoGrouping()
+            undoManager?.beginUndoGrouping()
             defer {
-                self.undoManager?.endUndoGrouping()
+                undoManager?.endUndoGrouping()
             }
             result = block()
         }
