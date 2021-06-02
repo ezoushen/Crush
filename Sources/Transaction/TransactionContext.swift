@@ -142,9 +142,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
         }
         
         executionContext.performAndWait {
-            executionContext.registeredObjects.forEach {
-                executionContext.refresh($0, mergeChanges: true)
-            }
+            executionContext.refreshAllObjects()
         }
     }
     
