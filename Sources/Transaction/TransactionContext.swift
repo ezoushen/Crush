@@ -138,11 +138,15 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     
     private func reset() {
         rootContext.performAndWait {
-            rootContext.reset()
+            rootContext.rollback()
         }
-        
+
         executionContext.performAndWait {
-            executionContext.refreshAllObjects()
+            executionContext.rollback()
+        }
+
+        uiContext.performAndWait {
+            uiContext.rollback()
         }
     }
     
