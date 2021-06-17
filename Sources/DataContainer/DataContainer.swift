@@ -51,7 +51,7 @@ public class DataContainer {
                   context == writerContext else { return }
         
         let block: () -> Void =  {
-            self.uiContext.refreshAllObjects()
+            self.uiContext.mergeChanges(fromContextDidSave: notification)
             
             let ids = (notification.userInfo?[NSUpdatedObjectsKey] as? NSSet)?.allObjects.compactMap {
                 ($0 as? NSManagedObject)?.objectID
