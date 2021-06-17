@@ -176,10 +176,6 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                         transactionContext.reset()
                     }
                 }
-                                
-                transactionContext.uiContext.performAndWait {
-                    transactionContext.uiContext.refreshAllObjects()
-                }
             }
             
             return err
@@ -219,10 +215,6 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                 
                 guard err == nil else {
                     return transactionContext.reset()
-                }
-                                
-                transactionContext.uiContext.performAndWait {
-                    transactionContext.uiContext.refreshAllObjects()
                 }
             }
             
