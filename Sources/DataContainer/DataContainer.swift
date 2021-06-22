@@ -43,31 +43,18 @@ public class DataContainer {
         writerContext = createWriterContext()
         uiContext = createUiContext(parent: writerContext)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(writerContextDidSave), name: Notification.Name.NSManagedObjectContextDidSave, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(writerContextDidSave),
+            name: Notification.Name.NSManagedObjectContextDidSave,
+            object: writerContext)
     }
     
     @objc private func writerContextDidSave(notification: Notification) {
-        guard let context = notification.object as? NSManagedObjectContext,
-                  context == writerContext else { return }
-        
-        let block: () -> Void =  {
-            self.uiContext.mergeChanges(fromContextDidSave: notification)
-            
-            let ids = (notification.userInfo?[NSUpdatedObjectsKey] as? NSSet)?.allObjects.compactMap {
-                ($0 as? NSManagedObject)?.objectID
-            } ?? []
-            
+        uiContext.performAndWait {
+            uiContext.mergeChanges(fromContextDidSave: notification)
             NotificationCenter.default.post(
-                name: .DataContainerDidRefreshUiContext,
-                object: self,
-                userInfo: ["objectIDs": ids]
-            )
-        }
-        
-        if Thread.current == .main {
-            block()
-        } else {
-            DispatchQueue.main.async(execute: block)
+                name: .DataContainerDidRefreshUiContext, object: self, userInfo: nil)
         }
     }
     
@@ -75,19 +62,14 @@ public class DataContainer {
         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         context.persistentStoreCoordinator = connection.persistentStoreCoordinator
         context.mergePolicy = mergePolicy
-        context.shouldDeleteInaccessibleFaults = true
         context.automaticallyMergesChangesFromParent = false
-        context.retainsRegisteredObjects = false
         return context
     }
     
     private func createUiContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         context.parent = parent
-        context.stalenessInterval = 0.0
-        context.automaticallyMergesChangesFromParent = false
-        context.shouldDeleteInaccessibleFaults = true
-        context.retainsRegisteredObjects = false
+        context.automaticallyMergesChangesFromParent = true
         return context
     }
     
@@ -95,8 +77,6 @@ public class DataContainer {
         autoreleasepool {
             let context = NSManagedObjectContext(concurrencyType: concurrencyType)
             context.parent = parent
-            context.stalenessInterval = 0.0
-            context.retainsRegisteredObjects = false
             context.automaticallyMergesChangesFromParent = false
             return context
         }
