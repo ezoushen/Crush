@@ -51,8 +51,13 @@ public class DataContainer {
     }
     
     @objc private func writerContextDidSave(notification: Notification) {
-        uiContext.performAndWait {
-            uiContext.mergeChanges(fromContextDidSave: notification)
+        uiContext.perform(
+            #selector(self.uiContext.mergeChanges(fromContextDidSave:)),
+            on: .main,
+            with: notification,
+            waitUntilDone: Thread.isMainThread)
+
+        DispatchQueue.main.async {
             NotificationCenter.default.post(
                 name: .DataContainerDidRefreshUiContext, object: self, userInfo: nil)
         }
