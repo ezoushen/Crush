@@ -17,7 +17,7 @@ public protocol RawContextProviderProtocol {
 public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
     func create<T: Entity>(entity: T.Type) -> T
     func delete<T: Entity>(_ object: T)
-    func load<T: Entity>(objecID: NSManagedObjectID) -> T?
+    func load<T: Entity>(objectID: NSManagedObjectID) -> T?
 
     func commit() throws
     func commitAndWait() throws
@@ -52,8 +52,8 @@ extension TransactionContext where Self: RawContextProviderProtocol {
         .init(config: .init(), context: self)
     }
 
-    public func load<T: Entity>(objecID: NSManagedObjectID) -> T? {
-        executionContext.object(with: objecID) as? T
+    public func load<T: Entity>(objectID: NSManagedObjectID) -> T? {
+        executionContext.object(with: objectID) as? T
     }
 }
 
