@@ -86,16 +86,17 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     
     func execute<T>(request: NSFetchRequest<NSFetchRequestResult>, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) throws -> [T] {
         let context = self[keyPath: context]
-        context.processPendingChanges()
         return try context.performSync {
+            context.processPendingChanges()
             return try context.fetch(request) as! [T]
         }
     }
     
     func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) throws -> T {
         let context = self[keyPath: context]
-        context.processPendingChanges()
         return try context.performSync {
+            context.processPendingChanges()
+
             let result = try context.execute(request) as! T
             
             if let changes: [AnyHashable: Any] = {
