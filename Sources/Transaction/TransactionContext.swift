@@ -157,14 +157,14 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     }
     
     public func commit() throws {
-        guard executionContext.hasChanges else {
-            return
-        }
-        
         let err: NSError? = withExtendedLifetime(self) { transactionContext in
             var err: NSError?
 
             transactionContext.executionContext.performAndWait {
+                guard transactionContext.executionContext.hasChanges else {
+                    return
+                }
+
                 do {
                     try transactionContext.executionContext.save()
                 } catch let error as NSError {
@@ -193,14 +193,14 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     }
     
     public func commitAndWait() throws {
-        guard executionContext.hasChanges else {
-            return
-        }
-        
         let err: NSError? = withExtendedLifetime(self) { transactionContext in
             var err: NSError?
 
             transactionContext.executionContext.performAndWait {
+                guard transactionContext.executionContext.hasChanges else {
+                    return
+                }
+                
                 do {
                     try transactionContext.executionContext.save()
                 } catch let error as NSError {
