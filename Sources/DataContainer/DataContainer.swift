@@ -96,8 +96,12 @@ public class DataContainer {
     }
     
     public func reduceMemoryUsage() {
-        uiContext.reset()
-        writerContext.reset()
+        uiContext.performSync {
+            uiContext.reset()
+        }
+        writerContext.performSync {
+            writerContext.reset()
+        }
     }
     
     deinit {
