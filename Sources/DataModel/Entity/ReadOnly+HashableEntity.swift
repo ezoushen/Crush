@@ -22,28 +22,24 @@ public struct ReadOnly<Value: HashableEntity> {
     public func edit(in transaction: Transaction) -> Editable<Value> {
         .init(self, transaction: transaction)
     }
-    
-    public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> Subject? {
+
+    public func access<T>(keyPath: KeyPath<Value, T>) -> T {
         guard let context = value.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
-        return context.performSync{ value[keyPath: keyPath] }
+        return context.performSync { value[keyPath: keyPath] }
+    }
+    
+    public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> Subject? {
+        access(keyPath: keyPath)
     }
     
     public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject>) -> Subject {
-        guard let context = value.managedObjectContext else {
-            fatalError("Accessing stale object is dangerous")
-        }
-        return context.performSync{ value[keyPath: keyPath] }
+        access(keyPath: keyPath)
     }
     
     public subscript<Subject: HashableEntity>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> ReadOnly<Subject>? {
-        guard let context = value.managedObjectContext else {
-            fatalError("Accessing stale object is dangerous")
-        }
-        guard let value = context.performSync({ value[keyPath: keyPath] }) else {
-            return nil
-        }
+        guard let value = access(keyPath: keyPath) else { return nil }
         return ReadOnly<Subject>(value)
     }
     
