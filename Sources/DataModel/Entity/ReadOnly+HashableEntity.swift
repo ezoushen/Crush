@@ -27,14 +27,14 @@ public struct ReadOnly<Value: HashableEntity> {
         guard let context = value.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
-        context.performSync{ value[keyPath: keyPath] }
+        return context.performSync{ value[keyPath: keyPath] }
     }
     
     public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject>) -> Subject {
         guard let context = value.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
-        context.performSync{ value[keyPath: keyPath] }
+        return context.performSync{ value[keyPath: keyPath] }
     }
     
     public subscript<Subject: HashableEntity>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> ReadOnly<Subject>? {
