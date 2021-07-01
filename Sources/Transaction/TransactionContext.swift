@@ -25,12 +25,12 @@ public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
 
 extension TransactionContext where Self: RawContextProviderProtocol {
     func receive<T: NSManagedObject>(_ object: T) -> T {
-        guard executionContext != object.managedObjectContext else { return object }
+        guard executionContext !== object.managedObjectContext else { return object }
         return executionContext.receive(runtimeObject: object) as! T
     }
     
     func present<T: NSManagedObject>(_ object: T) -> T {
-        guard uiContext != object.managedObjectContext else { return object }
+        guard uiContext !== object.managedObjectContext else { return object }
         return uiContext.receive(runtimeObject: object) as! T
     }
 }
@@ -94,34 +94,31 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     
     func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) throws -> T {
         let context = self[keyPath: context]
-        return try context.performSync {
+        let result: T = try context.performSync {
             context.processPendingChanges()
-
-            let result = try context.execute(request) as! T
-            
-            if let changes: [AnyHashable: Any] = {
-                if let result = result as? NSBatchDeleteResult {
-                    return [
-                        NSDeletedObjectsKey: result.result ?? []
-                    ]
-                } else if let result = result as? NSBatchUpdateResult {
-                    return [
-                        NSUpdatedObjectsKey: result.result ?? []
-                    ]
-                }
-                return nil
-            }() {
-                let contexts = [
-                    self.rootContext,
-                    self.uiContext,
-                    self.executionContext
-                ]
-                
-                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: contexts)
-            }
-            
-            return result
+            return try context.execute(request) as! T
         }
+        if let changes: [AnyHashable: Any] = {
+            if let result = result as? NSBatchDeleteResult {
+                return [
+                    NSDeletedObjectsKey: result.result ?? []
+                ]
+            } else if let result = result as? NSBatchUpdateResult {
+                return [
+                    NSUpdatedObjectsKey: result.result ?? []
+                ]
+            }
+            return nil
+        }() {
+            let contexts = [
+                self.rootContext,
+                self.uiContext,
+                self.executionContext
+            ]
+
+            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: contexts)
+        }
+        return result
     }
 }
 
