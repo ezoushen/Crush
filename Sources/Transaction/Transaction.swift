@@ -135,7 +135,9 @@ extension Transaction {
             return nil
         }
         
-        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.performSync {
+            transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType
+        },
                "You should commit changes in transaction before return")
 
         return present(result)
@@ -155,7 +157,9 @@ extension Transaction {
         let result: [T] = try transactionContext.executionContext.performSync {
             try block(transactionContext)
         }
-        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.performSync {
+            transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType
+        },
                "You should commit changes in transaction before return")
         
         return result.map(present(_:))
@@ -192,7 +196,9 @@ extension Transaction {
             return nil
         }
         
-        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.performSync {
+            transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType
+        },
                "You should commit changes in transaction before return")
 
         return present(result)
@@ -212,7 +218,9 @@ extension Transaction {
         let result: [T] = transactionContext.executionContext.performSync {
             block(transactionContext)
         }
-        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType,
+        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.performSync {
+            transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType
+        },
                "You should commit changes in transaction before return")
         
         return result.map(present(_:))
