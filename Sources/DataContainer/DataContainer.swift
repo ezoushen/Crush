@@ -122,11 +122,17 @@ extension DataContainer {
                                    rootContext: writerContext,
                                    uiContext: context)
     }
+    
+    internal func queryTransactionContext() -> _TransactionContext {
+        _TransactionContext(executionContext: uiContext,
+                            rootContext: writerContext,
+                            uiContext: uiContext)
+    }
 }
 
 extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
     public func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, T, T.ReadOnly> {
-        .init(config: .init(), context: startTransaction().context, onUiContext: true)
+        .init(config: .init(), context: queryTransactionContext(), onUiContext: true)
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
