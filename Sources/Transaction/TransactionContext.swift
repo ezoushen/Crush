@@ -26,12 +26,16 @@ public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
 extension TransactionContext where Self: RawContextProviderProtocol {
     func receive<T: NSManagedObject>(_ object: T) -> T {
         guard executionContext !== object.managedObjectContext else { return object }
-        return executionContext.receive(runtimeObject: object) as! T
+        return executionContext.performSync {
+            executionContext.receive(runtimeObject: object) as! T
+        }
     }
     
     func present<T: NSManagedObject>(_ object: T) -> T {
         guard uiContext !== object.managedObjectContext else { return object }
-        return uiContext.receive(runtimeObject: object) as! T
+        return uiContext.performSync {
+            uiContext.receive(runtimeObject: object) as! T
+        }
     }
 }
 
