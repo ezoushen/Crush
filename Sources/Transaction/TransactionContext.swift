@@ -12,7 +12,7 @@ public protocol RawContextProviderProtocol {
     var executionContext: NSManagedObjectContext { get }
     var rootContext: NSManagedObjectContext { get }
     var uiContext: NSManagedObjectContext { get }
-    var logger: (DataContainer.LogLevel, String) -> Void { get }
+    var logger: DataContainer.LogHandler { get }
 }
 
 public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
@@ -66,9 +66,9 @@ internal struct _TransactionContext: TransactionContext, RawContextProviderProto
     internal let executionContext: NSManagedObjectContext
     internal let rootContext: NSManagedObjectContext
     internal let uiContext: NSManagedObjectContext
-    internal let logger: (DataContainer.LogLevel, String) -> Void
+    internal let logger: DataContainer.LogHandler
     
-    internal init(executionContext: NSManagedObjectContext, rootContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, logger: @escaping (DataContainer.LogLevel, String) -> Void) {
+    internal init(executionContext: NSManagedObjectContext, rootContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, logger: DataContainer.LogHandler) {
         self.executionContext = executionContext
         self.rootContext = rootContext
         self.uiContext = uiContext
@@ -84,7 +84,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
             do {
                 result = try context.count(for: request)
             } catch {
-                logger(.error, "Unabled to count the records, \(error)")
+                logger.log(.error, "Unabled to count the records", error: error)
             }
         }
         
@@ -172,7 +172,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                 do {
                     try transactionContext.executionContext.save()
                 } catch let error as NSError {
-                    logger(.error, "Merge changes to the writer context ended with error, \(error)")
+                    logger.log(.error, "Merge changes to the writer context ended with error", error: error)
                     err = error
                 }
 
@@ -180,7 +180,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                     do {
                         try transactionContext.rootContext.save()
                     } catch let error as NSError {
-                        logger(.error, "Merge changes to the persistent container ended with error, \(error)")
+                        logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
                         err = error
                         
                         transactionContext.reset()
@@ -208,7 +208,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                 do {
                     try transactionContext.executionContext.save()
                 } catch let error as NSError {
-                    logger(.error, "Merge changes to the writer context ended with error, \(error)")
+                    logger.log(.error, "Merge changes to the writer context ended with error", error: error)
                     err = error
                 }
                 
@@ -218,7 +218,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                     do {
                         try transactionContext.rootContext.save()
                     } catch let error as NSError {
-                        logger(.error, "Merge changes to the persistent container ended with error, \(error)")
+                        logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
                         err = error
                     }
                 }
