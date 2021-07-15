@@ -15,6 +15,12 @@ extension Notification.Name {
 public class DataContainer {
     internal var writerContext: NSManagedObjectContext!
     internal var uiContext: NSManagedObjectContext!
+
+    public enum LogLevel {
+        case info, warning, error, critical
+    }
+
+    public var logger: (LogLevel, String) -> Void = { NSLog($1) }
     
     let connection: Connection
     
@@ -113,20 +119,23 @@ extension DataContainer {
     internal func backgroundTransactionContext() -> _TransactionContext {
         _TransactionContext(executionContext: createBackgroundContext(parent: writerContext),
                             rootContext: writerContext,
-                            uiContext: uiContext)
+                            uiContext: uiContext,
+                            logger: logger)
     }
     
     internal func uiTransactionContext() -> _TransactionContext {
         let context = createMainThreadContext(parent: writerContext)
         return _TransactionContext(executionContext: context,
                                    rootContext: writerContext,
-                                   uiContext: context)
+                                   uiContext: context,
+                                   logger: logger)
     }
     
     internal func queryTransactionContext() -> _TransactionContext {
         _TransactionContext(executionContext: uiContext,
                             rootContext: writerContext,
-                            uiContext: uiContext)
+                            uiContext: uiContext,
+                            logger: logger)
     }
 }
 
