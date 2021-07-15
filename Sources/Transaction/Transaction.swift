@@ -45,7 +45,7 @@ public struct Transaction {
     internal func checkUndoManager() {
         #if DEBUG
         if context.executionContext.undoManager == nil {
-            context.logger(.warning, "Please enable undo manager first.")
+            context.logger.log(.warning, "Please enable undo manager first.")
         }
         #endif
     }
@@ -106,7 +106,7 @@ extension Transaction {
                 try block(transactionContext)
             } catch {
                 guard let catchBlock = `catch` else {
-                    assertionFailure("unhandled error occured")
+                    transactionContext.logger.log(.critical, "unhandled error occured", error: error)
                     return
                 }
                 catchBlock(error)
@@ -255,7 +255,7 @@ extension Transaction.ArrayPairEditor {
                 try block(context, array, value)
             } catch {
                 guard let catchBlock = `catch` else {
-                    assertionFailure("unhandled error occured")
+                    context.logger.log(.critical, "unhandled error occured", error: error)
                     return
                 }
                 catchBlock(error)
@@ -403,7 +403,7 @@ extension Transaction.SingularEditor {
                 try block(context, value)
             } catch {
                 guard let catchBlock = `catch` else {
-                    assertionFailure("unhandled error occured")
+                    context.logger.log(.critical, "unhandled error occured", error: error)
                     return
                 }
                 catchBlock(error)
@@ -547,7 +547,7 @@ extension Transaction.PluralEditor {
                 try block(context, values)
             } catch {
                 guard let catchBlock = `catch` else {
-                    assertionFailure("unhandled error occured")
+                    context.logger.log(.critical, "unhandled error occured", error: error)
                     return
                 }
                 catchBlock(error)
@@ -694,7 +694,7 @@ extension Transaction.DualEditor {
                 try block(context, context.receive(self.value1), context.receive(self.value2))
             } catch {
                guard let catchBlock = `catch` else {
-                    assertionFailure("unhandled error occured")
+                context.logger.log(.critical, "unhandled error occured", error: error)
                     return
                }
                catchBlock(error)
