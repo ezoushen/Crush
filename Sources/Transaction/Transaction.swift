@@ -45,7 +45,7 @@ public struct Transaction {
     internal func checkUndoManager() {
         #if DEBUG
         if context.executionContext.undoManager == nil {
-            NSLog("Please enable undo manager first.")
+            context.logger(.warning, "Please enable undo manager first.")
         }
         #endif
     }
