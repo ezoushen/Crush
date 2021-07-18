@@ -54,7 +54,7 @@ extension Entity {
         }
         
         let description = NSEntityDescription()
-        description.managedObjectClassName = NSStringFromClass(Self.self)
+        description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
         
         let object = Self.init()
         let mirror = Mirror(reflecting: object)
@@ -391,3 +391,25 @@ extension Publisher {
     }
 }
 #endif
+
+@dynamicMemberLookup
+public class ManagedObject<T: Entity>: NSManagedObject, Entity {
+    public static var isAbstract: Bool { false }
+    
+    public static var renamingIdentifier: String? { nil }
+    
+    public func createProperties() -> [NSPropertyDescription] {
+        T.init().createProperties()
+    }
+    
+    public subscript<Property: NullableProperty>(dynamicMember keyPath: ReferenceWritableKeyPath<T, Property>) -> Property.PropertyValue {
+        get {
+            let property = T.init()[keyPath: keyPath]
+            return Property.FieldConvertor.convert(value: getValue(key: property.name))
+        }
+        set {
+            let property = T.init()[keyPath: keyPath]
+            setValue(Property.FieldConvertor.convert(value: newValue, with: getValue(key: property.name)), key: property.name)
+        }
+    }
+}
