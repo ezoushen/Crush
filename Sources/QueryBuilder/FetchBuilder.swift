@@ -27,42 +27,16 @@ public enum FetchSorterOption {
 }
 
 public struct FetchConfig<T: Entity>: RequestConfig {
-    private(set) var predicate: NSPredicate?
-    private(set) var sorters: [NSSortDescriptor]?
-    private(set) var resultType: NSFetchRequestResultType
-    private(set) var groupBy: [Expressible]?
-    private(set) var prefetched: [Expressible]?
-    private(set) var limit: Int?
-    private(set) var offset: Int?
-    private(set) var batch: Int
-    private(set) var asFaults: Bool
-    private(set) var includePendingChanges: Bool
-    
-    init() {
-        self.predicate = nil
-        self.sorters = nil
-        self.groupBy = nil
-        self.prefetched = nil
-        self.limit = nil
-        self.offset = nil
-        self.batch = 0
-        self.asFaults = true
-        self.resultType = .managedObjectResultType
-        self.includePendingChanges = false
-    }
-    
-    private init(predicate: NSPredicate?, limit: Int?, offset: Int?, batch: Int, sorters: [NSSortDescriptor]?, groupBy: [Expressible]?, prefetched: [Expressible]?, asFaults: Bool, resultType: NSFetchRequestResultType, includePendingChanges: Bool) {
-        self.predicate = predicate
-        self.sorters = sorters
-        self.resultType = resultType
-        self.groupBy = groupBy
-        self.prefetched = prefetched
-        self.limit = limit
-        self.batch = batch
-        self.asFaults = asFaults
-        self.offset = offset
-        self.includePendingChanges = includePendingChanges
-    }
+    private(set) var predicate: NSPredicate? = nil
+    private(set) var sorters: [NSSortDescriptor]? = nil
+    private(set) var resultType: NSFetchRequestResultType = .managedObjectResultType
+    private(set) var groupBy: [Expressible]? = nil
+    private(set) var prefetched: [Expressible]? = nil
+    private(set) var limit: Int? = nil
+    private(set) var offset: Int? = nil
+    private(set) var batch: Int = 0
+    private(set) var asFaults: Bool = true
+    private(set) var includePendingChanges: Bool = false    
     
     func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entityDescription().name ?? String(describing: T.self))
