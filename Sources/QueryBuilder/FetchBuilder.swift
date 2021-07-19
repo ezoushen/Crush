@@ -216,7 +216,7 @@ extension PartialFetchBuilder where Result == Dictionary<String, Any>, Received 
     }
 }
 
-extension PartialFetchBuilder where Result: HashableEntity, Received: NSManagedObject {
+extension PartialFetchBuilder where Result: Entity, Received: NSManagedObject {
     public func exists() -> Bool {
         findOne() != nil
     }
@@ -238,7 +238,7 @@ extension PartialFetchBuilder where Result: HashableEntity, Received: NSManagedO
     }
 }
 
-extension PartialFetchBuilder where Target: HashableEntity, Result == Target.ReadOnly, Received == Target {
+extension PartialFetchBuilder where Target: Entity, Result == Target.ReadOnly, Received == ManagedObject<Target> {
     public func exists() -> Bool {
         findOne() != nil
     }

@@ -30,11 +30,11 @@ extension AttributeOption: MutablePropertyConfigurable {
     }
 }
 
-public protocol AttributeProtocol: NullableProperty where PredicateValue: FieldAttribute & FieldConvertible {
+public protocol AttributeProtocol: ValuedProperty where PredicateValue: FieldAttribute & FieldConvertible {
     var defaultValue: Any? { get set }
     var attributeValueClassName: String? { get }
     var configuration: PropertyConfiguration { get set }
-    init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration)
+    init(_ name: String, defaultValue: PropertyValue, options: PropertyConfiguration)
 }
 
 extension AttributeProtocol {
@@ -49,11 +49,9 @@ extension AttributeProtocol {
     public var valueTransformerName: String? {
         PredicateValue.self is NSCoding.Type ? String(describing: DefaultTransformer.self) : nil
     }
-
 }
 
 // MARK: - EntityAttributeType
-@propertyWrapper
 public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashable>: AttributeProtocol, ObservableProtocol {
     public typealias ObservableType = PredicateValue
     public typealias PredicateValue = FieldType
@@ -61,31 +59,6 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     public typealias Nullability = O
     public typealias PropertyOption = AttributeOption
     public typealias FieldConvertor = FieldType
-    
-    @available(*, unavailable)
-    public var wrappedValue: PropertyValue {
-      get { fatalError("only works on instance properties of classes") }
-      set { fatalError("only works on instance properties of classes") }
-    }
-    
-    public static subscript<EnclosingSelf: HashableEntity>(
-        _enclosingInstance observed: EnclosingSelf,
-        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, PropertyValue>,
-        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Attribute<O, FieldType>>
-    ) -> PropertyValue {
-        get {
-            let property = observed[keyPath: storageKeyPath]
-            return FieldType.convert(value: observed.getValue(key: property.name))
-        }
-        set {
-            let property = observed[keyPath: storageKeyPath]
-            observed.setValue(FieldType.convert(value: newValue), key: property.name)
-        }
-    }
-    
-    public var projectedValue: Attribute<O, FieldType> {
-        self
-    }
         
     public var isAttribute: Bool {
         true
@@ -103,13 +76,13 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         self.name = name
     }
     
-    public convenience init(wrappedValue: PropertyValue, _ name: String) {
-        self.init(wrappedValue: wrappedValue, name, options: [])
+    public convenience init(defaultValue: PropertyValue = nil, _ name: String) {
+        self.init(name, defaultValue: defaultValue, options: [])
     }
     
-    public init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
+    public init(_ name: String, defaultValue: PropertyValue = nil, options: PropertyConfiguration) {
         self.name = name
-        self.defaultValue = wrappedValue
+        self.defaultValue = defaultValue
         self.configuration = options
     }
     

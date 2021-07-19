@@ -84,190 +84,124 @@ infix operator |~|
 // MATCHES operator
 infix operator |*|
 
-extension KeyPath where Root: NeutralEntityObject, Value: NullableProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
+// MARK: - Operator overloading for Entity
+
+extension KeyPath where Root: Entity, Value: ValuedProperty {
+    public var propertyName: String {
+        Root.init()[keyPath: self].name
+    }
+}
+
+extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
     public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) IN %@", NSSet(set: rhs))
+        return NSPredicate(format: "\(lhs.propertyName) IN %@", NSSet(set: rhs))
     }
 }
 
-extension KeyPath where Root: NeutralEntityObject, Value: NullableProperty, Value.PredicateValue: PredicateEquatable & Equatable {
+extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable {
     public static func <> (lhs: KeyPath, rhs: Array<Value.PredicateValue>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) IN %@", NSArray(array: rhs))
+        return NSPredicate(format: "\(lhs.propertyName) IN %@", NSArray(array: rhs))
     }
 }
 
-extension KeyPath where Root: NSManagedObject, Value: PredicateEquatable & Equatable {
-    public static func == (lhs: KeyPath, rhs: Value?) -> NSPredicate {
+extension KeyPath where
+    Root: Entity,
+    Value: ValuedProperty,
+    Value.PredicateValue: PredicateEquatable & Equatable,
+    Value.Nullability == NotNull
+{
+    public static func == (lhs: KeyPath, rhs: Value.PredicateValue) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.propertyName) == %@", rhs.predicateValue)
+    }
+
+    public static func != (lhs: KeyPath, rhs: Value.PredicateValue) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.propertyName) != %@", rhs.predicateValue)
+    }
+}
+
+extension KeyPath where
+    Root: Entity,
+    Value: ValuedProperty,
+    Value.PredicateValue: PredicateEquatable & Equatable,
+    Value.Nullability == Nullable
+{
+    public static func == (lhs: KeyPath, rhs: Value.PredicateValue?) -> NSPredicate {
         guard let value = rhs?.predicateValue else {
-            return NSPredicate(format: "\(lhs.stringValue) == NULL")
+            return NSPredicate(format: "\(lhs.propertyName) == NULL")
         }
-        return NSPredicate(format: "\(lhs.stringValue) == %@", value)
+        return NSPredicate(format: "\(lhs.propertyName) == %@", value)
     }
-    
-    public static func != (lhs: KeyPath, rhs: Value?) -> NSPredicate {
+
+    public static func != (lhs: KeyPath, rhs: Value.PredicateValue?) -> NSPredicate {
         guard let value = rhs?.predicateValue else {
-            return NSPredicate(format: "\(lhs.stringValue) != NULL")
+            return NSPredicate(format: "\(lhs.propertyName) != NULL")
         }
-        return NSPredicate(format: "\(lhs.stringValue) != %@", value)
-    }
-    
-    public static func == (lhs: KeyPath, rhs: Value) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) == %@", rhs.predicateValue)
-    }
-    
-    public static func != (lhs: KeyPath, rhs: Value) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) != %@", rhs.predicateValue)
+        return NSPredicate(format: "\(lhs.propertyName) != %@", value)
     }
 }
 
-// MARK: - Operator Overloading for `NSManagedObject`
-
-extension KeyPath where Root: NSManagedObject {
-    public static func == <E: PredicateEquatable & Equatable>(lhs: KeyPath, rhs: Value) -> NSPredicate where Value == Swift.Optional<E> {
-        guard let value = rhs?.predicateValue else {
-            return NSPredicate(format: "\(lhs.stringValue) == NULL")
-        }
-        return NSPredicate(format: "\(lhs.stringValue) == %@", value)
+extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue: PredicateComparable & Comparable {
+    public static func > (lhs: KeyPath, rhs: Value.PredicateValue) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.propertyName) > %@", rhs.predicateValue)
     }
 
-    public static func != <E: PredicateEquatable & Equatable>(lhs: KeyPath, rhs: Value) -> NSPredicate where Value == Swift.Optional<E> {
-        guard let value = rhs?.predicateValue else {
-            return NSPredicate(format: "\(lhs.stringValue) != NULL")
-        }
-        return NSPredicate(format: "\(lhs.stringValue) != %@", value)
+    public static func < (lhs: KeyPath, rhs: Value.PredicateValue) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.propertyName) < %@", rhs.predicateValue)
     }
-}
 
-extension KeyPath where Root: NSManagedObject, Value: PredicateEquatable & Equatable & Hashable {
-    public static func <> (lhs: KeyPath, rhs: Set<Value>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) IN %@", NSSet(set: rhs))
+    public static func >= (lhs: KeyPath, rhs: Value.PredicateValue) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.propertyName) >= %@", rhs.predicateValue)
+    }
+
+    public static func <= (lhs: KeyPath, rhs: Value.PredicateValue) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.propertyName) <= %@", rhs.predicateValue)
+    }
+
+    public static func <> (lhs: KeyPath, rhs: ClosedRange<Value.PredicateValue>) -> NSPredicate {
+        return NSPredicate(format: "\(lhs.propertyName) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 }
 
-extension KeyPath where Root: NSManagedObject, Value: PredicateEquatable & Equatable {
-    public static func <> (lhs: KeyPath, rhs: Array<Value>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) IN %@", NSArray(array: rhs))
-    }
-}
-
-extension KeyPath where Root: NSManagedObject, Value: PredicateComparable & Comparable {
-    public static func > (lhs: KeyPath, rhs: Value) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) > %@", rhs.predicateValue)
-    }
-
-    public static func < (lhs: KeyPath, rhs: Value) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) < %@", rhs.predicateValue)
-    }
-
-    public static func >= (lhs: KeyPath, rhs: Value) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) >= %@", rhs.predicateValue)
-    }
-
-    public static func <= (lhs: KeyPath, rhs: Value) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) <= %@", rhs.predicateValue)
-    }
-
-    public static func <> (lhs: KeyPath, rhs: ClosedRange<Value>) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
-    }
-}
-
-extension KeyPath where Root: NSManagedObject, Value == String {
+extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue == String {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
 
     public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
     }
 
     public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) CONTAINS\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName) CONTAINS\(rhs.type.modifier) %@", rhs.string)
     }
 
     public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) LIKE\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName) LIKE\(rhs.type.modifier) %@", rhs.string)
     }
 
     public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) MATCHES\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName) MATCHES\(rhs.type.modifier) %@", rhs.string)
     }
 }
 
-extension KeyPath where Root: NSManagedObject {
-    public static func <> <E: PredicateEquatable & Equatable & Hashable>(lhs: KeyPath, rhs: Set<E>) -> NSPredicate where Value == Swift.Optional<E>{
-        return NSPredicate(format: "\(lhs.stringValue) IN %@", NSSet(set: rhs))
-    }
-}
-
-extension KeyPath where Root: NSManagedObject {
-    public static func <> <E: PredicateEquatable & Equatable>(lhs: KeyPath, rhs: Array<E>) -> NSPredicate where Value == Swift.Optional<E>{
-        return NSPredicate(format: "\(lhs.stringValue) IN %@", NSArray(array: rhs))
-    }
-}
-
-extension KeyPath where Root: NSManagedObject {
-    public static func > <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: E) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) > %@", rhs.predicateValue)
-    }
-
-    public static func < <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: E) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) < %@", rhs.predicateValue)
-    }
-
-    public static func >= <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: E) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) >= %@", rhs.predicateValue)
-    }
-
-    public static func <= <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: E) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) <= %@", rhs.predicateValue)
-    }
-
-    public static func <> <E: PredicateComparable & Comparable>(lhs: KeyPath, rhs: ClosedRange<E>) -> NSPredicate where Value == Swift.Optional<E> {
-        return NSPredicate(format: "\(lhs.stringValue) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
-    }
-}
-
-extension KeyPath where Root: NSManagedObject, Value == Swift.Optional<String> {
+extension KeyPath where Root: Entity, Value: ValuedProperty {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName).stringValue BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
     }
 
     public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) ENDSWITH\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName).stringValue ENDSWITH\(rhs.type.modifier) %@", rhs.string)
     }
 
     public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) CONTAINS\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName).stringValue CONTAINS\(rhs.type.modifier) %@", rhs.string)
     }
 
     public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) LIKE\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName).stringValue LIKE\(rhs.type.modifier) %@", rhs.string)
     }
 
     public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue) MATCHES\(rhs.type.modifier) %@", rhs.string)
-    }
-}
-
-extension KeyPath where Root: NSManagedObject {
-    public static func |~ (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue).stringValue BEGINSWITH\(rhs.type.modifier) %@", rhs.string)
-    }
-
-    public static func ~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue).stringValue ENDSWITH\(rhs.type.modifier) %@", rhs.string)
-    }
-
-    public static func <> (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue).stringValue CONTAINS\(rhs.type.modifier) %@", rhs.string)
-    }
-
-    public static func |~| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue).stringValue LIKE\(rhs.type.modifier) %@", rhs.string)
-    }
-
-    public static func |*| (lhs: KeyPath, rhs: SearchString) -> NSPredicate {
-        return NSPredicate(format: "\(lhs.stringValue).stringValue MATCHES\(rhs.type.modifier) %@", rhs.string)
+        return NSPredicate(format: "\(lhs.propertyName).stringValue MATCHES\(rhs.type.modifier) %@", rhs.string)
     }
 }

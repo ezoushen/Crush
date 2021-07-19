@@ -8,11 +8,11 @@
 import CoreData
 
 public protocol QueryerProtocol {
-    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, T, T>
+    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, ManagedObject<T>>
 }
 
 public protocol ReadOnlyQueryerProtocol {
-    func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, T, T.ReadOnly>
+    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, T.ReadOnly>
 }
 
 public protocol MutableQueryerProtocol {

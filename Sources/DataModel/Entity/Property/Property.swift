@@ -79,18 +79,15 @@ extension PropertyProtocol {
 
 // MARK: - Entity Property
 
-public protocol MutableProperty: PropertyProtocol {
+public protocol ValuedProperty: PropertyProtocol {
     associatedtype PropertyOption: MutablePropertyConfigurable
     associatedtype PropertyValue
     associatedtype PredicateValue
-    
-    init(_ name: String)
-}
-
-public protocol NullableProperty: MutableProperty {
     associatedtype Nullability: Crush.Nullability
     associatedtype FieldConvertor: FieldConvertible
     where FieldConvertor.RuntimeObjectValue == PropertyValue
-    
+
+    init(_ name: String)
+
     var isAttribute: Bool { get }
 }

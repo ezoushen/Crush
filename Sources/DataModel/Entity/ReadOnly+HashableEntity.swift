@@ -1,5 +1,5 @@
 //
-//  ReadOnly+HashableEntity.swift
+//  ReadOnly+Entity.swift
 //  Crush
 //
 //  Created by 沈昱佐 on 2020/5/6.
@@ -8,47 +8,47 @@
 import CoreData
 
 @dynamicMemberLookup
-public struct ReadOnly<Value: HashableEntity> {
-    public let value: Value
+public struct ReadOnly<Value: Entity> {
+    public let value: ManagedObject<Value>
     
     public var managedObjectID: NSManagedObjectID {
-        value.rawObject.objectID
+        value.objectID
     }
     
-    public init(_ value: Value) {
+    public init(_ value: ManagedObject<Value>) {
         self.value = value
     }
-    
-    public func edit(in transaction: Transaction) -> Editable<Value> {
-        .init(self, transaction: transaction)
-    }
 
-    public func access<T>(keyPath: KeyPath<Value, T>) -> T {
+    public func access<T: ValuedProperty>(keyPath: KeyPath<Value, T>) -> T.PropertyValue {
         guard let context = value.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
-        return context.performSync { value[keyPath: keyPath] }
+        return context.performSync { value[dynamicMember: keyPath] }
     }
-    
-    public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> Subject? {
+
+    public subscript<T: ValuedProperty>(dynamicMember keyPath: KeyPath<Value, T>) -> T.PropertyValue {
         access(keyPath: keyPath)
     }
-    
-    public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject>) -> Subject {
-        access(keyPath: keyPath)
-    }
-    
-    public subscript<Subject: HashableEntity>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> ReadOnly<Subject>? {
+
+    public subscript<T: RelationshipProtocol>(dynamicMember keyPath: KeyPath<Value, T>) -> ReadOnly<T.Mapping.EntityType>?
+    where
+        T.Mapping.RuntimeObjectValue == ManagedObject<T.Mapping.EntityType>?,
+        T.PropertyValue == T.Mapping.RuntimeObjectValue
+    {
         guard let value = access(keyPath: keyPath) else { return nil }
-        return ReadOnly<Subject>(value)
+        return ReadOnly<T.Mapping.EntityType>(value)
     }
-    
-    public subscript<Subject: HashableEntity>(dynamicMember keyPath: KeyPath<Value, Set<Subject>>) -> Set<Subject.ReadOnly> {
+
+    public subscript<T: RelationshipProtocol>(dynamicMember keyPath: KeyPath<Value, T>) -> Set<T.Mapping.EntityType.ReadOnly>
+    where
+        T.Mapping.RuntimeObjectValue == Set<ManagedObject<T.Mapping.EntityType>>,
+        T.PropertyValue == T.Mapping.RuntimeObjectValue
+    {
         guard let context = value.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
         return context.performSync {
-            Set<Subject.ReadOnly>(value[keyPath: keyPath].map{ .init($0) })
+            Set<T.Mapping.EntityType.ReadOnly>(value[dynamicMember: keyPath].map{ .init($0) })
         }
     }
 }
@@ -65,48 +65,10 @@ extension ReadOnly: Hashable where Value: Hashable {
     }
 }
 
-extension ReadOnly where Value: NeutralEntityObject {
-    public func validateForDelete() throws {
-        try value.validateForDelete()
-    }
-    
-    public func validateForInsert() throws {
-        try value.validateForInsert()
-    }
-    
-    public func validateForUpdate() throws {
-        try value.validateForUpdate()
-    }
-}
-
-extension HashableEntity {
+extension Entity {
     public typealias ReadOnly = Crush.ReadOnly<Self>
 }
 
 public protocol ObservableProtocol {
     associatedtype ObservableType: FieldConvertible
 }
-
-#if canImport(Combine)
-import Combine
-import SwiftUI
-
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension ReadOnly {
-    public func observe<T: NullableProperty & ObservableProtocol>(_ keyPath: KeyPath<Value, T>, containsCurrent: Bool = false)
-    -> AnyPublisher<T.PropertyValue, Never>
-    where T.PropertyValue == T.ObservableType.RuntimeObjectValue {
-        let name = self.value[keyPath: keyPath].name
-        return KVOPublisher<NSManagedObject, T.ObservableType.ManagedObjectValue>(
-            subject: value.rawObject,
-            keyPath: name,
-            options: containsCurrent ? [.initial, .new] : [.new]
-        )
-            .filter { _ in
-                value.rawObject.faultingState == 0
-            }
-            .map(T.ObservableType.convert(value:))
-            .eraseToAnyPublisher()
-    }
-}
-#endif

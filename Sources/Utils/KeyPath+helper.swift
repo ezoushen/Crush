@@ -33,13 +33,13 @@ public protocol RootTracableKeyPathProtocol: Expressible {
     var stringValue: String { get }
 }
 
-extension KeyPath: Expressible where Root: RuntimeObject {
+extension KeyPath: Expressible where Root: Entity {
     public func asExpression() -> Any {
         stringValue
     }
 }
 
-extension KeyPath: RootTracableKeyPathProtocol where Root: NeutralEntityObject, Value: Field {
+extension KeyPath: RootTracableKeyPathProtocol where Root: EntityObject, Value: Field {
     public var rootType: Entity.Type {
         return Root.self
     }

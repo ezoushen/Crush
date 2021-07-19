@@ -13,10 +13,10 @@ public typealias Relation = Required.Relation
 
 public enum Optional {
     public struct Relation {
-        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToMany<S>, ToOne<D>>
-        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToMany<S>, ToMany<D>>
-        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToOne<S>, ToOne<D>>
-        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToOne<S>, ToMany<D>>
+        public typealias ManyToOne<S: Entity, D: Entity> = Relationship<Nullable, ToMany<S>, ToOne<D>>
+        public typealias ManyToMany<S: Entity, D: Entity> = Relationship<Nullable, ToMany<S>, ToMany<D>>
+        public typealias OneToOne<S: Entity, D: Entity> = Relationship<Nullable, ToOne<S>, ToOne<D>>
+        public typealias OneToMany<S: Entity, D: Entity> = Relationship<Nullable, ToOne<S>, ToMany<D>>
     }
     
     public struct Value {
@@ -39,10 +39,10 @@ public enum Optional {
 
 public enum Required {
     public struct Relation {
-        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToMany<S>, ToOne<D>>
-        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToMany<S>, ToMany<D>>
-        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToOne<S>, ToOne<D>>
-        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToOne<S>, ToMany<D>>
+        public typealias ManyToOne<S: Entity, D: Entity> = Relationship<NotNull, ToMany<S>, ToOne<D>>
+        public typealias ManyToMany<S: Entity, D: Entity> = Relationship<NotNull, ToMany<S>, ToMany<D>>
+        public typealias OneToOne<S: Entity, D: Entity> = Relationship<NotNull, ToOne<S>, ToOne<D>>
+        public typealias OneToMany<S: Entity, D: Entity> = Relationship<NotNull, ToOne<S>, ToMany<D>>
     }
 
     public struct Value {
@@ -69,10 +69,10 @@ enum Transient {
     
     public enum Optional {
         public struct Relation {
-            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToMany<S>, ToOne<D>>>
-            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToMany<S>, ToMany<D>>>
-            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToOne<S>, ToOne<D>>>
-            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToOne<S>, ToMany<D>>>
+            public typealias ManyToOne<S: Entity, D: Entity> = Temporary<Relationship<Nullable, ToMany<S>, ToOne<D>>>
+            public typealias ManyToMany<S: Entity, D: Entity> = Temporary<Relationship<Nullable, ToMany<S>, ToMany<D>>>
+            public typealias OneToOne<S: Entity, D: Entity> = Temporary<Relationship<Nullable, ToOne<S>, ToOne<D>>>
+            public typealias OneToMany<S: Entity, D: Entity> = Temporary<Relationship<Nullable, ToOne<S>, ToMany<D>>>
         }
         
         public struct Value {
@@ -96,10 +96,10 @@ enum Transient {
 
     public enum Required {
         public struct Relation {
-            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToMany<S>, ToOne<D>>>
-            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToMany<S>, ToMany<D>>>
-            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToOne<S>, ToOne<D>>>
-            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToOne<S>, ToMany<D>>>
+            public typealias ManyToOne<S: Entity, D: Entity> = Temporary<Relationship<NotNull, ToMany<S>, ToOne<D>>>
+            public typealias ManyToMany<S: Entity, D: Entity> = Temporary<Relationship<NotNull, ToMany<S>, ToMany<D>>>
+            public typealias OneToOne<S: Entity, D: Entity> = Temporary<Relationship<NotNull, ToOne<S>, ToOne<D>>>
+            public typealias OneToMany<S: Entity, D: Entity> = Temporary<Relationship<NotNull, ToOne<S>, ToMany<D>>>
         }
 
         public struct Value {

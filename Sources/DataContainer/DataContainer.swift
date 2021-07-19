@@ -101,15 +101,6 @@ public class DataContainer {
         createContext(parent: parent, concurrencyType: .mainQueueConcurrencyType)
     }
     
-    public func reduceMemoryUsage() {
-        uiContext.performSync {
-            uiContext.reset()
-        }
-        writerContext.performSync {
-            writerContext.reset()
-        }
-    }
-    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -140,7 +131,7 @@ extension DataContainer {
 }
 
 extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
-    public func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, T, T.ReadOnly> {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, T.ReadOnly> {
         .init(config: .init(), context: queryTransactionContext(), onUiContext: true)
     }
     
@@ -166,18 +157,18 @@ extension DataContainer {
         Transaction(context: uiTransactionContext(), mergePolicy: mergePolicy)
     }
     
-    public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
-        guard let object = uiContext.object(with: objectID) as? T else { return nil }
+    public func load<T: Entity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
+        guard let object = uiContext.object(with: objectID) as? ManagedObject<T> else { return nil }
         return T.ReadOnly(object)
     }
     
-    public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
+    public func load<T: Entity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
         objectIDs.map(load(objectID:))
     }
     
-    public func load<T: HashableEntity>(_ object: T.ReadOnly) -> T.ReadOnly {
-        guard uiContext != object.value.rawObject.managedObjectContext else { return object }
-        let newObject = uiContext.receive(runtimeObject: object.value) as! T
+    public func load<T: Entity>(_ object: T.ReadOnly) -> T.ReadOnly {
+        guard uiContext != object.value.managedObjectContext else { return object }
+        let newObject = uiContext.receive(runtimeObject: object.value) as! ManagedObject<T>
         return T.ReadOnly(newObject)
     }
 }

@@ -56,7 +56,7 @@ public final class InsertBuilder<Target: Entity>: RequestBuilder {
     }
 }
 
-extension InsertBuilder where Target: NeutralEntityObject {
+extension InsertBuilder where Target: EntityObject {
     private func transform<Value: AttributeProtocol>(object: [(KeyPath<Target, Value>, Value.PropertyValue)]) -> [String: Any] {
         var dict = Dictionary<String, Any>(minimumCapacity: object.count)
         object.forEach{ dict[$0.0.stringValue] = $0.1 }

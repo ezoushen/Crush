@@ -8,37 +8,27 @@
 
 import CoreData
 
-public protocol RuntimeObject: AnyObject {
-    var rawObject: NSManagedObject { get }
-}
-
-public protocol Entity: RuntimeObject, Field {
+public protocol Entity: NSObject, Field {
     static func entityDescription() -> NSEntityDescription
     static var isAbstract: Bool { get }
     static var renamingIdentifier: String? { get }
     static var entityCacheKey: String { get }
-    
+
     init()
-    init(context: NSManagedObjectContext)
-    
     func createProperties() -> [NSPropertyDescription]
 }
 
-public protocol HashableEntity: NSManagedObject, Entity { }
-
-extension RuntimeObject {
+extension Entity {
+    public static var entityCacheKey: String {
+        String(reflecting: Self.self)
+    }
+    
     static var fetchKey: String {
         String(describing: Self.self)
     }
         
     static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
         NSFetchRequest<NSFetchRequestResult>(entityName: fetchKey)
-    }
-}
-
-extension Entity {
-    public static var entityCacheKey: String {
-        String(reflecting: Self.self)
     }
     
     static func createPropertyCacheKey(domain: String = entityCacheKey, name: String) -> String {
@@ -78,7 +68,7 @@ extension Entity {
             }
         }
         
-        description.name = String(describing: Self.self)
+        description.name = fetchKey
         description.properties = properties
         description.isAbstract = isAbstract
         description.renamingIdentifier = renamingIdentifier
@@ -102,9 +92,7 @@ extension Entity {
         // Setup parent entity
         if let superMirror = mirror.superclassMirror,
             superMirror.subjectType is Entity.Type,
-            superMirror.subjectType != NeutralEntityObject.self,
             superMirror.subjectType != EntityObject.self,
-            superMirror.subjectType != AbstractEntityObject.self,
             let superType = superMirror.subjectType as? Entity.Type {
             coordinator.getAndWait(superType.entityCacheKey, in: CacheType.entity) { entity in
                 entity.subentities.append(description)
@@ -142,7 +130,7 @@ extension Entity {
         func resolveIndexes(objectMirror mirror: Mirror?, constraintClass: ConstraintSet.Type?) {
             guard let mirror = mirror,
                   let constraintClass = constraintClass ?? createIndexClassFromMirror(mirror),
-                  mirror.superclassMirror?.subjectType != AbstractEntityObject.self || mirror.subjectType == Self.self
+                      mirror.subjectType == Self.self
                 else { return }
             let indexClassMirror = Mirror(reflecting: constraintClass.init())
             let indexChildren = indexClassMirror.children
@@ -215,8 +203,8 @@ extension Entity {
         let attributeMappings = try entityDescription().properties
             .filter { $0 is NSAttributeDescription }
             .compactMap { property -> PropertyMappingProtocol? in
-            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
-                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObject.Type,
+            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? Entity.Type,
+                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? Entity.Type,
                   let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
                   let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
                 else { return nil }
@@ -233,8 +221,8 @@ extension Entity {
         let relationshipMappings = try entityDescription().properties
             .filter { $0 is NSRelationshipDescription }
             .compactMap { property -> PropertyMappingProtocol? in
-            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? RuntimeObject.Type,
-                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? RuntimeObject.Type,
+            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? Entity.Type,
+                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? Entity.Type,
                   let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
                   let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
                 else { return nil }
@@ -262,7 +250,7 @@ extension Entity {
     }
 }
 
-open class NeutralEntityObject: NSManagedObject, HashableEntity {
+open class EntityObject: NSObject, Entity {
     public class var isAbstract: Bool {
         return false
     }
@@ -274,19 +262,23 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
     public class var renamingIdentifier: String? {
         renamingClass?.fetchKey
     }
+
+    public override required init() {
+        super.init()
+    }
     
     private lazy var _allMirrors: [(Mirror.Child, String)] = {
         func findAllMirrors(_ mirror: Mirror?) -> [(Mirror, String)] {
             guard let mirror = mirror else { return [] }
             
-            if mirror.subjectType == EntityObject.self || mirror.subjectType == AbstractEntityObject.self {
+            if mirror.subjectType == EntityObject.self {
                 return []
             }
             
             guard let subjectType = mirror.subjectType as? Entity.Type,
                 let superClassMirror = mirror.superclassMirror else { return [] }
             
-            return [(mirror, superClassMirror.subjectType.self == AbstractEntityObject.self ? subjectType.entityCacheKey : Self.entityCacheKey)] + findAllMirrors(superClassMirror)
+            return [(mirror, subjectType.entityCacheKey)] + findAllMirrors(superClassMirror)
         }
         
         return findAllMirrors(Mirror(reflecting: self)).flatMap{
@@ -322,94 +314,5 @@ open class NeutralEntityObject: NSManagedObject, HashableEntity {
                 CacheCoordinator.shared.set(defaultKey, value: description, in: CacheType.property)
                 return description
             }
-    }
-}
-
-open class AbstractEntityObject: NeutralEntityObject {
-    public override class var isAbstract: Bool {
-        return class_getSuperclass(Self.self) == AbstractEntityObject.self
-    }
-}
-
-open class EntityObject: NeutralEntityObject {
-    public override class var isAbstract: Bool {
-        return false
-    }
-}
-
-extension NSManagedObject: RuntimeObject, PropertyProxy {
-    public convenience init(context: TransactionContext) {
-        if let transactionContext = context as? _TransactionContext {
-            self.init(context: transactionContext.executionContext)
-        } else {
-            fatalError()
-        }
-    }
-    
-    public var rawObject: NSManagedObject {
-        self
-    }
-}
-
-#if canImport(Combine)
-import Combine
-import SwiftUI
-
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension Publisher where Self.Failure == Never {
-    public func assign<Root: HashableEntity>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: Root.ReadOnly, in transaction: Transaction) -> AnyCancellable {
-        sink {
-            Editable(object, transaction: transaction)[dynamicMember: keyPath] = $0
-        }
-    }
-}
-
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension Publisher {
-    public func tryMap<T>(transaction: Crush.Transaction, _ block: @escaping (TransactionContext, Output) throws -> T) -> Publishers.TryMap<Self, T> {
-        tryMap { value in
-            try transaction.sync { context in
-                try block(context, value)
-            }
-        }
-    }
-    
-    public func tryMap<T: HashableEntity>(transaction: Crush.Transaction, _ block: @escaping (TransactionContext, Output) throws -> T) -> Publishers.TryMap<Self, T.ReadOnly> {
-        tryMap { value in
-            try transaction.sync { context in
-                try block(context, value)
-            }
-        }
-    }
-    
-    public func tryMap<T: HashableEntity>(transaction: Crush.Transaction, _ block: @escaping (TransactionContext, Output) throws -> [T]) -> Publishers.TryMap<Self, [T.ReadOnly]> {
-        tryMap { value in
-            try transaction.sync { context in
-                try block(context, value)
-            }
-        }
-    }
-}
-#endif
-
-@dynamicMemberLookup
-public class ManagedObject<T: Entity>: NSManagedObject, Entity {
-    public static var isAbstract: Bool { false }
-    
-    public static var renamingIdentifier: String? { nil }
-    
-    public func createProperties() -> [NSPropertyDescription] {
-        T.init().createProperties()
-    }
-    
-    public subscript<Property: NullableProperty>(dynamicMember keyPath: ReferenceWritableKeyPath<T, Property>) -> Property.PropertyValue {
-        get {
-            let property = T.init()[keyPath: keyPath]
-            return Property.FieldConvertor.convert(value: getValue(key: property.name))
-        }
-        set {
-            let property = T.init()[keyPath: keyPath]
-            setValue(Property.FieldConvertor.convert(value: newValue, with: getValue(key: property.name)), key: property.name)
-        }
     }
 }

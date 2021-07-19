@@ -9,8 +9,7 @@
 import CoreData
 
 // MARK: - Transient Property
-@propertyWrapper
-public final class Temporary<Property: NullableProperty>: NullableProperty {
+public final class Temporary<Property: ValuedProperty>: ValuedProperty {
         
     var property: Property!
     
@@ -37,34 +36,6 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
         }
     }
     
-    @available(*, unavailable)
-    public var wrappedValue: PropertyValue {
-      get { fatalError("only works on instance properties of classes") }
-      set { fatalError("only works on instance properties of classes") }
-    }
-    
-    public static subscript<EnclosingSelf: HashableEntity>(
-        _enclosingInstance observed: EnclosingSelf,
-        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, PropertyValue>,
-        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Temporary<Property>>
-    ) -> PropertyValue {
-        get {
-            let property = observed[keyPath: storageKeyPath]
-            return FieldConvertor.convert(value: observed.getValue(key: property.name))
-        }
-        set {
-            let property = observed[keyPath: storageKeyPath]
-            observed.setValue(
-                FieldConvertor.convert(value: newValue, with: observed.getValue(key: property.name)),
-                key: property.name
-            )
-        }
-    }
-    
-    public var projectedValue: Temporary<Property> {
-        self
-    }
-    
     public func emptyPropertyDescription() -> NSPropertyDescription {
         let description = property.emptyPropertyDescription()
         description.isTransient = true
@@ -74,9 +45,9 @@ public final class Temporary<Property: NullableProperty>: NullableProperty {
 }
 
 extension Temporary where Property: AttributeProtocol {
-    public convenience init(wrappedValue: PropertyValue, _ name: String, options: PropertyConfiguration) {
+    public convenience init(_ name: String, defaultValue: PropertyValue, options: PropertyConfiguration = []) {
         self.init(name)
-        self.property.defaultValue = wrappedValue
+        self.property.defaultValue = defaultValue
         self.property.configuration = options
     }
 }

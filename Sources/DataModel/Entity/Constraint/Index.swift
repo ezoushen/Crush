@@ -15,8 +15,7 @@ protocol IndexProtocol {
 }
 
 protocol TargetedIndexProtocol: IndexProtocol {
-    associatedtype Target: RuntimeObject
-
+    associatedtype Target: Entity
     var indexes: [IndexElement<Target>] { get }
 }
 
@@ -36,7 +35,7 @@ extension IndexElementProtocol {
     }
 }
 
-public class IndexElement<Target: RuntimeObject>: IndexElementProtocol {
+public class IndexElement<Target: Entity>: IndexElementProtocol {
     public var isAscending: Bool {
         fatalError("Do not use abstract directly")
     }
@@ -51,16 +50,16 @@ public class IndexElement<Target: RuntimeObject>: IndexElementProtocol {
     }
 }
 
-public class AscendingIndex<Target: RuntimeObject>: IndexElement<Target> {
+public class AscendingIndex<Target: Entity>: IndexElement<Target> {
     public override var isAscending: Bool { true }
 }
 
-public class DescendingIndex<Target: RuntimeObject>: IndexElement<Target> {
+public class DescendingIndex<Target: Entity>: IndexElement<Target> {
     public override var isAscending: Bool { false }
 }
 
 @propertyWrapper
-public struct CompositeFetchIndex<Target: RuntimeObject>: TargetedIndexProtocol {
+public struct CompositeFetchIndex<Target: Entity>: TargetedIndexProtocol {
     private let _indexes: [IndexElement<Target>]
     
     public var indexes: [IndexElement<Target>] {
@@ -77,7 +76,7 @@ public struct CompositeFetchIndex<Target: RuntimeObject>: TargetedIndexProtocol 
 }
 
 @propertyWrapper
-public struct FetchIndex<Target: RuntimeObject>: TargetedIndexProtocol {
+public struct FetchIndex<Target: Entity>: TargetedIndexProtocol {
     
     private let _index: IndexElement<Target>
     

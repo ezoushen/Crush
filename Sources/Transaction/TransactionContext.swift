@@ -16,9 +16,9 @@ public protocol RawContextProviderProtocol {
 }
 
 public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
-    func create<T: Entity>(entity: T.Type) -> T
-    func delete<T: Entity>(_ object: T)
-    func load<T: Entity>(objectID: NSManagedObjectID) -> T?
+    func create<T: Entity>(entity: T.Type) -> ManagedObject<T>
+    func delete<T: Entity>(_ object: ManagedObject<T>)
+    func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>?
 
     func commit() throws
     func commitAndWait() throws
@@ -41,7 +41,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
 }
 
 extension TransactionContext where Self: RawContextProviderProtocol {
-    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, T, T> {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, ManagedObject<T>> {
         .init(config: .init(), context: self, onUiContext: false)
     }
     
@@ -57,8 +57,8 @@ extension TransactionContext where Self: RawContextProviderProtocol {
         .init(config: .init(), context: self)
     }
 
-    public func load<T: Entity>(objectID: NSManagedObjectID) -> T? {
-        executionContext.object(with: objectID) as? T
+    public func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>? {
+        executionContext.object(with: objectID) as? ManagedObject<T>
     }
 }
 
@@ -130,19 +130,15 @@ extension TransactionContext where Self: RawContextProviderProtocol {
 }
 
 extension TransactionContext where Self: RawContextProviderProtocol {
-    public func create<T: Entity>(entity: T.Type) -> T {
-        var object: T!
-        
-        executionContext.performAndWait {
-            object = entity.init(context: executionContext)
+    public func create<T: Entity>(entity: T.Type) -> ManagedObject<T> {
+        executionContext.performSync {
+            ManagedObject<T>(context: executionContext)
         }
-        
-        return object
     }
     
-    public func delete<T: Entity>(_ object: T) {
-        executionContext.performAndWait {
-            executionContext.delete(object.rawObject)
+    public func delete<T: Entity>(_ object: ManagedObject<T>) {
+        executionContext.performSync {
+            executionContext.delete(object)
         }
     }
     

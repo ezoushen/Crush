@@ -9,9 +9,9 @@
 import CoreData
 
 extension NSManagedObjectContext {
-    func receive<T: RuntimeObject>(runtimeObject: T) -> NSManagedObject {
-        let object = self.object(with: runtimeObject.rawObject.objectID)
-        if !runtimeObject.rawObject.isFault,
+    func receive<T: NSManagedObject>(runtimeObject: T) -> NSManagedObject {
+        let object = self.object(with: runtimeObject.objectID)
+        if !runtimeObject.isFault,
             let name = object.entity.attributesByName.keys.first {
             object.willAccessValue(forKey: name)
             defer {
