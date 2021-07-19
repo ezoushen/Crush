@@ -31,7 +31,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     private(set) var sorters: [NSSortDescriptor]?
     private(set) var resultType: NSFetchRequestResultType
     private(set) var groupBy: [Expressible]?
-    private(set) var mapTo: [Expressible]?
+    private(set) var prefetched: [Expressible]?
     private(set) var limit: Int?
     private(set) var offset: Int?
     private(set) var batch: Int
@@ -42,7 +42,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         self.predicate = nil
         self.sorters = nil
         self.groupBy = nil
-        self.mapTo = nil
+        self.prefetched = nil
         self.limit = nil
         self.offset = nil
         self.batch = 0
@@ -51,12 +51,12 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         self.includePendingChanges = false
     }
     
-    private init(predicate: NSPredicate?, limit: Int?, offset: Int?, batch: Int, sorters: [NSSortDescriptor]?, groupBy: [Expressible]?, mapTo: [Expressible]?, asFaults: Bool, resultType: NSFetchRequestResultType, includePendingChanges: Bool) {
+    private init(predicate: NSPredicate?, limit: Int?, offset: Int?, batch: Int, sorters: [NSSortDescriptor]?, groupBy: [Expressible]?, prefetched: [Expressible]?, asFaults: Bool, resultType: NSFetchRequestResultType, includePendingChanges: Bool) {
         self.predicate = predicate
         self.sorters = sorters
         self.resultType = resultType
         self.groupBy = groupBy
-        self.mapTo = mapTo
+        self.prefetched = prefetched
         self.limit = limit
         self.batch = batch
         self.asFaults = asFaults
@@ -68,7 +68,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entityDescription().name ?? String(describing: T.self))
         request.sortDescriptors = sorters
         request.predicate = predicate
-        request.propertiesToFetch = mapTo?.map{ $0.asExpression() }
+        request.propertiesToFetch = prefetched?.map{ $0.asExpression() }
         request.propertiesToGroupBy = groupBy?.map{ $0.asExpression() }
         request.resultType = resultType
         request.fetchLimit = limit ?? 0
@@ -112,8 +112,8 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
         return self
     }
     
-    public func groupAndCount<V>(col name: KeyPath<Target, V>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
-        let keypathExp = NSExpression(forKeyPath: name.stringValue)
+    public func groupAndCount<V: ValuedProperty>(col name: KeyPath<Target, V>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
+        let keypathExp = NSExpression(forKeyPath: name.propertyName)
         let countDesc = NSExpressionDescription()
         countDesc.name = "count"
         countDesc.expressionResultType = .integer64AttributeType
@@ -121,51 +121,30 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
                                             arguments: [keypathExp])
         let newConfig = _config
             .updated(\.groupBy, value: (_config.groupBy ?? []) + [name])
-            .updated(\.mapTo, value: [name, countDesc])
+            .updated(\.prefetched, value: [name, countDesc])
             .updated(\.resultType, value: .dictionaryResultType)
         return .init(config: newConfig, context: _context, onUiContext: _onUiContext)
     }
-    
-    public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: true, selector: type.selector)
+
+    public func sort<V: ValuedProperty>(_ keyPath: KeyPath<Target, V>, ascending: Bool, option: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
+        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: ascending, selector: option.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
-    }
-    
-    public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: false, selector: type.selector)
-        _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return self
-    }
-    
-    public func ascendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> where V: FieldProtocol {
-        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: true, selector: type.selector)
-        _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return self
-    }
-    
-    public func descendingSort<V>(_ keyPath: KeyPath<Target, V>, type: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> where V: FieldProtocol{
-        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: false, selector: type.selector)
-        _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
-        return self
-    }
-    
-    public func map<V>(_ keyPath: KeyPath<Target, V>) -> PartialFetchBuilder<Target, Dictionary<String, Any>, V> {
-        let newConfig = _config.updated(\.mapTo, value: [keyPath]).updated(\.resultType, value: .dictionaryResultType)
-        return .init(config: newConfig, context: _context, onUiContext: _onUiContext)
-    }
-    
-    public func map<V>(_ keyPaths: [KeyPath<Target, V>]) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
-        let newConfig = _config.updated(\.mapTo, value: (_config.mapTo ?? []) + keyPaths).updated(\.resultType, value: .dictionaryResultType)
-        return .init(config: newConfig, context: _context, onUiContext: _onUiContext)
     }
 
-    public func `where`(_ predicate: NSPredicate) -> Self {
+    public func select(_ keyPaths: PartialKeyPath<Target>...) -> PartialFetchBuilder<Target, Received, Result> {
+        _config = _config
+            .updated(\.prefetched, value: (_config.prefetched ?? []) + keyPaths.compactMap{ $0 as? Expressible })
+            .updated(\.asFaults, value: true)
+        return self
+    }
+
+    public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
         _config = _config.updated(\.predicate, value: predicate)
         return self
     }
     
-    public func andWhere(_ predicate: NSPredicate) -> Self {
+    public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
         let newPredicate: NSPredicate = {
             if let pred = _config.predicate {
                 return NSCompoundPredicate(andPredicateWithSubpredicates: [pred, predicate])
@@ -176,7 +155,7 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
         return self
     }
     
-    public func orWhere(_ predicate: NSPredicate) -> Self {
+    public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {
         let newPredicate: NSPredicate = {
             if let pred = _config.predicate {
                 return NSCompoundPredicate(orPredicateWithSubpredicates: [pred, predicate])
@@ -210,31 +189,9 @@ public class FetchBuilder<Target, Received, Result>: PartialFetchBuilder<Target,
     }
 }
 
-extension PartialFetchBuilder where Result == Dictionary<String, Any>, Received == Result {
+extension PartialFetchBuilder where Received == Result {
     public func exec() -> [Result] {
         received()
-    }
-}
-
-extension PartialFetchBuilder where Result: Entity, Received: NSManagedObject {
-    public func exists() -> Bool {
-        findOne() != nil
-    }
-    
-    public func findOne() -> Result? {
-        limit(1).exec().first
-    }
-    
-    public func exec() -> [Result] {
-        if _onUiContext {
-            return received().compactMap {
-                _context.present($0) as? Result
-            }
-        } else {
-            return received().compactMap {
-                _context.receive($0) as? Result
-            }
-        }
     }
 }
 
@@ -248,24 +205,11 @@ extension PartialFetchBuilder where Target: Entity, Result == Target.ReadOnly, R
     }
     
     public func exec() -> [Result] {
-        if _onUiContext {
-            return received().map {
-                Result(_context.present($0))
-            }
-        } else {
-            return received().map {
-                Result(_context.receive($0))
-            }
-        }
+        _onUiContext
+            ? received().map { Result(_context.present($0)) }
+            : received().map { Result(_context.receive($0)) }
     }
 }
-
-extension PartialFetchBuilder where Received == Dictionary<String, Any> {
-    public func exec() -> [Result] {
-        received().flatMap{ $0.values }.compactMap{ $0 as? Result }
-    }
-}
-
 
 extension NSExpressionDescription: Expressible {
     public func asExpression() -> Any {

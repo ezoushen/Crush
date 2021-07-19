@@ -11,7 +11,7 @@ public struct SearchString {
     public enum Category {
         case caseInsensitive, diacriticInsensitive, caseDiacriticInsensitive, plain
         
-        var modifier: String {
+        public var modifier: String {
             switch self {
             case .plain: return ""
             case .caseDiacriticInsensitive: return "[cd]"
@@ -39,14 +39,16 @@ extension SearchString: ExpressibleByStringLiteral {
     }
 }
 
-public func CASE_INSENSITIVE(_ string: String) -> SearchString {
-    return .init(type: .caseInsensitive, string: string)
-}
+public extension SearchString {
+    static func caseInsensitive(_ string: String) -> SearchString {
+        SearchString(type: .caseInsensitive, string: string)
+    }
 
-public func DIACRITIC_INSENSITIVE(_ string: String) -> SearchString {
-    return .init(type: .diacriticInsensitive, string: string)
-}
+    static func diacriticInsensitive(_ string: String) -> SearchString {
+        SearchString(type: .diacriticInsensitive, string: string)
+    }
 
-public func CASE_DIACRITIC_INSENSITIVE(_ string: String) -> SearchString {
-    return .init(type: .caseDiacriticInsensitive, string: string)
+    static func caseDiacriticInsensitive(_ string: String) -> SearchString {
+        SearchString(type: .caseDiacriticInsensitive, string: string)
+    }
 }
