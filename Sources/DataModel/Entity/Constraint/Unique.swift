@@ -11,45 +11,43 @@ protocol UniqueConstraintProtocol {
     var uniquenessConstarints: [String] { get }
 }
 
-public struct UniqueConstraintSet<Target: Entity> {
-    public let constraints: [PartialKeyPath<Target>]
+public struct UniqueConstraintSet<Target: Entity, Value: ValuedProperty> {
+    public let constraints: [KeyPath<Target, Value>]
 }
 
 extension UniqueConstraintSet: ExpressibleByArrayLiteral {
-    public init(arrayLiteral elements: PartialKeyPath<Target>...) {
+    public init(arrayLiteral elements: KeyPath<Target, Value>...) {
         constraints = elements
     }
 }
 
 @propertyWrapper
-public struct CompositeUniqueConstraint<Target: Entity>: UniqueConstraintProtocol {
-    public var wrappedValue: UniqueConstraintSet<Target>
+public struct CompositeUniqueConstraint<Target: Entity, Value: ValuedProperty>: UniqueConstraintProtocol {
+    public var wrappedValue: UniqueConstraintSet<Target, Value>
     
-    public init(wrappedValue: UniqueConstraintSet<Target>) {
+    public init(wrappedValue: UniqueConstraintSet<Target, Value>) {
         self.wrappedValue = wrappedValue
     }
 }
 
 extension CompositeUniqueConstraint {
     var uniquenessConstarints: [String] {
-        wrappedValue.constraints.compactMap {
-            $0.stringValue
-        }
+        wrappedValue.constraints.map(\.propertyName)
     }
 }
 
 @propertyWrapper
-public struct UniqueConstraint<Target: Entity>: UniqueConstraintProtocol {
+public struct UniqueConstraint<Target: Entity, Value: ValuedProperty>: UniqueConstraintProtocol {
     
-    public var wrappedValue: PartialKeyPath<Target>
+    public var wrappedValue: KeyPath<Target, Value>
     
-    public init(wrappedValue: PartialKeyPath<Target>) {
+    public init(wrappedValue: KeyPath<Target, Value>) {
         self.wrappedValue = wrappedValue
     }
 }
 
 extension UniqueConstraint {
     var uniquenessConstarints: [String] {
-        [wrappedValue.stringValue].compactMap{ $0 }
+        [wrappedValue.propertyName]
     }
 }

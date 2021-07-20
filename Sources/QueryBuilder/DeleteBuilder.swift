@@ -33,12 +33,12 @@ public final class DeleteBuilder<Target: Entity> {
 }
 
 extension DeleteBuilder: RequestBuilder {
-    public func `where`(_ predicate: NSPredicate) -> Self {
+    public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
         _config = _config.updated(\.predicate, value: predicate)
         return self
     }
     
-    public func andWhere(_ predicate: NSPredicate) -> Self {
+    public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
         let newPredicate: NSPredicate = {
             if let pred = _config.predicate {
                 return NSCompoundPredicate(andPredicateWithSubpredicates: [pred, predicate])
@@ -49,7 +49,7 @@ extension DeleteBuilder: RequestBuilder {
         return self
     }
     
-    public func orWhere(_ predicate: NSPredicate) -> Self {
+    public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {
         let newPredicate: NSPredicate = {
             if let pred = _config.predicate {
                 return NSCompoundPredicate(orPredicateWithSubpredicates: [pred, predicate])

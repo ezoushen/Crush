@@ -36,7 +36,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     private(set) var offset: Int? = nil
     private(set) var batch: Int = 0
     private(set) var asFaults: Bool = true
-    private(set) var includePendingChanges: Bool = false    
+    private(set) var includePendingChanges: Bool = false
     
     func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entityDescription().name ?? String(describing: T.self))
@@ -101,7 +101,7 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
     }
 
     public func sort<V: ValuedProperty>(_ keyPath: KeyPath<Target, V>, ascending: Bool, option: FetchSorterOption = .default) -> PartialFetchBuilder<Target, Received, Result> {
-        let descriptor = NSSortDescriptor(key: keyPath.stringValue, ascending: ascending, selector: option.selector)
+        let descriptor = NSSortDescriptor(key: keyPath.propertyName, ascending: ascending, selector: option.selector)
         _config = _config.updated(\.sorters, value: (_config.sorters ?? []) + [descriptor])
         return self
     }

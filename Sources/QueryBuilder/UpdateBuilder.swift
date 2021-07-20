@@ -33,12 +33,12 @@ public final class UpdateBuilder<Target: Entity> {
 }
 
 extension UpdateBuilder {
-    public func `where`(_ predicate: NSPredicate) -> Self {
+    public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
         _config = _config.updated(\.predicate, value: predicate)
         return self
     }
     
-    public func andWhere(_ predicate: NSPredicate) -> Self {
+    public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
         let newPredicate: NSPredicate = {
             if let pred = _config.predicate {
                 return NSCompoundPredicate(andPredicateWithSubpredicates: [pred, predicate])
@@ -49,7 +49,7 @@ extension UpdateBuilder {
         return self
     }
     
-    public func orWhere(_ predicate: NSPredicate) -> Self {
+    public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {
         let newPredicate: NSPredicate = {
             if let pred = _config.predicate {
                 return NSCompoundPredicate(orPredicateWithSubpredicates: [pred, predicate])
@@ -68,9 +68,9 @@ extension UpdateBuilder {
     }
 }
 
-extension UpdateBuilder where Target: NSManagedObject {
+extension UpdateBuilder where Target: Entity {
     public func update<Value: AttributeProtocol>(_ keyPath: KeyPath<Target, Value>, value: Value.PropertyValue) -> Self {
-        update(key: keyPath.stringValue, value: value)
+        update(key: keyPath.propertyName, value: value)
     }
 }
 

@@ -56,11 +56,11 @@ public final class InsertBuilder<Target: Entity>: RequestBuilder {
     }
 }
 
-extension InsertBuilder where Target: EntityObject {
+extension InsertBuilder where Target: Entity {
     private func transform<Value: AttributeProtocol>(object: [(KeyPath<Target, Value>, Value.PropertyValue)]) -> [String: Any] {
-        var dict = Dictionary<String, Any>(minimumCapacity: object.count)
-        object.forEach{ dict[$0.0.stringValue] = $0.1 }
-        return dict
+        object.reduce(into: Dictionary<String, Any>(minimumCapacity: object.count)) {
+            $0[$1.0.propertyName] = $1.1
+        }
     }
     
     public func object<Value: AttributeProtocol>(_ value: [(KeyPath<Target, Value>, Value.PropertyValue)]) -> Self {

@@ -162,7 +162,11 @@ extension KeyPath where
     }
 }
 
-extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue: PredicateComparable & Comparable {
+extension KeyPath where
+    Root: Entity,
+    Value: ValuedProperty,
+    Value.PredicateValue: PredicateComparable & Comparable
+{
     @inlinable public static func > (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) > %@", rhs.predicateValue)
     }
@@ -184,7 +188,11 @@ extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValu
     }
 }
 
-extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue == String {
+extension KeyPath where
+    Root: Entity,
+    Value: ValuedProperty,
+    Value.PredicateValue == String
+{
     @inlinable public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) \(BEGINSWITH(rhs))")
     }
@@ -206,7 +214,11 @@ extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValu
     }
 }
 
-extension KeyPath where Root: Entity, Value: AttributeProtocol, Value.PredicateValue: PredicateExpressedByString {
+extension KeyPath where
+    Root: Entity,
+    Value: AttributeProtocol,
+    Value.PredicateValue: PredicateExpressedByString
+{
     @inlinable public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(BEGINSWITH(rhs))")
     }
