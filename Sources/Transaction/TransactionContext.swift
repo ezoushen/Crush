@@ -29,14 +29,14 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     func receive<T: NSManagedObject>(_ object: T) -> T {
         guard executionContext !== object.managedObjectContext else { return object }
         return executionContext.performSync {
-            executionContext.receive(runtimeObject: object) as! T
+            executionContext.receive(runtimeObject: object)
         }
     }
     
     func present<T: NSManagedObject>(_ object: T) -> T {
         guard uiContext !== object.managedObjectContext else { return object }
         return uiContext.performSync {
-            uiContext.receive(runtimeObject: object) as! T
+            uiContext.receive(runtimeObject: object)
         }
     }
 }

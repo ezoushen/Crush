@@ -10,7 +10,11 @@ import CoreData
 
 extension NSManagedObjectContext {
     func receive<T: NSManagedObject>(runtimeObject: T) -> T {
-        object(with: runtimeObject.objectID) as! T
+        let result = object(with: runtimeObject.objectID) as! T
+        if runtimeObject.isFault == false {
+            result.willAccessValue(forKey: T.entity().attributeKeys.first!)
+        }
+        return result
     }
 }
 

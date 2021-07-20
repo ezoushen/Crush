@@ -128,11 +128,9 @@ extension Transaction {
     }
 
     public func sync<T: Entity>(_ block: (TransactionContext) throws -> ManagedObject<T>) rethrows -> T.ReadOnly {
-        let result: T.ReadOnly? = try sync {
-            let value: ManagedObject<T>? = try block($0)
-            return value
-        }
-        return result!
+        try sync { context -> ManagedObject<T>? in
+            try block(context)
+        }!
     }
 
     public func sync<T: Entity>(_ block: (TransactionContext) throws -> [ManagedObject<T>]) rethrows -> [T.ReadOnly] {

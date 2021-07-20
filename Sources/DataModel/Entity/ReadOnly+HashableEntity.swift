@@ -68,7 +68,3 @@ extension ReadOnly: Hashable where Value: Hashable {
 extension Entity {
     public typealias ReadOnly = Crush.ReadOnly<Self>
 }
-
-public protocol ObservableProtocol {
-    associatedtype ObservableType: FieldConvertible
-}
