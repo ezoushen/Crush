@@ -108,20 +108,27 @@ infix operator |*|
 
 // MARK: - Operator overloading for Entity
 
+private var propertyNameCache: NSCache<AnyKeyPath, NSString> = .init()
+
 extension KeyPath where Root: Entity, Value: ValuedProperty {
-    public var propertyName: String {
-        Root.init()[keyPath: self].name
+    var propertyName: String {
+        guard let name = propertyNameCache.object(forKey: self) else {
+            let name = Root.init()[keyPath: self].name
+            propertyNameCache.setObject(name as NSString, forKey: self)
+            return name
+        }
+        return name as String
     }
 }
 
 extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
-    @inlinable public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> TypedPredicate<Root> {
+    public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) IN %@", NSSet(set: rhs))
     }
 }
 
 extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable {
-    @inlinable public static func <> (lhs: KeyPath, rhs: Array<Value.PredicateValue>) -> TypedPredicate<Root> {
+    public static func <> (lhs: KeyPath, rhs: Array<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) IN %@", NSArray(array: rhs))
     }
 }
@@ -132,11 +139,11 @@ extension KeyPath where
     Value.PredicateValue: PredicateEquatable & Equatable,
     Value.Nullability == NotNull
 {
-    @inlinable public static func == (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
+    public static func == (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
         return TypedPredicate(format: "\(lhs.propertyName) == %@", rhs.predicateValue)
     }
 
-    @inlinable public static func != (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
+    public static func != (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
         return TypedPredicate(format: "\(lhs.propertyName) != %@", rhs.predicateValue)
     }
 }
@@ -147,14 +154,14 @@ extension KeyPath where
     Value.PredicateValue: PredicateEquatable & Equatable,
     Value.Nullability == Nullable
 {
-    @inlinable public static func == (lhs: KeyPath, rhs: Value.PredicateValue?) -> TypedPredicate<Root> {
+    public static func == (lhs: KeyPath, rhs: Value.PredicateValue?) -> TypedPredicate<Root> {
         guard let value = rhs?.predicateValue else {
             return TypedPredicate<Root>(format: "\(lhs.propertyName) == NULL")
         }
         return TypedPredicate<Root>(format: "\(lhs.propertyName) == %@", value)
     }
 
-    @inlinable public static func != (lhs: KeyPath, rhs: Value.PredicateValue?) -> TypedPredicate<Root> {
+    public static func != (lhs: KeyPath, rhs: Value.PredicateValue?) -> TypedPredicate<Root> {
         guard let value = rhs?.predicateValue else {
             return TypedPredicate<Root>(format: "\(lhs.propertyName) != NULL")
         }
@@ -167,23 +174,23 @@ extension KeyPath where
     Value: ValuedProperty,
     Value.PredicateValue: PredicateComparable & Comparable
 {
-    @inlinable public static func > (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
+    public static func > (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) > %@", rhs.predicateValue)
     }
 
-    @inlinable public static func < (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
+    public static func < (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) < %@", rhs.predicateValue)
     }
 
-    @inlinable public static func >= (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
+    public static func >= (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) >= %@", rhs.predicateValue)
     }
 
-    @inlinable public static func <= (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
+    public static func <= (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) <= %@", rhs.predicateValue)
     }
 
-    @inlinable public static func <> (lhs: KeyPath, rhs: ClosedRange<Value.PredicateValue>) -> TypedPredicate<Root> {
+    public static func <> (lhs: KeyPath, rhs: ClosedRange<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 }
@@ -193,23 +200,23 @@ extension KeyPath where
     Value: ValuedProperty,
     Value.PredicateValue == String
 {
-    @inlinable public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) \(BEGINSWITH(rhs))")
     }
 
-    @inlinable public static func ~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func ~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) \(ENDSWITH(rhs))")
     }
 
-    @inlinable public static func <> (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func <> (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) \(CONTAINS(rhs))")
     }
 
-    @inlinable public static func |~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func |~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) \(LIKE(rhs))")
     }
 
-    @inlinable public static func |*| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func |*| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) \(MATCHES(rhs))")
     }
 }
@@ -219,23 +226,23 @@ extension KeyPath where
     Value: AttributeProtocol,
     Value.PredicateValue: PredicateExpressedByString
 {
-    @inlinable public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(BEGINSWITH(rhs))")
     }
 
-    @inlinable public static func ~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func ~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(ENDSWITH(rhs))")
     }
 
-    @inlinable public static func <> (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func <> (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(CONTAINS(rhs))")
     }
 
-    @inlinable public static func |~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func |~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(LIKE(rhs))")
     }
 
-    @inlinable public static func |*| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
+    public static func |*| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(MATCHES(rhs))")
     }
 }
