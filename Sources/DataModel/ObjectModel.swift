@@ -77,19 +77,15 @@ public final class DataModel: ObjectModel {
         rawModel = model
         previousModel = version.previousVersion?.model
         
-        guard let lastVersion = version.previousVersion,
-              let previousModel = self.previousModel else {
+        guard let previousModel = self.previousModel else {
             migration = nil
             return
         }
-        
-        let entityMappings = sorted.compactMap {
-            try? $0.createEntityMapping(sourceModel: previousModel.rawModel,
-                                        destinationModel: model)
-        }
-        let mapping = VersionMigration(from: lastVersion,
-                                       to: version,
-                                       mappings: entityMappings)
+
+        let mapping = CoreDataMigration(
+            sourceModel: previousModel.rawModel,
+            destinationModel: rawModel,
+            inferredMappingModelAutomatically: true)
     
         coordinator.set(versionString, value: mapping, in: CacheType.migration)
         

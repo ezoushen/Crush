@@ -14,11 +14,6 @@ enum UserInfoKey: Hashable {
     case relationshipDestination
     case inverseRelationship
     case inverseUnidirectional
-    case propertyMappingKeyPath
-    case propertyMappingSource
-    case propertyMappingDestination
-    case propertyMappingRoot
-    case propertyMappingValue
     case version
 }
 
@@ -33,7 +28,6 @@ public protocol MutablePropertyConfigurable: PropertyConfigurable {
 }
 
 public enum PropertyOption {
-    case mapping(AnyKeyPath)
     case isIndexedBySpotlight(Bool)
     case validationPredicatesWithWarnings([(NSPredicate, String)])
 }
@@ -61,9 +55,6 @@ extension PropertyOption: MutablePropertyConfigurable {
         case .isIndexedBySpotlight(let flag): description.isIndexedBySpotlight = flag
         case .validationPredicatesWithWarnings(let tuples):
             description.setValidationPredicates(tuples.map{$0.0}, withValidationWarnings: tuples.map{$0.1})
-        case .mapping(let keyPath):
-            description.userInfo = (description.userInfo ?? [:])
-            description.userInfo?[UserInfoKey.propertyMappingKeyPath] = keyPath
         }
     }
 }

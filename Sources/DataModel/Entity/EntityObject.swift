@@ -195,59 +195,6 @@ extension Entity {
         description.indexes.append(contentsOf: allIndexes)
         description.uniquenessConstraints.append(contentsOf: allUniquenessConstraints)
     }
-    
-    static func createEntityMapping(sourceModel: NSManagedObjectModel, destinationModel: NSManagedObjectModel) throws -> NSEntityMapping? {
-        var fromEntityTypeName: String? = nil
-        var toEntityTypeName: String? = nil
-        
-        let attributeMappings = try entityDescription().properties
-            .filter { $0 is NSAttributeDescription }
-            .compactMap { property -> PropertyMappingProtocol? in
-            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? Entity.Type,
-                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? Entity.Type,
-                  let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
-                  let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
-                else { return nil }
-                
-                if (fromEntityTypeName == nil && toEntityTypeName == nil ) {
-                    fromEntityTypeName = fromEntityType.fetchKey
-                    toEntityTypeName = toEntityType.fetchKey
-                } else if fromEntityTypeName != fromEntityType.fetchKey || toEntityTypeName != toEntityType.fetchKey {
-                    throw EntityMappingError.entityTypeMismatch
-                }
-            return AnyPropertyMapping(type: .attribute, from: fromPath, to: toPath)
-        }
-        
-        let relationshipMappings = try entityDescription().properties
-            .filter { $0 is NSRelationshipDescription }
-            .compactMap { property -> PropertyMappingProtocol? in
-            guard let fromEntityType = property.userInfo?[UserInfoKey.propertyMappingRoot] as? Entity.Type,
-                  let toEntityType = property.userInfo?[UserInfoKey.propertyMappingValue] as? Entity.Type,
-                  let fromPath = property.userInfo?[UserInfoKey.propertyMappingSource] as? String,
-                  let toPath = property.userInfo?[UserInfoKey.propertyMappingDestination] as? String
-                else { return nil }
-                
-                if (fromEntityTypeName == nil && toEntityTypeName == nil ) {
-                    fromEntityTypeName = fromEntityType.fetchKey
-                    toEntityTypeName = toEntityType.fetchKey
-                } else if fromEntityTypeName != fromEntityType.fetchKey || toEntityTypeName != toEntityType.fetchKey {
-                    throw EntityMappingError.entityTypeMismatch
-                }
-            return AnyPropertyMapping(type: .relationship, from: fromPath, to: toPath)
-        }
-        
-        guard let sourceName = fromEntityTypeName, let destinationName = toEntityTypeName else {
-            return nil
-        }
-                
-        return try AnyEntityMapping(type: .transform,
-                                    source: sourceName,
-                                    destination: destinationName,
-                                    attributes: attributeMappings,
-                                    relations: relationshipMappings)
-            .entityMapping(sourceModel: sourceModel,
-                           destinationModel: destinationModel)
-    }
 }
 
 open class EntityObject: NSObject, Entity {
@@ -299,18 +246,6 @@ open class EntityObject: NSObject, Entity {
                     return description
                 }
                 let description = property.emptyPropertyDescription()
-                
-                if let mapping = description.userInfo?[UserInfoKey.propertyMappingKeyPath] as? RootTracableKeyPathProtocol {
-                    if mapping.stringValue.contains(".") {
-                        description.userInfo?[UserInfoKey.propertyMappingSource] = mapping.stringValue
-                        description.userInfo?[UserInfoKey.propertyMappingDestination] = property.name
-                        description.userInfo?[UserInfoKey.propertyMappingRoot] = mapping.rootType
-                        description.userInfo?[UserInfoKey.propertyMappingValue] = type(of: self)
-                    } else {
-                        description.renamingIdentifier = mapping.stringValue
-                    }
-                }
-                
                 CacheCoordinator.shared.set(defaultKey, value: description, in: CacheType.property)
                 return description
             }
