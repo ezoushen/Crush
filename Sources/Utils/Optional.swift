@@ -7,19 +7,21 @@
 
 import Foundation
 
-protocol OptionalProtocol {
+public protocol OptionalProtocol {
     var isNil: Bool { get }
-    var null: OptionalProtocol { get }
+    static var null: Self { get }
 }
 
 extension Swift.Optional: OptionalProtocol {
-    var isNil: Bool {
+    public var isNil: Bool {
         switch self {
         case .some(let value):
             return (value as? OptionalProtocol)?.isNil == true
         default: return true
         }
     }
-    
-    var null: OptionalProtocol { Swift.Optional<Wrapped>.none as OptionalProtocol }
+
+    public static var null: Self {
+        return .none
+    }
 }

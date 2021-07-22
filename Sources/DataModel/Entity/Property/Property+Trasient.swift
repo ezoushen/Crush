@@ -39,13 +39,14 @@ public final class Temporary<Property: ValuedProperty>: ValuedProperty {
     public func emptyPropertyDescription() -> NSPropertyDescription {
         let description = property.emptyPropertyDescription()
         description.isTransient = true
+        
         return description
     }
     
 }
 
-extension Temporary where Property: AttributeProtocol {
-    public convenience init(_ name: String, defaultValue: PropertyValue, options: PropertyConfiguration = []) {
+extension Temporary where Property: AttributeProtocol, PropertyValue: OptionalProtocol {
+    public convenience init(_ name: String, defaultValue: PropertyValue = PropertyValue.null, options: PropertyConfiguration = []) {
         self.init(name)
         self.property.defaultValue = defaultValue
         self.property.configuration = options

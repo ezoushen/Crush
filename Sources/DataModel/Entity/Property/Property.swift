@@ -28,6 +28,7 @@ public protocol MutablePropertyConfigurable: PropertyConfigurable {
 }
 
 public enum PropertyOption {
+    /// This option will be ignored while the property is transient
     case isIndexedBySpotlight(Bool)
     case validationPredicatesWithWarnings([(NSPredicate, String)])
 }
