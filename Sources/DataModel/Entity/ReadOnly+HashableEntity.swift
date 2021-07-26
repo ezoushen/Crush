@@ -14,6 +14,10 @@ public struct ReadOnly<Value: HashableEntity> {
     public var managedObjectID: NSManagedObjectID {
         value.rawObject.objectID
     }
+
+    public var isInaccessible: Bool {
+        value.managedObjectContext == nil
+    }
     
     public init(_ value: Value) {
         self.value = value
@@ -37,7 +41,7 @@ public struct ReadOnly<Value: HashableEntity> {
     public subscript<Subject: FieldAttribute>(dynamicMember keyPath: KeyPath<Value, Subject>) -> Subject {
         access(keyPath: keyPath)
     }
-    
+
     public subscript<Subject: HashableEntity>(dynamicMember keyPath: KeyPath<Value, Subject?>) -> ReadOnly<Subject>? {
         guard let value = access(keyPath: keyPath) else { return nil }
         return ReadOnly<Subject>(value)
@@ -61,6 +65,7 @@ extension ReadOnly: Equatable where Value: Equatable {
 
 extension ReadOnly: Hashable where Value: Hashable {
     public func hash(into hasher: inout Hasher) {
+        guard isInaccessible == false else { return }
         hasher.combine(value)
     }
 }
