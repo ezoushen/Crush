@@ -328,7 +328,7 @@ extension Transaction.ArrayPairEditor {
     public func sync(_ block: (TransactionContext, [T], S) -> Void) {
         let context = transaction.context
         
-        context.executionContext.performAndWait {
+        context.executionContext.performSync {
             let array = self.array.map(context.receive)
             let value = context.receive(self.value)
             block(context, array, value)
@@ -474,7 +474,7 @@ extension Transaction.SingularEditor {
     public func sync(_ block: (TransactionContext, T) -> Void) {
         let context = transaction.context
         
-        context.executionContext.performAndWait {
+        context.executionContext.performSync {
             let value = context.receive(self.value)
             block(context, value)
         }
@@ -619,7 +619,7 @@ extension Transaction.PluralEditor {
     public func sync(_ block: (TransactionContext, [T]) -> Void) {
         let context = transaction.context
         
-        context.executionContext.performAndWait {
+        context.executionContext.performSync {
             let values = self.values.map(context.receive(_:))
             block(context, values)
         }
@@ -758,7 +758,7 @@ extension Transaction.DualEditor {
     public func sync(_ block: (TransactionContext, T, S) -> Void) {
         let context = transaction.context
         
-        context.executionContext.performAndWait {
+        context.executionContext.performSync {
             block(context, context.receive(self.value1), context.receive(self.value2))
         }
     }
