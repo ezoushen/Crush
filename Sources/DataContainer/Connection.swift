@@ -20,13 +20,22 @@ public final class Connection {
     private lazy var docomentDirectoryUrl: URL? = {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
     }()
+
+    private lazy var targetDirectoryUrl: URL? = {
+        guard let identifier = domain else {
+            return docomentDirectoryUrl
+        }
+        return FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
+    }()
     
     lazy var currentUrl: URL? = {
         createPersistentStoreURL(name: name)
     }()
     
     private var _coordinator: NSPersistentStoreCoordinator?
-    
+
+    private let domain: String?
+
     internal var persistentStoreCoordinator: NSPersistentStoreCoordinator {
         _coordinator ?? createPersistenStoreCoordinator(model: _schema.model)
     }
@@ -39,10 +48,11 @@ public final class Connection {
     
     private var _schema: SchemaProtocol
     
-    public init(type: DataContainer.StoreType, name: String, version: SchemaProtocol) {
+    public init(type: DataContainer.StoreType, domain: String? = nil, name: String, version: SchemaProtocol) {
         self.type = type
         self.name = name
         self.migrator = type.migrator?.init(activeVersion: version)
+        self.domain = domain
 
         _schema = version
         _coordinator = Connection.connected["\(type)\(name)"]
@@ -71,7 +81,25 @@ public final class Connection {
     }
     
     private func createPersistentStoreURL(name: String) -> URL? {
-        return type.createURL(docomentDirectoryUrl, with: name)
+        guard let targetUrl = type.createURL(targetDirectoryUrl, with: name) else { return nil }
+
+        if FileManager.default.fileExists(atPath: targetUrl.path) {
+            return targetUrl
+        }
+
+        guard let document = type.createURL(docomentDirectoryUrl, with: name) else { return targetUrl }
+
+        if FileManager.default.fileExists(atPath: document.path) {
+            try? FileManager.default.copyItem(atPath: document.path, toPath: targetUrl.path)
+            try? FileManager.default.copyItem(atPath: document.path + "-shm", toPath: targetUrl.path + "-shm")
+            try? FileManager.default.copyItem(atPath: document.path + "-wal", toPath: targetUrl.path + "-wal")
+
+            try? FileManager.default.removeItem(atPath: document.path)
+            try? FileManager.default.removeItem(atPath: document.path + "-shm")
+            try? FileManager.default.removeItem(atPath: document.path + "-wal")
+        }
+
+        return targetUrl
     }
     
     private func createPersistenStoreCoordinator(model: ObjectModel) -> NSPersistentStoreCoordinator {
