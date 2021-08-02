@@ -25,7 +25,17 @@ public final class Connection {
         guard let identifier = domain else {
             return docomentDirectoryUrl
         }
-        return FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
+        guard let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier) else {
+            return nil
+        }
+
+        let dbUrl = url.appendingPathComponent("db", isDirectory: true)
+
+        if !FileManager.default.fileExists(atPath: dbUrl.path) {
+            try? FileManager.default.createDirectory(at: dbUrl, withIntermediateDirectories: false, attributes: nil)
+        }
+
+        return dbUrl
     }()
     
     lazy var currentUrl: URL? = {
@@ -90,13 +100,13 @@ public final class Connection {
         guard let document = type.createURL(docomentDirectoryUrl, with: name) else { return targetUrl }
 
         if FileManager.default.fileExists(atPath: document.path) {
-            try? FileManager.default.copyItem(atPath: document.path, toPath: targetUrl.path)
-            try? FileManager.default.copyItem(atPath: document.path + "-shm", toPath: targetUrl.path + "-shm")
-            try? FileManager.default.copyItem(atPath: document.path + "-wal", toPath: targetUrl.path + "-wal")
+            try! FileManager.default.copyItem(atPath: document.path, toPath: targetUrl.path)
+            try! FileManager.default.copyItem(atPath: document.path + "-shm", toPath: targetUrl.path + "-shm")
+            try! FileManager.default.copyItem(atPath: document.path + "-wal", toPath: targetUrl.path + "-wal")
 
-            try? FileManager.default.removeItem(atPath: document.path)
-            try? FileManager.default.removeItem(atPath: document.path + "-shm")
-            try? FileManager.default.removeItem(atPath: document.path + "-wal")
+            try! FileManager.default.removeItem(atPath: document.path)
+            try! FileManager.default.removeItem(atPath: document.path + "-shm")
+            try! FileManager.default.removeItem(atPath: document.path + "-wal")
         }
 
         return targetUrl
