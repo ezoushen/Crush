@@ -44,15 +44,15 @@ public final class TypedPredicate<T: Entity>: NSPredicate {
 // MARK: - Validation
 
 public final class ValidationCondition: NSPredicate {
-    public convenience init<T: PredicateComparable>(between rhs: ClosedRange<T>) {
+    public convenience init<T: PredicateComparable>(in rhs: ClosedRange<T>) {
         self.init(format: "SELF BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 
-    public convenience init<T: PredicateEquatable>(between rhs: Array<T>) {
+    public convenience init<T: PredicateEquatable>(in rhs: Array<T>) {
         self.init(format: "SELF IN %@", NSArray(array: rhs))
     }
 
-    public convenience init<T: PredicateEquatable>(between rhs: Set<T>) {
+    public convenience init<T: PredicateEquatable>(in rhs: Set<T>) {
         self.init(format: "SELF IN %@", NSSet(set: rhs))
     }
 
