@@ -8,10 +8,15 @@
 import CoreData
 
 @inline(__always)
-fileprivate func warning(_ condition: @autoclosure () -> Bool, _ message: @autoclosure () -> String) {
+fileprivate func warning(
+    _ condition: @autoclosure () -> Bool,
+    _ message: @autoclosure () -> String)
+{
     #if DEBUG
-    if condition() { return }
-    print(message(), "to resolve this warning, you can set breakpoint at \(#file.split(separator: "/").last ?? "") \(#line)")
+    guard condition() else { return }
+    print(message(),
+          "to resolve this warning, you can set breakpoint at " +
+            "\(#file.split(separator: "/").last ?? "") \(#line)")
     #endif
 }
 
@@ -41,7 +46,7 @@ public struct Transaction {
         checkUndoManager()
         context.executionContext.undoManager?.redo()
     }
-    
+
     internal func checkUndoManager() {
         #if DEBUG
         if context.executionContext.undoManager == nil {
@@ -80,17 +85,29 @@ extension Transaction {
 
 extension Transaction {
 
-    // MARK: throwable
+    private func shouldWarnUnsavedChangesOnPrivateContext() -> Bool {
+        guard enabledWarningForUnsavedChanges else { return false }
+        let executionContext = context.executionContext
+        return context.performSync {
+            executionContext.hasChanges &&
+                executionContext.concurrencyType == .privateQueueConcurrencyType
+        }
+    }
+
+    @inline(__always)
+    private func warnUnsavedChangesIfNeeded() {
+        warning(shouldWarnUnsavedChangesOnPrivateContext(),
+                "You should commit changes in transaction before return")
+    }
 
     public func async(_ block: @escaping (TransactionContext) throws -> Void, catch: ((Error) -> Void)? = nil) {
-        let transactionContext = context
-
-        transactionContext.executionContext.performAsync {
+        let context = context
+        context.performAsyncUndoable {
             do {
-                try block(transactionContext)
+                try block(context)
             } catch {
                 guard let catchBlock = `catch` else {
-                    transactionContext.logger.log(.critical, "unhandled error occured", error: error)
+                    context.logger.log(.critical, "unhandled error occured", error: error)
                     return
                 }
                 catchBlock(error)
@@ -98,65 +115,50 @@ extension Transaction {
         }
     }
 
-    public func sync<T>(_ block: (TransactionContext) throws -> T) rethrows -> T {
-        let transactionContext = context
-        let result = try transactionContext.executionContext.performSync {
-            try block(transactionContext)
+    public func sync<T>(
+        _ block: (TransactionContext) throws -> T
+    ) rethrows -> T {
+        let result = try context.performSyncUndoable {
+            try block(context)
         }
-
-        warning(enabledWarningForUnsavedChanges == false || !(result is EntityObject), "Return an EntityObject is not recommended")
-
+        warning(result is EntityObject, "Return an EntityObject is not recommended")
         return result
     }
 
-    public func sync<T: Entity>(_ block: (TransactionContext) throws -> ManagedObject<T>?) rethrows -> T.ReadOnly? {
-        let transactionContext = context
-        let optionalResult: ManagedObject<T>? = try transactionContext.executionContext.performSync {
-            try block(transactionContext)
+    public func sync<T: Entity>(
+        _ block: (TransactionContext) throws -> ManagedObject<T>?
+    ) rethrows -> T.ReadOnly? {
+        let optionalResult = try context.performSyncUndoable {
+            return try block(context)
         }
-
-        guard let result = optionalResult else {
-            return nil
-        }
-
-        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.performSync {
-            transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType
-        },
-               "You should commit changes in transaction before return")
-
+        guard let result = optionalResult else { return nil }
+        warnUnsavedChangesIfNeeded()
         return present(result)
     }
 
-    public func sync<T: Entity>(_ block: (TransactionContext) throws -> ManagedObject<T>) rethrows -> T.ReadOnly {
+    public func sync<T: Entity>(
+        _ block: (TransactionContext) throws -> ManagedObject<T>
+    ) rethrows -> T.ReadOnly {
         try sync { context -> ManagedObject<T>? in
             try block(context)
         }!
     }
 
-    public func sync<T: Entity>(_ block: (TransactionContext) throws -> [ManagedObject<T>]) rethrows -> [T.ReadOnly] {
-        let transactionContext = context
-
-        let result: [ManagedObject<T>] = try transactionContext.executionContext.performSync {
-            try block(transactionContext)
+    public func sync<T: Entity>(
+        _ block: (TransactionContext) throws -> [ManagedObject<T>]
+    ) rethrows -> [T.ReadOnly] {
+        let context = context
+        let result = try context.performSyncUndoable {
+            try block(context)
         }
-        warning(enabledWarningForUnsavedChanges == false || transactionContext.executionContext.performSync {
-            transactionContext.executionContext.hasChanges == false || transactionContext.executionContext.concurrencyType == .mainQueueConcurrencyType
-        },
-               "You should commit changes in transaction before return")
-
+        warnUnsavedChangesIfNeeded()
         return result.map(present(_:))
     }
 }
 
 extension NSManagedObjectContext {
     func performAsync(_ block: @escaping () -> Void) {
-        perform {
-            self.undoManager?.beginUndoGrouping()
-            defer {
-                self.undoManager?.endUndoGrouping()
-            }
-            block()
-        }
+        perform(block)
     }
 
     func performSync<T>(_ block: () throws -> T) rethrows -> T {
@@ -164,10 +166,6 @@ extension NSManagedObjectContext {
             var result: T!
             var error: Error?
             performAndWait {
-                undoManager?.beginUndoGrouping()
-                defer {
-                    undoManager?.endUndoGrouping()
-                }
                 do {
                     result = try block()
                 } catch(let err) {
@@ -182,5 +180,40 @@ extension NSManagedObjectContext {
         }
 
         return try execute(block, rethrowing: { throw $0 })
+    }
+
+    private func undoable<T>(_ block: () throws -> T) rethrows -> T {
+        undoManager?.beginUndoGrouping()
+        defer {
+            undoManager?.endUndoGrouping()
+        }
+        return try block()
+    }
+
+    func performAsyncUndoable(_ block: @escaping () -> Void) {
+        performAsync { self.undoable(block) }
+    }
+
+    func performSyncUndoable<T>(_ block: () throws -> T) rethrows -> T {
+        try performSync { try undoable(block) }
+    }
+}
+
+
+extension _TransactionContext {
+    func performAsync(_ block: @escaping () -> Void) {
+        executionContext.performAsync(block)
+    }
+
+    func performSync<T>(_ block: () throws -> T) rethrows -> T {
+        try executionContext.performSync(block)
+    }
+
+    func performAsyncUndoable(_ block: @escaping () -> Void) {
+        executionContext.performAsyncUndoable(block)
+    }
+
+    func performSyncUndoable<T>(_ block: () throws -> T) rethrows -> T {
+        try executionContext.performSyncUndoable(block)
     }
 }

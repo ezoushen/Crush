@@ -149,3 +149,7 @@ class AttributeTests: XCTestCase {
         XCTAssert(description.attributeType == .stringAttributeType)
     }
 }
+
+class EntityTests: XCTestCase {
+    
+}
