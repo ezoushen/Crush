@@ -13,10 +13,9 @@ public typealias Relation = Required.Relation
 
 public enum Optional {
     public struct Relation {
-        public typealias ManyToOne<S: Entity, D: Entity> = Relationship<Nullable, ToMany<S>, ToOne<D>>
-        public typealias ManyToMany<S: Entity, D: Entity> = Relationship<Nullable, ToMany<S>, ToMany<D>>
-        public typealias OneToOne<S: Entity, D: Entity> = Relationship<Nullable, ToOne<S>, ToOne<D>>
-        public typealias OneToMany<S: Entity, D: Entity> = Relationship<Nullable, ToOne<S>, ToMany<D>>
+        public typealias ToOne<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToOne<D>>
+        public typealias ToMany<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToMany<D>>
+        public typealias ToOrderedMany<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToOrderedMany<D>>
     }
     
     public struct Value {
@@ -39,10 +38,9 @@ public enum Optional {
 
 public enum Required {
     public struct Relation {
-        public typealias ManyToOne<S: Entity, D: Entity> = Relationship<NotNull, ToMany<S>, ToOne<D>>
-        public typealias ManyToMany<S: Entity, D: Entity> = Relationship<NotNull, ToMany<S>, ToMany<D>>
-        public typealias OneToOne<S: Entity, D: Entity> = Relationship<NotNull, ToOne<S>, ToOne<D>>
-        public typealias OneToMany<S: Entity, D: Entity> = Relationship<NotNull, ToOne<S>, ToMany<D>>
+        public typealias ToOne<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToOne<D>>
+        public typealias ToMany<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToMany<D>>
+        public typealias ToOrderedMany<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToOrderedMany<D>>
     }
 
     public struct Value {
@@ -69,10 +67,9 @@ enum Transient {
     
     public enum Optional {
         public struct Relation {
-            public typealias ManyToOne<S: Entity, D: Entity> = Temporary<Relationship<Nullable, ToMany<S>, ToOne<D>>>
-            public typealias ManyToMany<S: Entity, D: Entity> = Temporary<Relationship<Nullable, ToMany<S>, ToMany<D>>>
-            public typealias OneToOne<S: Entity, D: Entity> = Temporary<Relationship<Nullable, ToOne<S>, ToOne<D>>>
-            public typealias OneToMany<S: Entity, D: Entity> = Temporary<Relationship<Nullable, ToOne<S>, ToMany<D>>>
+            public typealias ToOne<S: Entity, D: Entity> = Temporary<Relationship<Nullable, S, Crush.ToOne<D>>>
+            public typealias ToMany<S: Entity, D: Entity> = Temporary<Relationship<Nullable, S, Crush.ToMany<D>>>
+            public typealias ToOrderedMany<S: Entity, D: Entity> = Temporary<Relationship<Nullable, S, Crush.ToOrderedMany<D>>>
         }
         
         public struct Value {
@@ -96,10 +93,9 @@ enum Transient {
 
     public enum Required {
         public struct Relation {
-            public typealias ManyToOne<S: Entity, D: Entity> = Temporary<Relationship<NotNull, ToMany<S>, ToOne<D>>>
-            public typealias ManyToMany<S: Entity, D: Entity> = Temporary<Relationship<NotNull, ToMany<S>, ToMany<D>>>
-            public typealias OneToOne<S: Entity, D: Entity> = Temporary<Relationship<NotNull, ToOne<S>, ToOne<D>>>
-            public typealias OneToMany<S: Entity, D: Entity> = Temporary<Relationship<NotNull, ToOne<S>, ToMany<D>>>
+            public typealias ToOne<S: Entity, D: Entity> = Temporary<Relationship<NotNull, S, Crush.ToOne<D>>>
+            public typealias ToMany<S: Entity, D: Entity> = Temporary<Relationship<NotNull, S, Crush.ToMany<D>>>
+            public typealias ToOrderedMany<S: Entity, D: Entity> = Temporary<Relationship<NotNull, S, Crush.ToOrderedMany<D>>>
         }
 
         public struct Value {

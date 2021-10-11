@@ -8,18 +8,10 @@
 
 import CoreData
 
-// MARK: - UserInfoKey
-
-enum UserInfoKey: Hashable {
-    case relationshipDestination
-    case inverseRelationship
-    case inverseUnidirectional
-    case version
-}
-
 // MARK: - EntityOption
 
 public protocol PropertyConfigurable {
+    var id: Int { get }
     func updatePropertyDescription<D: NSPropertyDescription>(_ description: D)
 }
 
@@ -35,6 +27,10 @@ public enum PropertyOption {
 
 public struct PropertyConfiguration {
     let options: [PropertyConfigurable]
+    
+    public func contains(_ option: PropertyConfigurable) -> Bool {
+        options.contains(where: { option.id == $0.id })
+    }
 }
 
 extension PropertyConfiguration: ExpressibleByArrayLiteral {
@@ -48,8 +44,17 @@ extension PropertyConfiguration: ExpressibleByArrayLiteral {
 }
 
 extension PropertyOption: MutablePropertyConfigurable {
-
+    
     public typealias Description = NSPropertyDescription
+    
+    public var id: Int {
+        switch self {
+        case .isIndexedBySpotlight:
+            return 0x100
+        case .validationPredicatesWithWarnings:
+            return 0x200
+        }
+    }
     
     public func updatePropertyDescription<D: NSPropertyDescription>(_ description: D) {
         switch self {
@@ -62,7 +67,7 @@ extension PropertyOption: MutablePropertyConfigurable {
 
 public protocol PropertyProtocol: AnyObject {
     var name: String { get set }    
-    func emptyPropertyDescription() -> NSPropertyDescription
+    func createPropertyDescription() -> NSPropertyDescription
 }
 
 extension PropertyProtocol {

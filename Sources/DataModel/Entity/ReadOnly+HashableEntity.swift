@@ -9,57 +9,79 @@ import CoreData
 
 @dynamicMemberLookup
 public struct ReadOnly<Value: Entity> {
-    public let value: ManagedObject<Value>
+    
+    internal let value: ManagedObject<Value>
+    internal let context: NSManagedObjectContext
     
     public var managedObjectID: NSManagedObjectID {
         value.objectID
     }
     
     public init(_ value: ManagedObject<Value>) {
-        self.value = value
-    }
-
-    public func access<T: ValuedProperty>(keyPath: KeyPath<Value, T>) -> T.PropertyValue {
         guard let context = value.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
-        return context.performSync { value[dynamicMember: keyPath] }
+        self.value = value
+        self.context = context
     }
 
-    public subscript<T: ValuedProperty>(dynamicMember keyPath: KeyPath<Value, T>) -> T.PropertyValue {
+    @inline(__always)
+    private func access<T: ValuedProperty>(
+        keyPath: KeyPath<Value, T>) -> T.PropertyValue
+    {
+        context.performSync { value[immutable: keyPath] }
+    }
+
+    public subscript<T: AttributeProtocol>(
+        dynamicMember keyPath: KeyPath<Value, T>) -> T.PropertyValue
+    {
         access(keyPath: keyPath)
     }
 
-    public subscript<T: RelationshipProtocol>(dynamicMember keyPath: KeyPath<Value, T>) -> ReadOnly<T.Mapping.EntityType>?
+    public subscript<T: RelationshipProtocol>(
+        dynamicMember keyPath: KeyPath<Value, T>
+    ) -> T.Mapping.EntityType.ReadOnly?
     where
-        T.Mapping.RuntimeObjectValue == ManagedObject<T.Mapping.EntityType>?,
-        T.PropertyValue == T.Mapping.RuntimeObjectValue
+        T.Mapping == ToOne<T.Destination>
     {
-        guard let value = access(keyPath: keyPath) else { return nil }
-        return ReadOnly<T.Mapping.EntityType>(value)
+        guard let value = access(keyPath: keyPath)
+        else { return nil }
+        return ReadOnly<T.Destination>(value)
     }
 
-    public subscript<T: RelationshipProtocol>(dynamicMember keyPath: KeyPath<Value, T>) -> Set<T.Mapping.EntityType.ReadOnly>
+    public subscript<T: RelationshipProtocol>(
+        dynamicMember keyPath: KeyPath<Value, T>
+    ) -> Set<T.Destination.ReadOnly>
     where
-        T.Mapping.RuntimeObjectValue == Set<ManagedObject<T.Mapping.EntityType>>,
-        T.PropertyValue == T.Mapping.RuntimeObjectValue
+        T.Mapping == ToMany<T.Destination>
     {
-        guard let context = value.managedObjectContext else {
-            fatalError("Accessing stale object is dangerous")
+        context.performSync {
+            let set = value[immutable: keyPath]
+            return Set(set.map { ReadOnly<T.Destination>($0) })
         }
-        return context.performSync {
-            Set<T.Mapping.EntityType.ReadOnly>(value[dynamicMember: keyPath].map{ .init($0) })
+    }
+    
+    public subscript<T: RelationshipProtocol>(
+        dynamicMember keyPath: KeyPath<Value, T>
+    ) -> OrderedSet<T.Destination.ReadOnly>
+    where
+        T.Mapping == ToOrderedMany<T.Destination>
+    {
+        context.performSync {
+            let orderedSet = value[immutable: keyPath]
+            return OrderedSet(
+                orderedSet.map{ ReadOnly<T.Destination>($0) })
         }
     }
 }
 
-extension ReadOnly: Equatable where Value: Equatable {
+extension ReadOnly: Equatable {
     public static func == (lhs: ReadOnly, rhs: ReadOnly) -> Bool {
         lhs.value == rhs.value
     }
 }
 
-extension ReadOnly: Hashable where Value: Hashable {
+extension ReadOnly: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(value)
     }

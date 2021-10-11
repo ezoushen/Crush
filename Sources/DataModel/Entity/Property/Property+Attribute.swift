@@ -18,6 +18,15 @@ public enum AttributeOption {
 extension AttributeOption: MutablePropertyConfigurable {
     public typealias Description = NSAttributeDescription
     
+    public var id: Int {
+        switch self {
+        case .allowsExternalBinaryDataStorage:
+            return 0x001
+        case .preservesValueInHistoryOnDeletion:
+            return 0x002
+        }
+    }
+    
     public func updatePropertyDescription<D: NSPropertyDescription>(_ description: D) {
         guard let description = description as? Description else { return }
         switch self {
@@ -43,11 +52,15 @@ extension AttributeProtocol {
     }
     
     public var attributeValueClassName: String? {
-        PredicateValue.self is NSCoding.Type ? String(describing: Self.self) : nil
+        PredicateValue.self is NSCoding.Type
+            ? String(describing: Self.self)
+            : nil
     }
     
     public var valueTransformerName: String? {
-        PredicateValue.self is NSCoding.Type ? String(describing: DefaultTransformer.self) : nil
+        PredicateValue.self is NSCoding.Type
+            ? String(describing: DefaultTransformer.self)
+            : nil
     }
 }
 
@@ -75,28 +88,28 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         self.name = name
     }
     
-    public convenience init(defaultValue: PropertyValue = nil, _ name: String) {
-        self.init(name, defaultValue: defaultValue, options: [])
-    }
-    
-    public init(_ name: String, defaultValue: PropertyValue = nil, options: PropertyConfiguration) {
+    public init(_ name: String, defaultValue: PropertyValue = nil, options: PropertyConfiguration = []) {
         self.name = name
         self.defaultValue = defaultValue
         self.configuration = options
     }
     
-    public func emptyPropertyDescription() -> NSPropertyDescription {
+    public func createPropertyDescription() -> NSPropertyDescription {
         let description = NSAttributeDescription()
 
         configuration.configure(description: description)
-
+        
         description.isTransient = isTransient
         description.valueTransformerName = valueTransformerName
         description.name = name
-        description.defaultValue = defaultValue
         description.versionHashModifier = description.name
         description.isOptional = O.isOptional
         description.attributeType = attributeType
+        description.defaultValue = {
+            guard let value = defaultValue as? FieldType.RuntimeObjectValue
+            else { return nil }
+            return FieldType.convert(value: value)
+        }()
         
         if let className = attributeValueClassName {
             description.attributeValueClassName = className

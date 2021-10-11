@@ -15,22 +15,31 @@ public enum RelationshipOption {
     case maxCount(Int)
     case minCount(Int)
     case deleteRule(NSDeleteRule)
-    case isOrdered(Bool)
 }
 
 extension RelationshipOption: MutablePropertyConfigurable {
     public typealias Description = NSRelationshipDescription
     
+    public var id: Int {
+        switch self {
+        case .unidirectionalInverse:
+            return 0x010
+        case .maxCount:
+            return 0x020
+        case .minCount:
+            return 0x030
+        case .deleteRule:
+            return 0x040
+        }
+    }
+    
     public func updatePropertyDescription<D: NSPropertyDescription>(_ description: D) {
         guard let description = description as? Description else { return }
         switch self {
-        case .unidirectionalInverse:
-            description.userInfo = (description.userInfo ?? [:])
-            description.userInfo?[UserInfoKey.inverseUnidirectional] = true
+        case .unidirectionalInverse: break
         case .maxCount(let amount): description.maxCount = amount
         case .minCount(let amount): description.minCount = amount
         case .deleteRule(let rule): description.deleteRule = rule
-        case .isOrdered(let flag): description.isOrdered = flag
         }
     }
 }
@@ -38,11 +47,10 @@ extension RelationshipOption: MutablePropertyConfigurable {
 public protocol RelationshipProtocol: ValuedProperty {
     associatedtype Destination: Entity
     associatedtype Source: Entity
-    associatedtype Mapping: RelationMapping
-    associatedtype InverseMapping: RelationMapping
+    associatedtype Mapping: RelationMapping where Mapping.RuntimeObjectValue == PropertyValue
     
     var configuration: PropertyConfiguration { get set }
-    var inverseKeyPath: AnyKeyPath! { get set }
+    var inverseName: String? { get set }
     
     init<R: RelationshipProtocol>(
         _ name: String,
@@ -50,15 +58,14 @@ public protocol RelationshipProtocol: ValuedProperty {
         options: PropertyConfiguration)
     where
         R.Destination == Source,
-        R.Source == Destination,
-        R.Mapping == InverseMapping,
-        R.InverseMapping == Mapping
+        R.Source == Destination
 }
 
 // MARK: - EntityRelationShipType
 public protocol RelationMapping: FieldConvertible {
     associatedtype EntityType: Entity
     
+    static var isOrdered: Bool { get }
     static func resolveMaxCount(_ amount: Int) -> Int
 }
 
@@ -71,6 +78,8 @@ extension RelationMapping {
 public struct ToOne<EntityType: Entity>: RelationMapping, FieldConvertible {
     public typealias RuntimeObjectValue = ManagedObject<EntityType>?
     public typealias ManagedObjectValue = NSManagedObject?
+    
+    public static var isOrdered: Bool { false }
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return 1
@@ -89,8 +98,10 @@ public struct ToOne<EntityType: Entity>: RelationMapping, FieldConvertible {
 }
 
 public struct ToMany<EntityType: Entity>: RelationMapping, FieldConvertible {
-    public typealias RuntimeObjectValue = Set<ManagedObject<EntityType>>
-    public typealias ManagedObjectValue = NSSet?
+    public typealias RuntimeObjectValue = MutableSet<ManagedObject<EntityType>>
+    public typealias ManagedObjectValue = NSMutableSet
+    
+    public static var isOrdered: Bool { false }
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return amount == 1 ? 0 : amount
@@ -98,30 +109,41 @@ public struct ToMany<EntityType: Entity>: RelationMapping, FieldConvertible {
     
     @inline(__always)
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return Set(value?.allObjects.compactMap{ getEnity(from: $0 as! NSManagedObject) } ?? [])
+        return MutableSet(value)
     }
     
     @inline(__always)
     public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        return value as ManagedObjectValue
-    }
-    
-    @inline(__always)
-    public static func convert(value: RuntimeObjectValue, with: @autoclosure () -> ManagedObjectValue) -> ManagedObjectValue {
-        let nsset = with()
-        let mutableSet = nsset?.mutableCopy() as? NSMutableSet ?? NSMutableSet()
-        mutableSet.removeAllObjects()
-        mutableSet.union(Set(value.map{ $0 }))
-        return mutableSet
+        return value.mutableSet
     }
 }
 
-public final class Relationship<O: Nullability, I: RelationMapping, R: RelationMapping>: RelationshipProtocol where R.RuntimeObjectValue: Hashable {
+public struct ToOrderedMany<EntityType: Entity>: RelationMapping, FieldConvertible {
+    public typealias RuntimeObjectValue = MutableOrderedSet<ManagedObject<EntityType>>
+    public typealias ManagedObjectValue = NSMutableOrderedSet
+    
+    public static var isOrdered: Bool { true }
+    
+    public static func resolveMaxCount(_ amount: Int) -> Int {
+        return amount == 1 ? 0 : amount
+    }
+    
+    @inline(__always)
+    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
+        return MutableOrderedSet(value)
+    }
+    
+    @inline(__always)
+    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
+        return value.orderedSet
+    }
+}
+
+public final class Relationship<O: Nullability, S: Entity, R: RelationMapping>: RelationshipProtocol {
     public typealias PredicateValue = Destination
     public typealias PropertyValue = R.RuntimeObjectValue
-    public typealias InverseMapping = I
     public typealias Mapping = R
-    public typealias Source = I.EntityType
+    public typealias Source = S
     public typealias Destination = R.EntityType
     public typealias Nullability = O
     public typealias PropertyOption = RelationshipOption
@@ -133,7 +155,14 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
                 
     public var name: String = ""
                 
-    public var inverseKeyPath: AnyKeyPath!
+    public lazy var inverseName: String? = {
+        guard let inverseKeyPath = inverseKeyPath,
+              let inverseProperty = Destination.init()[keyPath: inverseKeyPath] as? PropertyProtocol
+        else { return nil }
+        return inverseProperty.name
+    }()
+    
+    private var inverseKeyPath: PartialKeyPath<Destination>?
     
     public var configuration: PropertyConfiguration = []
         
@@ -146,7 +175,7 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
     }
     
     public init<R>(_ name: String, inverse: KeyPath<Destination, R>, options: PropertyConfiguration = [])
-        where R: RelationshipProtocol, R.Destination == Source, R.Source == Destination, R.Mapping == InverseMapping, R.InverseMapping == Mapping {
+        where R: RelationshipProtocol, R.Destination == Source, R.Source == Destination {
         self.name = name
         self.inverseKeyPath = inverse
         self.configuration = options
@@ -157,22 +186,47 @@ public final class Relationship<O: Nullability, I: RelationMapping, R: RelationM
         self.configuration = options
     }
     
-    public func emptyPropertyDescription() -> NSPropertyDescription {
+    public func createPropertyDescription() -> NSPropertyDescription {
         let description = NSRelationshipDescription()
         
         configuration.configure(description: description)
 
         description.isOptional = O.isOptional
         description.isTransient = isTransient
+        description.isOrdered = R.isOrdered
         description.name = name
         description.userInfo = description.userInfo ?? [:]
-        description.userInfo?[UserInfoKey.relationshipDestination] = Destination.entityCacheKey
         description.maxCount = Mapping.resolveMaxCount(description.maxCount)
 
-        if let inverseKeyPath = inverseKeyPath {
-            description.userInfo?[UserInfoKey.inverseRelationship] = inverseKeyPath
+        let coordinator = CacheCoordinator.shared
+        let isUniDirectional = configuration
+            .contains(RelationshipOption.unidirectionalInverse)
+        
+        coordinator.getAndWait(Destination.entityCacheKey, in: CacheType.entity) {
+            description.destinationEntity = $0
+
+            guard let inverseName = self.inverseName else { return }
+            
+            if let inverseRelationship = $0.relationshipsByName[inverseName] {
+                description.inverseRelationship = inverseRelationship
+                guard isUniDirectional == false else { return }
+                inverseRelationship.inverseRelationship = description
+            } else {
+                assertionFailure("inverse relationship not found")
+            }
         }
         
         return description
+    }
+}
+
+extension Relationship where Source == Destination {
+    public convenience init(
+        _ name: String,
+        inverse: String,
+        options: PropertyConfiguration = [])
+    {
+        self.init(name, options: options)
+        self.inverseName = inverse
     }
 }

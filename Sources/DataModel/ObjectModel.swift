@@ -39,7 +39,15 @@ public final class CoreDataModel: ObjectModel {
     public func updateCacheKey() { }
 }
 
-var firstDescription: NSEntityDescription!
+public struct EntityDescription {
+    public let type: Entity.Type
+    public let inheritance: EntityInheritance
+    
+    public init(type: Entity.Type, inheritance: EntityInheritance) {
+        self.type = type
+        self.inheritance = inheritance
+    }
+}
 
 public final class DataModel: ObjectModel {
     
@@ -51,12 +59,14 @@ public final class DataModel: ObjectModel {
     internal let entities: [Entity.Type]
     internal let versionString: String
     
-    public init(version: DataSchema, entities: [Entity.Type]) {
+    public init(version: DataSchema) {
         let coordinator = CacheCoordinator.shared
         let versionString = String(reflecting: version.self)
-                
+        let sortedDescriptions = version.descriptions
+            .sorted { $0.inheritance < $1.inheritance }
+        
         self.versionString = versionString
-        self.entities = entities
+        self.entities = sortedDescriptions.map { $0.type }
 
         if let model = coordinator.get(versionString, in: CacheType.objectModel) {
             rawModel = model
@@ -64,12 +74,15 @@ public final class DataModel: ObjectModel {
             return
         }
 
-        let sorted = entities.sorted { !$1.isAbstract }
         let versionHashModifier = String(reflecting: version)
         
+        let meta = sortedDescriptions.reduce(into: EntityInheritanceMeta()) {
+            $0[ObjectIdentifier($1.type)] = $1.inheritance
+        }
         let model = NSManagedObjectModel()
-        let entities: [NSEntityDescription] = sorted.map { $0.entityDescription() }
-        zip(sorted, entities).forEach { $0.0.createConstraints(description: $0.1) }
+        let entities: [NSEntityDescription] = entities
+            .compactMap { $0.createEntityDescription(meta: meta) }
+//        zip(sorted, entities).forEach { $0.0.createConstraints(description: $0.1) }
         model.versionIdentifiers = [versionHashModifier]
         model.entities = entities
         coordinator.set(versionString, value: model, in: CacheType.objectModel)

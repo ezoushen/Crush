@@ -83,6 +83,72 @@ extension Transaction {
     }
 }
 
+public protocol UnsafeTransactionPropertyProtocol { }
+
+public protocol UnsafeTransactionProperty: UnsafeTransactionPropertyProtocol {
+    associatedtype Entity: Crush.Entity
+    associatedtype Safe
+    func wrapped(in transaction: Transaction) -> Safe
+}
+
+extension MutableSet: UnsafeTransactionPropertyProtocol where Element: RuntimeObject { }
+extension MutableSet: UnsafeTransactionProperty where Element: RuntimeObject {
+    public typealias Entity = Element.Entity
+    public typealias Safe = Set<Entity.ReadOnly>
+
+    public func wrapped(in transaction: Transaction) -> Set<Entity.ReadOnly> {
+        Set(self.map { transaction.present($0 as! ManagedObject<Entity>) })
+    }
+}
+
+extension MutableOrderedSet: UnsafeTransactionPropertyProtocol where Element: RuntimeObject { }
+extension MutableOrderedSet: UnsafeTransactionProperty where Element: RuntimeObject {
+    public typealias Entity = Element.Entity
+    public typealias Safe = OrderedSet<Entity.ReadOnly>
+
+    public func wrapped(in transaction: Transaction) -> OrderedSet<Entity.ReadOnly> {
+        OrderedSet(self.map { transaction.present($0 as! ManagedObject<Entity>) })
+    }
+}
+
+extension Array: UnsafeTransactionPropertyProtocol where Element: RuntimeObject { }
+extension Array: UnsafeTransactionProperty where Element: RuntimeObject {
+    public typealias Entity = Element.Entity
+    public typealias Safe = Array<Entity.ReadOnly>
+
+    public func wrapped(in transaction: Transaction) -> Array<Entity.ReadOnly> {
+        self.map { transaction.present($0 as! ManagedObject<Entity>) }
+    }
+}
+
+extension Set: UnsafeTransactionPropertyProtocol where Element: RuntimeObject { }
+extension Set: UnsafeTransactionProperty where Element: RuntimeObject {
+    public typealias Entity = Element.Entity
+    public typealias Safe = Set<Entity.ReadOnly>
+
+    public func wrapped(in transaction: Transaction) -> Set<Entity.ReadOnly> {
+        Set<Entity.ReadOnly>(map { transaction.present($0 as! ManagedObject<Entity>) })
+    }
+}
+
+extension Swift.Optional: UnsafeTransactionPropertyProtocol where Wrapped: UnsafeTransactionPropertyProtocol { }
+extension Swift.Optional: UnsafeTransactionProperty where Wrapped: UnsafeTransactionProperty {
+    public typealias Entity = Wrapped.Entity
+    public typealias Safe = Wrapped.Safe?
+    public func wrapped(in transaction: Transaction) -> Wrapped.Safe? {
+        guard case .some(let value) = self else { return nil }
+        return value.wrapped(in: transaction)
+    }
+}
+
+extension ManagedObject: UnsafeTransactionProperty {
+    public typealias Safe = ReadOnly<T>
+
+    public func wrapped(in transaction: Transaction) -> ReadOnly<T> {
+        transaction.present(self)
+    }
+}
+
 extension Transaction {
 
     private func shouldWarnUnsavedChangesOnPrivateContext() -> Bool {
@@ -115,44 +181,27 @@ extension Transaction {
         }
     }
 
+    public func sync<Property: UnsafeTransactionProperty>(
+        _ block: (TransactionContext) throws -> Property
+    ) rethrows -> Property.Safe {
+        let context = context
+        let result = try context.performSyncUndoable {
+            try block(context)
+        }
+        warnUnsavedChangesIfNeeded()
+        return result.wrapped(in: self)
+    }
+
     public func sync<T>(
         _ block: (TransactionContext) throws -> T
     ) rethrows -> T {
         let result = try context.performSyncUndoable {
             try block(context)
         }
-        warning(result is EntityObject, "Return an EntityObject is not recommended")
+        warning(
+            result is UnsafeTransactionPropertyProtocol,
+            "Return an \(type(of: result)) is not recommended")
         return result
-    }
-
-    public func sync<T: Entity>(
-        _ block: (TransactionContext) throws -> ManagedObject<T>?
-    ) rethrows -> T.ReadOnly? {
-        let optionalResult = try context.performSyncUndoable {
-            return try block(context)
-        }
-        guard let result = optionalResult else { return nil }
-        warnUnsavedChangesIfNeeded()
-        return present(result)
-    }
-
-    public func sync<T: Entity>(
-        _ block: (TransactionContext) throws -> ManagedObject<T>
-    ) rethrows -> T.ReadOnly {
-        try sync { context -> ManagedObject<T>? in
-            try block(context)
-        }!
-    }
-
-    public func sync<T: Entity>(
-        _ block: (TransactionContext) throws -> [ManagedObject<T>]
-    ) rethrows -> [T.ReadOnly] {
-        let context = context
-        let result = try context.performSyncUndoable {
-            try block(context)
-        }
-        warnUnsavedChangesIfNeeded()
-        return result.map(present(_:))
     }
 }
 

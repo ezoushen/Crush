@@ -36,10 +36,9 @@ public final class Temporary<Property: ValuedProperty>: ValuedProperty {
         }
     }
     
-    public func emptyPropertyDescription() -> NSPropertyDescription {
-        let description = property.emptyPropertyDescription()
+    public func createPropertyDescription() -> NSPropertyDescription {
+        let description = property.createPropertyDescription()
         description.isTransient = true
-        
         return description
     }
     
@@ -55,10 +54,21 @@ extension Temporary where Property: AttributeProtocol, PropertyValue: OptionalPr
 
 extension Temporary where Property: RelationshipProtocol {
     public convenience init<R: RelationshipProtocol>(_ name: String, inverse: KeyPath<Property.Destination, R>, options: PropertyConfiguration = [])
-        where R.Destination == Property.Source, R.Source == Property.Destination,
-        R.Mapping == Property.InverseMapping, R.InverseMapping == Property.Mapping {
+        where R.Destination == Property.Source, R.Source == Property.Destination {
         self.init(name)
-        self.property.inverseKeyPath = inverse
+        self.property.inverseName = Property.Destination.init()[keyPath: inverse].name
+        self.property.configuration = options
+    }
+}
+
+extension Temporary
+where
+    Property: RelationshipProtocol,
+    Property.Source == Property.Destination
+{
+    public convenience init(_ name: String, inverse: String, options: PropertyConfiguration = []) {
+        self.init(name)
+        self.property.inverseName = inverse
         self.property.configuration = options
     }
 }

@@ -7,24 +7,56 @@
 
 import CoreData
 
+public protocol RuntimeObject {
+    associatedtype Entity: Crush.Entity
+}
+
 @dynamicMemberLookup
-public class ManagedObject<T: Entity>: NSManagedObject {
-    public subscript<Property: ValuedProperty>(dynamicMember keyPath: ReferenceWritableKeyPath<T, Property>) -> Property.PropertyValue {
+public class ManagedObject<T: Crush.Entity>: NSManagedObject, RuntimeObject {
+    public typealias Entity = T
+    
+    public subscript<Property: RelationshipProtocol>(
+        dynamicMember keyPath: KeyPath<T, Property>
+    ) -> MutableSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToMany<Property.Destination>
+    {
+        let property = T.init()[keyPath: keyPath]
+        let key = property.name
+        let mutableSet = getMutableSet(key: key)
+        return Property.Mapping.convert(value: mutableSet)
+    }
+
+    public subscript<Property: RelationshipProtocol>(
+        dynamicMember keyPath: KeyPath<T, Property>
+    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToOrderedMany<Property.Destination>
+    {
+        let property = T.init()[keyPath: keyPath]
+        let key = property.name
+        let mutableOrderedSet = getMutableOrderedSet(key: key)
+        return Property.Mapping.convert(value: mutableOrderedSet)
+    }
+
+    public subscript<Property: ValuedProperty>(
+        dynamicMember keyPath: KeyPath<T, Property>
+    ) -> Property.PropertyValue {
         get {
-            let property = T.init()[keyPath: keyPath]
-            return Property.FieldConvertor.convert(value: getValue(key: property.name))
+            return self[immutable: keyPath]
         }
         set {
             let property = T.init()[keyPath: keyPath]
-            setValue(Property.FieldConvertor.convert(value: newValue, with: getValue(key: property.name)), key: property.name)
+            setValue(Property.FieldConvertor.convert(value: newValue), key: property.name)
         }
     }
 
-    public subscript<Property: ValuedProperty>(dynamicMember keyPath: KeyPath<T, Property>) -> Property.PropertyValue {
-        get {
-            let property = T.init()[keyPath: keyPath]
-            return Property.FieldConvertor.convert(value: getValue(key: property.name))
-        }
+    public subscript<Property: ValuedProperty>(
+        immutable keyPath: KeyPath<T, Property>
+    ) -> Property.PropertyValue {
+        let property = T.init()[keyPath: keyPath]
+        return Property.FieldConvertor.convert(
+            value: getValue(key: property.name))
     }
 }
 
@@ -47,4 +79,24 @@ extension NSManagedObject {
         }
         setPrimitiveValue(value, forKey: key)
     }
+
+    func getMutableSet(key: String) -> NSMutableSet {
+        willAccessValue(forKey: key)
+        defer {
+            didAccessValue(forKey: key)
+        }
+        return mutableSetValue(forKey: key)
+    }
+
+    func getMutableOrderedSet(key: String) -> NSMutableOrderedSet {
+        willAccessValue(forKey: key)
+        defer {
+            didAccessValue(forKey: key)
+        }
+        return mutableOrderedSetValue(forKey: key)
+    }
+}
+
+extension Entity {
+    public typealias ManagedObject = Crush.ManagedObject<Self>
 }

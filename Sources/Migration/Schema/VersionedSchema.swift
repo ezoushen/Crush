@@ -8,12 +8,12 @@
 import Foundation
 
 public protocol DataSchema: SchemaProtocol {
-    var entities: [Entity.Type] { get }
+    var descriptions: [EntityDescription] { get }
 }
 
 extension DataSchema {
     public var model: ObjectModel {
-        DataModel(version: self, entities: entities)
+        DataModel(version: self)
     }
 }
 
@@ -22,7 +22,7 @@ open class BaseSchema: DataSchema {
         fatalError()
     }
     
-    open var entities: [Entity.Type] {
+    open var descriptions: [EntityDescription] {
         fatalError()
     }
     
