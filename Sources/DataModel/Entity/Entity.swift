@@ -1,5 +1,5 @@
 //
-//  RuntimeObject.swift
+//  Entity.swift
 //  Crush
 //
 //  Created by ezou on 2019/9/22.
@@ -8,14 +8,33 @@
 
 import CoreData
 
-public enum EntityInheritance: Int, Comparable {
-    public static func < (
-        lhs: EntityInheritance,
-        rhs: EntityInheritance
-    ) -> Bool {
+public struct EntityDescription: Hashable {
+
+    public let type: Entity.Type
+    public let inheritance: EntityInheritance
+
+    public static func == (
+        lhs: EntityDescription, rhs: EntityDescription) -> Bool
+    {
+        lhs.hashValue == rhs.hashValue
+    }
+
+    public init(type: Entity.Type, inheritance: EntityInheritance) {
+        self.type = type
+        self.inheritance = inheritance
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(type))
+        hasher.combine(inheritance)
+    }
+}
+
+public enum EntityInheritance: Int, Comparable, Hashable {
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
-    
+
     case abstract
     case embedded
     case concrete
@@ -23,11 +42,8 @@ public enum EntityInheritance: Int, Comparable {
 
 typealias EntityInheritanceMeta = [ObjectIdentifier: EntityInheritance]
 
-public protocol Entity: AnyObject, Field {
-    static var renamingIdentifier: String? { get }
-    static var entityCacheKey: String { get }
-
-    init()
+open class Entity: Field {
+    required public init() { }
 }
 
 extension Entity {
@@ -41,14 +57,6 @@ extension Entity {
         
     static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
         NSFetchRequest<NSFetchRequestResult>(entityName: fetchKey)
-    }
-    
-    public static var renamingClass: Entity.Type? {
-        return nil
-    }
-
-    public static var renamingIdentifier: String? {
-        renamingClass?.fetchKey
     }
     
     static func createPropertyCacheKey(domain: String = entityCacheKey, name: String) -> String {
@@ -80,33 +88,40 @@ extension Entity {
             return nil
         }
         
-        let coordinator = CacheCoordinator.shared
+        let cache = Caches.entity
         let object = Self.init()
         let mirror = Mirror(reflecting: object)
         
         // Setup properties
         let description = NSEntityDescription()
-        description.managedObjectClassName = NSStringFromClass(ManagedObject.self)
+        description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
         description.name = fetchKey
         description.properties = object.createProperties(mirror: mirror, meta: meta)
         description.isAbstract = inheritance == .abstract
-        description.renamingIdentifier = renamingIdentifier
         
         if let superMirror = mirror.superclassMirror,
            let superType = superMirror.subjectType as? Entity.Type,
            meta[ObjectIdentifier(superType)] != .embedded
         {
-            coordinator.getAndWait(superType.entityCacheKey, in: CacheType.entity) {
+            cache.getAndWait(superType.entityCacheKey) {
                 $0.subentities.append(description)
             }
         }
         
-        coordinator.set(entityCacheKey, value: description, in: CacheType.entity)
+        cache.set(entityCacheKey, value: description)
         
         return description
     }
 
     static func entityDescription() -> NSEntityDescription {
-        ManagedObject.entity()
+        ManagedObject<Self>.entity()
     }
+}
+
+public protocol ManagableObject { }
+
+extension Entity: ManagableObject { }
+
+extension ManagableObject where Self: Entity {
+    public typealias Managed = ManagedObject<Self>
 }

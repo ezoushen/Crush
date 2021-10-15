@@ -40,7 +40,7 @@ extension AttributeOption: MutablePropertyConfigurable {
 }
 
 public protocol AttributeProtocol: ValuedProperty where PredicateValue: FieldAttribute & FieldConvertible {
-    var defaultValue: Any? { get set }
+    var defaultValue: PropertyValue { get set }
     var attributeValueClassName: String? { get }
     var configuration: PropertyConfiguration { get set }
     init(_ name: String, defaultValue: PropertyValue, options: PropertyConfiguration)
@@ -76,7 +76,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         true
     }
     
-    public var defaultValue: Any? = nil
+    public var defaultValue: PropertyValue = nil
 
     public var name: String = ""
         
@@ -98,18 +98,17 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         let description = NSAttributeDescription()
 
         configuration.configure(description: description)
-        
+
         description.isTransient = isTransient
         description.valueTransformerName = valueTransformerName
         description.name = name
-        description.versionHashModifier = description.name
         description.isOptional = O.isOptional
         description.attributeType = attributeType
-        description.defaultValue = {
-            guard let value = defaultValue as? FieldType.RuntimeObjectValue
-            else { return nil }
-            return FieldType.convert(value: value)
-        }()
+        
+        // Make sure not setting default value to nil
+        if let value = defaultValue {
+            description.defaultValue = FieldType.convert(value: value)
+        }
         
         if let className = attributeValueClassName {
             description.attributeValueClassName = className

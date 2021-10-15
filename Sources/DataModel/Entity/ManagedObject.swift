@@ -72,12 +72,13 @@ extension NSManagedObject {
 
     @inline(__always)
     func setValue(_ value: Any?, key: String) {
-        let value = value.isNil ? nil : value
         willChangeValue(forKey: key)
         defer {
             didChangeValue(forKey: key)
         }
-        setPrimitiveValue(value, forKey: key)
+        value.isNil
+            ? setNilValueForKey(key)
+            : setPrimitiveValue(value, forKey: key)
     }
 
     func getMutableSet(key: String) -> NSMutableSet {
@@ -95,8 +96,4 @@ extension NSManagedObject {
         }
         return mutableOrderedSetValue(forKey: key)
     }
-}
-
-extension Entity {
-    public typealias ManagedObject = Crush.ManagedObject<Self>
 }

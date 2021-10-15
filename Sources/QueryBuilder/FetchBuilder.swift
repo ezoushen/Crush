@@ -169,7 +169,7 @@ extension PartialFetchBuilder where Received == Result {
     }
 }
 
-extension PartialFetchBuilder where Target: Entity, Result == Target.ReadOnly, Received == ManagedObject<Target> {
+extension PartialFetchBuilder where Target: Entity, Result == ReadOnly<Target>, Received == ManagedObject<Target> {
     public func exists() -> Bool {
         findOne() != nil
     }
@@ -180,8 +180,8 @@ extension PartialFetchBuilder where Target: Entity, Result == Target.ReadOnly, R
     
     public func exec() -> [Result] {
         _onUiContext
-            ? received().map { Result(_context.present($0)) }
-            : received().map { Result(_context.receive($0)) }
+            ? received().map { ReadOnly<Target>(_context.present($0)) }
+            : received().map { ReadOnly<Target>(_context.receive($0)) }
     }
 }
 

@@ -25,3 +25,12 @@ extension Swift.Optional: OptionalProtocol {
         return .none
     }
 }
+
+extension Swift.Optional {
+    @inlinable var contentDescription: String {
+        switch self {
+        case .none: return "null"
+        case .some(let value): return "\(value)"
+        }
+    }
+}

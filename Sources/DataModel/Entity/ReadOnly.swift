@@ -1,5 +1,5 @@
 //
-//  ReadOnly+Entity.swift
+//  ReadOnly.swift
 //  Crush
 //
 //  Created by 沈昱佐 on 2020/5/6.
@@ -87,6 +87,10 @@ extension ReadOnly: Hashable {
     }
 }
 
-extension Entity {
+public protocol ReadaleObject { }
+
+extension Entity: ReadaleObject { }
+
+extension ReadaleObject where Self: Entity {
     public typealias ReadOnly = Crush.ReadOnly<Self>
 }

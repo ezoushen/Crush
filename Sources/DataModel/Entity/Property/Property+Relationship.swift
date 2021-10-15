@@ -67,6 +67,7 @@ public protocol RelationMapping: FieldConvertible {
     
     static var isOrdered: Bool { get }
     static func resolveMaxCount(_ amount: Int) -> Int
+    static func resolveMinCount(_ amount: Int) -> Int
 }
 
 extension RelationMapping {
@@ -82,6 +83,10 @@ public struct ToOne<EntityType: Entity>: RelationMapping, FieldConvertible {
     public static var isOrdered: Bool { false }
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
+        return 1
+    }
+
+    public static func resolveMinCount(_ amount: Int) -> Int {
         return 1
     }
     
@@ -106,6 +111,10 @@ public struct ToMany<EntityType: Entity>: RelationMapping, FieldConvertible {
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return amount == 1 ? 0 : amount
     }
+
+    public static func resolveMinCount(_ amount: Int) -> Int {
+        return amount
+    }
     
     @inline(__always)
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
@@ -126,6 +135,10 @@ public struct ToOrderedMany<EntityType: Entity>: RelationMapping, FieldConvertib
     
     public static func resolveMaxCount(_ amount: Int) -> Int {
         return amount == 1 ? 0 : amount
+    }
+
+    public static func resolveMinCount(_ amount: Int) -> Int {
+        return amount
     }
     
     @inline(__always)
@@ -197,16 +210,16 @@ public final class Relationship<O: Nullability, S: Entity, R: RelationMapping>: 
         description.name = name
         description.userInfo = description.userInfo ?? [:]
         description.maxCount = Mapping.resolveMaxCount(description.maxCount)
+        description.minCount = Mapping.resolveMinCount(description.minCount)
 
-        let coordinator = CacheCoordinator.shared
         let isUniDirectional = configuration
             .contains(RelationshipOption.unidirectionalInverse)
-        
-        coordinator.getAndWait(Destination.entityCacheKey, in: CacheType.entity) {
+
+        Caches.entity.getAndWait(Destination.entityCacheKey) {
             description.destinationEntity = $0
 
             guard let inverseName = self.inverseName else { return }
-            
+
             if let inverseRelationship = $0.relationshipsByName[inverseName] {
                 description.inverseRelationship = inverseRelationship
                 guard isUniDirectional == false else { return }

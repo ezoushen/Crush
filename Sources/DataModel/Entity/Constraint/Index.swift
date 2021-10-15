@@ -96,8 +96,7 @@ public struct FetchIndex<Target: Entity>: TargetedIndexProtocol {
 extension TargetedIndexProtocol {
     func fetchIndexDescription<R: Entity>(name: String, in object: R) -> NSFetchIndexDescription {
         let indcies = indexes.compactMap{ index -> (IndexElementProtocol, NSPropertyDescription)? in
-            let coordinator = CacheCoordinator.shared
-            guard let description = coordinator.get(R.createPropertyCacheKey(name: index.keyPath), in: CacheType.property) else { return nil }
+            guard let description = Caches.property.get(R.createPropertyCacheKey(name: index.keyPath)) else { return nil }
             return (index, description)
         }.map{ (index, description) -> NSFetchIndexElementDescription in
             return index.fetchIndexElementDescription(property: description)
