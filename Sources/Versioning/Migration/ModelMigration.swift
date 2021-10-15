@@ -8,7 +8,8 @@
 import CoreData
 import Foundation
 
-public struct ModelMigration {
+public struct ModelMigration: Hashable {
+
     public let name: String
     public let entityMigrations: [EntityMigration]
 
@@ -23,6 +24,16 @@ public struct ModelMigration {
     {
         self.name = name
         self.entityMigrations = entityMigrations()
+    }
+    
+    public static func == (
+        lhs: ModelMigration, rhs: ModelMigration) -> Bool
+    {
+        lhs.hashValue == rhs.hashValue
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
     }
 
     public func createMappingModel(

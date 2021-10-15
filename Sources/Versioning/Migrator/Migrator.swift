@@ -8,29 +8,24 @@
 import CoreData
 import Foundation
 
+public enum MigrationError: Error {
+    case incompatible
+    case notMigrated
+}
+
 open /*abstract*/ class Migrator {
 
     internal let storage: ConcreteStorage
     internal let dataModel: DataModel
-
-    internal weak var delegate: MigratorDelegate?
 
     internal init(storage: ConcreteStorage, dataModel: DataModel) {
         self.storage = storage
         self.dataModel = dataModel
     }
 
-    open func migrate() throws {
-
-    }
-
-    internal func isStoreCompatible(
-        with managedObjectModel: NSManagedObjectModel) throws -> Bool
-    {
-        let metadata = try NSPersistentStoreCoordinator
-            .metadataForPersistentStore(ofType: storage.storeType, at: storage.storageUrl)
-        return managedObjectModel.isConfiguration(
-            withName: storage.configuration, compatibleWithStoreMetadata: metadata)
+    @discardableResult
+    open func migrate() throws -> Bool {
+        return false
     }
 
     internal func migrateStore(
@@ -58,24 +53,9 @@ open /*abstract*/ class Migrator {
             destinationOptions: nil,
             withPersistentStoreFrom: destinationURL,
             sourceOptions: nil,
-            ofType: storage.storeType
-        )
-    }
-}
-
-extension Migrator {
-    public static func create(
-        storage: Storage,
-        migrationChain: MigrationChain?,
-        dataModel: DataModel) -> Migrator?
-    {
-        guard let migrationChain = migrationChain,
-              let storage = storage as? ConcreteStorage else {
-                  return nil
-              }
-        return ChainMigrator(
-            storage: storage,
-            migrationChain: migrationChain,
-            dataModel: dataModel)
+            ofType: storage.storeType)
+        if let store = coordinator.persistentStore(for: storage.storageUrl) {
+            coordinator.updateLastActiveVersionName(name, in: store)
+        }
     }
 }

@@ -70,9 +70,6 @@ extension Storage {
 extension Storage {
     public enum Option: Equatable {
         case readOnly
-        case addStoreAsynchronously
-        case preventInferringMappingModel
-        case preventAutoMigration
         case timeout(TimeInterval)
         // Only effects on sqlite storage
         case sqlitePragmas([String: NSObject])
@@ -83,12 +80,6 @@ extension Storage {
             switch self {
             case .readOnly:
                 description.isReadOnly = true
-            case .addStoreAsynchronously:
-                description.shouldAddStoreAsynchronously = true
-            case .preventInferringMappingModel:
-                description.shouldInferMappingModelAutomatically = false
-            case .preventAutoMigration:
-                description.shouldMigrateStoreAutomatically = false
             case .timeout(let timeInterval):
                 description.timeout = timeInterval
             case .sqlitePragmas(let dictionary):
@@ -110,18 +101,12 @@ extension Storage {
             switch self {
             case .readOnly:
                 return 0
-            case .addStoreAsynchronously:
-                return 1
-            case .preventInferringMappingModel:
-                return 2
-            case .preventAutoMigration:
-                return 3
             case .timeout:
-                return 4
+                return 1
             case .sqlitePragmas:
-                return 5
+                return 2
             case .options:
-                return 6
+                return 3
             }
         }
     }

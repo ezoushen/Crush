@@ -12,86 +12,54 @@ public class CoreDataStack {
     public let storage: Storage
     public let dataModel: DataModel
     public let mergePolicy: NSMergePolicy
+    public let migrationPolicy: MigrationPolicy
 
-    internal var migratorDelegate: MigratorDelegate?
-    internal var migrator: Migrator? = nil {
-        didSet { migratorDidUpdate() }
-    }
-
-    internal private(set) var coordinator: NSPersistentStoreCoordinator!
-
-    private let completionBlock: () -> Void
+    internal let coordinator: NSPersistentStoreCoordinator!
 
     init(
         storage: Storage,
-        migrationChain: MigrationChain?,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy,
-        completion: @escaping () -> Void) throws
+        migrationPolicy: MigrationPolicy) throws
     {
         self.storage = storage
         self.dataModel = dataModel
         self.mergePolicy = mergePolicy
-        self.completionBlock = completion
-        self.migrator = Migrator.create(
-            storage: storage,
-            migrationChain: migrationChain,
-            dataModel: dataModel)
-        try migrateIfNeeded()
-        coordinator = createPersistentStoreCoordinator()
-        persistActiveDataModel()
-    }
-
-    private func migratorDidUpdate() {
-        guard storage.storeType == NSSQLiteStoreType,
-              let migrator = migrator,
-              let model = loadLastActiveDataModel() else { return }
-        migratorDelegate =
-        SQLiteMigratorDelegate(managedObjectModel: model)
-        migrator.delegate = migratorDelegate
-    }
-
-    private func loadLastActiveDataModel() -> NSManagedObjectModel? {
-        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let path = url.path+"/\(dataModel.name).crushmodel"
-        guard FileManager.default.fileExists(atPath: path) else { return nil }
-        return NSKeyedUnarchiver.unarchiveObject(withFile: path) as? NSManagedObjectModel
-    }
-
-    private func persistActiveDataModel() {
-        let data = NSKeyedArchiver.archivedData(withRootObject: dataModel.managedObjectModel)
-        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let path = url.path+"/\(dataModel.name).crushmodel"
-        if FileManager.default.fileExists(atPath: path) {
-            try? FileManager.default.removeItem(atPath: path)
-        }
-        FileManager.default.createFile(atPath: path, contents: data, attributes: nil)
-    }
-
-    private func migrateIfNeeded() throws {
-        guard let migrator = migrator else { return }
-        do {
-            try migrator.migrate()
-        } catch {
-            if storage.options.contains(.preventAutoMigration) ||
-                storage.options.contains(.preventInferringMappingModel) {
-                throw error
-            }
-            LogHandler.default.log(
-                .warning, "Custom migration failed with error \(error), trying lightweight migration later")
-        }
-    }
-
-    private func createPersistentStoreCoordinator() -> NSPersistentStoreCoordinator {
-        let cooridnator = NSPersistentStoreCoordinator(
+        self.migrationPolicy = migrationPolicy
+        self.coordinator = NSPersistentStoreCoordinator(
             managedObjectModel: dataModel.managedObjectModel)
-        cooridnator.addPersistentStore(with: storage.createDescription()) {
-            if let error = $1 {
-                fatalError("load persistent store failed with error \(error)")
-            }
-            self.completionBlock()
+    }
+
+    internal func loadPersistentStore() throws {
+        var error: Error?
+
+        try loadPersistentStore(async: false) { error = $0 }
+
+        if let error = error {
+            throw error
         }
-        return cooridnator
+    }
+
+    internal func loadPersistentStoreAsync(
+        _ completion: @escaping (Error?) -> Void) throws
+    {
+        try loadPersistentStore(async: true, completion: completion)
+    }
+
+    private func loadPersistentStore(async flag: Bool, completion: @escaping (Error?) -> Void) throws {
+        // Migrate store before reading
+        try migrationPolicy.process(storage: storage, with: dataModel)
+        // Setup persistent store description
+        let description = storage.createDescription()
+        migrationPolicy.configureStoreDescription(description)
+        description.shouldAddStoreAsynchronously = flag
+        // Load persistent store
+        coordinator.addPersistentStore(with: description) {
+            completion($1)
+        }
+        NSPersistentStoreCoordinator
+            .updateLastActiveVersionName(dataModel.name, in: storage)
+        dataModel.managedObjectModel.save(name: dataModel.name)
     }
 
     internal func createWriterContext() -> NSManagedObjectContext {

@@ -10,7 +10,6 @@ import Foundation
 
 public enum ChainMigratorError: Error {
     case migrationChainIncompatibleWithDataModel
-    case noAvailableMigration
 }
 
 internal final class ChainMigrator: Migrator {
@@ -21,23 +20,18 @@ internal final class ChainMigrator: Migrator {
         super.init(storage: storage, dataModel: dataModel)
     }
 
-    internal override func migrate() throws {
-        if try isStoreCompatible(with: dataModel.managedObjectModel) {
-            return // No need to migrate data
-        }
-
+    @discardableResult
+    internal override func migrate() throws -> Bool {
         try validateMigrationChainAndDataModel(chain: migrationChain, model: dataModel)
 
         guard var currentManagedObjectModel =
                 try findCompatibleModel(in: migrationChain)
         else {
-            throw ChainMigratorError.noAvailableMigration
+            throw MigrationError.incompatible
         }
         let iterator = MigrationChainIterator(migrationChain)
         iterator.setActiveVersion(
             managedObjectModel: currentManagedObjectModel)
-
-        delegate?.migrator(self, willProcessStoreAt: storage.storageUrl)
 
         while let node = iterator.next() {
             try migrateStore(
@@ -48,17 +42,28 @@ internal final class ChainMigrator: Migrator {
 
             currentManagedObjectModel = node.destinationManagedObjectModel
         }
+
+        return true
     }
 
     internal func findCompatibleModel(in chain: MigrationChain) throws -> NSManagedObjectModel? {
         try chain.managedObjectModels().first(where: isStoreCompatible(with:))
     }
 
+    internal func isStoreCompatible(
+        with managedObjectModel: NSManagedObjectModel) throws -> Bool
+    {
+        let metadata = try NSPersistentStoreCoordinator
+            .metadataForPersistentStore(ofType: storage.storeType, at: storage.storageUrl)
+        return managedObjectModel.isConfiguration(
+            withName: storage.configuration, compatibleWithStoreMetadata: metadata)
+    }
+
     internal func validateMigrationChainAndDataModel(
         chain: MigrationChain, model: DataModel) throws
     {
         guard let managedObjectModel = try chain.managedObjectModels().last else {
-            throw ChainMigratorError.noAvailableMigration
+            throw MigrationError.incompatible
         }
         if managedObjectModel.entityVersionHashesByName !=
             dataModel.managedObjectModel.entityVersionHashesByName

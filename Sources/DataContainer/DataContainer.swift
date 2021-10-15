@@ -19,22 +19,55 @@ public class DataContainer {
 
     public var logger: LogHandler = .default
 
-    public init(
+    private init(
         storage: Storage,
-        migrationChain: MigrationChain? = nil,
         dataModel: DataModel,
-        mergePolicy: NSMergePolicy = .error,
-        completion: @escaping () -> Void = { }) throws
+        mergePolicy: NSMergePolicy,
+        migrationPolicy: MigrationPolicy) throws
     {
         coreDataStack = try CoreDataStack(
             storage: storage,
-            migrationChain: migrationChain,
             dataModel: dataModel,
             mergePolicy: mergePolicy,
-            completion: completion)
+            migrationPolicy: migrationPolicy)
+    }
 
-        initializeAllContext()
-        observingContextDidSaveNotification()
+    public static func load(
+        storage: Storage,
+        dataModel: DataModel,
+        mergePolicy: NSMergePolicy = .error,
+        migrationPolicy: MigrationPolicy = LightWeightMigrationPolicy()
+    ) throws -> DataContainer {
+        let container = try DataContainer(
+            storage: storage,
+            dataModel: dataModel,
+            mergePolicy: mergePolicy,
+            migrationPolicy: migrationPolicy)
+        try container.coreDataStack.loadPersistentStore()
+        container.initializeAllContext()
+        container.observingContextDidSaveNotification()
+        return container
+    }
+
+    public static func loadAsync(
+        storage: Storage,
+        dataModel: DataModel,
+        mergePolicy: NSMergePolicy = .error,
+        migrationPolicy: MigrationPolicy = LightWeightMigrationPolicy(),
+        loadCompletion: @escaping (Error?) -> Void
+    ) throws -> DataContainer {
+        let container = try DataContainer(
+            storage: storage,
+            dataModel: dataModel,
+            mergePolicy: mergePolicy,
+            migrationPolicy: migrationPolicy)
+        try container.coreDataStack.loadPersistentStoreAsync { error in
+            defer { loadCompletion(error) }
+            guard error == nil else { return }
+            container.initializeAllContext()
+            container.observingContextDidSaveNotification()
+        }
+        return container
     }
     
     private func initializeAllContext() {
