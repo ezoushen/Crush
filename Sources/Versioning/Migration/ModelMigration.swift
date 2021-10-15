@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-public final class ModelMigration {
+public struct ModelMigration {
     public let name: String
     public let entityMigrations: [EntityMigration]
 

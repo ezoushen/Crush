@@ -15,20 +15,12 @@ public struct MigrationChainBuilder {
     }
 }
 
-public final class MigrationChain: IteratorProtocol {
-
-    public struct Node {
-        public let name: String
-        public let mappingModel: NSMappingModel
-        public let destinationManagedObjectModel: NSManagedObjectModel
-    }
-
-    private var index: Int = 0
+public final class MigrationChain {
 
     let migrations: [ModelMigration]
 
-    private var _managedObjectModels: [NSManagedObjectModel]? = nil
-    private var _mappingModels: [NSMappingModel]? = nil
+    fileprivate var _managedObjectModels: [NSManagedObjectModel]? = nil
+    fileprivate var _mappingModels: [NSMappingModel]? = nil
 
     public init(_ migrations: [ModelMigration]) {
         self.migrations = migrations
@@ -36,17 +28,6 @@ public final class MigrationChain: IteratorProtocol {
 
     public init(@MigrationChainBuilder _ builder: () -> [ModelMigration]) {
         self.migrations = builder()
-    }
-
-    public func next() -> Node? {
-        guard let mappingModels = _mappingModels,
-              let managedObjectModels = _managedObjectModels,
-              mappingModels.count > index else { return nil }
-        defer { index += 1}
-        return Node(
-            name: migrations[index+1].name,
-            mappingModel: mappingModels[index],
-            destinationManagedObjectModel: managedObjectModels[index+1])
     }
 
     public func managedObjectModels() throws -> [NSManagedObjectModel] {
@@ -84,17 +65,5 @@ public final class MigrationChain: IteratorProtocol {
             mappingModels.append(mappingModel)
         }
         return mappingModels
-    }
-
-    func setActiveVersion(managedObjectModel: NSManagedObjectModel?) {
-        guard let managedObjectModels = _managedObjectModels,
-              let managedObjectModel = managedObjectModel else {
-                  return index = 0
-              }
-        index = managedObjectModels.firstIndex(of: managedObjectModel) ?? 0
-    }
-
-    func reset() {
-        index = 0
     }
 }

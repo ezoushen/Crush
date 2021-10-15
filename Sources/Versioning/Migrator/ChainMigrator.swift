@@ -29,16 +29,17 @@ internal final class ChainMigrator: Migrator {
         try validateMigrationChainAndDataModel(chain: migrationChain, model: dataModel)
 
         guard var currentManagedObjectModel =
-                try findCompatibleModel(in: migrationChain) else {
-                    throw ChainMigratorError.noAvailableMigration
-                }
-
-        migrationChain.setActiveVersion(
+                try findCompatibleModel(in: migrationChain)
+        else {
+            throw ChainMigratorError.noAvailableMigration
+        }
+        let iterator = MigrationChainIterator(migrationChain)
+        iterator.setActiveVersion(
             managedObjectModel: currentManagedObjectModel)
 
         delegate?.migrator(self, willProcessStoreAt: storage.storageUrl)
 
-        while let node = migrationChain.next() {
+        while let node = iterator.next() {
             try migrateStore(
                 name: node.name,
                 from: currentManagedObjectModel,
