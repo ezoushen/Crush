@@ -13,10 +13,6 @@ public struct ReadOnly<Value: Entity> {
     internal let value: ManagedObject<Value>
     internal let context: NSManagedObjectContext
     
-    public var managedObjectID: NSManagedObjectID {
-        value.objectID
-    }
-    
     public init(_ value: ManagedObject<Value>) {
         guard let context = value.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
@@ -72,6 +68,58 @@ public struct ReadOnly<Value: Entity> {
             return OrderedSet(
                 orderedSet.map{ ReadOnly<T.Destination>($0) })
         }
+    }
+}
+
+extension ReadOnly {
+    public var hasChanges: Bool {
+        value.hasChanges
+    }
+    
+    public var managedObjectID: NSManagedObjectID {
+        value.objectID
+    }
+    
+    public var hasPersistentChangedValues: Bool {
+        value.hasPersistentChangedValues
+    }
+    
+    public var isInserted: Bool {
+        value.isInserted
+    }
+    
+    public var isDeleted: Bool {
+        value.isDeleted
+    }
+    
+    public var isUpdated: Bool {
+        value.isUpdated
+    }
+    
+    public var isFault: Bool {
+        value.isFault
+    }
+    
+    public var faultingState: Int {
+        value.faultingState
+    }
+    
+    public func hasFault<T: RelationshipProtocol>(
+        forRelationship keyPath: KeyPath<Value, T>) -> Bool
+    {
+        value.hasFault(forRelationshipNamed: keyPath.propertyName)
+    }
+    
+    public func changedValues() -> [String: Any] {
+        value.changedValues()
+    }
+    
+    public func changedValuesForCurrentEvent() -> [String: Any] {
+        value.changedValuesForCurrentEvent()
+    }
+    
+    public func commitedValues(forKeys keys: [String]?) -> [String: Any] {
+        value.committedValues(forKeys: keys)
     }
 }
 

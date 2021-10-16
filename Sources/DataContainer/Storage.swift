@@ -53,9 +53,32 @@ extension Storage {
     public static func binary(url: URL, configuration: String? = nil, options: Option...) -> Storage {
         ConcreteStorage(storeType: NSBinaryStoreType, url: url, configuration: configuration, options: options)
     }
+    
+    public static func sqlite(name: String, configuration: String? = nil, options: Option...) -> Storage {
+        ConcreteStorage(
+            storeType: NSSQLiteStoreType,
+            url: defaultURL().appendingPathComponent(name),
+            configuration: configuration,
+            options: options)
+    }
+
+    public static func binary(name: String, configuration: String? = nil, options: Option...) -> Storage {
+        ConcreteStorage(
+            storeType: NSBinaryStoreType,
+            url: defaultURL().appendingPathComponent(name),
+            configuration: configuration,
+            options: options)
+    }
 
     public static func inMemory(configuration: String? = nil, options: Option...) -> Storage {
         Storage(storeType: NSInMemoryStoreType, url: nil, configuration: configuration, options: options)
+    }
+    
+    internal static func defaultURL() -> URL {
+        try! FileManager.default.url(
+            for: .documentDirectory,
+            in: .allDomainsMask,
+            appropriateFor: nil, create: true)
     }
 }
 

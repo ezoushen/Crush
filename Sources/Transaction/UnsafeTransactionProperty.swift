@@ -67,9 +67,9 @@ extension Swift.Optional: UnsafeTransactionProperty where Wrapped: UnsafeTransac
 }
 
 extension ManagedObject: UnsafeTransactionProperty {
-    public typealias Safe = ReadOnly<T>
+    public typealias Safe = ReadOnly<Entity>
 
-    public func wrapped(in transaction: Transaction) -> ReadOnly<T> {
+    public func wrapped(in transaction: Transaction) -> ReadOnly<Entity> {
         transaction.present(self)
     }
 }

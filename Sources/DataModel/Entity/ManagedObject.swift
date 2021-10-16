@@ -12,49 +12,89 @@ public protocol RuntimeObject {
 }
 
 @dynamicMemberLookup
-public class ManagedObject<T: Crush.Entity>: NSManagedObject, RuntimeObject {
-    public typealias Entity = T
+public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject {
+    public override func willSave() {
+        super.willSave()
+        Entity.willSave(self)
+    }
     
+    public override func didSave() {
+        super.didSave()
+        Entity.didSave(self)
+    }
+    
+    public override func prepareForDeletion() {
+        super.prepareForDeletion()
+        Entity.prepareForDeletion(self)
+    }
+    
+    public override func willTurnIntoFault() {
+        super.willTurnIntoFault()
+        Entity.willTurnIntoFault(self)
+    }
+    
+    public override func didTurnIntoFault() {
+        super.didTurnIntoFault()
+        Entity.didTurnIntoFault(self)
+    }
+    
+    public override func awakeFromFetch() {
+        super.awakeFromFetch()
+        Entity.awakeFromFetch(self)
+    }
+    
+    public override func awakeFromInsert() {
+        super.awakeFromInsert()
+        Entity.awakeFromInsert(self)
+    }
+    
+    public override func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
+        super.awake(fromSnapshotEvents: flags)
+        Entity.awake(self, fromSnapshotEvents: flags)
+    }
+}
+
+extension ManagedObject {
     public subscript<Property: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<T, Property>
+        dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> MutableSet<ManagedObject<Property.Destination>>
     where
         Property.Mapping == ToMany<Property.Destination>
     {
-        let property = T.init()[keyPath: keyPath]
+        let property = Entity.init()[keyPath: keyPath]
         let key = property.name
         let mutableSet = getMutableSet(key: key)
         return Property.Mapping.convert(value: mutableSet)
     }
 
     public subscript<Property: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<T, Property>
+        dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
     where
         Property.Mapping == ToOrderedMany<Property.Destination>
     {
-        let property = T.init()[keyPath: keyPath]
+        let property = Entity.init()[keyPath: keyPath]
         let key = property.name
         let mutableOrderedSet = getMutableOrderedSet(key: key)
         return Property.Mapping.convert(value: mutableOrderedSet)
     }
 
     public subscript<Property: ValuedProperty>(
-        dynamicMember keyPath: KeyPath<T, Property>
+        dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> Property.PropertyValue {
         get {
             return self[immutable: keyPath]
         }
         set {
-            let property = T.init()[keyPath: keyPath]
+            let property = Entity.init()[keyPath: keyPath]
             setValue(Property.FieldConvertor.convert(value: newValue), key: property.name)
         }
     }
 
     public subscript<Property: ValuedProperty>(
-        immutable keyPath: KeyPath<T, Property>
+        immutable keyPath: KeyPath<Entity, Property>
     ) -> Property.PropertyValue {
-        let property = T.init()[keyPath: keyPath]
+        let property = Entity.init()[keyPath: keyPath]
         return Property.FieldConvertor.convert(
             value: getValue(key: property.name))
     }
@@ -62,7 +102,7 @@ public class ManagedObject<T: Crush.Entity>: NSManagedObject, RuntimeObject {
 
 extension NSManagedObject {
     @inline(__always)
-    func getValue<T>(key: String) -> T {
+    internal func getValue<T>(key: String) -> T {
         willAccessValue(forKey: key)
         defer {
             didAccessValue(forKey: key)
@@ -71,7 +111,7 @@ extension NSManagedObject {
     }
 
     @inline(__always)
-    func setValue(_ value: Any?, key: String) {
+    internal func setValue(_ value: Any?, key: String) {
         willChangeValue(forKey: key)
         defer {
             didChangeValue(forKey: key)
@@ -81,7 +121,8 @@ extension NSManagedObject {
             : setPrimitiveValue(value, forKey: key)
     }
 
-    func getMutableSet(key: String) -> NSMutableSet {
+    @inline(__always)
+    internal func getMutableSet(key: String) -> NSMutableSet {
         willAccessValue(forKey: key)
         defer {
             didAccessValue(forKey: key)
@@ -89,7 +130,8 @@ extension NSManagedObject {
         return mutableSetValue(forKey: key)
     }
 
-    func getMutableOrderedSet(key: String) -> NSMutableOrderedSet {
+    @inline(__always)
+    internal func getMutableOrderedSet(key: String) -> NSMutableOrderedSet {
         willAccessValue(forKey: key)
         defer {
             didAccessValue(forKey: key)

@@ -83,6 +83,15 @@ extension EntityInheritance {
 
 open class Entity: Field {
     required public init() { }
+    @objc open dynamic class func willSave(_ managedObject: NSManagedObject) { }
+    @objc open dynamic class func didSave(_ managedObject: NSManagedObject) { }
+    @objc open dynamic class func prepareForDeletion(_ managedObject: NSManagedObject) { }
+    @objc open dynamic class func willTurnIntoFault(_ managedObject: NSManagedObject) { }
+    @objc open dynamic class func didTurnIntoFault(_ managedObject: NSManagedObject) { }
+    @objc open dynamic class func awakeFromFetch(_ managedObject: NSManagedObject) { }
+    @objc open dynamic class func awakeFromInsert(_ managedObject: NSManagedObject) { }
+    @objc open dynamic class func awake(_ managedObject: NSManagedObject,
+                                        fromSnapshotEvents: NSSnapshotEventType) { }
 }
 
 extension Entity {
