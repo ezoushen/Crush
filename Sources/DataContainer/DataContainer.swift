@@ -36,7 +36,7 @@ public class DataContainer {
         storage: Storage,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy = .error,
-        migrationPolicy: MigrationPolicy = LightWeightMigrationPolicy()
+        migrationPolicy: MigrationPolicy = .lightWeight
     ) throws -> DataContainer {
         let container = try DataContainer(
             storage: storage,
@@ -53,8 +53,8 @@ public class DataContainer {
         storage: Storage,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy = .error,
-        migrationPolicy: MigrationPolicy = LightWeightMigrationPolicy(),
-        loadCompletion: @escaping (Error?) -> Void
+        migrationPolicy: MigrationPolicy = .lightWeight,
+        completion: @escaping (Error?) -> Void
     ) throws -> DataContainer {
         let container = try DataContainer(
             storage: storage,
@@ -62,7 +62,7 @@ public class DataContainer {
             mergePolicy: mergePolicy,
             migrationPolicy: migrationPolicy)
         try container.coreDataStack.loadPersistentStoreAsync { error in
-            defer { loadCompletion(error) }
+            defer { completion(error) }
             guard error == nil else { return }
             container.initializeAllContext()
             container.observingContextDidSaveNotification()

@@ -59,6 +59,41 @@ public /*abstract*/ class LightWeightBackupMigrationPolicy: MigrationPolicy {
     }
 }
 
+extension MigrationPolicy {
+    public static var error: MigrationPolicy {
+        ErrorMigrationPolicy()
+    }
+
+    public static var lightWeight: MigrationPolicy {
+        LightWeightMigrationPolicy()
+    }
+
+    public static func adHoc(
+        migrations: Set<AdHocMigration>,
+        lightWeightBackup flag: Bool = true) -> MigrationPolicy
+    {
+        AdHocMigrationPolicy(migrations, lightWeightBackup: flag)
+    }
+
+    public static func chain(
+        _ chain: MigrationChain,
+        lightWeightBackup flag: Bool = true) -> MigrationPolicy
+    {
+        ChainMigrationPolicy(chain, lightWeightBackup: flag)
+    }
+
+    public static func adHocTrumpChain(
+        adHoc: Set<AdHocMigration>,
+        chain: MigrationChain,
+        lightWeightBackup flag: Bool = true) -> MigrationPolicy
+    {
+        AdHocTrumpChainMigrationPolicy(
+            adHocMigrations: adHoc,
+            migrationChain: chain,
+            lightWeightBackup: flag)
+    }
+}
+
 // MARK: Error
 
 public class ErrorMigrationPolicy: LightWeightBackupMigrationPolicy {
