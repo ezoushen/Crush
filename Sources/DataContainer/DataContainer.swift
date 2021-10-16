@@ -129,20 +129,27 @@ extension DataContainer {
 }
 
 extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
+    private func canUseBatchRequest() -> Bool {
+        coreDataStack.storage.storeType == NSSQLiteStoreType
+    }
+
     public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, T.ReadOnly> {
         .init(config: .init(), context: queryTransactionContext(), onUiContext: true)
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
-        .init(config: .init(), context: backgroundTransactionContext())
+        .init(config: .init(batch: canUseBatchRequest()),
+              context: backgroundTransactionContext())
     }
     
     public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
-        .init(config: .init(), context: backgroundTransactionContext())
+        .init(config: .init(batch: canUseBatchRequest()),
+              context: backgroundTransactionContext())
     }
     
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
-        .init(config: .init(), context: backgroundTransactionContext())
+        .init(config: .init(batch: canUseBatchRequest()),
+              context: backgroundTransactionContext())
     }
 }
 

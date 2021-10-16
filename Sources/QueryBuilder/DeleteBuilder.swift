@@ -9,16 +9,20 @@ import CoreData
 
 struct DeletionConfig<Target: Entity> {
     var predicate: NSPredicate?
+    let batch: Bool
 }
 
 extension DeletionConfig: RequestConfig {
-    func createFetchRequest() -> NSBatchDeleteRequest {
-        let name = Target.entityDescription().name ?? String(describing: Self.self)
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: name)
+    func createFetchRequest() -> NSPersistentStoreRequest {
+        let fetchRequest = Target.fetchRequest()
         fetchRequest.predicate = predicate
-        let description = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-        description.resultType = .resultTypeObjectIDs
-        return description
+        if batch {
+            let description = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            description.resultType = .resultTypeObjectIDs
+            return description
+        }
+        fetchRequest.resultType = .managedObjectResultType
+        return fetchRequest
     }
 }
 
@@ -62,7 +66,28 @@ extension DeleteBuilder: RequestBuilder {
 }
 
 extension DeleteBuilder {
-    public func exec() throws -> NSBatchDeleteResult {
-        try _context.execute(request: _config.createFetchRequest(), on: \.rootContext)
+    public func exec() throws -> [NSManagedObjectID] {
+        return try _config.batch
+            ? executeBatchDelete()
+            : executeLegacyBatchDelete()
+    }
+
+    private func executeBatchDelete() throws -> [NSManagedObjectID] {
+        let request = _config.createFetchRequest()
+        let result: NSBatchDeleteResult = try _context
+            .execute(request: request, on: \.rootContext)
+        return result.result as! [NSManagedObjectID]
+    }
+
+    private func executeLegacyBatchDelete() throws -> [NSManagedObjectID] {
+        let request = _config.createFetchRequest()
+        let context = _context.rootContext
+        return try context.performSync {
+            let request = request as! NSFetchRequest<NSManagedObject>
+            let objects = try context.fetch(request)
+            objects.forEach(_context.rootContext.delete)
+            try context.save()
+            return objects.map(\.objectID)
+        }
     }
 }

@@ -16,11 +16,22 @@ class C: Entity {
 }
 
 class A: C {
-    let orderedList = Optional.Relation.ToOrderedMany<A, B>("orderedList", inverse: \.owner, options: [RelationshipOption.unidirectionalInverse])
-    let unorderedList = Optional.Relation.ToMany<A, B>("unorderedList")
+    let orderedList = Optional.Relation.ToOrderedMany<A, B>("orderedList")
+    let unorderedList = Optional.Relation.ToMany<A, B>("unorderedList", inverse: \.owner)
 }
+
 class B: Entity {
-    let owner = Optional.Relation.ToOne<B, A>("owner", inverse: \.unorderedList)
+    let owner = Optional.Relation.ToOne<B, A>("owner", inverse: \.orderedList)
+}
+
+extension DataModel {
+    static var v_1: DataModel {
+        DataModel("V1") {
+            EntityDescription<C>(.embedded)
+            EntityDescription<A>(.concrete)
+            EntityDescription<B>(.concrete)
+        }
+    }
 }
 
 class DataModelTests: XCTestCase {
@@ -28,12 +39,8 @@ class DataModelTests: XCTestCase {
     var sut: DataContainer!
     
     override func setUp() {
-        sut = try! DataContainer(
-            storage: Storage.inMemory(),
-            dataModel: DataModel("V1", descriptions: [
-                EntityDescription(type: C.self, inheritance: .abstract),
-                EntityDescription(type: A.self, inheritance: .concrete),
-                EntityDescription(type: B.self, inheritance: .concrete),
-            ]))
+        sut = try! DataContainer.load(
+            storage: .inMemory(),
+            dataModel: .v_1)
     }
 }

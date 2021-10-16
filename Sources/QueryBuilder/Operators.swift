@@ -110,6 +110,19 @@ infix operator |*|
 
 private var propertyNameCache: NSCache<AnyKeyPath, NSString> = .init()
 
+extension PartialKeyPath where Root: Entity {
+    var optionalPropertyName: String? {
+        guard let name = propertyNameCache.object(forKey: self) else {
+            if let name = (Root.init()[keyPath: self] as? PropertyProtocol)?.name {
+                propertyNameCache.setObject(name as NSString, forKey: self)
+                return name
+            }
+            return nil
+        }
+        return name as String
+    }
+}
+
 extension KeyPath where Root: Entity, Value: ValuedProperty {
     var propertyName: String {
         guard let name = propertyNameCache.object(forKey: self) else {

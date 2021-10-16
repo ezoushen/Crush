@@ -11,37 +11,21 @@ enum BatchInsertionError: Error {
     case invalidRequest
 }
 
-class LegacyBatchInsertRequest: NSPersistentStoreRequest {
-    let objects: [[String: Any]]
-    let entity: NSEntityDescription
-    
-    required init(entity: NSEntityDescription, objects: [[String: Any]]) {
-        self.objects = objects
-        self.entity = entity
-    }
-}
-
 struct InsertionConfig<Target: Entity> {
     var predicate: NSPredicate?
     var objects: [[String: Any]] = []
+    let batch: Bool
 }
 
 extension InsertionConfig: RequestConfig {
     func createFetchRequest() -> NSPersistentStoreRequest {
-        createFetchRequest(options: [:])
-    }
-    
-    func createFetchRequest(options: [String: Any]) -> NSPersistentStoreRequest {
         let entity = Target.entityDescription()
-
-        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), batch {
             let description = NSBatchInsertRequest(entity: entity, objects: objects)
             description.resultType = .objectIDs
             return description
         } else {
-            // dummy
-            let description = LegacyBatchInsertRequest(entity: entity, objects: objects)
-            return description
+            return Target.fetchRequest()
         }
     }
 }
@@ -53,28 +37,6 @@ public final class InsertBuilder<Target: Entity>: RequestBuilder {
     required init(config: Config, context: Context) {
         _context = context
         _config = config
-    }
-}
-
-extension InsertBuilder where Target: Entity {
-    private func transform<Value: AttributeProtocol>(object: [(KeyPath<Target, Value>, Value.PropertyValue)]) -> [String: Any] {
-        object.reduce(into: Dictionary<String, Any>(minimumCapacity: object.count)) {
-            $0[$1.0.propertyName] = $1.1
-        }
-    }
-    
-    public func object<Value: AttributeProtocol>(_ value: [(KeyPath<Target, Value>, Value.PropertyValue)]) -> Self {
-        let objects = _config.objects
-        let dict = transform(object: value)
-        _config = _config.updated(\.objects, value: objects + [dict])
-        return self
-    }
-    
-    public func object<Value: AttributeProtocol>(contentsOf values: [[(KeyPath<Target, Value>, Value.PropertyValue)]]) -> Self {
-        let objects = _config.objects
-        let dicts = values.map(transform(object:))
-        _config = _config.updated(\.objects, value: objects + dicts)
-        return self
     }
 }
 
@@ -90,29 +52,47 @@ extension InsertBuilder {
         _config = _config.updated(\.objects, value: objects + values)
         return self
     }
+
+    public func object(_ object: PartialObject<Target>) -> Self {
+        let objects = _config.objects
+        _config = _config.updated(\.objects, value: objects + [object.store])
+        return self
+    }
+
+    public func object(contentsOf values: [PartialObject<Target>]) -> Self {
+        let objects = _config.objects
+        _config = _config.updated(\.objects, value: objects + values.map(\.store))
+        return self
+    }
     
     public func exec() throws -> [NSManagedObjectID] {
-        let request = _config.createFetchRequest()
-        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
-            let result: NSBatchInsertResult = try _context.execute(request: request, on: \.rootContext)
-            _context.executionContext.reset()
-            return result.result as! [NSManagedObjectID]
-        } else if let request = request as? LegacyBatchInsertRequest {
-            let entity = request.entity
-            let context = _context.rootContext
-            context.reset()
-            return context.performSync {
-                autoreleasepool { () -> [NSManagedObjectID] in
-                    request.objects.map { object -> NSManagedObjectID in
-                        let rawObject = NSManagedObject(entity: entity, insertInto: context)
-                        object.forEach {
-                            rawObject.setValue($0.1, key: $0.0)
-                        }
-                        return rawObject.objectID
-                    }
-                }
-            }
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), _config.batch {
+            return try executeBatchInsert()
+        } else {
+            return try executeLegacyBatchInsert()
         }
-        throw BatchInsertionError.invalidRequest
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    private func executeBatchInsert() throws -> [NSManagedObjectID] {
+        let result: NSBatchInsertResult = try _context.execute(
+            request: _config.createFetchRequest(), on: \.rootContext)
+        _context.executionContext.reset()
+        return result.result as! [NSManagedObjectID]
+    }
+
+    private func executeLegacyBatchInsert() throws -> [NSManagedObjectID] {
+        let entity = Target.entityDescription()
+        let context = _context.rootContext
+        return try context.performSync {
+            let result = _config.objects.map { object -> NSManagedObject in
+                let rawObject = NSManagedObject(entity: entity, insertInto: context)
+                object.forEach { rawObject.setValue($0.1, key: $0.0) }
+                return rawObject
+            }
+            try context.save()
+            try context.obtainPermanentIDs(for: result)
+            return result.map(\.objectID)
+        }
     }
 }

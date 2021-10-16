@@ -42,20 +42,28 @@ extension TransactionContext where Self: RawContextProviderProtocol {
 }
 
 extension TransactionContext where Self: RawContextProviderProtocol {
+    private func canUseBatchRequest() -> Bool {
+        rootContext
+            .persistentStoreCoordinator?
+            .persistentStores.contains { $0.type != NSSQLiteStoreType } == false
+    }
+
     public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, ManagedObject<T>> {
         .init(config: .init(), context: self, onUiContext: false)
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
-        .init(config: .init(), context: self)
+        .init(
+            config: .init(batch: canUseBatchRequest()),
+            context: self)
     }
     
     public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
-        .init(config: .init(), context: self)
+        .init(config: .init(batch: canUseBatchRequest()), context: self)
     }
     
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
-        .init(config: .init(), context: self)
+        .init(config: .init(batch: canUseBatchRequest()), context: self)
     }
 
     public func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>? {

@@ -9,16 +9,33 @@ import CoreData
 
 struct UpdateConfig<Target: Entity>: RequestConfig {
     var predicate: NSPredicate?
-    var propertiesToUpdate: [AnyHashable: Any]?
+    var propertiesToUpdate: [AnyHashable: Any] = [:]
+
+    let batch: Bool
 }
 
 extension UpdateConfig {
-    func createFetchRequest() -> NSBatchUpdateRequest {
+    func createFetchRequest() -> NSPersistentStoreRequest {
+        batch
+            ? batchRequest()
+            : fetchRequest()
+    }
+
+    private func batchRequest() -> NSBatchUpdateRequest {
         let description = NSBatchUpdateRequest(entity: Target.entityDescription())
         description.predicate = predicate
         description.propertiesToUpdate = propertiesToUpdate
         description.resultType = .updatedObjectIDsResultType
         return description
+    }
+
+    private func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
+        let request = Target.fetchRequest()
+        request.predicate = predicate
+        request.resultType = .managedObjectResultType
+        request.propertiesToFetch = propertiesToUpdate
+            .compactMap{ $0.key as? String }
+        return request
     }
 }
 
@@ -61,7 +78,7 @@ extension UpdateBuilder {
     }
     
     private func update(key: String, value: Any) -> Self {
-        var properties = _config.propertiesToUpdate ?? [:]
+        var properties = _config.propertiesToUpdate
         properties[key] = value
         _config = _config.updated(\.propertiesToUpdate, value: properties)
         return self
@@ -70,12 +87,41 @@ extension UpdateBuilder {
 
 extension UpdateBuilder where Target: Entity {
     public func update<Value: AttributeProtocol>(_ keyPath: KeyPath<Target, Value>, value: Value.PropertyValue) -> Self {
-        update(key: keyPath.propertyName, value: value)
+        update(key: keyPath.propertyName, value: Value.FieldConvertor.convert(value: value))
     }
 }
 
 extension UpdateBuilder: RequestBuilder {
-    public func exec() throws -> NSBatchUpdateResult {
-        try _context.execute(request: _config.createFetchRequest(), on: \.rootContext)
+    public func exec() throws -> [NSManagedObjectID] {
+        try _config.batch
+            ? executeBatchUpdate()
+            : executeLegacyBatchUpdate()
+    }
+
+    private func executeBatchUpdate() throws -> [NSManagedObjectID] {
+        let request = _config.createFetchRequest()
+        let result: NSBatchUpdateResult = try _context
+            .execute(request: request, on: \.rootContext)
+        return result.result as! [NSManagedObjectID]
+    }
+
+    private func executeLegacyBatchUpdate() throws -> [NSManagedObjectID] {
+        let context = _context.rootContext
+
+        return try context.performSync {
+            let request = _config
+                .createFetchRequest() as! NSFetchRequest<NSManagedObject>
+            let objects = try context.fetch(request)
+
+            for object in objects {
+                for (key, value) in _config.propertiesToUpdate {
+                    object.setValue(value, key: key as! String)
+                }
+            }
+
+            try _context.rootContext.save()
+
+            return objects.map(\.objectID)
+        }
     }
 }
