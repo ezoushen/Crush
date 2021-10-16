@@ -26,66 +26,37 @@ extension DeletionConfig: RequestConfig {
     }
 }
 
-public final class DeleteBuilder<Target: Entity> {
-    var _config: DeletionConfig<Target>
-    let _context: Context
+public final class DeleteBuilder<Target: Entity>: RequestBuilder {
+    var config: DeletionConfig<Target>
+    let context: Context
     
     required init(config: Config, context: Context) {
-        _config = config
-        _context = context
-    }
-}
-
-extension DeleteBuilder: RequestBuilder {
-    public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
-        _config = _config.updated(\.predicate, value: predicate)
-        return self
-    }
-    
-    public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
-        let newPredicate: NSPredicate = {
-            if let pred = _config.predicate {
-                return NSCompoundPredicate(andPredicateWithSubpredicates: [pred, predicate])
-            }
-            return predicate
-        }()
-        _config = _config.updated(\.predicate, value: newPredicate)
-        return self
-    }
-    
-    public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {
-        let newPredicate: NSPredicate = {
-            if let pred = _config.predicate {
-                return NSCompoundPredicate(orPredicateWithSubpredicates: [pred, predicate])
-            }
-            return predicate
-        }()
-        _config = _config.updated(\.predicate, value: newPredicate)
-        return self
+        self.config = config
+        self.context = context
     }
 }
 
 extension DeleteBuilder {
     public func exec() throws -> [NSManagedObjectID] {
-        return try _config.batch
+        return try config.batch
             ? executeBatchDelete()
             : executeLegacyBatchDelete()
     }
 
     private func executeBatchDelete() throws -> [NSManagedObjectID] {
-        let request = _config.createStoreRequest()
-        let result: NSBatchDeleteResult = try _context
+        let request = config.createStoreRequest()
+        let result: NSBatchDeleteResult = try context
             .execute(request: request, on: \.rootContext)
         return result.result as! [NSManagedObjectID]
     }
 
     private func executeLegacyBatchDelete() throws -> [NSManagedObjectID] {
-        let request = _config.createStoreRequest()
-        let context = _context.rootContext
+        let request = config.createStoreRequest()
+        let context = context.rootContext
         return try context.performSync {
             let request = request as! NSFetchRequest<NSManagedObject>
             let objects = try context.fetch(request)
-            objects.forEach(_context.rootContext.delete)
+            objects.forEach(context.delete)
             try context.save()
             return objects.map(\.objectID)
         }

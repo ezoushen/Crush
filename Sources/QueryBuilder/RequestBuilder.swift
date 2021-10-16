@@ -23,13 +23,11 @@ public protocol MutableQueryerProtocol {
 
 protocol RequestConfig {
     associatedtype Request
-    
+
+    var predicate: NSPredicate? { get set }
+
     func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self
     func createStoreRequest() -> Request
-}
-
-protocol PredicatibleRequestConfig: RequestConfig {
-    var predicate: NSPredicate? { get set }
 }
 
 extension RequestConfig {
@@ -43,8 +41,34 @@ extension RequestConfig {
 
 protocol RequestBuilder: AnyObject {
     typealias Context = Crush.TransactionContext & RawContextProviderProtocol
-    
+
+    associatedtype Target: Entity
     associatedtype Config: RequestConfig
     
-    var _config: Config { get set }
+    var config: Config { get set }
+}
+
+extension RequestBuilder {
+    public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
+        config.predicate = predicate
+        return self
+    }
+
+    public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
+        guard let oldPredicate = config.predicate else {
+            config.predicate = predicate
+            return self
+        }
+        config.predicate = oldPredicate && predicate
+        return self
+    }
+
+    public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {
+        guard let oldPredicate = config.predicate else {
+            config.predicate = predicate
+            return self
+        }
+        config.predicate = oldPredicate || predicate
+        return self
+    }
 }

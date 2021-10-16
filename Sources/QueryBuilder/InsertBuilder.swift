@@ -31,42 +31,42 @@ extension InsertionConfig: RequestConfig {
 }
 
 public final class InsertBuilder<Target: Entity>: RequestBuilder {
-    var _config: InsertionConfig<Target>
-    let _context: Context
+    var config: InsertionConfig<Target>
+    let context: Context
     
     required init(config: Config, context: Context) {
-        _context = context
-        _config = config
+        self.context = context
+        self.config = config
     }
 }
 
 extension InsertBuilder {
     public func object(_ value: [String: Any]) -> Self {
-        let objects = _config.objects
-        _config = _config.updated(\.objects, value: objects + [value])
+        let objects = config.objects
+        config = config.updated(\.objects, value: objects + [value])
         return self
     }
     
     public func object(contentsOf values: [[String: Any]]) -> Self {
-        let objects = _config.objects
-        _config = _config.updated(\.objects, value: objects + values)
+        let objects = config.objects
+        config = config.updated(\.objects, value: objects + values)
         return self
     }
 
     public func object(_ object: PartialObject<Target>) -> Self {
-        let objects = _config.objects
-        _config = _config.updated(\.objects, value: objects + [object.store])
+        let objects = config.objects
+        config = config.updated(\.objects, value: objects + [object.store])
         return self
     }
 
     public func object(contentsOf values: [PartialObject<Target>]) -> Self {
-        let objects = _config.objects
-        _config = _config.updated(\.objects, value: objects + values.map(\.store))
+        let objects = config.objects
+        config = config.updated(\.objects, value: objects + values.map(\.store))
         return self
     }
     
     public func exec() throws -> [NSManagedObjectID] {
-        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), _config.batch {
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), config.batch {
             return try executeBatchInsert()
         } else {
             return try executeLegacyBatchInsert()
@@ -75,17 +75,17 @@ extension InsertBuilder {
 
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
     private func executeBatchInsert() throws -> [NSManagedObjectID] {
-        let result: NSBatchInsertResult = try _context.execute(
-            request: _config.createStoreRequest(), on: \.rootContext)
-        _context.executionContext.reset()
+        let result: NSBatchInsertResult = try context.execute(
+            request: config.createStoreRequest(), on: \.rootContext)
+        context.executionContext.reset()
         return result.result as! [NSManagedObjectID]
     }
 
     private func executeLegacyBatchInsert() throws -> [NSManagedObjectID] {
         let entity = Target.entityDescription()
-        let context = _context.rootContext
+        let context = context.rootContext
         return try context.performSync {
-            let result = _config.objects.map { object -> NSManagedObject in
+            let result = config.objects.map { object -> NSManagedObject in
                 let rawObject = NSManagedObject(entity: entity, insertInto: context)
                 object.forEach { rawObject.setValue($0.1, key: $0.0) }
                 return rawObject

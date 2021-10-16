@@ -259,3 +259,15 @@ extension KeyPath where
         TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(MATCHES(rhs))")
     }
 }
+
+public func && (lhs: NSPredicate, rhs: NSPredicate) -> NSPredicate {
+    NSCompoundPredicate(andPredicateWithSubpredicates: [lhs, rhs])
+}
+
+public func || (lhs: NSPredicate, rhs: NSPredicate) -> NSPredicate {
+    NSCompoundPredicate(orPredicateWithSubpredicates: [lhs, rhs])
+}
+
+public prefix func ! (predicat: NSPredicate) -> NSPredicate {
+    NSCompoundPredicate(notPredicateWithSubpredicate: predicat)
+}
