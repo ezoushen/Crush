@@ -8,6 +8,10 @@
 
 import CoreData
 
+public enum EntityInheritance: Int, Comparable, Hashable {
+    case abstract, embedded, concrete
+}
+
 public class AnyEntityDescription: Hashable {
     public let type: Entity.Type
     public let inheritance: EntityInheritance
@@ -68,26 +72,28 @@ public class EntityDescription<T: Entity>: AnyEntityDescription {
     }
 }
 
-public enum EntityInheritance: Int, Comparable, Hashable {
+extension EntityInheritance {
     public static func < (
         lhs: EntityInheritance,
         rhs: EntityInheritance) -> Bool
     {
         lhs.rawValue < rhs.rawValue
     }
-
-    case abstract
-    case embedded
-    case concrete
 }
-
-typealias EntityInheritanceMeta = [ObjectIdentifier: EntityInheritance]
 
 open class Entity: Field {
     required public init() { }
 }
 
 extension Entity {
+    public static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
+        NSFetchRequest<NSFetchRequestResult>(entityName: fetchKey)
+    }
+    
+    public static func entityDescription() -> NSEntityDescription {
+        ManagedObject<Self>.entity()
+    }
+    
     public static var entityCacheKey: String {
         String(reflecting: Self.self)
     }
@@ -95,69 +101,120 @@ extension Entity {
     static var fetchKey: String {
         String(describing: Self.self)
     }
-        
-    static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        NSFetchRequest<NSFetchRequestResult>(entityName: fetchKey)
-    }
-
-    func createProperties(
-        mirror: Mirror,
-        meta: EntityInheritanceMeta
-    ) -> [NSPropertyDescription] {
-        let ownedProperties = mirror.children
-            .compactMap { $0.value as? PropertyProtocol }
-            .map { $0.createPropertyDescription() }
-        
-        if let superMirror = mirror.superclassMirror,
-           meta[ObjectIdentifier(superMirror.subjectType)] == .embedded
-        {
-            return ownedProperties + createProperties(mirror: superMirror, meta: meta)
-        }
-        
-        return ownedProperties
-    }
     
     static func createEntityDescription(
-        meta: EntityInheritanceMeta,
-        indexes: [IndexProtocol] = [],
-        uniqueConstraints: [UniqueConstraintProtocol] = [],
-        validations: [ValidationProtocol] = []
+        entityDescriptionsByType: [ObjectIdentifier: AnyEntityDescription]
     ) -> NSEntityDescription? {
-        guard let inheritance = meta[ObjectIdentifier(Self.self)],
-              inheritance != .embedded else {
+        let identifier = ObjectIdentifier(Self.self)
+        let entityDescription = entityDescriptionsByType[identifier]
+        
+        guard let entityDescription = entityDescription,
+              entityDescription.inheritance != .embedded else {
             return nil
         }
         
+        let inheritance = entityDescription.inheritance
         let cache = Caches.entity
-        let object = Self.init()
-        let mirror = Mirror(reflecting: object)
+        let mirror = Mirror(reflecting: Self.init())
         
         // Setup properties
         let description = NSEntityDescription()
         description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
         description.name = fetchKey
-        description.properties = object.createProperties(mirror: mirror, meta: meta)
         description.isAbstract = inheritance == .abstract
+        description.properties = createProperties(
+            mirror: mirror,
+            entityDescriptionsByType: entityDescriptionsByType)
 
         if let superMirror = mirror.superclassMirror,
            let superType = superMirror.subjectType as? Entity.Type,
-           meta[ObjectIdentifier(superType)] != .embedded
+           entityDescriptionsByType[ObjectIdentifier(superType)]?.inheritance != .embedded
         {
             cache.getAndWait(superType.entityCacheKey) {
                 $0.subentities.append(description)
             }
         }
         
-        description.indexes = indexes
-            .map { $0.createIndexDescription(for: description) }
-        description.uniquenessConstraints = uniqueConstraints
-            .map { $0.uniquenessConstarints }
+        let allIndexes = findAll(
+            keyPath: \.indexes,
+            mirror: mirror,
+            entityDescription: entityDescription,
+            entityDescriptionsByType: entityDescriptionsByType)
+        let allUniqueConstraints = findAll(
+            keyPath: \.uniqueConstraints,
+            mirror: mirror,
+            entityDescription: entityDescription,
+            entityDescriptionsByType: entityDescriptionsByType)
+        let allValidations = findAll(
+            keyPath: \.validations,
+            mirror: mirror,
+            entityDescription: entityDescription,
+            entityDescriptionsByType: entityDescriptionsByType)
         
-        setupValidations(validations, in: description)
+        setupIndexes(allIndexes, in: description)
+        setupUniqueConstraints(allUniqueConstraints, in: description)
+        setupValidations(allValidations, in: description)
         
         cache.set(entityCacheKey, value: description)
         
         return description
+    }
+    
+    private static func createProperties(
+        mirror: Mirror,
+        entityDescriptionsByType: [ObjectIdentifier: AnyEntityDescription]
+    ) -> [NSPropertyDescription] {
+        let ownedProperties = mirror.children
+            .compactMap { $0.value as? PropertyProtocol }
+            .map { $0.createPropertyDescription() }
+        
+        if let superMirror = mirror.superclassMirror,
+           entityDescriptionsByType[ObjectIdentifier(superMirror.subjectType)]?.inheritance == .embedded
+        {
+            return ownedProperties + createProperties(mirror: superMirror, entityDescriptionsByType: entityDescriptionsByType)
+        }
+        
+        return ownedProperties
+    }
+    
+    private static func findAll<T>(
+        keyPath: KeyPath<AnyEntityDescription, [T]>,
+        mirror: Mirror,
+        entityDescription: AnyEntityDescription,
+        entityDescriptionsByType: [ObjectIdentifier: AnyEntityDescription]) -> [T]
+    {
+        guard mirror.subjectType == self ||
+              entityDescription.inheritance == .embedded
+        else { return [] }
+        
+        let array = entityDescription[keyPath: keyPath]
+        guard let superMirror = mirror.superclassMirror,
+              let superDescription =
+                entityDescriptionsByType[ObjectIdentifier(superMirror.subjectType)]
+        else { return array }
+        
+        return array +
+            findAll(
+                keyPath: keyPath,
+                mirror: superMirror,
+                entityDescription: superDescription,
+                entityDescriptionsByType: entityDescriptionsByType)
+    }
+    
+    private static func setupIndexes(
+        _ indexes: [IndexProtocol],
+        in description: NSEntityDescription)
+    {
+        description.indexes = indexes
+            .map { $0.createIndexDescription(for: description) }
+    }
+    
+    private static func setupUniqueConstraints(
+        _ constraints: [UniqueConstraintProtocol],
+        in description: NSEntityDescription)
+    {
+        description.uniquenessConstraints = constraints
+            .map { $0.uniquenessConstarints }
     }
     
     private static func setupValidations(
@@ -188,10 +245,6 @@ extension Entity {
                 predicatesByName[name],
                 withValidationWarnings: warningsByName[name])
         }
-    }
-    
-    static func entityDescription() -> NSEntityDescription {
-        ManagedObject<Self>.entity()
     }
 }
 

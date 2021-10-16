@@ -45,12 +45,15 @@ public class DataModel {
         }
         let sortedDescriptions = entityDescriptions
             .sorted { $0.inheritance < $1.inheritance }
-        let meta = sortedDescriptions
-            .reduce(into: EntityInheritanceMeta()) {
-                $0[ObjectIdentifier($1.type)] = $1.inheritance
+        let entityDescriptionsByType = sortedDescriptions
+            .reduce(into: [ObjectIdentifier: AnyEntityDescription]()) {
+                $0[ObjectIdentifier($1.type)] = $1
             }
         let entities: [NSEntityDescription] = sortedDescriptions
-            .compactMap { $0.type.createEntityDescription(meta: meta) }
+            .compactMap {
+                $0.type.createEntityDescription(
+                    entityDescriptionsByType: entityDescriptionsByType)
+            }
         model.versionIdentifiers = [name]
         model.entities = entities
         return model
