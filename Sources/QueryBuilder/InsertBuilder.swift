@@ -43,25 +43,25 @@ public final class InsertBuilder<Target: Entity>: RequestBuilder {
 extension InsertBuilder {
     public func object(_ value: [String: Any]) -> Self {
         let objects = config.objects
-        config = config.updated(\.objects, value: objects + [value])
+        config.objects = objects + [value]
         return self
     }
     
     public func object(contentsOf values: [[String: Any]]) -> Self {
         let objects = config.objects
-        config = config.updated(\.objects, value: objects + values)
+        config.objects = objects + values
         return self
     }
 
     public func object(_ object: PartialObject<Target>) -> Self {
         let objects = config.objects
-        config = config.updated(\.objects, value: objects + [object.store])
+        config.objects = objects + [object.store]
         return self
     }
 
     public func object(contentsOf values: [PartialObject<Target>]) -> Self {
         let objects = config.objects
-        config = config.updated(\.objects, value: objects + values.map(\.store))
+        config.objects = objects + values.map(\.store)
         return self
     }
     

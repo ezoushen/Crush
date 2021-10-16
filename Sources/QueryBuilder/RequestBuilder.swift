@@ -25,18 +25,7 @@ protocol RequestConfig {
     associatedtype Request
 
     var predicate: NSPredicate? { get set }
-
-    func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self
     func createStoreRequest() -> Request
-}
-
-extension RequestConfig {
-    func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self {
-        guard let keyPath = keyPath as? WritableKeyPath<Self, V> else { return self }
-        var config = self
-        config[keyPath: keyPath] = value
-        return config
-    }
 }
 
 protocol RequestBuilder: AnyObject {

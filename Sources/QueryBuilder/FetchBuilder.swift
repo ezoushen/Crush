@@ -39,7 +39,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     var includePendingChanges: Bool = false
     
     func createStoreRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entityDescription().name ?? String(describing: T.self))
+        let request = T.fetchRequest()
         request.sortDescriptors = sorters
         request.predicate = predicate
         request.propertiesToFetch = prefetched?.map{ $0.asExpression() }
