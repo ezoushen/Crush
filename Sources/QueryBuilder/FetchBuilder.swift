@@ -38,7 +38,7 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     private(set) var asFaults: Bool = true
     private(set) var includePendingChanges: Bool = false
     
-    func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
+    func createStoreRequest() -> NSFetchRequest<NSFetchRequestResult> {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: T.entityDescription().name ?? String(describing: T.self))
         request.sortDescriptors = sorters
         request.predicate = predicate
@@ -150,7 +150,7 @@ extension PartialFetchBuilder: RequestBuilder {
     typealias Config = FetchConfig<Target>
     
     private func received() -> [Received] {
-        let request = _config.createFetchRequest()
+        let request = _config.createStoreRequest()
         return try! _context.execute(request: request, on: _config.includePendingChanges ? \.executionContext : \.rootContext)
     }
 }
@@ -158,7 +158,7 @@ extension PartialFetchBuilder: RequestBuilder {
 public class FetchBuilder<Target, Received, Result>: PartialFetchBuilder<Target, Received, Result> where Target: Entity {
     public func count() -> Int {
         let newConfig = _config.updated(\.resultType, value: .countResultType)
-        let request = newConfig.createFetchRequest()
+        let request = newConfig.createStoreRequest()
         return _context.count(request: request, on: _config.includePendingChanges ? \.executionContext : \.rootContext)
     }
 }

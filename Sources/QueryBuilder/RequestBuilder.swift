@@ -25,7 +25,7 @@ protocol RequestConfig {
     associatedtype Request
     
     func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self
-    func createFetchRequest() -> Request
+    func createStoreRequest() -> Request
 }
 
 protocol PredicatibleRequestConfig: RequestConfig {

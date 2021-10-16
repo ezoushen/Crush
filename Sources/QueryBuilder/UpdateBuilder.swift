@@ -15,7 +15,7 @@ struct UpdateConfig<Target: Entity>: RequestConfig {
 }
 
 extension UpdateConfig {
-    func createFetchRequest() -> NSPersistentStoreRequest {
+    func createStoreRequest() -> NSPersistentStoreRequest {
         batch
             ? batchRequest()
             : fetchRequest()
@@ -99,7 +99,7 @@ extension UpdateBuilder: RequestBuilder {
     }
 
     private func executeBatchUpdate() throws -> [NSManagedObjectID] {
-        let request = _config.createFetchRequest()
+        let request = _config.createStoreRequest()
         let result: NSBatchUpdateResult = try _context
             .execute(request: request, on: \.rootContext)
         return result.result as! [NSManagedObjectID]
@@ -110,7 +110,7 @@ extension UpdateBuilder: RequestBuilder {
 
         return try context.performSync {
             let request = _config
-                .createFetchRequest() as! NSFetchRequest<NSManagedObject>
+                .createStoreRequest() as! NSFetchRequest<NSManagedObject>
             let objects = try context.fetch(request)
 
             for object in objects {

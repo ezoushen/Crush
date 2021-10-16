@@ -13,7 +13,7 @@ struct DeletionConfig<Target: Entity> {
 }
 
 extension DeletionConfig: RequestConfig {
-    func createFetchRequest() -> NSPersistentStoreRequest {
+    func createStoreRequest() -> NSPersistentStoreRequest {
         let fetchRequest = Target.fetchRequest()
         fetchRequest.predicate = predicate
         if batch {
@@ -73,14 +73,14 @@ extension DeleteBuilder {
     }
 
     private func executeBatchDelete() throws -> [NSManagedObjectID] {
-        let request = _config.createFetchRequest()
+        let request = _config.createStoreRequest()
         let result: NSBatchDeleteResult = try _context
             .execute(request: request, on: \.rootContext)
         return result.result as! [NSManagedObjectID]
     }
 
     private func executeLegacyBatchDelete() throws -> [NSManagedObjectID] {
-        let request = _config.createFetchRequest()
+        let request = _config.createStoreRequest()
         let context = _context.rootContext
         return try context.performSync {
             let request = request as! NSFetchRequest<NSManagedObject>
