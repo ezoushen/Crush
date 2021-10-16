@@ -10,11 +10,20 @@ import Foundation
 
 public class DataModel {
     public let name: String
-    public let entityDescriptions: Set<EntityDescription>
+    public let entityDescriptions: Set<AnyEntityDescription>
 
-    public init(_ name: String, descriptions: Set<EntityDescription>) {
+    public init(name: String, descriptions: Set<AnyEntityDescription>) {
         self.name = name
         self.entityDescriptions = descriptions
+    }
+    
+    public init(
+        _ name: String,
+        @CollectionBuilder<AnyEntityDescription>
+        descriptions: () -> Set<AnyEntityDescription>)
+    {
+        self.name = name
+        self.entityDescriptions = descriptions()
     }
 
     internal func entityDescriptionHash() -> Int {
@@ -29,11 +38,9 @@ public class DataModel {
             return cachedModel
         }
         let model = NSManagedObjectModel()
-        Caches.property.clean()
         Caches.entity.clean()
         defer {
             Caches.managedObjectModel.set(key, value: model)
-            Caches.property.clean()
             Caches.entity.clean()
         }
         let sortedDescriptions = entityDescriptions

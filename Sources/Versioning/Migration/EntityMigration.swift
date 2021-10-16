@@ -23,27 +23,6 @@ public protocol EntityMigration {
         to destinationEntity: NSEntityDescription?) throws -> NSEntityMapping
 }
 
-@resultBuilder
-public struct EntityMigrationBuilder {
-    public static func buildBlock(_ components: EntityMigration...) -> [EntityMigration] {
-        components
-    }
-}
-
-@resultBuilder
-public struct PropertyMigrationBuilder {
-    public static func buildBlock(_ components: PropertyMigration...) -> [PropertyMigration] {
-        components
-    }
-}
-
-@resultBuilder
-public struct AddPropertyMigrationBuilder {
-    public static func buildBlock(_ components: AddPropertyMigration...) -> [AddPropertyMigration] {
-        components
-    }
-}
-
 public struct AddEntity: EntityMigration {
     public let name: String?
     public let parent: String?
@@ -68,7 +47,8 @@ public struct AddEntity: EntityMigration {
         _ name: String,
         parent: String? = nil,
         isAbstract: Bool = false,
-        @AddPropertyMigrationBuilder properties: () -> [AddPropertyMigration]
+        @CollectionBuilder<AddPropertyMigration>
+        properties: () -> [AddPropertyMigration]
     ) {
         self.name = name
         self.parent = parent
@@ -240,7 +220,8 @@ public struct UpdateEntity: EntityMigration {
         name: String? = nil,
         parent: String? = nil,
         isAbstract: Bool? = nil,
-        @PropertyMigrationBuilder properties: () -> [PropertyMigration]
+        @CollectionBuilder<PropertyMigration>
+        properties: () -> [PropertyMigration]
     ) {
         self.originEntityName = originName
         self.name = name

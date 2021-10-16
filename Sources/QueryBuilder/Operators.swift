@@ -41,9 +41,9 @@ public final class TypedPredicate<T: Entity>: NSPredicate {
     "MATCHES\(string.type.modifier) \"\(string.string)\""
 }
 
-// MARK: - Validation
+// MARK: - Property Condition
 
-public final class ValidationCondition: NSPredicate {
+public final class PropertyCondition: NSPredicate {
     public convenience init<T: PredicateComparable>(in rhs: ClosedRange<T>) {
         self.init(format: "SELF BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }

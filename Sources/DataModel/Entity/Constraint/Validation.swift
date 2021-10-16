@@ -8,22 +8,23 @@
 import Foundation
 
 public protocol ValidationProtocol {
-    var anyKeyPath: AnyKeyPath { get }
-    var wrappedValue: (NSPredicate, String) { get }
+    var propertyName: String { get }
+    var warning: String { get }
+    var predicate: PropertyCondition { get }
 }
 
-@propertyWrapper
-public struct Validation<E: Entity, A: Field>: ValidationProtocol {
-    public let keyPath: KeyPath<E, A>
+public struct Validation<T: Entity>: ValidationProtocol, Hashable {
+    public var propertyName: String
+    public var warning: String
+    public var predicate: PropertyCondition
     
-    public var anyKeyPath: AnyKeyPath {
-        keyPath
-    }
-    
-    public let wrappedValue: (NSPredicate, String)
-    
-    public init(wrappedValue: (NSPredicate, String), _ keyPath: KeyPath<E, A>) {
-        self.keyPath = keyPath
-        self.wrappedValue = wrappedValue
+    public init<S: ValuedProperty>(
+        _ keyPath: KeyPath<T, S>,
+        predicate: PropertyCondition,
+        warnging: String)
+    {
+        self.propertyName = keyPath.propertyName
+        self.predicate = predicate
+        self.warning = warnging
     }
 }

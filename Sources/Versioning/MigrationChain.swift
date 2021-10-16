@@ -8,13 +8,6 @@
 import CoreData
 import Foundation
 
-@resultBuilder
-public struct MigrationChainBuilder {
-    public static func buildBlock(_ components: ModelMigration...) -> [ModelMigration] {
-        components
-    }
-}
-
 public final class MigrationChain {
 
     let migrations: [ModelMigration]
@@ -26,7 +19,10 @@ public final class MigrationChain {
         self.migrations = migrations
     }
 
-    public init(@MigrationChainBuilder _ builder: () -> [ModelMigration]) {
+    public init(
+        @CollectionBuilder<ModelMigration>
+        builder: () -> [ModelMigration])
+    {
         self.migrations = builder()
     }
 

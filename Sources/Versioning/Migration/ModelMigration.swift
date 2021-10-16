@@ -20,7 +20,8 @@ public struct ModelMigration: Hashable {
 
     public init(
         _ name: String,
-        @EntityMigrationBuilder entityMigrations: () -> [EntityMigration])
+        @CollectionBuilder<EntityMigration>
+        entityMigrations: () -> [EntityMigration])
     {
         self.name = name
         self.entityMigrations = entityMigrations()

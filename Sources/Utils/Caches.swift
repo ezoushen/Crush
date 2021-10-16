@@ -80,18 +80,10 @@ extension Cache {
 
 struct EntityCache: Cache {
     struct Store: Crush.CacheStore {
-        static var cache: [AnyHashable: NSEntityDescription] = [:]
+        static var cache: [String: NSEntityDescription] = [:]
     }
 
-    static var callbackStore: [AnyHashable : [Callback]] = [:]
-}
-
-struct PropertyCache: Cache {
-    struct Store: CacheStore {
-        static var cache: [AnyHashable: NSPropertyDescription] = [:]
-    }
-
-    static var callbackStore: [AnyHashable : [Callback]] = [:]
+    static var callbackStore: [String : [Callback]] = [:]
 }
 
 struct ManagedObjectModelcache: Cache {
@@ -104,6 +96,5 @@ struct ManagedObjectModelcache: Cache {
 
 internal enum Caches {
     static let entity: EntityCache = .init()
-    static let property: PropertyCache = .init()
     static let managedObjectModel: ManagedObjectModelcache = .init()
 }

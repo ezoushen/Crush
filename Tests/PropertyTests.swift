@@ -35,7 +35,7 @@ class PropertyTests: XCTestCase {
     }
 
     func test_propertyOption_validationPredicateShouldBeSetProperly() {
-        let predicate = ValidationCondition(largerThan: 0)
+        let predicate = PropertyCondition(largerThan: 0)
         let warning = "property should larger than zero"
         let property = Required.Value.Int16(
             "property",
@@ -44,7 +44,7 @@ class PropertyTests: XCTestCase {
             ])])
         let description = property.createPropertyDescription()
         XCTAssertEqual(description.validationPredicates.count, 1, "predicates size should be 1")
-        XCTAssertEqual(description.validationPredicates.first, ValidationCondition(largerThan: 0), "predicate should be set properly")
+        XCTAssertEqual(description.validationPredicates.first, PropertyCondition(largerThan: 0), "predicate should be set properly")
         XCTAssertEqual(description.validationWarnings.count, 1, "warning size should be 1")
         XCTAssertEqual(description.validationWarnings.first as! String, warning, "warning should be set properly")
     }

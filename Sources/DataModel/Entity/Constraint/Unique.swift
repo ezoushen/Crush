@@ -7,47 +7,28 @@
 
 import Foundation
 
-protocol UniqueConstraintProtocol {
+public protocol UniqueConstraintProtocol {
     var uniquenessConstarints: [String] { get }
 }
 
-public struct UniqueConstraintSet<Target: Entity, Value: ValuedProperty> {
-    public let constraints: [KeyPath<Target, Value>]
-}
-
-extension UniqueConstraintSet: ExpressibleByArrayLiteral {
-    public init(arrayLiteral elements: KeyPath<Target, Value>...) {
-        constraints = elements
+public struct UniqueElement<T: Entity>: Hashable {
+    public let name: String
+    public init<S: ValuedProperty>(_ keyPath: KeyPath<T, S>) {
+        self.name = keyPath.propertyName
     }
 }
 
-@propertyWrapper
-public struct CompositeUniqueConstraint<Target: Entity, Value: ValuedProperty>: UniqueConstraintProtocol {
-    public var wrappedValue: UniqueConstraintSet<Target, Value>
+public struct UniqueConstraint<T: Entity>:
+    UniqueConstraintProtocol,
+    Hashable
+{
+    let elements: [UniqueElement<T>]
     
-    public init(wrappedValue: UniqueConstraintSet<Target, Value>) {
-        self.wrappedValue = wrappedValue
+    public init(_ elements: UniqueElement<T>...) {
+        self.elements = elements
     }
-}
-
-extension CompositeUniqueConstraint {
-    var uniquenessConstarints: [String] {
-        wrappedValue.constraints.map(\.propertyName)
-    }
-}
-
-@propertyWrapper
-public struct UniqueConstraint<Target: Entity, Value: ValuedProperty>: UniqueConstraintProtocol {
     
-    public var wrappedValue: KeyPath<Target, Value>
-    
-    public init(wrappedValue: KeyPath<Target, Value>) {
-        self.wrappedValue = wrappedValue
-    }
-}
-
-extension UniqueConstraint {
-    var uniquenessConstarints: [String] {
-        [wrappedValue.propertyName]
+    public var uniquenessConstarints: [String] {
+        elements.map(\.name)
     }
 }
