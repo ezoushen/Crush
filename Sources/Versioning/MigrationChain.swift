@@ -21,9 +21,9 @@ public final class MigrationChain {
 
     public init(
         @CollectionBuilder<ModelMigration>
-        builder: () -> [ModelMigration])
+        builder: () -> Set<ModelMigration>)
     {
-        self.migrations = builder()
+        self.migrations = Array(builder())
     }
 
     public func managedObjectModels() throws -> [NSManagedObjectModel] {
