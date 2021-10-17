@@ -7,10 +7,6 @@
 
 import CoreData
 
-enum BatchInsertionError: Error {
-    case invalidRequest
-}
-
 struct InsertionConfig<Target: Entity> {
     var predicate: NSPredicate?
     var objects: [[String: Any]] = []

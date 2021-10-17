@@ -1,5 +1,5 @@
 //
-//  Transaction.swift
+//  Session.swift
 //  Crush
 //
 //  Created by 沈昱佐 on 2020/2/11.
@@ -20,8 +20,8 @@ fileprivate func warning(
     #endif
 }
 
-public struct Transaction {
-    internal let context: _TransactionContext
+public struct Session {
+    internal let context: _SessionContext
     public var enabledWarningForUnsavedChanges: Bool = true
     public var mergePolicy: NSMergePolicy {
         didSet {
@@ -57,7 +57,7 @@ public struct Transaction {
     }
 }
 
-extension Transaction {
+extension Session {
     public func load<T: Entity>(_ entity: T.ReadOnly) -> T.ReadOnly {
         present(entity.value)
     }
@@ -84,7 +84,7 @@ extension Transaction {
     }
 }
 
-extension Transaction {
+extension Session {
 
     private func shouldWarnUnsavedChangesOnPrivateContext() -> Bool {
         guard enabledWarningForUnsavedChanges else { return false }
@@ -98,26 +98,27 @@ extension Transaction {
     @inline(__always)
     private func warnUnsavedChangesIfNeeded() {
         warning(shouldWarnUnsavedChangesOnPrivateContext(),
-                "You should commit changes in transaction before return")
+                "You should commit changes in session before return")
     }
 
-    public func async(_ block: @escaping (TransactionContext) throws -> Void, catch: ((Error) -> Void)? = nil) {
+    public func async(_ block: @escaping (SessionContext) throws -> Void, completion: ((Error?) -> Void)? = nil) {
         let context = context
         context.performAsyncUndoable {
+            var error: Error?
             do {
                 try block(context)
-            } catch {
-                guard let catchBlock = `catch` else {
-                    context.logger.log(.critical, "unhandled error occured", error: error)
-                    return
-                }
-                catchBlock(error)
+            } catch let err {
+                error = err
             }
+            if completion == nil, let error = error {
+                context.logger.log(.critical, "unhandled error occured", error: error)
+            }
+            completion?(error)
         }
     }
 
-    public func sync<Property: UnsafeTransactionProperty>(
-        _ block: (TransactionContext) throws -> Property
+    public func sync<Property: UnsafeSessionProperty>(
+        _ block: (SessionContext) throws -> Property
     ) rethrows -> Property.Safe {
         let context = context
         let result = try context.performSyncUndoable {
@@ -128,13 +129,13 @@ extension Transaction {
     }
 
     public func sync<T>(
-        _ block: (TransactionContext) throws -> T
+        _ block: (SessionContext) throws -> T
     ) rethrows -> T {
         let result = try context.performSyncUndoable {
             try block(context)
         }
         warning(
-            result is UnsafeTransactionPropertyProtocol,
+            result is UnsafeSessionPropertyProtocol,
             "Return an \(type(of: result)) is not recommended")
         return result
     }
@@ -184,7 +185,7 @@ extension NSManagedObjectContext {
 }
 
 
-extension _TransactionContext {
+extension _SessionContext {
     func performAsync(_ block: @escaping () -> Void) {
         executionContext.performAsync(block)
     }

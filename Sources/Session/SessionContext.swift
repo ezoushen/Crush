@@ -1,5 +1,5 @@
 //
-//  TransactionContext.swift
+//  SessionContext.swift
 //  Crush
 //
 //  Created by 沈昱佐 on 2019/9/26.
@@ -15,7 +15,7 @@ public protocol RawContextProviderProtocol {
     var logger: DataContainer.LogHandler { get }
 }
 
-public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
+public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func create<T: Entity>(entity: T.Type) -> ManagedObject<T>
     func delete<T: Entity>(_ object: ManagedObject<T>)
     func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>?
@@ -25,7 +25,7 @@ public protocol TransactionContext: QueryerProtocol, MutableQueryerProtocol {
     func commitAndWait() throws
 }
 
-extension TransactionContext where Self: RawContextProviderProtocol {
+extension SessionContext where Self: RawContextProviderProtocol {
     func receive<T: NSManagedObject>(_ object: T) -> T {
         guard executionContext !== object.managedObjectContext else { return object }
         return executionContext.performSync {
@@ -41,7 +41,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     }
 }
 
-extension TransactionContext where Self: RawContextProviderProtocol {
+extension SessionContext where Self: RawContextProviderProtocol {
     private func canUseBatchRequest() -> Bool {
         rootContext
             .persistentStoreCoordinator?
@@ -71,7 +71,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     }
 }
 
-internal struct _TransactionContext: TransactionContext, RawContextProviderProtocol {
+internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
     internal let executionContext: NSManagedObjectContext
     internal let rootContext: NSManagedObjectContext
     internal let uiContext: NSManagedObjectContext
@@ -85,7 +85,7 @@ internal struct _TransactionContext: TransactionContext, RawContextProviderProto
     }
 }
 
-extension TransactionContext where Self: RawContextProviderProtocol {
+extension SessionContext where Self: RawContextProviderProtocol {
     func count(request: NSFetchRequest<NSFetchRequestResult>, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) -> Int {
         var result: Int? = nil
         let context = self[keyPath: context]
@@ -138,7 +138,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     }
 }
 
-extension TransactionContext where Self: RawContextProviderProtocol {
+extension SessionContext where Self: RawContextProviderProtocol {
     public func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T> {
         executionContext.performSync {
             executionContext.receive(runtimeObject: object.value)
@@ -172,29 +172,29 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     }
     
     public func commit() throws {
-        let err: NSError? = withExtendedLifetime(self) { transactionContext in
+        let err: NSError? = withExtendedLifetime(self) { sessionContext in
             var err: NSError?
 
-            transactionContext.executionContext.performAndWait {
-                guard transactionContext.executionContext.hasChanges else {
+            sessionContext.executionContext.performAndWait {
+                guard sessionContext.executionContext.hasChanges else {
                     return
                 }
 
                 do {
-                    try transactionContext.executionContext.save()
+                    try sessionContext.executionContext.save()
                 } catch let error as NSError {
                     logger.log(.error, "Merge changes to the writer context ended with error", error: error)
                     err = error
                 }
 
-                transactionContext.rootContext.perform {
+                sessionContext.rootContext.perform {
                     do {
-                        try transactionContext.rootContext.save()
+                        try sessionContext.rootContext.save()
                     } catch let error as NSError {
                         logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
                         err = error
                         
-                        transactionContext.reset()
+                        sessionContext.reset()
                     }
                 }
             }
@@ -208,16 +208,16 @@ extension TransactionContext where Self: RawContextProviderProtocol {
     }
     
     public func commitAndWait() throws {
-        let err: NSError? = withExtendedLifetime(self) { transactionContext in
+        let err: NSError? = withExtendedLifetime(self) { sessionContext in
             var err: NSError?
 
-            transactionContext.executionContext.performAndWait {
-                guard transactionContext.executionContext.hasChanges else {
+            sessionContext.executionContext.performAndWait {
+                guard sessionContext.executionContext.hasChanges else {
                     return
                 }
                 
                 do {
-                    try transactionContext.executionContext.save()
+                    try sessionContext.executionContext.save()
                 } catch let error as NSError {
                     logger.log(.error, "Merge changes to the writer context ended with error", error: error)
                     err = error
@@ -225,9 +225,9 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                 
                 guard err == nil else { return }
 
-                transactionContext.rootContext.performAndWait {
+                sessionContext.rootContext.performAndWait {
                     do {
-                        try transactionContext.rootContext.save()
+                        try sessionContext.rootContext.save()
                     } catch let error as NSError {
                         logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
                         err = error
@@ -235,7 +235,7 @@ extension TransactionContext where Self: RawContextProviderProtocol {
                 }
                 
                 guard err == nil else {
-                    return transactionContext.reset()
+                    return sessionContext.reset()
                 }
             }
             

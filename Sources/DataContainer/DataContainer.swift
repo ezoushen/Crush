@@ -102,25 +102,25 @@ public class DataContainer {
 }
 
 extension DataContainer {
-    internal func backgroundTransactionContext() -> _TransactionContext {
-        _TransactionContext(
+    internal func backgroundSessionContext() -> _SessionContext {
+        _SessionContext(
             executionContext: coreDataStack.createBackgroundContext(parent: writerContext),
             rootContext: writerContext,
             uiContext: uiContext,
             logger: logger)
     }
     
-    internal func uiTransactionContext() -> _TransactionContext {
+    internal func uiSessionContext() -> _SessionContext {
         let context = coreDataStack.createMainThreadContext(parent: writerContext)
-        return _TransactionContext(
+        return _SessionContext(
             executionContext: context,
             rootContext: writerContext,
             uiContext: context,
             logger: logger)
     }
     
-    internal func queryTransactionContext() -> _TransactionContext {
-        _TransactionContext(
+    internal func querySessionContext() -> _SessionContext {
+        _SessionContext(
             executionContext: uiContext,
             rootContext: writerContext,
             uiContext: uiContext,
@@ -134,32 +134,32 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
     }
 
     public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, T.ReadOnly> {
-        .init(config: .init(), context: queryTransactionContext(), onUiContext: true)
+        .init(config: .init(), context: querySessionContext(), onUiContext: true)
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
         .init(config: .init(batch: canUseBatchRequest()),
-              context: backgroundTransactionContext())
+              context: backgroundSessionContext())
     }
     
     public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
         .init(config: .init(batch: canUseBatchRequest()),
-              context: backgroundTransactionContext())
+              context: backgroundSessionContext())
     }
     
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
         .init(config: .init(batch: canUseBatchRequest()),
-              context: backgroundTransactionContext())
+              context: backgroundSessionContext())
     }
 }
 
 extension DataContainer {
-    public func startTransaction() -> Transaction {
-        Transaction(context: backgroundTransactionContext(), mergePolicy: coreDataStack.mergePolicy)
+    public func startSession() -> Session {
+        Session(context: backgroundSessionContext(), mergePolicy: coreDataStack.mergePolicy)
     }
     
-    public func startUiTransaction() -> Transaction {
-        Transaction(context: uiTransactionContext(), mergePolicy: coreDataStack.mergePolicy)
+    public func startUiSession() -> Session {
+        Session(context: uiSessionContext(), mergePolicy: coreDataStack.mergePolicy)
     }
     
     public func load<T: Entity>(objectID: NSManagedObjectID) -> T.ReadOnly? {

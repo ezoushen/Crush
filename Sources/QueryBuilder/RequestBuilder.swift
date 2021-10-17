@@ -29,7 +29,7 @@ protocol RequestConfig {
 }
 
 protocol RequestBuilder: AnyObject {
-    typealias Context = Crush.TransactionContext & RawContextProviderProtocol
+    typealias Context = Crush.SessionContext & RawContextProviderProtocol
 
     associatedtype Target: Entity
     associatedtype Config: RequestConfig
