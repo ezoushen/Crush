@@ -22,12 +22,6 @@ class PropertyTests: XCTestCase {
         XCTAssertEqual(description.name, "property", "name should be property")
     }
 
-    func test_property_shouldBeTransient() {
-        let property = Transient.Value.String("property")
-        let description = property.createPropertyDescription()
-        XCTAssertTrue(description.isTransient, "property should be transient")
-    }
-
     func test_propertyOption_shouldBeIndexedBySpotlight() {
         let property = Value.Int16("property", options: [PropertyOption.isIndexedBySpotlight(true)])
         let description = property.createPropertyDescription()

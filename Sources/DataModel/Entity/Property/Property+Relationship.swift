@@ -51,14 +51,6 @@ public protocol RelationshipProtocol: ValuedProperty {
     
     var configuration: PropertyConfiguration { get set }
     var inverseName: String? { get set }
-    
-    init<R: RelationshipProtocol>(
-        _ name: String,
-        inverse: KeyPath<Destination, R>,
-        options: PropertyConfiguration)
-    where
-        R.Destination == Source,
-        R.Source == Destination
 }
 
 // MARK: - EntityRelationShipType
@@ -152,7 +144,8 @@ public struct ToOrderedMany<EntityType: Entity>: RelationMapping, FieldConvertib
     }
 }
 
-public final class Relationship<O: Nullability, S: Entity, R: RelationMapping>: RelationshipProtocol {
+public final class Relationship<O: Nullability, S: Entity, R: RelationMapping, T: Transience>: RelationshipProtocol {
+    public typealias Transience = T
     public typealias PredicateValue = Destination
     public typealias PropertyValue = R.RuntimeObjectValue
     public typealias Mapping = R
@@ -204,10 +197,10 @@ public final class Relationship<O: Nullability, S: Entity, R: RelationMapping>: 
         
         configuration.configure(description: description)
 
-        description.isOptional = O.isOptional
-        description.isTransient = isTransient
-        description.isOrdered = R.isOrdered
         description.name = name
+        description.isTransient = isTransient
+        description.isOptional = O.isOptional
+        description.isOrdered = R.isOrdered
         description.userInfo = description.userInfo ?? [:]
         description.maxCount = Mapping.resolveMaxCount(description.maxCount)
         description.minCount = Mapping.resolveMinCount(description.minCount)

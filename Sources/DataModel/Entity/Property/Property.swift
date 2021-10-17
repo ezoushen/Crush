@@ -67,11 +67,8 @@ extension PropertyOption: MutablePropertyConfigurable {
 
 public protocol PropertyProtocol: AnyObject {
     var name: String { get set }    
+    var isTransient: Bool { get }
     func createPropertyDescription() -> NSPropertyDescription
-}
-
-extension PropertyProtocol {
-    public var isTransient: Bool { false }
 }
 
 // MARK: - Entity Property
@@ -81,10 +78,13 @@ public protocol ValuedProperty: PropertyProtocol {
     associatedtype PropertyValue
     associatedtype PredicateValue
     associatedtype Nullability: Crush.Nullability
+    associatedtype Transience: Crush.Transience
     associatedtype FieldConvertor: FieldConvertible
     where FieldConvertor.RuntimeObjectValue == PropertyValue
 
-    init(_ name: String)
-
     var isAttribute: Bool { get }
+}
+
+extension ValuedProperty {
+    public var isTransient: Bool { Transience.isTransient }
 }

@@ -43,7 +43,6 @@ public protocol AttributeProtocol: ValuedProperty where PredicateValue: FieldAtt
     var defaultValue: PropertyValue { get set }
     var attributeValueClassName: String? { get }
     var configuration: PropertyConfiguration { get set }
-    init(_ name: String, defaultValue: PropertyValue, options: PropertyConfiguration)
 }
 
 extension AttributeProtocol {
@@ -65,12 +64,20 @@ extension AttributeProtocol {
 }
 
 // MARK: - EntityAttributeType
-public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashable>: AttributeProtocol {
-    public typealias PredicateValue = FieldType
-    public typealias PropertyValue = FieldType.RuntimeObjectValue
+public class Attribute<
+    O: Nullability,
+    F: FieldAttribute & Hashable,
+    T: Transience
+>:
+    AttributeProtocol
+{
+    public typealias FieldType = F
+    public typealias Transience = T
     public typealias Nullability = O
+    public typealias PredicateValue = F
+    public typealias PropertyValue = F.RuntimeObjectValue
     public typealias PropertyOption = AttributeOption
-    public typealias FieldConvertor = FieldType
+    public typealias FieldConvertor = F
         
     public var isAttribute: Bool {
         true
@@ -84,7 +91,7 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
     
     public var propertyCacheKey: String = ""
         
-    public init(_ name: String) {
+    public required init(_ name: String) {
         self.name = name
     }
     
@@ -102,8 +109,8 @@ public final class Attribute<O: Nullability, FieldType: FieldAttribute & Hashabl
         description.isTransient = isTransient
         description.valueTransformerName = valueTransformerName
         description.name = name
-        description.isOptional = O.isOptional
         description.attributeType = attributeType
+        description.isOptional = O.isOptional
         
         // Make sure not setting default value to nil
         if let value = defaultValue {

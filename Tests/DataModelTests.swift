@@ -36,11 +36,11 @@ extension DataModel {
 
 class DataModelTests: XCTestCase {
     
-    var sut: DataContainer!
+    lazy var sut: DataContainer! = try! DataContainer.load(
+        storage: .sqlite(name: "Crush.sqlite"),
+        dataModel: .v_1)
     
     override func setUp() {
-        sut = try! DataContainer.load(
-            storage: .inMemory(),
-            dataModel: .v_1)
+        try! sut.rebuildStorage()
     }
 }

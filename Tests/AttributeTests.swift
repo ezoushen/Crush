@@ -16,6 +16,18 @@ class AttributeTests: XCTestCase {
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.attributeType, .stringAttributeType)
     }
+
+    func test_attributeTransient_isTransientShouldBeTrue() {
+        let attribute = Required.Transient.Value.String("attribute")
+        let description = attribute.createPropertyDescription()
+        XCTAssertTrue(description.isTransient)
+    }
+
+    func test_attributeNonTransient_isTransientShouldBeFalse() {
+        let attribute = Required.Value.String("attribute")
+        let description = attribute.createPropertyDescription()
+        XCTAssertFalse(description.isTransient)
+    }
     
     func test_attributeStringWithDefaultValue_defaultValueShouldBeString() {
         let attribute = Value.String("attribute", defaultValue: "string")
