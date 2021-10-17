@@ -73,18 +73,18 @@ public class CoreDataStack {
     internal func createUiContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         context.parent = parent
-        context.automaticallyMergesChangesFromParent = true
+        context.automaticallyMergesChangesFromParent = false
         return context
     }
 
-    internal func createBackgroundContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
+    internal func createBackgroundContext(parent: NSManagedObjectContext?) -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         context.parent = parent
         context.automaticallyMergesChangesFromParent = false
         return context
     }
 
-    internal func createMainThreadContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
+    internal func createMainThreadContext(parent: NSManagedObjectContext?) -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         context.parent = parent
         context.automaticallyMergesChangesFromParent = false

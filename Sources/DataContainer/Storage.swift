@@ -43,29 +43,30 @@ public class ConcreteStorage: Storage {
     private override init(storeType: String, url: URL?, configuration: String?, options: [Storage.Option]) {
         fatalError("this initializer in unavailable")
     }
+    
+    public func destroy() throws {
+        try FileManager.default.removeItem(at: storageUrl)
+    }
+}
+
+public class SQLiteStorage: ConcreteStorage {
+    public override func destroy() throws {
+        try super.destroy()
+        try FileManager.default.removeItem(atPath: storageUrl.path + "-shm")
+        try FileManager.default.removeItem(atPath: storageUrl.path + "-wal")
+    }
 }
 
 extension Storage {
-    public static func sqlite(url: URL, configuration: String? = nil, options: Option...) -> Storage {
-        ConcreteStorage(storeType: NSSQLiteStoreType, url: url, configuration: configuration, options: options)
-    }
 
     public static func binary(url: URL, configuration: String? = nil, options: Option...) -> Storage {
         ConcreteStorage(storeType: NSBinaryStoreType, url: url, configuration: configuration, options: options)
-    }
-    
-    public static func sqlite(name: String, configuration: String? = nil, options: Option...) -> Storage {
-        ConcreteStorage(
-            storeType: NSSQLiteStoreType,
-            url: defaultURL().appendingPathComponent(name),
-            configuration: configuration,
-            options: options)
     }
 
     public static func binary(name: String, configuration: String? = nil, options: Option...) -> Storage {
         ConcreteStorage(
             storeType: NSBinaryStoreType,
-            url: defaultURL().appendingPathComponent(name),
+            url: CurrentWorkingDirectory().appendingPathComponent(name),
             configuration: configuration,
             options: options)
     }
@@ -73,12 +74,35 @@ extension Storage {
     public static func inMemory(configuration: String? = nil, options: Option...) -> Storage {
         Storage(storeType: NSInMemoryStoreType, url: nil, configuration: configuration, options: options)
     }
+}
+
+extension Storage {
+    public static func sqlite(url: URL, configuration: String? = nil, options: Option...) -> Storage {
+        sqlite(
+            url: url,
+            configuration: configuration,
+            options: options)
+    }
     
-    internal static func defaultURL() -> URL {
-        try! FileManager.default.url(
-            for: .documentDirectory,
-            in: .allDomainsMask,
-            appropriateFor: nil, create: true)
+    public static func sqlite(name: String, configuration: String? = nil, options: Option...) -> Storage {
+        sqlite(
+            url: CurrentWorkingDirectory().appendingPathComponent(name),
+            configuration: configuration,
+            options: options)
+    }
+    
+    private static func sqlite(url: URL, configuration: String? = nil, options: [Option]) -> Storage {
+        SQLiteStorage(
+            storeType: NSSQLiteStoreType,
+            url: url,
+            configuration: configuration,
+            options: [
+                .options([
+                    NSPersistentHistoryTrackingKey: NSNumber(booleanLiteral: true),
+                    // Use string key for preventing os version check
+                    "NSPersistentStoreRemoteChangeNotificationOptionKey": NSNumber(booleanLiteral: true),
+                ])
+            ] + options)
     }
 }
 

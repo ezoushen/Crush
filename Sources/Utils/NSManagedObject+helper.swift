@@ -12,13 +12,29 @@ extension NSManagedObjectContext {
     func receive<T: NSManagedObject>(runtimeObject: T) -> T {
         let result = object(with: runtimeObject.objectID) as! T
         if runtimeObject.isFault == false {
-            let description = T.entity()
-            let key = description.allAttributeKeys().first ??
-                        description.allToOneRelationshipKeys().first ??
-                        description.allToManyRelationshipKeys().first!
-            result.willAccessValue(forKey: key)
+            result.fireFault()
         }
         return result
+    }
+    
+    func refresh(
+        _ object: NSManagedObject,
+        mergeChanges: Bool,
+        preserveFaultingState flag: Bool)
+    {
+        let isFault = object.isFault
+        defer { isFault && flag ? () : object.fireFault() }
+        refresh(object, mergeChanges: mergeChanges)
+    }
+}
+
+extension NSManagedObject {
+    func fireFault() {
+        let description = Self.entity()
+        let key = description.allAttributeKeys().first ??
+                    description.allToOneRelationshipKeys().first ??
+                    description.allToManyRelationshipKeys().first!
+        willAccessValue(forKey: key)
     }
 }
 

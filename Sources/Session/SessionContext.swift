@@ -171,79 +171,76 @@ extension SessionContext where Self: RawContextProviderProtocol {
         }
     }
     
+    private static func defaultCommitCompletionHandler(_ error: Error?) {
+        guard let error = error else { return }
+        fatalError("Unhandled error: \(error)")
+    }
+    
     public func commit() throws {
-        let err: NSError? = withExtendedLifetime(self) { sessionContext in
-            var err: NSError?
-
-            sessionContext.executionContext.performAndWait {
-                guard sessionContext.executionContext.hasChanges else {
-                    return
-                }
-
-                do {
-                    try sessionContext.executionContext.save()
-                } catch let error as NSError {
-                    logger.log(.error, "Merge changes to the writer context ended with error", error: error)
-                    err = error
-                }
-
-                sessionContext.rootContext.perform {
+        try commit(Self.defaultCommitCompletionHandler)
+    }
+    
+    public func commit(_ handler: @escaping (NSError?) -> Void) throws {
+        try withExtendedLifetime(self) { sessionContext -> Void in
+            try sessionContext.saveExecutionContext {
+                sessionContext.rootContext.performAsync {
                     do {
-                        try sessionContext.rootContext.save()
+                        try trySaveRootContext()
                     } catch let error as NSError {
-                        logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
-                        err = error
-                        
-                        sessionContext.reset()
+                        return handler(error)
                     }
                 }
             }
-            
-            return err
         }
-        
-        guard let error = err else { return }
-        
-        throw error
     }
     
     public func commitAndWait() throws {
-        let err: NSError? = withExtendedLifetime(self) { sessionContext in
-            var err: NSError?
-
-            sessionContext.executionContext.performAndWait {
-                guard sessionContext.executionContext.hasChanges else {
-                    return
-                }
-                
-                do {
-                    try sessionContext.executionContext.save()
-                } catch let error as NSError {
-                    logger.log(.error, "Merge changes to the writer context ended with error", error: error)
-                    err = error
-                }
-                
-                guard err == nil else { return }
-
-                sessionContext.rootContext.performAndWait {
-                    do {
-                        try sessionContext.rootContext.save()
-                    } catch let error as NSError {
-                        logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
-                        err = error
-                    }
-                }
-                
-                guard err == nil else {
-                    return sessionContext.reset()
+        try withExtendedLifetime(self) { sessionContext in
+            try sessionContext.saveExecutionContext {
+                try sessionContext.rootContext.performSync {
+                    try trySaveRootContext()
                 }
             }
+        }
+    }
+    
+    internal func saveExecutionContext(_ completion: @escaping () throws -> Void) throws {
+        let updated = try executionContext.performSync {
+            () -> [NSManagedObjectID] in
+            guard executionContext.hasChanges else {
+                return []
+            }
+            let updatedObjectIDs = executionContext
+                .updatedObjects.map(\.objectID)
+            do {
+                try executionContext.save()
+            } catch let error as NSError {
+                logger.log(.error, "Merge changes to the writer context ended with error", error: error)
+                throw error
+            }
             
-            return err
+            try completion()
+            
+            return updatedObjectIDs
         }
         
-        guard let error = err else { return }
-        
-        throw error
+        DispatchQueue.performMainThreadTask {
+            updated
+                .map(uiContext.object(with:))
+                .forEach {
+                    uiContext.refresh(
+                        $0, mergeChanges: true, preserveFaultingState: true)
+                }
+        }
+    }
+    
+    internal func trySaveRootContext() throws {
+        do {
+            try rootContext.save()
+        } catch let error as NSError {
+            logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
+            reset()
+            throw error
+        }
     }
 }

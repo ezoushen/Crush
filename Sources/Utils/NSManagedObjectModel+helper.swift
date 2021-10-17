@@ -14,8 +14,7 @@ extension NSManagedObjectModel {
     private static let directoryName: String = "CrushManagedObjectModels"
     private static var managedobjectModelDirectory: URL = {
         let fileManager = FileManager.default
-        let directoryURL = fileManager
-            .urls(for: .documentDirectory, in: .userDomainMask).first!
+        let directoryURL = CurrentWorkingDirectory()
             .appendingPathComponent(directoryName)
         if !fileManager.fileExists(atPath: directoryURL.path) {
             try! fileManager

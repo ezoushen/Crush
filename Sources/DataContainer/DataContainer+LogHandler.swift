@@ -24,7 +24,7 @@ extension DataContainer {
         }
 
         private static let queue: DispatchQueue = .init(
-            label: "\(Bundle.main.bundleIdentifier ?? "").DataContainer.LogHandler",
+            label: "\(Bundle.main.bundleIdentifier ?? "").LogHandler",
             qos: .background)
 
         public enum Level {

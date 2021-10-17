@@ -17,7 +17,7 @@ class C: Entity {
 
 class A: C {
     let orderedList = Optional.Relation.ToOrderedMany<A, B>("orderedList")
-    let unorderedList = Optional.Relation.ToMany<A, B>("unorderedList", inverse: \.owner)
+    let unorderedList = Optional.Relation.ToMany<A, B>("unorderedList")
 }
 
 class B: Entity {

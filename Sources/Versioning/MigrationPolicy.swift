@@ -82,12 +82,12 @@ extension MigrationPolicy {
         ChainMigrationPolicy(chain, lightWeightBackup: flag)
     }
 
-    public static func adHocTrumpChain(
+    public static func adHocChainComposite(
         adHoc: Set<AdHocMigration>,
         chain: MigrationChain,
         lightWeightBackup flag: Bool = true) -> MigrationPolicy
     {
-        AdHocTrumpChainMigrationPolicy(
+        AdHocChainCompositeMigrationPolicy(
             adHocMigrations: adHoc,
             migrationChain: chain,
             lightWeightBackup: flag)
@@ -193,9 +193,9 @@ public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
     }
 }
 
-// MARK: AdHocTrumpChain
+// MARK: AdHoc chain
 
-public class AdHocTrumpChainMigrationPolicy: AdHocMigrationPolicy {
+public class AdHocChainCompositeMigrationPolicy: AdHocMigrationPolicy {
     public let migrationChain: MigrationChain
     private lazy var chainMigrationPolicy =
         ChainMigrationPolicy(migrationChain, lightWeightBackup: lightWeightEnabled)

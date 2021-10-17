@@ -9,13 +9,18 @@
 import CoreData
 
 extension Notification.Name {
-    public static let DataContainerDidRefreshUiContext: Notification.Name = .init("Notification.Name.DataContainerDidRefreshUiContext")
+    public static let DataContainerDidRefreshUiContext = Notification.Name("DataContainerDidRefreshUiContext")
 }
 
 public class DataContainer {
     internal let coreDataStack: CoreDataStack
     internal var writerContext: NSManagedObjectContext!
     internal var uiContext: NSManagedObjectContext!
+
+    internal lazy var persistentHistoryTracker =
+        PersistentHistoryTracker(
+            context: backgroundSessionContext(),
+            coordinator: coreDataStack.coordinator)
 
     public var logger: LogHandler = .default
 
@@ -44,8 +49,7 @@ public class DataContainer {
             mergePolicy: mergePolicy,
             migrationPolicy: migrationPolicy)
         try container.coreDataStack.loadPersistentStore()
-        container.initializeAllContext()
-        container.observingContextDidSaveNotification()
+        container.setup()
         return container
     }
 
@@ -64,40 +68,40 @@ public class DataContainer {
         try container.coreDataStack.loadPersistentStoreAsync { error in
             defer { completion(error) }
             guard error == nil else { return }
-            container.initializeAllContext()
-            container.observingContextDidSaveNotification()
+            container.setup()
         }
         return container
+    }
+
+    private func setup() {
+        initializeAllContext()
+        persistentHistoryTracker.enable()
     }
     
     private func initializeAllContext() {
         writerContext = coreDataStack.createWriterContext()
         uiContext = coreDataStack.createUiContext(parent: writerContext)
     }
-
-    private func observingContextDidSaveNotification() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(writerContextDidSave),
-            name: Notification.Name.NSManagedObjectContextDidSave,
-            object: writerContext)
+    
+    public func rebuildStorage() throws {
+        try destroyStorage()
+        try buildStorage()
     }
     
-    @objc private func writerContextDidSave(notification: Notification) {
-        uiContext.perform(
-            #selector(uiContext.mergeChanges(fromContextDidSave:)),
-            on: .main,
-            with: notification,
-            waitUntilDone: Thread.isMainThread)
-
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(
-                name: .DataContainerDidRefreshUiContext, object: self, userInfo: nil)
+    public func destroyStorage() throws {
+        guard let storage = coreDataStack.storage as? ConcreteStorage else {
+            return
         }
+        
+        try coreDataStack.coordinator
+            .destroyPersistentStore(
+                at: storage.storageUrl,
+                ofType: storage.storeType, options: nil)
+        try storage.destroy()
     }
     
-    deinit {
-        NotificationCenter.default.removeObserver(self)
+    public func buildStorage() throws {
+        try coreDataStack.loadPersistentStore()
     }
 }
 

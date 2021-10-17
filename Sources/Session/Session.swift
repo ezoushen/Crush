@@ -142,12 +142,16 @@ extension Session {
 }
 
 extension NSManagedObjectContext {
+    @inlinable
     func performAsync(_ block: @escaping () -> Void) {
         perform(block)
     }
 
     func performSync<T>(_ block: () throws -> T) rethrows -> T {
-        func execute(_ block: () throws -> T, rethrowing: (Error) throws -> Void) rethrows -> T {
+        func execute(
+            _ block: () throws -> T,
+            rethrowing: (Error) throws -> Void) rethrows -> T
+        {
             var result: T!
             var error: Error?
             performAndWait {
