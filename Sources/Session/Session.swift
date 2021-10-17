@@ -71,12 +71,16 @@ extension Session {
         objectIDs.map(load(objectID:))
     }
 
-    public func commit() throws {
-        try context.commit()
+    public func commitAsync() throws {
+        try context.commitAsync()
     }
 
-    public func commitAndWait() throws {
-        try context.commitAndWait()
+    public func commitAsync(_ completion: @escaping (NSError?) -> Void) throws {
+        try context.commitAsync(completion)
+    }
+
+    public func commit() throws {
+        try context.commit()
     }
 
     func present<T: Entity>(_ entity: ManagedObject<T>) -> T.ReadOnly {

@@ -21,8 +21,9 @@ public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>?
     func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T>
 
+    func commitAsync() throws
+    func commitAsync(_ handler: @escaping (NSError?) -> Void) throws
     func commit() throws
-    func commitAndWait() throws
 }
 
 extension SessionContext where Self: RawContextProviderProtocol {
@@ -157,75 +158,71 @@ extension SessionContext where Self: RawContextProviderProtocol {
         }
     }
     
-    private func reset() {
-        rootContext.performAndWait {
-            rootContext.rollback()
-        }
-
-        executionContext.performAndWait {
-            executionContext.rollback()
-        }
-
-        uiContext.performAndWait {
-            uiContext.rollback()
-        }
-    }
-    
     private static func defaultCommitCompletionHandler(_ error: Error?) {
         guard let error = error else { return }
         fatalError("Unhandled error: \(error)")
     }
     
-    public func commit() throws {
-        try commit(Self.defaultCommitCompletionHandler)
+    public func commitAsync() throws {
+        try commitAsync(Self.defaultCommitCompletionHandler)
     }
     
-    public func commit(_ handler: @escaping (NSError?) -> Void) throws {
-        try withExtendedLifetime(self) { sessionContext -> Void in
-            try sessionContext.saveExecutionContext {
-                sessionContext.rootContext.performAsync {
+    public func commitAsync(_ handler: @escaping (NSError?) -> Void) throws {
+        let objectIDs = try executionContext.performSync {
+            try saveExecutionContext {
+                rootContext.performAsync {
                     do {
-                        try trySaveRootContext()
+                        try saveRootContext()
                     } catch let error as NSError {
-                        return handler(error)
+                        handler(error)
                     }
                 }
             }
         }
+        refreshObjects(objectIDs)
     }
     
-    public func commitAndWait() throws {
-        try withExtendedLifetime(self) { sessionContext in
-            try sessionContext.saveExecutionContext {
-                try sessionContext.rootContext.performSync {
-                    try trySaveRootContext()
+    public func commit() throws {
+        let objectIDs = try executionContext.performSync {
+            try saveExecutionContext {
+                try rootContext.performSync {
+                    try saveRootContext()
                 }
             }
         }
+        refreshObjects(objectIDs)
     }
     
-    internal func saveExecutionContext(_ completion: @escaping () throws -> Void) throws {
-        let updated = try executionContext.performSync {
-            () -> [NSManagedObjectID] in
-            guard executionContext.hasChanges else {
-                return []
-            }
-            let updatedObjectIDs = executionContext
-                .updatedObjects.map(\.objectID)
-            do {
-                try executionContext.save()
-            } catch let error as NSError {
-                logger.log(.error, "Merge changes to the writer context ended with error", error: error)
-                throw error
-            }
-            
-            try completion()
-            
-            return updatedObjectIDs
+    internal func saveExecutionContext(
+        _ completion: @escaping () throws -> Void) throws -> Set<NSManagedObjectID>
+    {
+        guard executionContext.hasChanges else {
+            return []
         }
-        
+        let objectIDs = Set(
+            executionContext.updatedObjects
+                .union(executionContext.deletedObjects)
+                .union(executionContext.insertedObjects)
+                .map(\.objectID))
+        do {
+            try executionContext.save()
+        } catch let error as NSError {
+            logger.log(
+                .error,
+                "Merge changes to the writer context ended with error",
+                error: error)
+            throw error
+        }
+
+        try completion()
+
+        return objectIDs
+    }
+
+    internal func refreshObjects(_ objectIDs: Set<NSManagedObjectID>) {
         DispatchQueue.performMainThreadTask {
-            updated
+            objectIDs
+                .intersection(uiContext.registeredObjects.map(\.objectID))
                 .map(uiContext.object(with:))
                 .forEach {
                     uiContext.refresh(
@@ -234,12 +231,12 @@ extension SessionContext where Self: RawContextProviderProtocol {
         }
     }
     
-    internal func trySaveRootContext() throws {
+    internal func saveRootContext() throws {
         do {
             try rootContext.save()
         } catch let error as NSError {
             logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
-            reset()
+            rootContext.rollback()
             throw error
         }
     }
