@@ -58,6 +58,24 @@ public enum Optional {
         public typealias Data = Attribute<Nullable, Foundation.Data, NonTransient>
         public typealias UUID = Attribute<Nullable, Foundation.UUID, NonTransient>
         public typealias Enum<E: Enumerator> = Attribute<Nullable, E, NonTransient>
+
+        @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+        public enum Derived {
+            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = DerivedAttribute<Nullable, T>
+            public typealias Codable<T: CodableProperty> = DerivedAttribute<Nullable, T>
+            public typealias Int16 = DerivedAttribute<Nullable, Swift.Int16>
+            public typealias Int32 = DerivedAttribute<Nullable, Swift.Int32>
+            public typealias Int64 = DerivedAttribute<Nullable, Swift.Int64>
+            public typealias DecimalNumber = DerivedAttribute<Nullable, NSDecimalNumber>
+            public typealias Double = DerivedAttribute<Nullable, Swift.Double>
+            public typealias Float = DerivedAttribute<Nullable, Swift.Float>
+            public typealias String = DerivedAttribute<Nullable, Swift.String>
+            public typealias Bool = DerivedAttribute<Nullable, Swift.Bool>
+            public typealias Date = DerivedAttribute<Nullable, Foundation.Date>
+            public typealias Data = DerivedAttribute<Nullable, Foundation.Data>
+            public typealias UUID = DerivedAttribute<Nullable, Foundation.UUID>
+            public typealias Enum<E: Enumerator> = DerivedAttribute<Nullable, E>
+        }
     }
 }
 
@@ -108,5 +126,23 @@ public enum Required {
         public typealias Data = Attribute<NotNull, Foundation.Data, NonTransient>
         public typealias UUID = Attribute<NotNull, Foundation.UUID, NonTransient>
         public typealias Enum<E: Enumerator> = Attribute<NotNull, E, NonTransient>
+
+        @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+        public enum Derived {
+            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = DerivedAttribute<NotNull, T>
+            public typealias Codable<T: CodableProperty> = DerivedAttribute<NotNull, T>
+            public typealias Int16 = DerivedAttribute<NotNull, Swift.Int16>
+            public typealias Int32 = DerivedAttribute<NotNull, Swift.Int32>
+            public typealias Int64 = DerivedAttribute<NotNull, Swift.Int64>
+            public typealias DecimalNumber = DerivedAttribute<NotNull, NSDecimalNumber>
+            public typealias Double = DerivedAttribute<NotNull, Swift.Double>
+            public typealias Float = DerivedAttribute<NotNull, Swift.Float>
+            public typealias String = DerivedAttribute<NotNull, Swift.String>
+            public typealias Bool = DerivedAttribute<NotNull, Swift.Bool>
+            public typealias Date = DerivedAttribute<NotNull, Foundation.Date>
+            public typealias Data = DerivedAttribute<NotNull, Foundation.Data>
+            public typealias UUID = DerivedAttribute<NotNull, Foundation.UUID>
+            public typealias Enum<E: Enumerator> = DerivedAttribute<NotNull, E>
+        }
     }
 }

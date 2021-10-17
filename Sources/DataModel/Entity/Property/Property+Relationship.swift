@@ -62,13 +62,17 @@ public protocol RelationMapping: FieldConvertible {
     static func resolveMinCount(_ amount: Int) -> Int
 }
 
+public protocol ToManyRelationMappingProtocol: RelationMapping { }
+
+public protocol ToOneRelationMappingProtocol: RelationMapping { }
+
 extension RelationMapping {
     static func getEnity(from value: NSManagedObject) -> ManagedObject<EntityType> {
         value as! ManagedObject<EntityType>
     }
 }
 
-public struct ToOne<EntityType: Entity>: RelationMapping, FieldConvertible {
+public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, FieldConvertible {
     public typealias RuntimeObjectValue = ManagedObject<EntityType>?
     public typealias ManagedObjectValue = NSManagedObject?
     
@@ -94,7 +98,7 @@ public struct ToOne<EntityType: Entity>: RelationMapping, FieldConvertible {
     }
 }
 
-public struct ToMany<EntityType: Entity>: RelationMapping, FieldConvertible {
+public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, FieldConvertible {
     public typealias RuntimeObjectValue = MutableSet<ManagedObject<EntityType>>
     public typealias ManagedObjectValue = NSMutableSet
     
@@ -119,7 +123,7 @@ public struct ToMany<EntityType: Entity>: RelationMapping, FieldConvertible {
     }
 }
 
-public struct ToOrderedMany<EntityType: Entity>: RelationMapping, FieldConvertible {
+public struct ToOrderedMany<EntityType: Entity>: ToManyRelationMappingProtocol, FieldConvertible {
     public typealias RuntimeObjectValue = MutableOrderedSet<ManagedObject<EntityType>>
     public typealias ManagedObjectValue = NSMutableOrderedSet
     

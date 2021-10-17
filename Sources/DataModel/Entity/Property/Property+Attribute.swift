@@ -91,7 +91,7 @@ public class Attribute<
     
     public var propertyCacheKey: String = ""
         
-    public required init(_ name: String) {
+    public init(_ name: String) {
         self.name = name
     }
     
