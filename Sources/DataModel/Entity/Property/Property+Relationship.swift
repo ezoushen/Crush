@@ -121,28 +121,3 @@ public final class Relationship<R: RelationMapping>:
         return description
     }
 }
-
-@propertyWrapper
-public class Inverse<T: RelationshipProtocol, S: RelationshipProtocol>:
-    PropertyModifier<T, KeyPath<T.Destination, S>>
-{
-    public var wrappedValue: T { property }
-
-    public override func createDescription() -> NSRelationshipDescription {
-        let description = super.createDescription()
-
-        Caches.entity.getAndWait(Destination.entityCacheKey) {
-            let inverseName = self.modifier.propertyName
-
-            if let inverseRelationship = $0.relationshipsByName[inverseName] {
-                description.inverseRelationship = inverseRelationship
-                guard self.isUniDirectional == false else { return }
-                inverseRelationship.inverseRelationship = description
-            } else {
-                assertionFailure("inverse relationship not found")
-            }
-        }
-
-        return description
-    }
-}

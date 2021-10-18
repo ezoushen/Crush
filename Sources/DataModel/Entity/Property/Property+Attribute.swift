@@ -16,7 +16,6 @@ where
     FieldConvertor == PredicateValue,
     Description: NSAttributeDescription
 {
-    var defaultValue: PropertyValue { get }
     var attributeValueClassName: String? { get }
 }
 
@@ -50,12 +49,10 @@ public class Attribute<F: FieldAttribute>:
     public typealias PropertyValue = F.RuntimeObjectValue
     public typealias FieldConvertor = F
     
-    public let defaultValue: PropertyValue
     public let name: String
     
-    public init(_ name: String, defaultValue: PropertyValue = nil) {
+    public init(_ name: String) {
         self.name = name
-        self.defaultValue = defaultValue
     }
     
     public func createDescription() -> NSAttributeDescription {
@@ -63,11 +60,6 @@ public class Attribute<F: FieldAttribute>:
         description.valueTransformerName = valueTransformerName
         description.name = name
         description.attributeType = attributeType
-        
-        // Make sure not setting default value to nil
-        if let value = defaultValue {
-            description.defaultValue = F.convert(value: value)
-        }
         
         if let className = attributeValueClassName {
             description.attributeValueClassName = className

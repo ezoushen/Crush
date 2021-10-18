@@ -18,7 +18,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeStringWithDefaultValue_defaultValueShouldBeString() {
-        let attribute = Value.String("attribute", defaultValue: "string")
+        let attribute = Default(wrappedValue: Value.String("attribute"), "string")
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? String, "string")
     }
@@ -30,7 +30,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeBoolWithDefaultValue_defaultValueShouldBeTrue() {
-        let attribute = Value.Bool("attribute", defaultValue: true)
+        let attribute = Default(wrappedValue: Value.Bool("attribute"), true)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Bool, true)
     }
@@ -42,7 +42,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeInt16WithDefaultValue_defaultValueShouleBe16() {
-        let attribute = Value.Int16("attribute", defaultValue: 16)
+        let attribute = Default(wrappedValue: Value.Int16("attribute"), 16)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Int16, 16)
     }
@@ -54,7 +54,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeInt32WithDefaultValue_defaultValueShouldBe32() {
-        let attribute = Value.Int32("attribute", defaultValue: 32)
+        let attribute = Default(wrappedValue: Value.Int32("attribute"), 32)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Int32, 32)
     }
@@ -66,7 +66,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeInt64WithDefaultValue_defaultValueShouldBe64() {
-        let attribute = Value.Int64("attribute", defaultValue: 64)
+        let attribute = Default(wrappedValue: Value.Int64("attribute"), 64)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Int64, 64)
     }
@@ -78,7 +78,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeDecimalWithDefaultValue_defaultValueShouldBe10() {
-        let attribute = Value.DecimalNumber("attribute", defaultValue: 10)
+        let attribute = Default(wrappedValue: Value.DecimalNumber("attribute"), 10)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? NSDecimalNumber, 10)
     }
@@ -91,7 +91,7 @@ class AttributeTests: XCTestCase {
     
     func test_attributeDataWithDefaultValue_defaultValueShouldBeData() {
         let data = "DATA".data(using: .utf8)
-        let attribute = Value.Data("attribute", defaultValue: data)
+        let attribute = Default(wrappedValue: Value.Data("attribute"), data)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Data, data)
     }
@@ -104,7 +104,7 @@ class AttributeTests: XCTestCase {
     
     func test_attributeDateWithDefaultValue_defaultValueShouldBeNow() {
         let now = Date()
-        let attribute = Value.Date("attribute", defaultValue: now)
+        let attribute = Default(wrappedValue: Value.Date("attribute"), now)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Date, now)
     }
@@ -116,7 +116,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeDoubleWithDefaultValue_defaultValueShouldBe10() {
-        let attribute = Value.Double("attribute", defaultValue: 10.0)
+        let attribute = Default(wrappedValue: Value.Double("attribute"), 10.0)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Double, 10.0)
     }
@@ -128,7 +128,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeFloatWithDefaultValue_defaultValueShouldBe10() {
-        let attribute = Value.Float("attribute", defaultValue: 10.0)
+        let attribute = Default(wrappedValue: Value.Float("attribute"), 10.0)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Float, 10.0)
     }
@@ -141,7 +141,7 @@ class AttributeTests: XCTestCase {
     
     func test_attributeUUIDWithDefaultValue_defaultValueShouldBeUUID() {
         let uuid = UUID()
-        let attribute = Value.UUID("attribute", defaultValue: uuid)
+        let attribute = Default(wrappedValue: Value.UUID("attribute"), uuid)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? UUID, uuid)
     }
@@ -158,7 +158,7 @@ class AttributeTests: XCTestCase {
             let value: Int
         }
         let model = Model(value: 100)
-        let attribute = Value.Codable<Model>("attribute", defaultValue: model)
+        let attribute = Default(wrappedValue: Value.Codable<Model>("attribute"), model)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? Data, model.data)
     }
@@ -178,7 +178,7 @@ class AttributeTests: XCTestCase {
             typealias RawValue = String
             case dummy
         }
-        let attribute = Value.Enum<Model>("attribute", defaultValue: .dummy)
+        let attribute = Default(wrappedValue: Value.Enum<Model>("attribute"), .dummy)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? String, Model.dummy.rawValue)
     }

@@ -40,11 +40,7 @@ extension PropertyModifier: RelationshipProtocol where T: RelationshipProtocol {
     }
 }
 
-extension PropertyModifier: AttributeProtocol where T: AttributeProtocol {
-    public var defaultValue: T.PropertyValue {
-        property.defaultValue
-    }
-}
+extension PropertyModifier: AttributeProtocol where T: AttributeProtocol { }
 
 public protocol TransientProperty: ValuedProperty { }
 
@@ -114,6 +110,21 @@ public class IndexedBySpotlight<T: ValuedProperty>: PropertyModifier<T, Bool> {
 // MARK: Attribute modifier
 
 @propertyWrapper
+public class Default<T: ConcreteAttriuteProcotol & TransientProperty>:
+    PropertyModifier<T, T.PropertyValue>,
+    ConcreteAttriuteProcotol,
+    TransientProperty
+{
+    public var wrappedValue: T { property }
+
+    public override func createDescription() -> Description {
+        let description = super.createDescription()
+        description.defaultValue = T.FieldConvertor.convert(value: modifier)
+        return description
+    }
+}
+
+@propertyWrapper
 public class ExternalBinaryDataStorage<T: AttributeProtocol>: PropertyModifier<T, Bool> {
     public var wrappedValue: T { property }
 
@@ -145,6 +156,29 @@ public class PreservesValueInHistoryOnDeletion<T: AttributeProtocol>: PropertyMo
 }
 
 // MARK: Relationship modifier
+
+@propertyWrapper
+public class Inverse<T: RelationshipProtocol, S: RelationshipProtocol>:
+    PropertyModifier<T, KeyPath<T.Destination, S>>
+{
+    public var wrappedValue: T { property }
+
+    public override func createDescription() -> NSRelationshipDescription {
+        let description = super.createDescription()
+        let inverseName = self.modifier.propertyName
+
+        Caches.entity.getAndWait(Destination.entityCacheKey) {
+            guard let inverseRelationship = $0.relationshipsByName[inverseName] else {
+                return assertionFailure("inverse relationship not found")
+            }
+            description.inverseRelationship = inverseRelationship
+            guard self.isUniDirectional == false else { return }
+            inverseRelationship.inverseRelationship = description
+        }
+
+        return description
+    }
+}
 
 @propertyWrapper
 public final class MaxCount<T: RelationshipProtocol>: PropertyModifier<T, Int>
