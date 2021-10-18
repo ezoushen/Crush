@@ -70,6 +70,21 @@ public class Optional<T: ValuedProperty>: PropertyModifier<T, Bool> {
 }
 
 @propertyWrapper
+public class Required<T: ValuedProperty>: PropertyModifier<T, Bool> {
+    public var wrappedValue: T { property }
+
+    public init(wrappedValue: T) {
+        super.init(wrappedValue: wrappedValue, false)
+    }
+
+    public override func createDescription() -> PropertyModifier<T, Bool>.Description {
+        let description = super.createDescription()
+        description.isOptional = modifier
+        return description
+    }
+}
+
+@propertyWrapper
 public class Transient<T: ValuedProperty & TransientProperty>: PropertyModifier<T, Bool> {
     public var wrappedValue: T { property }
 

@@ -24,8 +24,8 @@ public enum DerivedAggregation: String {
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 public final class DerivedAttribute<F: FieldAttribute & Hashable>: AttributeProtocol {
-    public typealias FieldType = F
     public typealias PredicateValue = F
+    public typealias Description = NSDerivedAttributeDescription
     public typealias PropertyValue = F.RuntimeObjectValue
     public typealias FieldConvertor = F
 
@@ -60,14 +60,14 @@ extension DerivedAttribute {
     public convenience init<T: Entity, S: AttributeProtocol>(
         _ name: String, from keyPath: KeyPath<T, S>)
     where
-        S.PropertyValue == PropertyValue
+        S.FieldConvertor == FieldConvertor
     {
         self.init(name: name, derivation: keyPath.propertyName)
     }
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension DerivedAttribute where FieldType == String {
+extension DerivedAttribute where F == String {
     public convenience init<T: Entity, S: AttributeProtocol>(
         _ name: String,
         from keyPath: KeyPath<T, S>,
@@ -90,14 +90,14 @@ extension DerivedAttribute where FieldType == String {
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension DerivedAttribute where FieldType == Date {
+extension DerivedAttribute where F == Date {
     public convenience init(_ name: String) {
         self.init(name: name, derivation: "now()")
     }
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension DerivedAttribute where FieldType: CoreDataInteger {
+extension DerivedAttribute where F: CoreDataInteger {
     public convenience init<T: Entity, S: RelationshipProtocol>(
         _ name: String,
         from keyPath: KeyPath<T, S>,

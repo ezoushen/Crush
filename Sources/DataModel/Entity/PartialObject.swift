@@ -19,14 +19,12 @@ public final class PartialObject<T: Entity> {
     }
     
     public subscript<S: AttributeProtocol>(
-        dynamicMember keyPath: KeyPath<T, S>
-    ) -> S.PropertyValue
-    where S.PropertyValue: OptionalProtocol
+        dynamicMember keyPath: KeyPath<T, S>) -> S.PropertyValue
     {
         get {
             let value = store[keyPath.propertyName]
             guard let result = value as? S.FieldConvertor.ManagedObjectValue
-            else { return .null }
+            else { return nil }
             return S.FieldConvertor.convert(value: result)
         }
         set {

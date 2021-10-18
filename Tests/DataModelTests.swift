@@ -16,30 +16,29 @@ class C: Entity {
 }
 
 class A: C {
-    @Optional
-    var orderedList = Relation.ToOrdered<B>("orderedList")
-
-    @Optional
-    var unorderedList = Relation.ToMany<B>("unorderedList")
+    let orderedList = Relation.ToOrdered<B>("orderedList")
+    let unorderedList = Relation.ToMany<B>("unorderedList")
 }
 
 class B: Entity {
-    @Optional
-    var owner = Relation.ToOne<A>("owner", inverse: \.orderedList)
+    let owner = Relation.ToOne<A>("owner", inverse: \.orderedList)
 }
 
 class Entity_Root: Entity {
-    @Optional
-    var attribute_optional = Value.Bool("optional_attribute")
+    let attribute_optional = Value.Bool("optional_attribute")
 }
 
 class Entity_1: Entity {
-    let attribute_required = Value.String("required_attribute")
-
-    let attribute_string = Value.String("string_value")
-    let atrribute_integer16 = Value.Int16("attribute_integer16")
-    let atrribute_integer32 = Value.Int16("attribute_integer32")
-    let atrribute_integer64 = Value.Int16("attribute_integer64")
+    @Required
+    var attribute_required = Value.String("required_attribute")
+    @Required
+    var attribute_string = Value.String("string_value")
+    @Required
+    var atrribute_integer16 = Value.Int16("attribute_integer16")
+    @Required
+    var atrribute_integer32 = Value.Int16("attribute_integer32")
+    @Required
+    var atrribute_integer64 = Value.Int16("attribute_integer64")
 }
 
 extension DataModel {
@@ -81,14 +80,11 @@ class DataModelTests: XCTestCase {
         migrationPolicy: .waterDoChain())
     
     override func setUp() {
-//        try! sut.rebuildStorage()
+        try! sut.rebuildStorage()
     }
 
     func test_myTest() {
-        sut.startSession().sync { context in
-            let a = context.create(entity: A.self)
-            
-        }
-//        print(DataModel.v_1.managedObjectModel)
+        print(123)
     }
 }
+

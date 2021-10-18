@@ -12,7 +12,8 @@ import CoreData
 
 public protocol AttributeProtocol: ValuedProperty
 where
-    PredicateValue: FieldAttribute & FieldConvertible,
+    FieldConvertor: FieldAttribute,
+    FieldConvertor == PredicateValue,
     Description: NSAttributeDescription
 {
     var defaultValue: PropertyValue { get }
@@ -23,7 +24,7 @@ extension AttributeProtocol {
     public var isAttribute: Bool { true }
     
     public var attributeType: NSAttributeType {
-        PredicateValue.nativeType
+        FieldConvertor.nativeType
     }
     
     public var attributeValueClassName: String? {
@@ -46,7 +47,6 @@ public class Attribute<F: FieldAttribute & Hashable>:
     ConcreteAttriuteProcotol,
     TransientProperty
 {
-    public typealias PredicateValue = F
     public typealias PropertyValue = F.RuntimeObjectValue
     public typealias FieldConvertor = F
     

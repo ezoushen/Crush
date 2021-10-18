@@ -81,7 +81,7 @@ extension EntityInheritance {
     }
 }
 
-open class Entity: Field {
+open class Entity {
     required public init() { }
     @objc open dynamic class func willSave(_ managedObject: NSManagedObject) { }
     @objc open dynamic class func didSave(_ managedObject: NSManagedObject) { }

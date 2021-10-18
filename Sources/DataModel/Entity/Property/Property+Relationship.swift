@@ -11,7 +11,10 @@ import CoreData
 // MARK: - EntityRelationship
 
 public protocol RelationshipProtocol: ValuedProperty
-where Description == NSRelationshipDescription {
+where
+    Description == NSRelationshipDescription,
+    Mapping == FieldConvertor
+{
     associatedtype Destination: Entity
     associatedtype Mapping: RelationMapping where Mapping.RuntimeObjectValue == PropertyValue
     
@@ -92,11 +95,10 @@ public final class Relationship<R: RelationMapping>:
     RelationshipProtocol,
     TransientProperty
 {
-    public typealias PredicateValue = Destination
-    public typealias PropertyValue = R.RuntimeObjectValue
-    public typealias Mapping = R
-    public typealias Destination = R.EntityType
     public typealias FieldConvertor = R
+    public typealias PredicateValue = R.ManagedObjectValue
+    public typealias PropertyValue = R.RuntimeObjectValue
+    public typealias Destination = R.EntityType
     public typealias Description = NSRelationshipDescription
 
     public let name: String

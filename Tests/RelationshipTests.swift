@@ -13,16 +13,15 @@ import XCTest
 public class RelationshipTests: XCTestCase {
 
     class Entity_A: Entity {
-        let toOne_B = Relation.ToOne<Entity_B>("toOne_B", inverse: \.toMany_A)
+        @Required
+        var toOne_B = Relation.ToOne<Entity_B>("toOne_B", inverse: \.toMany_A)
 
         @MaxCount(10)
         @MinCount(2)
-        @Optional
         var toOrderedMany_B = Relation.ToOrdered<Entity_B>("toOrderedMany_B")
     }
 
     class Entity_B: Entity {
-        @Optional
         @DeleteRule(.noActionDeleteRule)
         var toMany_A = Relation.ToMany<Entity_A>("toMany_A")
     }

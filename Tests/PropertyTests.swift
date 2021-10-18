@@ -10,10 +10,16 @@ import XCTest
 @testable import Crush
 
 class PropertyTests: XCTestCase {
-    func test_property_shouldBeRequired() {
+    func test_property_shouldBeOptionalByDefault() {
         let property = Value.Int16("property")
         let description = property.createPropertyDescription()
-        XCTAssertFalse(description.isOptional, "property should be required")
+        XCTAssertTrue(description.isOptional)
+    }
+
+    func test_property_shouldBeRequired() {
+        let property = Required(wrappedValue: Value.Int16("property"))
+        let description = property.createPropertyDescription()
+        XCTAssertFalse(description.isOptional)
     }
 
     func test_property_nameShouldEqualProperty() {

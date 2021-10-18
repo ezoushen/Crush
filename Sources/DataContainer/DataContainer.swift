@@ -84,13 +84,13 @@ public class DataContainer {
     }
     
     public func rebuildStorage() throws {
-        try destroyStorage()
+        guard try destroyStorage() else { return }
         try buildStorage()
     }
     
-    public func destroyStorage() throws {
+    public func destroyStorage() throws -> Bool {
         guard let storage = coreDataStack.storage as? ConcreteStorage else {
-            return
+            return false
         }
         
         try coreDataStack.coordinator
@@ -98,6 +98,8 @@ public class DataContainer {
                 at: storage.storageUrl,
                 ofType: storage.storeType, options: nil)
         try storage.destroy()
+
+        return true
     }
     
     public func buildStorage() throws {
