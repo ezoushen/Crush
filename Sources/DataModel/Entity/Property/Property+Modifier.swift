@@ -34,10 +34,6 @@ extension PropertyModifier: RelationshipProtocol where T: RelationshipProtocol {
     public typealias Destination = T.Destination
     public typealias Mapping = T.Mapping
 
-    public var inverseName: String? {
-        property.inverseName
-    }
-
     public var isUniDirectional: Bool {
         get { property.isUniDirectional }
         set { property.isUniDirectional = newValue }
@@ -88,6 +84,10 @@ public class Required<T: ValuedProperty>: PropertyModifier<T, Bool> {
 public class Transient<T: ValuedProperty & TransientProperty>: PropertyModifier<T, Bool> {
     public var wrappedValue: T { property }
 
+    public init(wrappedValue: T) {
+        super.init(wrappedValue: wrappedValue, true)
+    }
+
     public override func createDescription() -> PropertyModifier<T, Bool>.Description {
         let description = super.createDescription()
         description.isTransient = modifier
@@ -99,6 +99,10 @@ public class Transient<T: ValuedProperty & TransientProperty>: PropertyModifier<
 @propertyWrapper
 public class IndexedBySpotlight<T: ValuedProperty>: PropertyModifier<T, Bool> {
     public var wrappedValue: T { property }
+
+    public init(wrappedValue: T) {
+        super.init(wrappedValue: wrappedValue, true)
+    }
 
     public override func createDescription() -> Description {
         let description = super.createDescription()
@@ -113,6 +117,10 @@ public class IndexedBySpotlight<T: ValuedProperty>: PropertyModifier<T, Bool> {
 public class ExternalBinaryDataStorage<T: AttributeProtocol>: PropertyModifier<T, Bool> {
     public var wrappedValue: T { property }
 
+    public init(wrappedValue: T) {
+        super.init(wrappedValue: wrappedValue, true)
+    }
+
     public override func createDescription() -> Description {
         let description = super.createDescription()
         description.allowsExternalBinaryDataStorage = modifier
@@ -124,6 +132,10 @@ public class ExternalBinaryDataStorage<T: AttributeProtocol>: PropertyModifier<T
 @propertyWrapper
 public class PreservesValueInHistoryOnDeletion<T: AttributeProtocol>: PropertyModifier<T, Bool> {
     public var wrappedValue: T { property }
+
+    public init(wrappedValue: T) {
+        super.init(wrappedValue: wrappedValue, true)
+    }
 
     public override func createDescription() -> Description {
         let description = super.createDescription()
@@ -159,8 +171,7 @@ where T.Mapping: ToManyRelationMappingProtocol {
 }
 
 @propertyWrapper
-public class DeleteRule<T: RelationshipProtocol>: PropertyModifier<T, NSDeleteRule>
-where T.Mapping: ToManyRelationMappingProtocol {
+public class DeleteRule<T: RelationshipProtocol>: PropertyModifier<T, NSDeleteRule> {
     public var wrappedValue: T { property }
 
     public override func createDescription() -> Description {
@@ -171,12 +182,11 @@ where T.Mapping: ToManyRelationMappingProtocol {
 }
 
 @propertyWrapper
-public class UnidirectionalInverse<T: RelationshipProtocol>: PropertyModifier<T, Bool>
-where T.Mapping: ToManyRelationMappingProtocol {
+public class UnidirectionalInverse<T: RelationshipProtocol>: PropertyModifier<T, Bool> {
     public var wrappedValue: T { property }
 
-    public override init(wrappedValue: T, _ modifier: Bool) {
-        super.init(wrappedValue: wrappedValue, modifier)
-        self.isUniDirectional = modifier
+    public init(wrappedValue: T) {
+        super.init(wrappedValue: wrappedValue, true)
+        self.isUniDirectional = true
     }
 }

@@ -15,12 +15,12 @@ public protocol PropertyProtocol: AnyObject {
     func createPropertyDescription() -> NSPropertyDescription
 }
 
-public protocol ValuedProperty: PropertyProtocol {
+public protocol ValuedProperty: PropertyProtocol
+where FieldConvertor.RuntimeObjectValue == PropertyValue {
     associatedtype PropertyValue
     associatedtype PredicateValue
     associatedtype Description: NSPropertyDescription
     associatedtype FieldConvertor: FieldConvertible
-        where FieldConvertor.RuntimeObjectValue == PropertyValue
 
     var isAttribute: Bool { get }
 

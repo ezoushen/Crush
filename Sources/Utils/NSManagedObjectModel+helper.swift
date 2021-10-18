@@ -44,10 +44,7 @@ extension NSManagedObjectModel {
 
     func save(to url: URL) {
         let data = NSKeyedArchiver.archivedData(withRootObject: self)
-        if FileManager.default.fileExists(atPath: url.path) {
-            try? FileManager.default.removeItem(atPath: url.path)
-        }
-        FileManager.default.createFile(atPath: url.path, contents: data, attributes: nil)
+        try! data.write(to: url)
     }
 }
 

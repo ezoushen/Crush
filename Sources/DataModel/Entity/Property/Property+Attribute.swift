@@ -43,7 +43,7 @@ extension AttributeProtocol {
 public protocol ConcreteAttriuteProcotol: AttributeProtocol { }
 
 // MARK: - EntityAttributeType
-public class Attribute<F: FieldAttribute & Hashable>:
+public class Attribute<F: FieldAttribute>:
     ConcreteAttriuteProcotol,
     TransientProperty
 {

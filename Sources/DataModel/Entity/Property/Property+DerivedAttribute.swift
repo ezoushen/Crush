@@ -23,19 +23,26 @@ public enum DerivedAggregation: String {
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-public final class DerivedAttribute<F: FieldAttribute & Hashable>: AttributeProtocol {
-    public typealias PredicateValue = F
+public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol {
     public typealias Description = NSDerivedAttributeDescription
     public typealias PropertyValue = F.RuntimeObjectValue
     public typealias FieldConvertor = F
 
     public let defaultValue: PropertyValue
     public let name: String
-    public let expression: NSExpression?
+    private let stringBlock: () -> String
+    public private(set) lazy var expression: NSExpression? = NSExpression(format: stringBlock())
 
+    public init<T: Entity>(
+        _ name: String, from keyPath: KeyPath<T, Attribute<F>>)
+    {
+        self.stringBlock = { keyPath.propertyName }
+        self.defaultValue = nil
+        self.name = name
+    }
 
     internal init(name: String, derivation: String) {
-        self.expression = NSExpression(format: derivation)
+        self.stringBlock = { derivation }
         self.defaultValue = nil
         self.name = name
     }
@@ -56,36 +63,15 @@ public final class DerivedAttribute<F: FieldAttribute & Hashable>: AttributeProt
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-extension DerivedAttribute {
-    public convenience init<T: Entity, S: AttributeProtocol>(
-        _ name: String, from keyPath: KeyPath<T, S>)
-    where
-        S.FieldConvertor == FieldConvertor
-    {
-        self.init(name: name, derivation: keyPath.propertyName)
-    }
-}
-
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 extension DerivedAttribute where F == String {
     public convenience init<T: Entity, S: AttributeProtocol>(
         _ name: String,
         from keyPath: KeyPath<T, S>,
-        mapping: DerivedStringMapping = .plain)
-    where
-        S.FieldConvertor: PredicateExpressedByString
-    {
-        self.init(name: name, derivation: "\(mapping.rawValue)(\(keyPath.propertyName).stringValue")
-    }
-
-    public convenience init<T: Entity, S: AttributeProtocol>(
-        _ name: String,
-        from keyPath: KeyPath<T, S>,
-        mapping: DerivedStringMapping = .plain)
+        mapping: DerivedStringMapping)
     where
         S.FieldConvertor == String
     {
-        self.init(name: name, derivation: "\(mapping.rawValue)(\(keyPath.propertyName)")
+        self.init(name: name, derivation: "\(mapping.rawValue)(\(keyPath.propertyName))")
     }
 }
 

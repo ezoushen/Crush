@@ -18,7 +18,6 @@ where
     associatedtype Destination: Entity
     associatedtype Mapping: RelationMapping where Mapping.RuntimeObjectValue == PropertyValue
     
-    var inverseName: String? { get }
     var isUniDirectional: Bool { get set }
 }
 
@@ -102,22 +101,10 @@ public final class Relationship<R: RelationMapping>:
     public typealias Description = NSRelationshipDescription
 
     public let name: String
-    public let inverseName: String?
     public var isUniDirectional: Bool = false
 
-    public init(_ name: String, inverse: String?) {
+    public init(_ name: String) {
         self.name = name
-        self.inverseName = inverse
-    }
-
-    public convenience init(_ name: String) {
-        self.init(name, inverse: nil)
-    }
-
-    public convenience init<R>(
-        _ name: String, inverse: KeyPath<Destination, R>) where R: RelationshipProtocol
-    {
-        self.init(name, inverse: inverse.propertyName)
     }
 
     public func createDescription() -> NSRelationshipDescription {
@@ -129,8 +116,23 @@ public final class Relationship<R: RelationMapping>:
 
         Caches.entity.getAndWait(Destination.entityCacheKey) {
             description.destinationEntity = $0
+        }
 
-            guard let inverseName = self.inverseName else { return }
+        return description
+    }
+}
+
+@propertyWrapper
+public class Inverse<T: RelationshipProtocol, S: RelationshipProtocol>:
+    PropertyModifier<T, KeyPath<T.Destination, S>>
+{
+    public var wrappedValue: T { property }
+
+    public override func createDescription() -> NSRelationshipDescription {
+        let description = super.createDescription()
+
+        Caches.entity.getAndWait(Destination.entityCacheKey) {
+            let inverseName = self.modifier.propertyName
 
             if let inverseRelationship = $0.relationshipsByName[inverseName] {
                 description.inverseRelationship = inverseRelationship

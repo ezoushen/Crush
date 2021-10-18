@@ -21,7 +21,8 @@ class A: C {
 }
 
 class B: Entity {
-    let owner = Relation.ToOne<A>("owner", inverse: \.orderedList)
+    @Inverse(\A.orderedList)
+    var owner = Relation.ToOne<A>("owner")
 }
 
 class Entity_Root: Entity {
@@ -76,15 +77,10 @@ class DataModelTests: XCTestCase {
     
     lazy var sut: DataContainer! = try! DataContainer.load(
         storage: .inMemory(),
-        dataModel: .v_1,
-        migrationPolicy: .waterDoChain())
+        dataModel: .v_1)
     
     override func setUp() {
         try! sut.rebuildStorage()
-    }
-
-    func test_myTest() {
-        print(123)
     }
 }
 
