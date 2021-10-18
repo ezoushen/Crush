@@ -16,18 +16,6 @@ class AttributeTests: XCTestCase {
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.attributeType, .stringAttributeType)
     }
-
-    func test_attributeTransient_isTransientShouldBeTrue() {
-        let attribute = Required.Transient.Value.String("attribute")
-        let description = attribute.createPropertyDescription()
-        XCTAssertTrue(description.isTransient)
-    }
-
-    func test_attributeNonTransient_isTransientShouldBeFalse() {
-        let attribute = Required.Value.String("attribute")
-        let description = attribute.createPropertyDescription()
-        XCTAssertFalse(description.isTransient)
-    }
     
     func test_attributeStringWithDefaultValue_defaultValueShouldBeString() {
         let attribute = Value.String("attribute", defaultValue: "string")
@@ -196,36 +184,28 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeOption_allowsExternalBinaryDataStorageShouldBeTrue() {
-        let attribute = Value.Bool("attribute", options: [
-            AttributeOption.allowsExternalBinaryDataStorage(true)
-        ])
+        let attribute = ExternalBinaryDataStorage(wrappedValue: Value.Bool("attribute"), true)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertTrue(description.allowsExternalBinaryDataStorage)
     }
     
     func test_attributeOption_allowsExternalBinaryDataStorageShouldBeFalse() {
-        let attribute = Value.Bool("attribute", options: [
-            AttributeOption.allowsExternalBinaryDataStorage(false)
-        ])
+        let attribute = ExternalBinaryDataStorage(wrappedValue: Value.Bool("attribute"), false)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertFalse(description.allowsExternalBinaryDataStorage)
     }
 
     @available(iOS 13.0, *)
     func test_attributeOption_preservesValueInHistoryOnDeletionShouldBeTrue() {
-        let attribute = Value.Bool("attribute", options: [
-            AttributeOption.preservesValueInHistoryOnDeletion(true)
-        ])
+        let attribute = PreservesValueInHistoryOnDeletion(wrappedValue: Value.Bool("attribute"), true)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertTrue(description.preservesValueInHistoryOnDeletion)
     }
 
     @available(iOS 13.0, *)
     func test_attributeOption_preservesValueInHistoryOnDeletionShouldBeFalse() {
-        let attribute = Value.Bool("attribute", options: [
-            AttributeOption.preservesValueInHistoryOnDeletion(true)
-        ])
+        let attribute = PreservesValueInHistoryOnDeletion(wrappedValue: Value.Bool("attribute"), false)
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
-        XCTAssertTrue(description.preservesValueInHistoryOnDeletion)
+        XCTAssertFalse(description.preservesValueInHistoryOnDeletion)
     }
 }

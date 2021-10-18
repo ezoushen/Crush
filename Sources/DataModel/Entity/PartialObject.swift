@@ -43,9 +43,9 @@ public struct EntityKeyValuePair<T: Entity> {
 
     public init<S: AttributeProtocol>(
         keyPath: KeyPath<T, S>,
-        value: S.PredicateValue.RuntimeObjectValue)
+        value: S.FieldConvertor.RuntimeObjectValue)
     {
         self.key = keyPath.propertyName
-        self.value = S.PredicateValue.convert(value: value)
+        self.value = S.FieldConvertor.convert(value: value)
     }
 }

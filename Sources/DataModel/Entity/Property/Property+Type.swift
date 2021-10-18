@@ -8,141 +8,43 @@
 
 import Foundation
 
-public typealias Value = Required.Value
-public typealias Relation = Required.Relation
-
-public enum Optional {
-    public enum Transient {
-        public enum Relation {
-            public typealias ToOne<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToOne<D>, Crush.Transient>
-            public typealias ToMany<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToMany<D>, Crush.Transient>
-            public typealias ToOrderedMany<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToOrderedMany<D>, Crush.Transient>
-        }
-
-        public enum Value {
-            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<Nullable, T, Crush.Transient>
-            public typealias Codable<T: CodableProperty> = Attribute<Nullable, T, Crush.Transient>
-            public typealias Int16 = Attribute<Nullable, Swift.Int16, Crush.Transient>
-            public typealias Int32 = Attribute<Nullable, Swift.Int32, Crush.Transient>
-            public typealias Int64 = Attribute<Nullable, Swift.Int64, Crush.Transient>
-            public typealias DecimalNumber = Attribute<Nullable, NSDecimalNumber, Crush.Transient>
-            public typealias Double = Attribute<Nullable, Swift.Double, Crush.Transient>
-            public typealias Float = Attribute<Nullable, Swift.Float, Crush.Transient>
-            public typealias String = Attribute<Nullable, Swift.String, Crush.Transient>
-            public typealias Bool = Attribute<Nullable, Swift.Bool, Crush.Transient>
-            public typealias Date = Attribute<Nullable, Foundation.Date, Crush.Transient>
-            public typealias Data = Attribute<Nullable, Foundation.Data, Crush.Transient>
-            public typealias UUID = Attribute<Nullable, Foundation.UUID, Crush.Transient>
-            public typealias Enum<E: Enumerator> = Attribute<Nullable, E, Crush.Transient>
-        }
-    }
-
-    public enum Relation {
-        public typealias ToOne<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToOne<D>, NonTransient>
-        public typealias ToMany<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToMany<D>, NonTransient>
-        public typealias ToOrderedMany<S: Entity, D: Entity> = Relationship<Nullable, S, Crush.ToOrderedMany<D>, NonTransient>
-    }
-
-    public enum Value {
-        public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<Nullable, T, NonTransient>
-        public typealias Codable<T: CodableProperty> = Attribute<Nullable, T, NonTransient>
-        public typealias Int16 = Attribute<Nullable, Swift.Int16, NonTransient>
-        public typealias Int32 = Attribute<Nullable, Swift.Int32, NonTransient>
-        public typealias Int64 = Attribute<Nullable, Swift.Int64, NonTransient>
-        public typealias DecimalNumber = Attribute<Nullable, NSDecimalNumber, NonTransient>
-        public typealias Double = Attribute<Nullable, Swift.Double, NonTransient>
-        public typealias Float = Attribute<Nullable, Swift.Float, NonTransient>
-        public typealias String = Attribute<Nullable, Swift.String, NonTransient>
-        public typealias Bool = Attribute<Nullable, Swift.Bool, NonTransient>
-        public typealias Date = Attribute<Nullable, Foundation.Date, NonTransient>
-        public typealias Data = Attribute<Nullable, Foundation.Data, NonTransient>
-        public typealias UUID = Attribute<Nullable, Foundation.UUID, NonTransient>
-        public typealias Enum<E: Enumerator> = Attribute<Nullable, E, NonTransient>
-
-        @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-        public enum Derived {
-            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = DerivedAttribute<Nullable, T>
-            public typealias Codable<T: CodableProperty> = DerivedAttribute<Nullable, T>
-            public typealias Int16 = DerivedAttribute<Nullable, Swift.Int16>
-            public typealias Int32 = DerivedAttribute<Nullable, Swift.Int32>
-            public typealias Int64 = DerivedAttribute<Nullable, Swift.Int64>
-            public typealias DecimalNumber = DerivedAttribute<Nullable, NSDecimalNumber>
-            public typealias Double = DerivedAttribute<Nullable, Swift.Double>
-            public typealias Float = DerivedAttribute<Nullable, Swift.Float>
-            public typealias String = DerivedAttribute<Nullable, Swift.String>
-            public typealias Bool = DerivedAttribute<Nullable, Swift.Bool>
-            public typealias Date = DerivedAttribute<Nullable, Foundation.Date>
-            public typealias Data = DerivedAttribute<Nullable, Foundation.Data>
-            public typealias UUID = DerivedAttribute<Nullable, Foundation.UUID>
-            public typealias Enum<E: Enumerator> = DerivedAttribute<Nullable, E>
-        }
-    }
+public enum Relation {
+    public typealias ToOne<D: Entity> = Relationship<Crush.ToOne<D>>
+    public typealias ToMany<D: Entity> = Relationship<Crush.ToMany<D>>
+    public typealias ToOrdered<D: Entity> = Relationship<Crush.ToOrdered<D>>
 }
 
-public enum Required {
-    public enum Transient {
-        public enum Relation {
-            public typealias ToOne<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToOne<D>, Crush.Transient>
-            public typealias ToMany<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToMany<D>, Crush.Transient>
-            public typealias ToOrderedMany<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToOrderedMany<D>, Crush.Transient>
-        }
+public enum Value {
+    public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<T>
+    public typealias Codable<T: CodableProperty> = Attribute<T>
+    public typealias Int16 = Attribute<Swift.Int16>
+    public typealias Int32 = Attribute<Swift.Int32>
+    public typealias Int64 = Attribute<Swift.Int64>
+    public typealias DecimalNumber = Attribute<NSDecimalNumber>
+    public typealias Double = Attribute<Swift.Double>
+    public typealias Float = Attribute<Swift.Float>
+    public typealias String = Attribute<Swift.String>
+    public typealias Bool = Attribute<Swift.Bool>
+    public typealias Date = Attribute<Foundation.Date>
+    public typealias Data = Attribute<Foundation.Data>
+    public typealias UUID = Attribute<Foundation.UUID>
+    public typealias Enum<E: Enumerator> = Attribute<E>
+}
 
-        public enum Value {
-            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<NotNull, T, Crush.Transient>
-            public typealias Codable<T: CodableProperty> = Attribute<NotNull, T, Crush.Transient>
-            public typealias Int16 = Attribute<NotNull, Swift.Int16, Crush.Transient>
-            public typealias Int32 = Attribute<NotNull, Swift.Int32, Crush.Transient>
-            public typealias Int64 = Attribute<NotNull, Swift.Int64, Crush.Transient>
-            public typealias DecimalNumber = Attribute<NotNull, NSDecimalNumber, Crush.Transient>
-            public typealias Double = Attribute<NotNull, Swift.Double, Crush.Transient>
-            public typealias Float = Attribute<NotNull, Swift.Float, Crush.Transient>
-            public typealias String = Attribute<NotNull, Swift.String, Crush.Transient>
-            public typealias Bool = Attribute<NotNull, Swift.Bool, Crush.Transient>
-            public typealias Date = Attribute<NotNull, Foundation.Date, Crush.Transient>
-            public typealias Data = Attribute<NotNull, Foundation.Data, Crush.Transient>
-            public typealias UUID = Attribute<NotNull, Foundation.UUID, Crush.Transient>
-            public typealias Enum<E: Enumerator> = Attribute<NotNull, E, Crush.Transient>
-        }
-    }
-
-    public enum Relation {
-        public typealias ToOne<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToOne<D>, NonTransient>
-        public typealias ToMany<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToMany<D>, NonTransient>
-        public typealias ToOrderedMany<S: Entity, D: Entity> = Relationship<NotNull, S, Crush.ToOrderedMany<D>, NonTransient>
-    }
-
-    public enum Value {
-        public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<NotNull, T, NonTransient>
-        public typealias Codable<T: CodableProperty> = Attribute<NotNull, T, NonTransient>
-        public typealias Int16 = Attribute<NotNull, Swift.Int16, NonTransient>
-        public typealias Int32 = Attribute<NotNull, Swift.Int32, NonTransient>
-        public typealias Int64 = Attribute<NotNull, Swift.Int64, NonTransient>
-        public typealias DecimalNumber = Attribute<NotNull, NSDecimalNumber, NonTransient>
-        public typealias Double = Attribute<NotNull, Swift.Double, NonTransient>
-        public typealias Float = Attribute<NotNull, Swift.Float, NonTransient>
-        public typealias String = Attribute<NotNull, Swift.String, NonTransient>
-        public typealias Bool = Attribute<NotNull, Swift.Bool, NonTransient>
-        public typealias Date = Attribute<NotNull, Foundation.Date, NonTransient>
-        public typealias Data = Attribute<NotNull, Foundation.Data, NonTransient>
-        public typealias UUID = Attribute<NotNull, Foundation.UUID, NonTransient>
-        public typealias Enum<E: Enumerator> = Attribute<NotNull, E, NonTransient>
-
-        @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-        public enum Derived {
-            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = DerivedAttribute<NotNull, T>
-            public typealias Codable<T: CodableProperty> = DerivedAttribute<NotNull, T>
-            public typealias Int16 = DerivedAttribute<NotNull, Swift.Int16>
-            public typealias Int32 = DerivedAttribute<NotNull, Swift.Int32>
-            public typealias Int64 = DerivedAttribute<NotNull, Swift.Int64>
-            public typealias DecimalNumber = DerivedAttribute<NotNull, NSDecimalNumber>
-            public typealias Double = DerivedAttribute<NotNull, Swift.Double>
-            public typealias Float = DerivedAttribute<NotNull, Swift.Float>
-            public typealias String = DerivedAttribute<NotNull, Swift.String>
-            public typealias Bool = DerivedAttribute<NotNull, Swift.Bool>
-            public typealias Date = DerivedAttribute<NotNull, Foundation.Date>
-            public typealias Data = DerivedAttribute<NotNull, Foundation.Data>
-            public typealias UUID = DerivedAttribute<NotNull, Foundation.UUID>
-            public typealias Enum<E: Enumerator> = DerivedAttribute<NotNull, E>
-        }
-    }
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+public enum Derived {
+    public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = DerivedAttribute<T>
+    public typealias Codable<T: CodableProperty> = DerivedAttribute<T>
+    public typealias Int16 = DerivedAttribute<Swift.Int16>
+    public typealias Int32 = DerivedAttribute<Swift.Int32>
+    public typealias Int64 = DerivedAttribute<Swift.Int64>
+    public typealias DecimalNumber = DerivedAttribute<NSDecimalNumber>
+    public typealias Double = DerivedAttribute<Swift.Double>
+    public typealias Float = DerivedAttribute<Swift.Float>
+    public typealias String = DerivedAttribute<Swift.String>
+    public typealias Bool = DerivedAttribute<Swift.Bool>
+    public typealias Date = DerivedAttribute<Foundation.Date>
+    public typealias Data = DerivedAttribute<Foundation.Data>
+    public typealias UUID = DerivedAttribute<Foundation.UUID>
+    public typealias Enum<E: Enumerator> = DerivedAttribute<E>
 }

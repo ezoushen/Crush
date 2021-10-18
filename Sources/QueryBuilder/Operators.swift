@@ -149,23 +149,7 @@ extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValu
 extension KeyPath where
     Root: Entity,
     Value: ValuedProperty,
-    Value.PredicateValue: PredicateEquatable & Equatable,
-    Value.Nullability == NotNull
-{
-    public static func == (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
-        return TypedPredicate(format: "\(lhs.propertyName) == %@", rhs.predicateValue)
-    }
-
-    public static func != (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
-        return TypedPredicate(format: "\(lhs.propertyName) != %@", rhs.predicateValue)
-    }
-}
-
-extension KeyPath where
-    Root: Entity,
-    Value: ValuedProperty,
-    Value.PredicateValue: PredicateEquatable & Equatable,
-    Value.Nullability == Nullable
+    Value.PredicateValue: PredicateEquatable & Equatable
 {
     public static func == (lhs: KeyPath, rhs: Value.PredicateValue?) -> TypedPredicate<Root> {
         guard let value = rhs?.predicateValue else {

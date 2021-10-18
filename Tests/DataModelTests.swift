@@ -12,16 +12,34 @@ import XCTest
 @testable import Crush
 
 class C: Entity {
-    let name = Optional.Value.String("name")
+    let name = Value.String("name")
 }
 
 class A: C {
-    let orderedList = Optional.Relation.ToOrderedMany<A, B>("orderedList")
-    let unorderedList = Optional.Relation.ToMany<A, B>("unorderedList")
+    @Optional
+    var orderedList = Relation.ToOrdered<B>("orderedList")
+
+    @Optional
+    var unorderedList = Relation.ToMany<B>("unorderedList")
 }
 
 class B: Entity {
-    let owner = Optional.Relation.ToOne<B, A>("owner", inverse: \.orderedList)
+    @Optional
+    var owner = Relation.ToOne<A>("owner", inverse: \.orderedList)
+}
+
+class Entity_Root: Entity {
+    @Optional
+    var attribute_optional = Value.Bool("optional_attribute")
+}
+
+class Entity_1: Entity {
+    let attribute_required = Value.String("required_attribute")
+
+    let attribute_string = Value.String("string_value")
+    let atrribute_integer16 = Value.Int16("attribute_integer16")
+    let atrribute_integer32 = Value.Int16("attribute_integer32")
+    let atrribute_integer64 = Value.Int16("attribute_integer64")
 }
 
 extension DataModel {
@@ -58,11 +76,19 @@ extension MigrationPolicy {
 class DataModelTests: XCTestCase {
     
     lazy var sut: DataContainer! = try! DataContainer.load(
-        storage: .sqlite(name: "Crush.sqlite"),
+        storage: .inMemory(),
         dataModel: .v_1,
         migrationPolicy: .waterDoChain())
     
     override func setUp() {
-        try! sut.rebuildStorage()
+//        try! sut.rebuildStorage()
+    }
+
+    func test_myTest() {
+        sut.startSession().sync { context in
+            let a = context.create(entity: A.self)
+            
+        }
+//        print(DataModel.v_1.managedObjectModel)
     }
 }

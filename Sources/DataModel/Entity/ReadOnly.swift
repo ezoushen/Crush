@@ -61,7 +61,7 @@ public struct ReadOnly<Value: Entity> {
         dynamicMember keyPath: KeyPath<Value, T>
     ) -> OrderedSet<T.Destination.ReadOnly>
     where
-        T.Mapping == ToOrderedMany<T.Destination>
+        T.Mapping == ToOrdered<T.Destination>
     {
         context.performSync {
             let orderedSet = value[immutable: keyPath]

@@ -71,7 +71,7 @@ extension ManagedObject {
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
     where
-        Property.Mapping == ToOrderedMany<Property.Destination>
+        Property.Mapping == ToOrdered<Property.Destination>
     {
         let property = Entity.init()[keyPath: keyPath]
         let key = property.name

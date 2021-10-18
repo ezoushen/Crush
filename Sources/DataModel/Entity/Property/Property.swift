@@ -8,83 +8,28 @@
 
 import CoreData
 
-// MARK: - EntityOption
-
-public protocol PropertyConfigurable {
-    var id: Int { get }
-    func updatePropertyDescription<D: NSPropertyDescription>(_ description: D)
-}
-
-public protocol MutablePropertyConfigurable: PropertyConfigurable {
-    associatedtype Description: NSPropertyDescription
-}
-
-public enum PropertyOption {
-    /// This option will be ignored while the property is transient
-    case isIndexedBySpotlight(Bool)
-    case validationPredicatesWithWarnings([(NSPredicate, String)])
-}
-
-public struct PropertyConfiguration {
-    let options: [PropertyConfigurable]
-    
-    public func contains(_ option: PropertyConfigurable) -> Bool {
-        options.contains(where: { option.id == $0.id })
-    }
-}
-
-extension PropertyConfiguration: ExpressibleByArrayLiteral {
-    public init(arrayLiteral elements: PropertyConfigurable...) {
-        options = elements
-    }
-    
-    func configure(description: NSPropertyDescription) {
-        options.forEach{ $0.updatePropertyDescription(description) }
-    }
-}
-
-extension PropertyOption: MutablePropertyConfigurable {
-    
-    public typealias Description = NSPropertyDescription
-    
-    public var id: Int {
-        switch self {
-        case .isIndexedBySpotlight:
-            return 0x100
-        case .validationPredicatesWithWarnings:
-            return 0x200
-        }
-    }
-    
-    public func updatePropertyDescription<D: NSPropertyDescription>(_ description: D) {
-        switch self {
-        case .isIndexedBySpotlight(let flag): description.isIndexedBySpotlight = flag
-        case .validationPredicatesWithWarnings(let tuples):
-            description.setValidationPredicates(tuples.map{$0.0}, withValidationWarnings: tuples.map{$0.1})
-        }
-    }
-}
+// MARK: - Entity Property
 
 public protocol PropertyProtocol: AnyObject {
-    var name: String { get set }    
-    var isTransient: Bool { get }
+    var name: String { get }
     func createPropertyDescription() -> NSPropertyDescription
 }
 
-// MARK: - Entity Property
-
 public protocol ValuedProperty: PropertyProtocol {
-    associatedtype PropertyOption: MutablePropertyConfigurable
     associatedtype PropertyValue
     associatedtype PredicateValue
-    associatedtype Nullability: Crush.Nullability
-    associatedtype Transience: Crush.Transience
+    associatedtype Description: NSPropertyDescription
     associatedtype FieldConvertor: FieldConvertible
-    where FieldConvertor.RuntimeObjectValue == PropertyValue
+        where FieldConvertor.RuntimeObjectValue == PropertyValue
 
     var isAttribute: Bool { get }
+
+    func createDescription() -> Description
 }
 
 extension ValuedProperty {
-    public var isTransient: Bool { Transience.isTransient }
+    @inlinable
+    public func createPropertyDescription() -> NSPropertyDescription {
+        createDescription()
+    }
 }
