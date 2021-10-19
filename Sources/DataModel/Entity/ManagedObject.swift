@@ -13,44 +13,64 @@ public protocol RuntimeObject {
 
 @dynamicMemberLookup
 public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject {
+    internal var canTriggerEvent: Bool {
+        managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
+    }
+
     public override func willSave() {
         super.willSave()
-        Entity.willSave(self)
+        if canTriggerEvent {
+            Entity.willSave(self)
+        }
     }
     
     public override func didSave() {
         super.didSave()
-        Entity.didSave(self)
+        if canTriggerEvent {
+            Entity.didSave(self)
+        }
     }
     
     public override func prepareForDeletion() {
         super.prepareForDeletion()
-        Entity.prepareForDeletion(self)
+        if canTriggerEvent {
+            Entity.prepareForDeletion(self)
+        }
     }
     
     public override func willTurnIntoFault() {
         super.willTurnIntoFault()
-        Entity.willTurnIntoFault(self)
+        if canTriggerEvent {
+            Entity.willTurnIntoFault(self)
+        }
     }
     
     public override func didTurnIntoFault() {
         super.didTurnIntoFault()
-        Entity.didTurnIntoFault(self)
+        if canTriggerEvent {
+            Entity.didTurnIntoFault(self)
+        }
     }
     
     public override func awakeFromFetch() {
         super.awakeFromFetch()
-        Entity.awakeFromFetch(self)
+        if canTriggerEvent {
+            Entity.awakeFromFetch(self)
+        }
     }
     
     public override func awakeFromInsert() {
         super.awakeFromInsert()
-        Entity.awakeFromInsert(self)
+        if canTriggerEvent {
+            Entity.awakeFromInsert(self)
+        }
     }
     
     public override func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
         super.awake(fromSnapshotEvents: flags)
-        Entity.awake(self, fromSnapshotEvents: flags)
+        if canTriggerEvent {
+            Entity.awake(self, fromSnapshotEvents: flags)
+        }
     }
 }
 
@@ -61,8 +81,7 @@ extension ManagedObject {
     where
         Property.Mapping == ToMany<Property.Destination>
     {
-        let property = Entity.init()[keyPath: keyPath]
-        let key = property.name
+        let key = keyPath.propertyName
         let mutableSet = getMutableSet(key: key)
         return Property.Mapping.convert(value: mutableSet)
     }
@@ -73,8 +92,7 @@ extension ManagedObject {
     where
         Property.Mapping == ToOrdered<Property.Destination>
     {
-        let property = Entity.init()[keyPath: keyPath]
-        let key = property.name
+        let key = keyPath.propertyName
         let mutableOrderedSet = getMutableOrderedSet(key: key)
         return Property.Mapping.convert(value: mutableOrderedSet)
     }
@@ -86,17 +104,15 @@ extension ManagedObject {
             return self[immutable: keyPath]
         }
         set {
-            let property = Entity.init()[keyPath: keyPath]
-            setValue(Property.FieldConvertor.convert(value: newValue), key: property.name)
+            setValue(Property.FieldConvertor.convert(value: newValue), key: keyPath.propertyName)
         }
     }
 
     public subscript<Property: ValuedProperty>(
         immutable keyPath: KeyPath<Entity, Property>
     ) -> Property.PropertyValue {
-        let property = Entity.init()[keyPath: keyPath]
         return Property.FieldConvertor.convert(
-            value: getValue(key: property.name))
+            value: getValue(key: keyPath.propertyName))
     }
 }
 

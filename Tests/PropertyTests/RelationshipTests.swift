@@ -36,8 +36,8 @@ public class RelationshipTests: XCTestCase {
     }
 
     private static var dataModel = DataModel("RelationshipTest") {
-        EntityDescription<Entity_A>(inheritance: .concrete)
-        EntityDescription<Entity_B>(inheritance: .concrete)
+        EntityDescription(Entity_A.self, inheritance: .concrete)
+        EntityDescription(Entity_B.self, inheritance: .concrete)
     }
 
     public lazy var dataModel: DataModel = {

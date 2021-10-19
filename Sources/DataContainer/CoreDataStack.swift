@@ -8,6 +8,10 @@
 import CoreData
 import Foundation
 
+internal let DefaultContextPrefix: String = "DefaultContext."
+internal let WriterContextName: String = "DefaultContext.writer"
+internal let UiContextName: String = "DefaultContext.ui"
+
 public class CoreDataStack {
     public let storage: Storage
     public let dataModel: DataModel
@@ -67,6 +71,7 @@ public class CoreDataStack {
         context.persistentStoreCoordinator = coordinator
         context.mergePolicy = mergePolicy
         context.automaticallyMergesChangesFromParent = false
+        context.name = WriterContextName
         return context
     }
 
@@ -74,6 +79,7 @@ public class CoreDataStack {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         context.parent = parent
         context.automaticallyMergesChangesFromParent = false
+        context.name = UiContextName
         return context
     }
 

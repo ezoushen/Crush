@@ -10,17 +10,17 @@ import Foundation
 
 public class DataModel {
     public let name: String
-    public let entityDescriptions: Set<AnyEntityDescription>
+    public let entityDescriptions: Set<EntityDescription>
 
-    public init(name: String, descriptions: Set<AnyEntityDescription>) {
+    public init(name: String, descriptions: Set<EntityDescription>) {
         self.name = name
         self.entityDescriptions = descriptions
     }
     
     public init(
         _ name: String,
-        @CollectionBuilder<AnyEntityDescription>
-        descriptions: () -> Set<AnyEntityDescription>)
+        @CollectionBuilder<EntityDescription>
+        descriptions: () -> Set<EntityDescription>)
     {
         self.name = name
         self.entityDescriptions = descriptions()
@@ -46,7 +46,7 @@ public class DataModel {
         let sortedDescriptions = entityDescriptions
             .sorted { $0.inheritance < $1.inheritance }
         let entityDescriptionsByType = sortedDescriptions
-            .reduce(into: [ObjectIdentifier: AnyEntityDescription]()) {
+            .reduce(into: [ObjectIdentifier: EntityDescription]()) {
                 $0[ObjectIdentifier($1.type)] = $1
             }
         let entities: [NSEntityDescription] = sortedDescriptions

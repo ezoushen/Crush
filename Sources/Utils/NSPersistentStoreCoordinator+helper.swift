@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-let CCurrentModelVersion = "CCurrentModelVersion"
+let CurrentModelVersion = "CurrentModelVersion"
 
 extension NSPersistentStoreCoordinator {
     static func lastActiveVersionName(in storage: Storage) -> String? {
@@ -21,7 +21,7 @@ extension NSPersistentStoreCoordinator {
     {
         let metadata = try? metadataForPersistentStore(
             ofType: storeType, at: url, options: nil)
-        return metadata?[CCurrentModelVersion] as? String
+        return metadata?[CurrentModelVersion] as? String
     }
 
     static func updateLastActiveVersionName(
@@ -36,7 +36,7 @@ extension NSPersistentStoreCoordinator {
         _ name: String, storeType: String, at url: URL)
     {
         try? setMetadata(
-            [CCurrentModelVersion: name],
+            [CurrentModelVersion: name],
             forPersistentStoreOfType: storeType,
             at: url,
             options: nil)
@@ -57,10 +57,10 @@ extension NSPersistentStoreCoordinator {
     }
 
     func lastActiveVersionName(in store: NSPersistentStore) -> String? {
-        metadata(for: store)[CCurrentModelVersion] as? String
+        metadata(for: store)[CurrentModelVersion] as? String
     }
 
     func updateLastActiveVersionName(_ name: String, in store: NSPersistentStore) {
-        setMetadata([CCurrentModelVersion: name], for: store)
+        setMetadata([CurrentModelVersion: name], for: store)
     }
 }

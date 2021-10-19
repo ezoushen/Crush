@@ -12,63 +12,27 @@ public enum EntityInheritance: Int, Comparable, Hashable {
     case abstract, embedded, concrete
 }
 
-public class AnyEntityDescription: Hashable {
+public class EntityDescription: Hashable {
     public let type: Entity.Type
     public let inheritance: EntityInheritance
-    public let indexes: [IndexProtocol]
-    public let uniqueConstraints: [UniqueConstraintProtocol]
-    public let validations: [ValidationProtocol]
 
     public static func == (
-        lhs: AnyEntityDescription, rhs: AnyEntityDescription) -> Bool
+        lhs: EntityDescription, rhs: EntityDescription) -> Bool
     {
         lhs.hashValue == rhs.hashValue
     }
 
-    init<T: Entity>(
+    public init<T: Entity>(
         _ type: T.Type,
-        inheritance: EntityInheritance,
-        indexes: Set<Index<T>> = [],
-        uniqueConstraints: Set<UniqueConstraint<T>> = [],
-        validations: Set<Validation<T>> = [])
+        inheritance: EntityInheritance)
     {
         self.type = type
         self.inheritance = inheritance
-        self.indexes = Array(indexes)
-        self.uniqueConstraints = Array(uniqueConstraints)
-        self.validations = Array(validations)
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(type))
         hasher.combine(inheritance)
-    }
-}
-
-public class EntityDescription<T: Entity>: AnyEntityDescription {
-    public init(
-        inheritance: EntityInheritance,
-        indexes: Set<Index<T>> = [],
-        uniqueConstraints: Set<UniqueConstraint<T>> = [],
-        validations: Set<Validation<T>> = [])
-    {
-        super.init(T.self, inheritance: inheritance, indexes: indexes, uniqueConstraints: uniqueConstraints, validations: validations)
-    }
-    
-    public convenience init(
-        _ inheritance: EntityInheritance,
-        @CollectionBuilder<Index<T>>
-        indexes: () -> Set<Index<T>> = { [] },
-        @CollectionBuilder<UniqueConstraint<T>>
-        uniqueConstraints: () -> Set<UniqueConstraint<T>> = { [] },
-        @CollectionBuilder<Validation<T>>
-        validations: () -> Set<Validation<T>> = { [] })
-    {
-        self.init(
-            inheritance: inheritance,
-            indexes: indexes(),
-            uniqueConstraints: uniqueConstraints(),
-            validations: validations())
     }
 }
 
@@ -112,7 +76,7 @@ extension Entity {
     }
     
     static func createEntityDescription(
-        entityDescriptionsByType: [ObjectIdentifier: AnyEntityDescription]
+        entityDescriptionsByType: [ObjectIdentifier: EntityDescription]
     ) -> NSEntityDescription? {
         let identifier = ObjectIdentifier(Self.self)
         let entityDescription = entityDescriptionsByType[identifier]
@@ -128,12 +92,17 @@ extension Entity {
         
         // Setup properties
         let description = NSEntityDescription()
+        let properties = createProperties(
+            mirror: mirror,
+            entityDescriptionsByType: entityDescriptionsByType)
+
+        setupIndexes(description: description)
+        setupUniquenessConstraints(description: description)
+
         description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
         description.name = fetchKey
         description.isAbstract = inheritance == .abstract
-        description.properties = createProperties(
-            mirror: mirror,
-            entityDescriptionsByType: entityDescriptionsByType)
+        description.properties = properties
 
         if let superMirror = mirror.superclassMirror,
            let superType = superMirror.subjectType as? Entity.Type,
@@ -143,27 +112,7 @@ extension Entity {
                 $0.subentities.append(description)
             }
         }
-        
-        let allIndexes = findAll(
-            keyPath: \.indexes,
-            mirror: mirror,
-            entityDescription: entityDescription,
-            entityDescriptionsByType: entityDescriptionsByType)
-        let allUniqueConstraints = findAll(
-            keyPath: \.uniqueConstraints,
-            mirror: mirror,
-            entityDescription: entityDescription,
-            entityDescriptionsByType: entityDescriptionsByType)
-        let allValidations = findAll(
-            keyPath: \.validations,
-            mirror: mirror,
-            entityDescription: entityDescription,
-            entityDescriptionsByType: entityDescriptionsByType)
-        
-        setupIndexes(allIndexes, in: description)
-        setupUniqueConstraints(allUniqueConstraints, in: description)
-        setupValidations(allValidations, in: description)
-        
+
         cache.set(entityCacheKey, value: description)
         
         return description
@@ -171,89 +120,73 @@ extension Entity {
     
     private static func createProperties(
         mirror: Mirror,
-        entityDescriptionsByType: [ObjectIdentifier: AnyEntityDescription]
+        entityDescriptionsByType: [ObjectIdentifier: EntityDescription]
     ) -> [NSPropertyDescription] {
         let ownedProperties = mirror.children
             .compactMap { $0.value as? PropertyProtocol }
             .map { $0.createPropertyDescription() }
         
         if let superMirror = mirror.superclassMirror,
-           entityDescriptionsByType[ObjectIdentifier(superMirror.subjectType)]?.inheritance == .embedded
+           let description = entityDescriptionsByType[ObjectIdentifier(superMirror.subjectType)],
+           description.inheritance == .embedded
         {
-            return ownedProperties + createProperties(mirror: superMirror, entityDescriptionsByType: entityDescriptionsByType)
+            return ownedProperties + createProperties(
+                mirror: superMirror, entityDescriptionsByType: entityDescriptionsByType)
         }
         
         return ownedProperties
     }
-    
-    private static func findAll<T>(
-        keyPath: KeyPath<AnyEntityDescription, [T]>,
-        mirror: Mirror,
-        entityDescription: AnyEntityDescription,
-        entityDescriptionsByType: [ObjectIdentifier: AnyEntityDescription]) -> [T]
-    {
-        guard mirror.subjectType == self ||
-              entityDescription.inheritance == .embedded
-        else { return [] }
-        
-        let array = entityDescription[keyPath: keyPath]
-        guard let superMirror = mirror.superclassMirror,
-              let superDescription =
-                entityDescriptionsByType[ObjectIdentifier(superMirror.subjectType)]
-        else { return array }
-        
-        return array +
-            findAll(
-                keyPath: keyPath,
-                mirror: superMirror,
-                entityDescription: superDescription,
-                entityDescriptionsByType: entityDescriptionsByType)
-    }
-    
-    private static func setupIndexes(
-        _ indexes: [IndexProtocol],
-        in description: NSEntityDescription)
-    {
-        description.indexes = indexes
-            .map { $0.createIndexDescription(for: description) }
-    }
-    
-    private static func setupUniqueConstraints(
-        _ constraints: [UniqueConstraintProtocol],
-        in description: NSEntityDescription)
-    {
-        description.uniquenessConstraints = constraints
-            .map { $0.uniquenessConstarints }
-    }
-    
-    private static func setupValidations(
-        _ validations: [ValidationProtocol],
-        in description: NSEntityDescription)
-    {
-        let propertiesByName = description.propertiesByName
-        
-        var predicatesByName: [String: [NSPredicate]] = [:]
-        var warningsByName: [String: [String]] = [:]
-        
-        for validation in validations {
-            let name = validation.propertyName
-            var predicates = predicatesByName[name] ?? []
-            var warnings = warningsByName[name] ?? []
-            
-            predicates.append(validation.predicate)
-            warnings.append(validation.warning)
-            
-            predicatesByName[name] = predicates
-            warningsByName[name] = warnings
+
+    private static func setupIndexes(description: NSEntityDescription) {
+        var indexesByName: [String: [NSFetchIndexElementDescription]] = [:]
+        var indexPredicatesByName: [String: NSPredicate] = [:]
+
+        for property in description.properties {
+            guard let element = property.userInfo?[UserInfoKey.index]
+                    as? NSFetchIndexElementDescription else { continue }
+            let indexName = property.userInfo?[UserInfoKey.indexName] as? String ?? property.name
+            let indexPredicate = property.userInfo?[UserInfoKey.indexPredicate] as? NSPredicate
+
+            defer {
+                property.userInfo?[UserInfoKey.index] = nil
+                property.userInfo?[UserInfoKey.indexName] = nil
+                property.userInfo?[UserInfoKey.indexPredicate] = nil
+            }
+
+            var indexes = indexesByName[indexName] ?? []
+            indexes.append(element)
+            indexesByName[indexName] = indexes
+
+            guard let indexPredicate = indexPredicate else { continue }
+
+            if let predicate = indexPredicatesByName[indexName] {
+                indexPredicatesByName[indexName] = NSCompoundPredicate(
+                    orPredicateWithSubpredicates: [indexPredicate, predicate])
+            } else {
+                indexPredicatesByName[indexName] = indexPredicate
+            }
         }
-        
-        for name in predicatesByName.keys {
-            guard let property = propertiesByName[name]
-            else { continue }
-            property.setValidationPredicates(
-                predicatesByName[name],
-                withValidationWarnings: warningsByName[name])
+
+        description.indexes = indexesByName.map { (name, elements) in
+            let index = NSFetchIndexDescription(name: name, elements: elements)
+            index.partialIndexPredicate = indexPredicatesByName[name]
+            return index
         }
+    }
+
+    private static func setupUniquenessConstraints(description: NSEntityDescription) {
+        let key = UserInfoKey.uniquenessConstraintName
+        var uniquenessConstraintsByName: [String: [String]] = [:]
+
+        for property in description.properties {
+            guard let name = property.userInfo?[key] as? String else { continue }
+            var constraints = uniquenessConstraintsByName[name] ?? []
+            constraints.append(property.name)
+            uniquenessConstraintsByName[name] = constraints
+            property.userInfo?[UserInfoKey.uniquenessConstraintName] = nil
+        }
+
+        description.uniquenessConstraints = Array(uniquenessConstraintsByName.values)
     }
 }
 

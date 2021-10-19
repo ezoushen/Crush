@@ -36,8 +36,10 @@ class Entity_1: Entity {
     var attribute_string = Value.String("string_value")
     @Required
     var atrribute_integer16 = Value.Int16("attribute_integer16")
+
     @Required
     var atrribute_integer32 = Value.Int16("attribute_integer32")
+
     @Required
     var atrribute_integer64 = Value.Int16("attribute_integer64")
 }
@@ -45,9 +47,9 @@ class Entity_1: Entity {
 extension DataModel {
     static var v_1: DataModel {
         DataModel("V1") {
-            EntityDescription<C>(.embedded)
-            EntityDescription<A>(.concrete)
-            EntityDescription<B>(.concrete)
+            EntityDescription(C.self, inheritance: .embedded)
+            EntityDescription(A.self, inheritance: .concrete)
+            EntityDescription(B.self, inheritance: .concrete)
         }
     }
 }
