@@ -46,11 +46,15 @@ class Entity_1: Entity {
 
 extension DataModel {
     static var v_1: DataModel {
-        DataModel("V1") {
-            EntityDescription(C.self, inheritance: .embedded)
-            EntityDescription(A.self, inheritance: .concrete)
-            EntityDescription(B.self, inheritance: .concrete)
-        }
+        DataModel(
+            name: "V1",
+            embedded: [
+                C()
+            ],
+            concrete: [
+                A(), B()
+            ]
+        )
     }
 }
 

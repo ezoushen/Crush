@@ -10,25 +10,22 @@ import Foundation
 
 public class DataModel {
     public let name: String
-    public let entityDescriptions: Set<EntityDescription>
+    public let abstractEntities: Set<Entity>
+    public let embeddedEntities: Set<Entity>
+    public let concreteEntities: Set<Entity>
 
-    public init(name: String, descriptions: Set<EntityDescription>) {
+    public init(name: String, abstract: Set<Entity> = [], embedded: Set<Entity> = [], concrete: Set<Entity>) {
         self.name = name
-        self.entityDescriptions = descriptions
-    }
-    
-    public init(
-        _ name: String,
-        @CollectionBuilder<EntityDescription>
-        descriptions: () -> Set<EntityDescription>)
-    {
-        self.name = name
-        self.entityDescriptions = descriptions()
+        self.abstractEntities = abstract
+        self.embeddedEntities = embedded
+        self.concreteEntities = concrete
     }
 
     internal func entityDescriptionHash() -> Int {
         var hasher = Hasher()
-        hasher.combine(entityDescriptions)
+        hasher.combine(abstractEntities)
+        hasher.combine(embeddedEntities)
+        hasher.combine(concreteEntities)
         return hasher.finalize()
     }
 
@@ -43,17 +40,19 @@ public class DataModel {
             Caches.managedObjectModel.set(key, value: model)
             Caches.entity.clean()
         }
-        let sortedDescriptions = entityDescriptions
-            .sorted { $0.inheritance < $1.inheritance }
-        let entityDescriptionsByType = sortedDescriptions
-            .reduce(into: [ObjectIdentifier: EntityDescription]()) {
-                $0[ObjectIdentifier($1.type)] = $1
-            }
-        let entities: [NSEntityDescription] = sortedDescriptions
-            .compactMap {
-                $0.type.createEntityDescription(
-                    entityDescriptionsByType: entityDescriptionsByType)
-            }
+
+        var inhertanceData = [ObjectIdentifier: EntityInheritance]()
+        abstractEntities.forEach { inhertanceData[ObjectIdentifier(type(of: $0))] = .abstract }
+        embeddedEntities.forEach { inhertanceData[ObjectIdentifier(type(of: $0))] = .embedded }
+        concreteEntities.forEach { inhertanceData[ObjectIdentifier(type(of: $0))] = .concrete }
+
+        let entities: [NSEntityDescription] = (
+            Array(abstractEntities) +
+            Array(embeddedEntities) +
+            Array(concreteEntities)
+        )
+            .compactMap { $0.createEntityDescription(inhertanceData: inhertanceData) }
+        
         model.versionIdentifiers = [name]
         model.entities = entities
         return model

@@ -45,7 +45,15 @@ extension EntityInheritance {
     }
 }
 
-open class Entity {
+open class Entity: Hashable {
+    public static func == (lhs: Entity, rhs: Entity) -> Bool {
+        lhs.hashValue == rhs.hashValue
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(Self.self))
+    }
+
     required public init() { }
     @objc open dynamic class func willSave(_ managedObject: NSManagedObject) { }
     @objc open dynamic class func didSave(_ managedObject: NSManagedObject) { }
@@ -75,69 +83,67 @@ extension Entity {
         String(describing: Self.self)
     }
     
-    static func createEntityDescription(
-        entityDescriptionsByType: [ObjectIdentifier: EntityDescription]
+    func createEntityDescription(
+        inhertanceData: [ObjectIdentifier: EntityInheritance]
     ) -> NSEntityDescription? {
         let identifier = ObjectIdentifier(Self.self)
-        let entityDescription = entityDescriptionsByType[identifier]
-        
-        guard let entityDescription = entityDescription,
-              entityDescription.inheritance != .embedded else {
+
+        guard let inheritance = inhertanceData[identifier],
+              inheritance != .embedded else {
             return nil
         }
         
-        let inheritance = entityDescription.inheritance
         let cache = Caches.entity
-        let mirror = Mirror(reflecting: Self.init())
+        let mirror = Mirror(reflecting: self)
         
         // Setup properties
         let description = NSEntityDescription()
         let properties = createProperties(
             mirror: mirror,
-            entityDescriptionsByType: entityDescriptionsByType)
+            inhertanceData: inhertanceData)
 
         setupIndexes(description: description)
         setupUniquenessConstraints(description: description)
 
         description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
-        description.name = fetchKey
+        description.name = Self.fetchKey
         description.isAbstract = inheritance == .abstract
         description.properties = properties
 
         if let superMirror = mirror.superclassMirror,
            let superType = superMirror.subjectType as? Entity.Type,
-           entityDescriptionsByType[ObjectIdentifier(superType)]?.inheritance != .embedded
+           inhertanceData[ObjectIdentifier(superType)] != .embedded
         {
             cache.getAndWait(superType.entityCacheKey) {
                 $0.subentities.append(description)
             }
         }
 
-        cache.set(entityCacheKey, value: description)
+        cache.set(Self.entityCacheKey, value: description)
         
         return description
     }
     
-    private static func createProperties(
+    private func createProperties(
         mirror: Mirror,
-        entityDescriptionsByType: [ObjectIdentifier: EntityDescription]
+        inhertanceData: [ObjectIdentifier: EntityInheritance]
     ) -> [NSPropertyDescription] {
         let ownedProperties = mirror.children
             .compactMap { $0.value as? PropertyProtocol }
             .map { $0.createPropertyDescription() }
         
         if let superMirror = mirror.superclassMirror,
-           let description = entityDescriptionsByType[ObjectIdentifier(superMirror.subjectType)],
-           description.inheritance == .embedded
+           let inheritance = inhertanceData[ObjectIdentifier(superMirror.subjectType)],
+           inheritance == .embedded
         {
             return ownedProperties + createProperties(
-                mirror: superMirror, entityDescriptionsByType: entityDescriptionsByType)
+                mirror: superMirror, inhertanceData: inhertanceData)
         }
         
         return ownedProperties
     }
 
-    private static func setupIndexes(description: NSEntityDescription) {
+    private func setupIndexes(description: NSEntityDescription) {
         var indexesByName: [String: [NSFetchIndexElementDescription]] = [:]
         var indexPredicatesByName: [String: NSPredicate] = [:]
 
@@ -174,7 +180,7 @@ extension Entity {
         }
     }
 
-    private static func setupUniquenessConstraints(description: NSEntityDescription) {
+    private func setupUniquenessConstraints(description: NSEntityDescription) {
         let key = UserInfoKey.uniquenessConstraintName
         var uniquenessConstraintsByName: [String: [String]] = [:]
 

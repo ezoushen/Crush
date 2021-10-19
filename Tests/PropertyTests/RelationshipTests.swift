@@ -35,10 +35,11 @@ public class RelationshipTests: XCTestCase {
         var toOne_A = Relation.ToOne<Entity_A>("toOne_A")
     }
 
-    private static var dataModel = DataModel("RelationshipTest") {
-        EntityDescription(Entity_A.self, inheritance: .concrete)
-        EntityDescription(Entity_B.self, inheritance: .concrete)
-    }
+    private static var dataModel = DataModel(
+        name: "RelationshipTest",
+        concrete: [
+            Entity_A(), Entity_B()
+        ])
 
     public lazy var dataModel: DataModel = {
         Self.dataModel
