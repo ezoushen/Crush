@@ -50,78 +50,78 @@ public class RelationshipTests: XCTestCase {
     }
 
     func test_optionalRelationship_isOptionalShouldBeTrue() {
-        let sut = Entity_A.entityDescription()
+        let sut = Entity_A.entity()
             .relationshipsByName["toOrdered_B"]!
         XCTAssertTrue(sut.isOptional)
     }
 
     func test_defaultDeleteRule_shouldBeNullify() {
-        let sut = Entity_A.entityDescription()
+        let sut = Entity_A.entity()
             .relationshipsByName["toOrdered_B"]!
         XCTAssertEqual(sut.deleteRule, .nullifyDeleteRule)
     }
 
     func test_deleteRule_shouldBeNoAction() {
-        let sut = Entity_B.entityDescription()
+        let sut = Entity_B.entity()
             .relationshipsByName["toMany_A"]!
         XCTAssertEqual(sut.deleteRule, .noActionDeleteRule)
     }
 
     func test_minCount_shouldBe2() {
-        let sut = Entity_A.entityDescription()
+        let sut = Entity_A.entity()
             .relationshipsByName["toOrdered_B"]!
         XCTAssertEqual(sut.minCount, 2)
     }
 
     func test_maxCount_shouldBe10() {
-        let sut = Entity_A.entityDescription()
+        let sut = Entity_A.entity()
             .relationshipsByName["toOrdered_B"]!
         XCTAssertEqual(sut.maxCount, 10)
     }
 
     func test_inverse_shouldBeUniDirectional() {
-        let sut = Entity_B.entityDescription()
+        let sut = Entity_B.entity()
             .relationshipsByName["toMany_A"]!
         XCTAssertNil(sut.inverseRelationship)
     }
 
     func test_inverse_shouldBeBiDirectional() {
-        let sut = Entity_B.entityDescription()
+        let sut = Entity_B.entity()
             .relationshipsByName["toOne_A"]!
-        let target = Entity_A.entityDescription()
+        let target = Entity_A.entity()
             .relationshipsByName["toOrdered_B"]!
         XCTAssertIdentical(sut.inverseRelationship, target)
     }
 
     func test_inverse_shouldBeNil() {
-        let sut = Entity_A.entityDescription()
+        let sut = Entity_A.entity()
             .relationshipsByName["toOne_B_noInverse"]!
         XCTAssertNil(sut.inverseRelationship)
     }
 
     func test_mapping_shouldBeToOne() {
-        let sut = Entity_A.entityDescription()
+        let sut = Entity_A.entity()
             .relationshipsByName["toOne_B_noInverse"]!
         XCTAssertFalse(sut.isToMany)
     }
 
     func test_mapping_shouldBeToMany() {
-        let sut = Entity_B.entityDescription()
+        let sut = Entity_B.entity()
             .relationshipsByName["toMany_A"]!
         XCTAssertTrue(sut.isToMany)
     }
 
     func test_mapping_shouldBeToOrdered() {
-        let sut = Entity_A.entityDescription()
+        let sut = Entity_A.entity()
             .relationshipsByName["toOrdered_B"]!
         XCTAssertTrue(sut.isToMany)
         XCTAssertTrue(sut.isOrdered)
     }
 
     func test_destination_shouldBeSetProperly() {
-        let sut = Entity_A.entityDescription()
+        let sut = Entity_A.entity()
             .relationshipsByName["toOrdered_B"]!
-        let target = Entity_B.entityDescription()
+        let target = Entity_B.entity()
         XCTAssertEqual(sut.destinationEntity, target)
     }
 }

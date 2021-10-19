@@ -8,35 +8,11 @@
 
 import CoreData
 
-public enum EntityInheritance: Int, Comparable, Hashable {
+public enum EntityInheritance: Int {
     case abstract, embedded, concrete
 }
 
-public class EntityDescription: Hashable {
-    public let type: Entity.Type
-    public let inheritance: EntityInheritance
-
-    public static func == (
-        lhs: EntityDescription, rhs: EntityDescription) -> Bool
-    {
-        lhs.hashValue == rhs.hashValue
-    }
-
-    public init<T: Entity>(
-        _ type: T.Type,
-        inheritance: EntityInheritance)
-    {
-        self.type = type
-        self.inheritance = inheritance
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(type))
-        hasher.combine(inheritance)
-    }
-}
-
-extension EntityInheritance {
+extension EntityInheritance: Comparable, Hashable {
     public static func < (
         lhs: EntityInheritance,
         rhs: EntityInheritance) -> Bool
@@ -45,15 +21,7 @@ extension EntityInheritance {
     }
 }
 
-open class Entity: Hashable {
-    public static func == (lhs: Entity, rhs: Entity) -> Bool {
-        lhs.hashValue == rhs.hashValue
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(Self.self))
-    }
-
+open class Entity {
     required public init() { }
     @objc open dynamic class func willSave(_ managedObject: NSManagedObject) { }
     @objc open dynamic class func didSave(_ managedObject: NSManagedObject) { }
@@ -66,21 +34,31 @@ open class Entity: Hashable {
                                         fromSnapshotEvents: NSSnapshotEventType) { }
 }
 
+extension Entity: Hashable {
+    public static func == (lhs: Entity, rhs: Entity) -> Bool {
+        lhs.hashValue == rhs.hashValue
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(Self.self))
+    }
+}
+
 extension Entity {
     public static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        NSFetchRequest<NSFetchRequestResult>(entityName: fetchKey)
+        Managed.fetchRequest()
     }
     
-    public static func entityDescription() -> NSEntityDescription {
-        ManagedObject<Self>.entity()
+    public static func entity() -> NSEntityDescription {
+        Managed.entity()
     }
-    
-    public static var entityCacheKey: String {
-        String(reflecting: Self.self)
-    }
-    
-    static var fetchKey: String {
+
+    public static var fetchKey: String {
         String(describing: Self.self)
+    }
+
+    static var entityCacheKey: String {
+        String(reflecting: Self.self)
     }
     
     func createEntityDescription(

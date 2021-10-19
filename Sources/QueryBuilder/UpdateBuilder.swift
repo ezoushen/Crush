@@ -22,7 +22,7 @@ extension UpdateConfig {
     }
 
     private func batchRequest() -> NSBatchUpdateRequest {
-        let description = NSBatchUpdateRequest(entity: Target.entityDescription())
+        let description = NSBatchUpdateRequest(entity: Target.entity())
         description.predicate = predicate
         description.propertiesToUpdate = propertiesToUpdate
         description.resultType = .updatedObjectIDsResultType

@@ -15,7 +15,7 @@ struct InsertionConfig<Target: Entity> {
 
 extension InsertionConfig: RequestConfig {
     func createStoreRequest() -> NSPersistentStoreRequest {
-        let entity = Target.entityDescription()
+        let entity = Target.entity()
         if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), batch {
             let description = NSBatchInsertRequest(entity: entity, objects: objects)
             description.resultType = .objectIDs
@@ -78,7 +78,7 @@ extension InsertBuilder {
     }
 
     private func executeLegacyBatchInsert() throws -> [NSManagedObjectID] {
-        let entity = Target.entityDescription()
+        let entity = Target.entity()
         let context = context.rootContext
         return try context.performSync {
             let result = config.objects.map { object -> NSManagedObject in
