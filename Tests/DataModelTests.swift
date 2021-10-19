@@ -32,8 +32,10 @@ class Entity_Root: Entity {
 class Entity_1: Entity {
     @Required
     var attribute_required = Value.String("required_attribute")
+
     @Required
     var attribute_string = Value.String("string_value")
+
     @Required
     var atrribute_integer16 = Value.Int16("attribute_integer16")
 
@@ -58,29 +60,24 @@ extension DataModel {
     }
 }
 
-extension MigrationChain {
-    static var `default`: MigrationChain = MigrationChain {
-        ModelMigration("V1") {
-            AddEntity("A") {
-                AddAttribute("name", type: String.self, isOptional: true)
-                AddRelationship("orderedList", toMany: "B", inverse: "owner", isOptional: true, isOrdered: true)
-                AddRelationship("unorderedList", toMany: "B", isOptional: true)
-            }
-            AddEntity("B") {
-                AddRelationship("owner", toOne: "A", inverse: "orderedList", isOptional: true)
-            }
-        }
-    }
-}
-
 extension MigrationPolicy {
     static func waterDoChain() -> MigrationPolicy {
-        .chain(.default)
+        .chain(MigrationChain {
+            ModelMigration("V1") {
+                AddEntity("A") {
+                    AddAttribute("name", type: String.self, isOptional: true)
+                    AddRelationship("orderedList", toMany: "B", inverse: "owner", isOptional: true, isOrdered: true)
+                    AddRelationship("unorderedList", toMany: "B", isOptional: true)
+                }
+                AddEntity("B") {
+                    AddRelationship("owner", toOne: "A", inverse: "orderedList", isOptional: true)
+                }
+            }
+        })
     }
 }
 
 class DataModelTests: XCTestCase {
-    
     lazy var sut: DataContainer! = try! DataContainer.load(
         storage: .inMemory(),
         dataModel: .v_1)

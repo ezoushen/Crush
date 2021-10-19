@@ -46,11 +46,11 @@ extension Entity: Hashable {
 
 extension Entity {
     public static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        Managed.fetchRequest()
+        Self.Managed.fetchRequest()
     }
     
     public static func entity() -> NSEntityDescription {
-        Managed.entity()
+        Self.Managed.entity()
     }
 
     public static var fetchKey: String {
