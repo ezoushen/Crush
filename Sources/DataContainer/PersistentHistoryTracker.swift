@@ -23,23 +23,44 @@ internal class PersistentHistoryTracker {
         self.context = context
         self.coordinator = coordinator
 
-        purgeHistory()
-        loadHistoryToken()
+        setup()
+    }
+
+    internal func setup() {
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *) {
+            purgeHistory()
+            loadHistoryToken()
+        }
     }
 
     internal func enable() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(persistentStoreHistoryChanged(_:)),
-            name: Notification.Name("NSPersistentStoreRemoteChangeNotification"),
-            object: coordinator)
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *) {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(persistentStoreHistoryChanged(_:)),
+                name: Notification.Name("NSPersistentStoreRemoteChangeNotification"),
+                object: coordinator)
+        } else {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(contextDidSave(notification:)),
+                name: .NSManagedObjectContextDidSave,
+                object: context.rootContext)
+        }
     }
 
     internal func disable() {
-        NotificationCenter.default.removeObserver(
-            self,
-            name: Notification.Name("NSPersistentStoreRemoteChangeNotification"),
-            object: coordinator)
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *) {
+            NotificationCenter.default.removeObserver(
+                self,
+                name: Notification.Name("NSPersistentStoreRemoteChangeNotification"),
+                object: coordinator)
+        } else {
+            NotificationCenter.default.removeObserver(
+                self,
+                name: .NSManagedObjectContextDidSave,
+                object: context.rootContext)
+        }
     }
 
     deinit {
@@ -63,6 +84,7 @@ internal class PersistentHistoryTracker {
         return url.appendingPathComponent("token.data", isDirectory: false)
     }()
 
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
     internal func storeHistoryToken(_ token: NSPersistentHistoryToken) {
         do {
             let data = try NSKeyedArchiver
@@ -74,6 +96,7 @@ internal class PersistentHistoryTracker {
         }
     }
 
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
     internal func loadHistoryToken() {
         do {
             let tokenData = try Data(contentsOf: tokenFileURL)
@@ -85,6 +108,7 @@ internal class PersistentHistoryTracker {
     }
 
     @objc
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
     internal func persistentStoreHistoryChanged(_ notification: Notification) {
         let uiContext = context.uiContext
         let rootContext = context.rootContext
@@ -105,15 +129,18 @@ internal class PersistentHistoryTracker {
                     as? NSPersistentHistoryToken {
                 self.storeHistoryToken(lastToken)
             }
-
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(
-                    name: .DataContainerDidRefreshUiContext,
-                    object: self, userInfo: nil)
-            }
         }
     }
 
+    internal func notifyOnMainThread() {
+        DispatchQueue.performMainThreadTask {
+            NotificationCenter.default.post(
+                name: .DataContainerDidRefreshUiContext,
+                object: self, userInfo: nil)
+        }
+    }
+
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
     internal func loadPersistentHistory() -> [NSPersistentHistoryTransaction] {
         let fetchHistoryRequest = NSPersistentHistoryChangeRequest
             .fetchHistory(after: lastHistoryToken)
@@ -132,7 +159,8 @@ internal class PersistentHistoryTracker {
             return []
         }
     }
-    
+
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
     internal func purgeHistory() {
         let sevenDaysAgo = Date(timeIntervalSinceNow: -transactionLifetime)
         let purgeHistoryRequest = NSPersistentHistoryChangeRequest
@@ -142,5 +170,16 @@ internal class PersistentHistoryTracker {
         } catch {
             logger.log(.error, "Failed to purge persistent history", error: error)
         }
+    }
+
+    @objc
+    internal func contextDidSave(notification: Notification) {
+        context.uiContext.perform(
+            #selector(context.uiContext.mergeChanges(fromContextDidSave:)),
+            on: Thread.main,
+            with: notification,
+            waitUntilDone: Thread.isMainThread)
+        
+        notifyOnMainThread()
     }
 }
