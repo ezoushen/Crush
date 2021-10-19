@@ -168,18 +168,22 @@ extension SessionContext where Self: RawContextProviderProtocol {
     }
     
     public func commitAsync(_ handler: @escaping (NSError?) -> Void) throws {
-        let objectIDs = try executionContext.performSync {
-            try saveExecutionContext {
-                rootContext.performAsync {
-                    do {
-                        try saveRootContext()
-                    } catch let error as NSError {
-                        handler(error)
+        executionContext.performAsync {
+            do {
+                let objectIDs = try saveExecutionContext {
+                    rootContext.performAsync {
+                        do {
+                            try saveRootContext()
+                        } catch let error as NSError {
+                            handler(error)
+                        }
                     }
                 }
+                refreshObjects(objectIDs)
+            } catch let error as NSError {
+                handler(error)
             }
         }
-        refreshObjects(objectIDs)
     }
     
     public func commit() throws {

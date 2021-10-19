@@ -105,9 +105,16 @@ extension Session {
                 "You should commit changes in session before return")
     }
 
-    public func async(_ block: @escaping (SessionContext) throws -> Void, completion: ((Error?) -> Void)? = nil) {
+    public func async(
+        name: String? = nil,
+        block: @escaping (SessionContext) throws -> Void,
+        completion: ((Error?) -> Void)? = nil)
+    {
         let context = context
+        let executionContext = context.executionContext
         context.performAsyncUndoable {
+            executionContext.transactionAuthor = name
+            defer { executionContext.transactionAuthor = nil }
             var error: Error?
             do {
                 try block(context)
@@ -122,21 +129,29 @@ extension Session {
     }
 
     public func sync<Property: UnsafeSessionProperty>(
-        _ block: (SessionContext) throws -> Property
+        name: String? = nil,
+        block: (SessionContext) throws -> Property
     ) rethrows -> Property.Safe {
         let context = context
-        let result = try context.performSyncUndoable {
-            try block(context)
+        let executionContext = context.executionContext
+        let result: Property = try context.performSyncUndoable {
+            executionContext.transactionAuthor = name
+            defer { executionContext.transactionAuthor = nil }
+            return try block(context)
         }
         warnUnsavedChangesIfNeeded()
         return result.wrapped(in: self)
     }
 
     public func sync<T>(
-        _ block: (SessionContext) throws -> T
+        name: String? = nil,
+        block: (SessionContext) throws -> T
     ) rethrows -> T {
-        let result = try context.performSyncUndoable {
-            try block(context)
+        let executionContext = context.executionContext
+        let result: T = try context.performSyncUndoable {
+            executionContext.transactionAuthor = name
+            defer { executionContext.transactionAuthor = nil }
+            return try block(context)
         }
         warning(
             result is UnsafeSessionPropertyProtocol,

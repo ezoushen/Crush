@@ -108,16 +108,19 @@ public class DataContainer {
 }
 
 extension DataContainer {
-    internal func backgroundSessionContext() -> _SessionContext {
-        _SessionContext(
-            executionContext: coreDataStack.createBackgroundContext(parent: writerContext),
+    internal func backgroundSessionContext(name: String? = nil) -> _SessionContext {
+        let context = coreDataStack.createBackgroundContext(parent: writerContext)
+        context.name = name ?? "background"
+        return _SessionContext(
+            executionContext: context,
             rootContext: writerContext,
             uiContext: uiContext,
             logger: logger)
     }
     
-    internal func uiSessionContext() -> _SessionContext {
+    internal func uiSessionContext(name: String? = nil) -> _SessionContext {
         let context = coreDataStack.createMainThreadContext(parent: writerContext)
+        context.name = name ?? "ui"
         return _SessionContext(
             executionContext: context,
             rootContext: writerContext,
@@ -125,8 +128,8 @@ extension DataContainer {
             logger: logger)
     }
     
-    internal func querySessionContext() -> _SessionContext {
-        _SessionContext(
+    internal func querySessionContext(name: String? = nil) -> _SessionContext {
+        return _SessionContext(
             executionContext: uiContext,
             rootContext: writerContext,
             uiContext: uiContext,
@@ -160,12 +163,16 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
 }
 
 extension DataContainer {
-    public func startSession() -> Session {
-        Session(context: backgroundSessionContext(), mergePolicy: coreDataStack.mergePolicy)
+    public func startSession(name: String? = nil) -> Session {
+        Session(
+            context: backgroundSessionContext(name: name),
+            mergePolicy: coreDataStack.mergePolicy)
     }
     
-    public func startUiSession() -> Session {
-        Session(context: uiSessionContext(), mergePolicy: coreDataStack.mergePolicy)
+    public func startUiSession(name: String? = nil) -> Session {
+        Session(
+            context: uiSessionContext(name: name),
+            mergePolicy: coreDataStack.mergePolicy)
     }
     
     public func load<T: Entity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
