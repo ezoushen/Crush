@@ -119,7 +119,7 @@ public class IndexedBySpotlight<T: ValuedProperty>: PropertyModifier<T, Bool> {
 }
 
 @propertyWrapper
-public class Indexed<T: ValuedProperty>: PropertyModifier<T, String> {
+public class Indexed<T: ValuedProperty>: PropertyModifier<T, String?> {
     @inlinable public var wrappedValue: T { property }
 
     public let collationType: NSFetchIndexElementType
@@ -127,7 +127,7 @@ public class Indexed<T: ValuedProperty>: PropertyModifier<T, String> {
 
     public init(
         wrappedValue: T,
-        _ modifier: String,
+        _ modifier: String? = nil,
         collationType: NSFetchIndexElementType = .binary,
         predicate: NSPredicate? = nil)
     {

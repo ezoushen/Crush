@@ -144,13 +144,24 @@ internal class PersistentHistoryTracker {
     internal func loadPersistentHistory() -> [NSPersistentHistoryTransaction] {
         let fetchHistoryRequest = NSPersistentHistoryChangeRequest
             .fetchHistory(after: lastHistoryToken)
-
+        return executePersistentHistoryRequest(fetchHistoryRequest)
+    }
+    
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
+    internal func loadPersistentHistory(date: Date) -> [NSPersistentHistoryTransaction] {
+        let fetchHistoryRequest = NSPersistentHistoryChangeRequest
+            .fetchHistory(after: lastHistoryToken)
+        return executePersistentHistoryRequest(fetchHistoryRequest)
+    }
+    
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
+    private func executePersistentHistoryRequest(_ request: NSPersistentHistoryChangeRequest) -> [NSPersistentHistoryTransaction] {
         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         context.persistentStoreCoordinator = coordinator
 
         do {
             let historyResult = try context
-                .execute(fetchHistoryRequest) as? NSPersistentHistoryResult
+                .execute(request) as? NSPersistentHistoryResult
             guard let history = historyResult?.result as? [NSPersistentHistoryTransaction]
             else { return [] }
             return history

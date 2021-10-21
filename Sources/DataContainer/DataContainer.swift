@@ -16,6 +16,7 @@ public class DataContainer {
     internal let coreDataStack: CoreDataStack
     internal var writerContext: NSManagedObjectContext!
     internal var uiContext: NSManagedObjectContext!
+    internal let createdDate: Date = Date()
 
     internal lazy var persistentHistoryTracker =
         PersistentHistoryTracker(
@@ -104,6 +105,11 @@ public class DataContainer {
     
     public func buildStorage() throws {
         try coreDataStack.loadPersistentStore()
+    }
+    
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
+    public func loadTransactionHistory(date: Date?) -> [NSPersistentHistoryTransaction] {
+        persistentHistoryTracker.loadPersistentHistory(date: date ?? createdDate)
     }
 }
 
