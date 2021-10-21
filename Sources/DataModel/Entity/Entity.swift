@@ -80,13 +80,13 @@ extension Entity {
             mirror: mirror,
             inhertanceData: inhertanceData)
 
-        setupIndexes(description: description)
-        setupUniquenessConstraints(description: description)
-
         description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
         description.name = Self.fetchKey
         description.isAbstract = inheritance == .abstract
         description.properties = properties
+
+        setupIndexes(description: description)
+        setupUniquenessConstraints(description: description)
 
         if let superMirror = mirror.superclassMirror,
            let superType = superMirror.subjectType as? Entity.Type,

@@ -136,12 +136,24 @@ public class Indexed<T: ValuedProperty>: PropertyModifier<T, String?> {
         super.init(wrappedValue: wrappedValue, modifier)
     }
 
+    public init(
+        wrappedValue: T,
+        _ modifier: String? = nil,
+        collationType: NSFetchIndexElementType = .binary,
+        predicate: String)
+    {
+        self.collationType = collationType
+        self.predicate = NSPredicate(format: predicate)
+        super.init(wrappedValue: wrappedValue, modifier)
+    }
+
     public override func createDescription() -> Description {
         let description = super.createDescription()
         var userInfo = description.userInfo ?? [:]
         userInfo[UserInfoKey.indexName] = modifier
         userInfo[UserInfoKey.index] = NSFetchIndexElementDescription(
             property: description, collationType: collationType)
+        userInfo[UserInfoKey.indexPredicate] = predicate
         description.userInfo = userInfo
         return description
     }

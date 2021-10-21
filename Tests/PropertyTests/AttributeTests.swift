@@ -182,6 +182,15 @@ class AttributeTests: XCTestCase {
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.defaultValue as? String, Model.dummy.rawValue)
     }
+
+    func test_attributeOption_validationsShouldBeSet() {
+        let predicate = PropertyCondition(format: "SELF == NO")
+        let warning = "warning"
+        let attribute = Validation(wrappedValue: Value.Bool("attribute"), predicate, warning: "warning")
+        let description = attribute.createPropertyDescription() as! NSAttributeDescription
+        XCTAssertEqual(description.validationPredicates, [predicate])
+        XCTAssertEqual(description.validationWarnings as! [String], [warning])
+    }
     
     func test_attributeOption_allowsExternalBinaryDataStorageShouldBeTrue() {
         let attribute = ExternalBinaryDataStorage(wrappedValue: Value.Bool("attribute"))
