@@ -31,7 +31,12 @@ public class FetchedProperty<T: Entity>: ValuedProperty {
         )
         let description = NSFetchedPropertyDescription()
         description.name = name
-        description.fetchRequest = builder.config.createStoreRequest()
+        Caches.entity.getAndWait(T.entityCacheKey) {
+            let request = NSFetchRequest<NSFetchRequestResult>()
+            request.entity = $0
+            builder.config.configureRequest(request)
+            description.fetchRequest = request
+        }
         return description
     }
 }

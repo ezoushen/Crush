@@ -40,6 +40,11 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     
     func createStoreRequest() -> NSFetchRequest<NSFetchRequestResult> {
         let request = T.fetchRequest()
+        configureRequest(request)
+        return request
+    }
+
+    func configureRequest(_ request: NSFetchRequest<NSFetchRequestResult>) {
         request.sortDescriptors = sorters
         request.predicate = predicate
         request.propertiesToFetch = prefetched?.map{ $0.asExpression() }
@@ -50,7 +55,6 @@ public struct FetchConfig<T: Entity>: RequestConfig {
         request.returnsObjectsAsFaults = asFaults
         request.includesPendingChanges = true
         request.fetchBatchSize = batch
-        return request
     }
 }
 

@@ -114,7 +114,21 @@ class EntityTests: XCTestCase {
         XCTAssertNotNil(result?.propertiesByName["derived"])
     }
 
-    func test_craeteEntityDescription_embeddedPropertyShouldNotBeParentEntity() {
+    func test_createEntityDescriptionFetchedProperty_shouldBeDefinedWithFetchRequest() {
+        class TestEntity: Entity {
+            var value = Value.Int64("value")
+            var fetched = Fetched<TestEntity>("fetched") { $0.where(\.value == 1) }
+        }
+        let sut = TestEntity()
+        let data: [ObjectIdentifier: EntityInheritance] = [
+            ObjectIdentifier(TestEntity.self): .concrete
+        ]
+        let result = sut.createEntityDescription(inhertanceData: data)
+        let description = result?.propertiesByName["fetched"] as! NSFetchedPropertyDescription
+        XCTAssertNotNil(description.fetchRequest)
+    }
+
+    func test_createEntityDescription_embeddedPropertyShouldNotBeParentEntity() {
         let result = createInheritedEntityDescription(.embedded)
         XCTAssertNil(result?.superentity)
     }
