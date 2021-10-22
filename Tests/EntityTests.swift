@@ -12,8 +12,18 @@ import Foundation
 @testable import Crush
 
 class EntityTests: XCTestCase {
-    override class func setUp() {
-        super.setUp()
+    func test_hashValue_shouldOnlyEffectedByClassType() {
+        class TestEntity: Entity { }
+        let sut = TestEntity()
+        let target = TestEntity()
+        XCTAssertEqual(sut.hashValue, target.hashValue)
+    }
+
+    func test_equatable_shouldConsiderHashValueOnly() {
+        class TestEntity: Entity { }
+        let sut = TestEntity()
+        let target = TestEntity()
+        XCTAssertEqual(sut, target)
     }
 
     func test_fetchKey_shouldEqualToClassName() {

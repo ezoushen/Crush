@@ -78,12 +78,128 @@ extension MigrationPolicy {
 }
 
 class DataModelTests: XCTestCase {
-    lazy var sut: DataContainer! = try! DataContainer.load(
-        storage: .inMemory(),
-        dataModel: .v_1)
-    
-    override func setUp() {
-        try! sut.rebuildStorage()
+    class AbstractEntity: Entity { }
+    class EmbeddedEntity: Entity { }
+    class ConcreteEntity_A: AbstractEntity { }
+    class ConcreteEntity_B: EmbeddedEntity { }
+
+    let sut: DataModel = {
+        DataModel(
+            name: "Model",
+            abstract: [
+                AbstractEntity()
+            ],
+            embedded: [
+                EmbeddedEntity()
+            ],
+            concrete: [
+                ConcreteEntity_A(), ConcreteEntity_B()
+            ])
+    }()
+
+    func test_name_shouldBeSet() {
+        XCTAssertEqual(sut.name, "Model")
+    }
+
+    func test_abstractClass_shouldBeSet() {
+        XCTAssertEqual(sut.abstractEntities, [
+            AbstractEntity()
+        ])
+    }
+
+    func test_ebemeddedClass_shouldBeSet() {
+        XCTAssertEqual(sut.embeddedEntities, [
+            EmbeddedEntity()
+        ])
+    }
+
+    func test_concreteClass_shouldBeSet() {
+        XCTAssertEqual(sut.concreteEntities, [
+            ConcreteEntity_A(), ConcreteEntity_B()
+        ])
+    }
+
+    func test_hashValueEffectedByAllEntities_shouldBeEqual() {
+        let target: DataModel = {
+            DataModel(
+                name: "Model",
+                abstract: [
+                    AbstractEntity()
+                ],
+                embedded: [
+                    EmbeddedEntity()
+                ],
+                concrete: [
+                    ConcreteEntity_A(), ConcreteEntity_B()
+                ])
+        }()
+        XCTAssertEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+    }
+
+    func test_hashValueEffedctedByAbstractEntities_shouldNotBeEqual() {
+        let target: DataModel = {
+            DataModel(
+                name: "Model",
+                embedded: [
+                    EmbeddedEntity()
+                ],
+                concrete: [
+                    ConcreteEntity_B()
+                ])
+        }()
+        XCTAssertNotEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+    }
+
+    func test_hashValueEffedctedByEmbeddedEntities_shouldNotBeEqual() {
+        let target: DataModel = {
+            DataModel(
+                name: "Model",
+                abstract: [
+                    AbstractEntity()
+                ],
+                concrete: [
+                    ConcreteEntity_A()
+                ])
+        }()
+        XCTAssertNotEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+    }
+
+    func test_hashValueEffedctedByConcreteEntities_shouldNotBeEqual() {
+        let target: DataModel = {
+            DataModel(
+                name: "Model",
+                abstract: [
+                    AbstractEntity()
+                ],
+                embedded: [
+                    EmbeddedEntity()
+                ], concrete: [
+                ])
+        }()
+        XCTAssertNotEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+    }
+
+    func test_hashValueEffedctedByName_shouldNotBeEqual() {
+        let target: DataModel = {
+            DataModel(
+                name: "Model2",
+                abstract: [
+                    AbstractEntity()
+                ],
+                embedded: [
+                    EmbeddedEntity()
+                ], concrete: [
+                    ConcreteEntity_A(), ConcreteEntity_B()
+                ])
+        }()
+        XCTAssertNotEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+    }
+
+    func test_managedObjectModelEntitiesCount_shouldEqualToNumberOfAllEntitiesMinusEmbeddedEntities() {
+        XCTAssertEqual(sut.managedObjectModel.entities.count, 3)
+    }
+
+    func test_managedObjectModelVersionIdentifiers_shouldEqualToModelName() {
+        XCTAssertEqual(sut.managedObjectModel.versionIdentifiers, [sut.name])
     }
 }
-

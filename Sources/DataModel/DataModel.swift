@@ -23,6 +23,7 @@ public class DataModel {
 
     internal func entityDescriptionHash() -> Int {
         var hasher = Hasher()
+        hasher.combine(name)
         hasher.combine(abstractEntities)
         hasher.combine(embeddedEntities)
         hasher.combine(concreteEntities)
@@ -41,10 +42,14 @@ public class DataModel {
             Caches.entity.clean()
         }
 
+        func identifier(_ object: AnyObject) -> ObjectIdentifier {
+            ObjectIdentifier(type(of: object))
+        }
+
         var inhertanceData = [ObjectIdentifier: EntityInheritance]()
-        abstractEntities.forEach { inhertanceData[ObjectIdentifier(type(of: $0))] = .abstract }
-        embeddedEntities.forEach { inhertanceData[ObjectIdentifier(type(of: $0))] = .embedded }
-        concreteEntities.forEach { inhertanceData[ObjectIdentifier(type(of: $0))] = .concrete }
+        abstractEntities.forEach { inhertanceData[identifier($0)] = .abstract }
+        embeddedEntities.forEach { inhertanceData[identifier($0)] = .embedded }
+        concreteEntities.forEach { inhertanceData[identifier($0)] = .concrete }
 
         let entities: [NSEntityDescription] = (
             Array(abstractEntities) +
