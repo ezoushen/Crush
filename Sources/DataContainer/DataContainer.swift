@@ -89,6 +89,7 @@ public class DataContainer {
         try buildStorage()
     }
     
+    @discardableResult
     public func destroyStorage() throws -> Bool {
         guard let storage = coreDataStack.storage as? ConcreteStorage else {
             return false

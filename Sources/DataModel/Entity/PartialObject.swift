@@ -40,8 +40,8 @@ public struct EntityKeyValuePair<T: Entity> {
     public let value: Any
 
     public init<S: AttributeProtocol>(
-        keyPath: KeyPath<T, S>,
-        value: S.FieldConvertor.RuntimeObjectValue)
+        _ keyPath: KeyPath<T, S>,
+        _ value: S.FieldConvertor.RuntimeObjectValue)
     {
         self.key = keyPath.propertyName
         self.value = S.FieldConvertor.convert(value: value)

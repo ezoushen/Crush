@@ -7,8 +7,18 @@
 
 import CoreData
 
-public class FetchedProperty<T: Entity>: ValuedProperty {
-    public typealias FieldConvertor = ToMany<T>
+public final class FetchedProperty<T: Entity>: ValuedProperty, FieldConvertible {
+    public static func convert(value: [T.Managed]) -> [T.ReadOnly] {
+        value.map { ReadOnly($0) }
+    }
+    
+    public static func convert(value: [T.ReadOnly]) -> [T.Managed] {
+        value.map { $0.value }
+    }
+    
+    public typealias RuntimeObjectValue = [T.ReadOnly]
+    public typealias ManagedObjectValue = [T.Managed]
+    public typealias FieldConvertor = FetchedProperty<T>
     public typealias PredicateValue = FieldConvertor.ManagedObjectValue
     public typealias PropertyValue = FieldConvertor.RuntimeObjectValue
     public typealias Description = NSFetchedPropertyDescription
