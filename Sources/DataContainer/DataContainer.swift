@@ -149,7 +149,7 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
     }
 
     public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, T.ReadOnly> {
-        .init(config: .init(), context: querySessionContext(), onUiContext: true)
+        .init(config: .init(), context: querySessionContext())
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {

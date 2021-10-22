@@ -15,7 +15,7 @@ public enum UserInfoKey {
     static let uniquenessConstraintName = "UniquenessConstraintName"
 }
 
-public class PropertyModifier<T: ValuedProperty, S>: ValuedProperty {
+public class PropertyModifier<T: WritableValuedProperty, S>: WritableValuedProperty {
     public typealias Description = T.Description
     public typealias PropertyValue = T.PropertyValue
     public typealias PredicateValue = T.PredicateValue
@@ -58,7 +58,7 @@ extension PropertyModifier: ConcreteAttriuteProcotol where T: ConcreteAttriutePr
 // MARK: Property modifier
 
 @propertyWrapper
-public class Optional<T: ValuedProperty>: PropertyModifier<T, Bool> {
+public class Optional<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
     @inlinable public var wrappedValue: T { property }
 
     public init(wrappedValue: T) {
@@ -73,7 +73,7 @@ public class Optional<T: ValuedProperty>: PropertyModifier<T, Bool> {
 }
 
 @propertyWrapper
-public class Required<T: ValuedProperty>: PropertyModifier<T, Bool> {
+public class Required<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
     @inlinable public var wrappedValue: T { property }
 
     public init(wrappedValue: T) {
@@ -88,7 +88,7 @@ public class Required<T: ValuedProperty>: PropertyModifier<T, Bool> {
 }
 
 @propertyWrapper
-public class Transient<T: ValuedProperty & TransientProperty>: PropertyModifier<T, Bool> {
+public class Transient<T: WritableValuedProperty & TransientProperty>: PropertyModifier<T, Bool> {
     @inlinable public var wrappedValue: T { property }
 
     public init(wrappedValue: T) {
@@ -104,7 +104,7 @@ public class Transient<T: ValuedProperty & TransientProperty>: PropertyModifier<
 
 /// This option will be ignored while the property is transient
 @propertyWrapper
-public class IndexedBySpotlight<T: ValuedProperty>: PropertyModifier<T, Bool> {
+public class IndexedBySpotlight<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
     @inlinable public var wrappedValue: T { property }
 
     public init(wrappedValue: T) {
@@ -119,7 +119,7 @@ public class IndexedBySpotlight<T: ValuedProperty>: PropertyModifier<T, Bool> {
 }
 
 @propertyWrapper
-public class Indexed<T: ValuedProperty>: PropertyModifier<T, String?> {
+public class Indexed<T: WritableValuedProperty>: PropertyModifier<T, String?> {
     @inlinable public var wrappedValue: T { property }
 
     public let collationType: NSFetchIndexElementType
@@ -160,7 +160,7 @@ public class Indexed<T: ValuedProperty>: PropertyModifier<T, String?> {
 }
 
 @propertyWrapper
-public class Unique<T: ValuedProperty>: PropertyModifier<T, String?> {
+public class Unique<T: WritableValuedProperty>: PropertyModifier<T, String?> {
     @inlinable public var wrappedValue: T { property }
 
     public override init(wrappedValue: T, _ modifier: String? = nil) {

@@ -8,6 +8,8 @@
 
 import Foundation
 
+public typealias Fetched<T: Entity> = FetchedProperty<T>
+
 public enum Relation {
     public typealias ToOne<D: Entity> = Relationship<Crush.ToOne<D>>
     public typealias ToMany<D: Entity> = Relationship<Crush.ToMany<D>>

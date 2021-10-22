@@ -50,7 +50,7 @@ extension SessionContext where Self: RawContextProviderProtocol {
     }
 
     public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, ManagedObject<T>> {
-        .init(config: .init(), context: self, onUiContext: false)
+        .init(config: .init(), context: self)
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
@@ -70,6 +70,13 @@ extension SessionContext where Self: RawContextProviderProtocol {
     public func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>? {
         executionContext.object(with: objectID) as? ManagedObject<T>
     }
+}
+
+internal struct DummyContext: SessionContext, RawContextProviderProtocol {
+    internal var logger: DataContainer.LogHandler = .default
+    internal var executionContext: NSManagedObjectContext { fatalError() }
+    internal var rootContext: NSManagedObjectContext { fatalError() }
+    internal var uiContext: NSManagedObjectContext { fatalError() }
 }
 
 internal struct _SessionContext: SessionContext, RawContextProviderProtocol {

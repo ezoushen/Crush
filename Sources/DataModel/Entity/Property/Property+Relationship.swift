@@ -10,7 +10,7 @@ import CoreData
 
 // MARK: - EntityRelationship
 
-public protocol RelationshipProtocol: ValuedProperty
+public protocol RelationshipProtocol: WritableValuedProperty
 where
     Description == NSRelationshipDescription,
     Mapping == FieldConvertor

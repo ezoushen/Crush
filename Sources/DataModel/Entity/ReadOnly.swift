@@ -28,7 +28,7 @@ public struct ReadOnly<Value: Entity> {
         context.performSync { value[immutable: keyPath] }
     }
 
-    public subscript<T: AttributeProtocol>(
+    public subscript<T: ValuedProperty>(
         dynamicMember keyPath: KeyPath<Value, T>) -> T.PropertyValue
     {
         access(keyPath: keyPath)

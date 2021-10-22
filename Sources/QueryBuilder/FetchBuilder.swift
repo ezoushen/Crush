@@ -58,12 +58,10 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
     
     internal var config: Config
     internal let context: Context
-    internal let onUiContext: Bool
-    
-    internal required init(config: Config, context: Context, onUiContext: Bool) {
+
+    internal required init(config: Config, context: Context) {
         self.config = config
         self.context = context
-        self.onUiContext = onUiContext
     }
     
     public func limit(_ size: Int) -> PartialFetchBuilder<Target, Received, Result> {
@@ -86,7 +84,7 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
         return self
     }
     
-    public func groupAndCount<V: ValuedProperty>(
+    public func groupAndCount<V: WritableValuedProperty>(
         col keyPath: KeyPath<Target, V>
     ) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
         let name = keyPath.propertyName
@@ -102,11 +100,10 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
         config.resultType = .dictionaryResultType
         return .init(
             config: config,
-            context: context,
-            onUiContext: onUiContext)
+            context: context)
     }
 
-    public func sort<V: ValuedProperty>(
+    public func sort<V: WritableValuedProperty>(
         _ keyPath: KeyPath<Target, V>,
         ascending: Bool,
         option: FetchSorterOption = .default
@@ -138,14 +135,16 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
 
 extension PartialFetchBuilder: RequestBuilder {
     typealias Config = FetchConfig<Target>
-    
+}
+
+extension PartialFetchBuilder where Received == ManagedObject<Target> {
     private func received() -> [Received] {
         let request = config.createStoreRequest()
         return try! context.execute(
             request: request,
             on: config.includePendingChanges
-                ? \.executionContext
-                : \.rootContext)
+            ? \.executionContext
+            : \.rootContext)
     }
 }
 
@@ -162,9 +161,27 @@ public class FetchBuilder<Target, Received, Result>:
     }
 }
 
-extension PartialFetchBuilder where Received == Result {
+extension PartialFetchBuilder where
+    Received == Result,
+    Result == ManagedObject<Target>
+{
+    public func exists() -> Bool {
+        findOne() != nil
+    }
+
+    public func findOne() -> Result? {
+        limit(1).exec().first
+    }
+    
     public func exec() -> [Result] {
-        received()
+        received().map {
+            let object = context.receive($0)
+            if config.includePendingChanges {
+                return object
+            }
+            object.awakeFromFetch()
+            return object
+        }
     }
 }
 
@@ -176,15 +193,14 @@ extension PartialFetchBuilder where
     public func exists() -> Bool {
         findOne() != nil
     }
-    
+
     public func findOne() -> Result? {
         limit(1).exec().first
     }
-    
+
     public func exec() -> [Result] {
-        onUiContext
-            ? received().map { ReadOnly<Target>(context.present($0)) }
-            : received().map { ReadOnly<Target>(context.receive($0)) }
+        received().map { ReadOnly<Target>(context.present($0))
+        }
     }
 }
 

@@ -110,7 +110,7 @@ infix operator |*|
 
 private var propertyNameCache: NSCache<AnyKeyPath, NSString> = .init()
 
-extension PartialKeyPath where Root: Entity {
+extension PartialKeyPath: CustomStringConvertible where Root: Entity {
     var optionalPropertyName: String? {
         guard let name = propertyNameCache.object(forKey: self) else {
             if let name = (Root.init()[keyPath: self] as? PropertyProtocol)?.name {
@@ -121,9 +121,13 @@ extension PartialKeyPath where Root: Entity {
         }
         return name as String
     }
+
+    public var description: String {
+        optionalPropertyName ?? "\(self)"
+    }
 }
 
-extension KeyPath where Root: Entity, Value: ValuedProperty {
+extension KeyPath where Root: Entity, Value: PropertyProtocol {
     var propertyName: String {
         guard let name = propertyNameCache.object(forKey: self) else {
             let name = Root.init()[keyPath: self].name
@@ -134,13 +138,13 @@ extension KeyPath where Root: Entity, Value: ValuedProperty {
     }
 }
 
-extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
+extension KeyPath where Root: Entity, Value: WritableValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
     public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) IN %@", NSSet(set: rhs))
     }
 }
 
-extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable {
+extension KeyPath where Root: Entity, Value: WritableValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable {
     public static func <> (lhs: KeyPath, rhs: Array<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) IN %@", NSArray(array: rhs))
     }
@@ -148,7 +152,7 @@ extension KeyPath where Root: Entity, Value: ValuedProperty, Value.PredicateValu
 
 extension KeyPath where
     Root: Entity,
-    Value: ValuedProperty,
+    Value: WritableValuedProperty,
     Value.PredicateValue: PredicateEquatable & Equatable
 {
     public static func == (lhs: KeyPath, rhs: Value.PredicateValue?) -> TypedPredicate<Root> {
@@ -168,7 +172,7 @@ extension KeyPath where
 
 extension KeyPath where
     Root: Entity,
-    Value: ValuedProperty,
+    Value: WritableValuedProperty,
     Value.PredicateValue: PredicateComparable & Comparable
 {
     public static func > (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
@@ -194,7 +198,7 @@ extension KeyPath where
 
 extension KeyPath where
     Root: Entity,
-    Value: ValuedProperty,
+    Value: WritableValuedProperty,
     Value.PredicateValue == String
 {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {

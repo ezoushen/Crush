@@ -20,13 +20,18 @@ fileprivate func warning(
     #endif
 }
 
-public struct Session {
+public class Session {
     internal let context: _SessionContext
     public var enabledWarningForUnsavedChanges: Bool = true
     public var mergePolicy: NSMergePolicy {
         didSet {
             context.executionContext.mergePolicy = mergePolicy
         }
+    }
+
+    internal init(context: _SessionContext, mergePolicy: NSMergePolicy) {
+        self.context = context
+        self.mergePolicy = mergePolicy
     }
     
     public func enableUndoManager() {

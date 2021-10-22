@@ -10,7 +10,7 @@ import CoreData
 
 // MARK: - EntityAttribute
 
-public protocol AttributeProtocol: ValuedProperty
+public protocol AttributeProtocol: WritableValuedProperty
 where
     FieldConvertor: FieldAttribute,
     FieldConvertor == PredicateValue,

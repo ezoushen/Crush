@@ -13,9 +13,9 @@ public protocol RuntimeObject {
 
 @dynamicMemberLookup
 public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject {
-    internal var canTriggerEvent: Bool {
+    internal lazy var canTriggerEvent: Bool = {
         managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
-    }
+    }()
 
     public override func willSave() {
         super.willSave()
@@ -98,6 +98,12 @@ extension ManagedObject {
     }
 
     public subscript<Property: ValuedProperty>(
+        dynamicMember keyPath: KeyPath<Entity, Property>
+    ) -> Property.PropertyValue {
+        return self[immutable: keyPath]
+    }
+
+    public subscript<Property: WritableValuedProperty>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> Property.PropertyValue {
         get {

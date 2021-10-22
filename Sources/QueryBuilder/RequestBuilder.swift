@@ -38,9 +38,17 @@ protocol RequestBuilder: AnyObject {
 }
 
 extension RequestBuilder {
+    public func `where`(_ predicateString: String) -> Self {
+        return `where`(TypedPredicate(format: predicateString))
+    }
+
     public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
         config.predicate = predicate
         return self
+    }
+
+    public func andWhere(_ predicateString: String) -> Self {
+        return andWhere(TypedPredicate(format: predicateString))
     }
 
     public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
@@ -50,6 +58,10 @@ extension RequestBuilder {
         }
         config.predicate = oldPredicate && predicate
         return self
+    }
+    
+    public func orWhere(_ predicateString: String) -> Self {
+        return orWhere(TypedPredicate(format: predicateString))
     }
 
     public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {

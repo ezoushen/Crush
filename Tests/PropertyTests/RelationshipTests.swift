@@ -35,7 +35,7 @@ public class RelationshipTests: XCTestCase {
         var toOne_A = Relation.ToOne<Entity_A>("toOne_A")
     }
 
-    private static var dataModel = DataModel(
+    private static var dataModel: DataModel! = DataModel(
         name: "RelationshipTest",
         concrete: [
             Entity_A(), Entity_B()
@@ -47,6 +47,10 @@ public class RelationshipTests: XCTestCase {
 
     public override class func setUp() {
         _ = NSPersistentStoreCoordinator(managedObjectModel: dataModel.managedObjectModel)
+    }
+
+    public override class func tearDown() {
+        dataModel = nil
     }
 
     func test_optionalRelationship_isOptionalShouldBeTrue() {

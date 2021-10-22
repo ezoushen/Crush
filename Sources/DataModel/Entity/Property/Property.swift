@@ -33,3 +33,5 @@ extension ValuedProperty {
         createDescription()
     }
 }
+
+public protocol WritableValuedProperty: ValuedProperty { }

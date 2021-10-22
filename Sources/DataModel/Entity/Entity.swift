@@ -84,7 +84,7 @@ extension Entity {
         description.name = Self.fetchKey
         description.isAbstract = inheritance == .abstract
         description.properties = properties
-
+        
         setupIndexes(description: description)
         setupUniquenessConstraints(description: description)
 
