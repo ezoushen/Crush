@@ -108,36 +108,6 @@ infix operator |*|
 
 // MARK: - Operator overloading for Entity
 
-private var propertyNameCache: NSCache<AnyKeyPath, NSString> = .init()
-
-extension PartialKeyPath: CustomStringConvertible where Root: Entity {
-    var optionalPropertyName: String? {
-        guard let name = propertyNameCache.object(forKey: self) else {
-            if let name = (Root.init()[keyPath: self] as? PropertyProtocol)?.name {
-                propertyNameCache.setObject(name as NSString, forKey: self)
-                return name
-            }
-            return nil
-        }
-        return name as String
-    }
-
-    public var description: String {
-        optionalPropertyName ?? "\(self)"
-    }
-}
-
-extension KeyPath where Root: Entity, Value: PropertyProtocol {
-    var propertyName: String {
-        guard let name = propertyNameCache.object(forKey: self) else {
-            let name = Root.init()[keyPath: self].name
-            propertyNameCache.setObject(name as NSString, forKey: self)
-            return name
-        }
-        return name as String
-    }
-}
-
 extension KeyPath where Root: Entity, Value: WritableValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
     public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) IN %@", NSSet(set: rhs))

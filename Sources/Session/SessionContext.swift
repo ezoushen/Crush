@@ -21,8 +21,7 @@ public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>?
     func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T>
 
-    func commitAsync() throws
-    func commitAsync(_ handler: @escaping (NSError?) -> Void) throws
+    func commit(_ handler: @escaping (Error?) -> Void) throws
     func commit() throws
 }
 
@@ -131,6 +130,10 @@ extension SessionContext where Self: RawContextProviderProtocol {
                 return [
                     NSUpdatedObjectsKey: result.result ?? []
                 ]
+            } else if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), let result = result as? NSBatchInsertResult {
+                return [
+                    NSInsertedObjectsKey: result.result ?? []
+                ]
             }
             return nil
         }() {
@@ -170,38 +173,23 @@ extension SessionContext where Self: RawContextProviderProtocol {
         fatalError("Unhandled error: \(error)")
     }
     
-    public func commitAsync() throws {
-        try commitAsync(Self.defaultCommitCompletionHandler)
+    public func commit() throws {
+        try commit(Self.defaultCommitCompletionHandler)
     }
     
-    public func commitAsync(_ handler: @escaping (NSError?) -> Void) throws {
-        executionContext.performAsync {
-            do {
-                let objectIDs = try saveExecutionContext {
-                    rootContext.performAsync {
-                        do {
-                            try saveRootContext()
-                        } catch let error as NSError {
-                            handler(error)
-                        }
+    public func commit(_ handler: @escaping (Error?) -> Void) throws {
+        try executionContext.performSync {
+            let objectIDs = try saveExecutionContext {
+                rootContext.performAsync {
+                    do {
+                        try saveRootContext()
+                    } catch let error as NSError {
+                        handler(error.customError())
                     }
                 }
-                refreshObjects(objectIDs)
-            } catch let error as NSError {
-                handler(error)
             }
+            refreshObjects(objectIDs)
         }
-    }
-    
-    public func commit() throws {
-        let objectIDs = try executionContext.performSync {
-            try saveExecutionContext {
-                try rootContext.performSync {
-                    try saveRootContext()
-                }
-            }
-        }
-        refreshObjects(objectIDs)
     }
     
     internal func saveExecutionContext(
@@ -218,6 +206,7 @@ extension SessionContext where Self: RawContextProviderProtocol {
         do {
             try executionContext.save()
         } catch let error as NSError {
+            let error = error.customError()
             logger.log(
                 .error,
                 "Merge changes to the writer context ended with error",

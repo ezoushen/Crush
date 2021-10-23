@@ -76,12 +76,8 @@ extension Session {
         objectIDs.map(load(objectID:))
     }
 
-    public func commitAsync() throws {
-        try context.commitAsync()
-    }
-
-    public func commitAsync(_ completion: @escaping (NSError?) -> Void) throws {
-        try context.commitAsync(completion)
+    public func commit(_ completion: @escaping (Error?) -> Void) throws {
+        try context.commit(completion)
     }
 
     public func commit() throws {
@@ -120,16 +116,16 @@ extension Session {
         context.performAsyncUndoable {
             executionContext.transactionAuthor = name
             defer { executionContext.transactionAuthor = nil }
-            var error: Error?
             do {
                 try block(context)
-            } catch let err {
-                error = err
+            } catch {
+                if completion == nil {
+                    context.logger.log(.critical, "unhandled error occured", error: error)
+                }
+                DispatchQueue.main.async {
+                    completion?(error)
+                }
             }
-            if completion == nil, let error = error {
-                context.logger.log(.critical, "unhandled error occured", error: error)
-            }
-            completion?(error)
         }
     }
 

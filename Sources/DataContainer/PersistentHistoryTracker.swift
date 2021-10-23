@@ -130,6 +130,7 @@ internal class PersistentHistoryTracker {
                 self.storeHistoryToken(lastToken)
             }
         }
+        notifyOnMainThread()
     }
 
     internal func notifyOnMainThread() {
