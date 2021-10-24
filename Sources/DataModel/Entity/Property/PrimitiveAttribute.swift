@@ -30,7 +30,9 @@ public protocol FieldAttributeProtocol {
 }
 
 public protocol FieldAttribute: FieldAttributeProtocol, FieldConvertible
-where RuntimeObjectValue == Self? { }
+where
+    RuntimeObjectValue == Self?,
+    ManagedObjectValue: OptionalProtocol { }
 
 public protocol PrimitiveAttribute: FieldAttribute
 where ManagedObjectValue == Self? { }

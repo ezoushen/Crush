@@ -157,7 +157,7 @@ public struct UpdateAttribute: AttributeMigration {
         type attributeType: T.Type,
         isOptional: Bool? = nil,
         derivedExpression: NSExpression,
-        transform: @escaping (Any?) -> T.ManagedObjectValue
+        transform: @escaping (Any?) -> T.ManagedObjectValue = { _ in .null }
     ) {
         self.originPropertyName = String(originName.split(separator: ".")[0])
         self.originKeyPath = originName
@@ -175,7 +175,7 @@ public struct UpdateAttribute: AttributeMigration {
         type attributeType: NSAttributeType,
         isOptional: Bool? = nil,
         derivedExpression: NSExpression,
-        transform: @escaping (Any?) -> Any?
+        transform: @escaping (Any?) -> Any? = { _ in nil }
     ) {
         self.originPropertyName = String(originName.split(separator: ".")[0])
         self.originKeyPath = originName
@@ -209,7 +209,7 @@ public struct UpdateAttribute: AttributeMigration {
         type attributeType: T.Type,
         isOptional: Bool? = nil,
         isTransient: Bool? = nil,
-        transform: @escaping (Any?) -> T.ManagedObjectValue
+        transform: @escaping (Any?) -> T.ManagedObjectValue = { _ in .null }
     ) {
         self.originPropertyName = String(originName.split(separator: ".")[0])
         self.originKeyPath = originName
@@ -227,7 +227,7 @@ public struct UpdateAttribute: AttributeMigration {
         type attributeType: NSAttributeType,
         isOptional: Bool? = nil,
         isTransient: Bool? = nil,
-        transform: @escaping (Any?) -> Any?
+        transform: @escaping (Any?) -> Any? = { _ in nil }
     ) {
         self.originPropertyName = String(originName.split(separator: ".")[0])
         self.originKeyPath = originName
@@ -274,6 +274,12 @@ public struct UpdateAttribute: AttributeMigration {
             description = derivedDescription
         } else {
             description = NSAttributeDescription()
+
+            if let defaultValue = defaultValue {
+                description.defaultValue = defaultValue
+            } else {
+                description.defaultValue = attribute.defaultValue
+            }
         }
         
         if let name = name {
@@ -298,12 +304,6 @@ public struct UpdateAttribute: AttributeMigration {
             description.attributeType = attributeType
         } else {
             description.attributeType = attribute.attributeType
-        }
-
-        if let defaultValue = defaultValue {
-            description.defaultValue = defaultValue
-        } else {
-            description.defaultValue = attribute.defaultValue
         }
         
         return description
