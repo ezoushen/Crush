@@ -74,3 +74,9 @@ public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject
         }
     }
 }
+
+extension ManagedObject {
+    public func driver() -> ManagedDriver<Entity> {
+        ManagedDriver(unsafe: self)
+    }
+}

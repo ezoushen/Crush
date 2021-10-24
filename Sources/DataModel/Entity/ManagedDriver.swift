@@ -121,11 +121,11 @@ public class ManagedDriver<Entity: Crush.Entity>: ObjectDriver {
 }
 
 extension NSManagedObject {
-    public func drive<T: Entity>(entity: T.Type) -> ManagedDriver<T>? {
+    public func driver<T: Entity>(entity: T.Type) -> ManagedDriver<T>? {
         ManagedDriver(self)
     }
 
-    public func unsafeDrive<T: Entity>(entity: T.Type) -> ManagedDriver<T> {
+    public func unsafeDriver<T: Entity>(entity: T.Type) -> ManagedDriver<T> {
         ManagedDriver(unsafe: self)
     }
 }

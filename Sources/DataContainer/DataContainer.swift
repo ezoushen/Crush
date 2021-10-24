@@ -29,9 +29,9 @@ public class DataContainer {
         storage: Storage,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy,
-        migrationPolicy: MigrationPolicy) throws
+        migrationPolicy: MigrationPolicy)
     {
-        coreDataStack = try CoreDataStack(
+        coreDataStack = CoreDataStack(
             storage: storage,
             dataModel: dataModel,
             mergePolicy: mergePolicy,
@@ -44,7 +44,7 @@ public class DataContainer {
         mergePolicy: NSMergePolicy = .error,
         migrationPolicy: MigrationPolicy = .lightWeight
     ) throws -> DataContainer {
-        let container = try DataContainer(
+        let container = DataContainer(
             storage: storage,
             dataModel: dataModel,
             mergePolicy: mergePolicy,
@@ -60,13 +60,13 @@ public class DataContainer {
         mergePolicy: NSMergePolicy = .error,
         migrationPolicy: MigrationPolicy = .lightWeight,
         completion: @escaping (Error?) -> Void
-    ) throws -> DataContainer {
-        let container = try DataContainer(
+    ) -> DataContainer {
+        let container = DataContainer(
             storage: storage,
             dataModel: dataModel,
             mergePolicy: mergePolicy,
             migrationPolicy: migrationPolicy)
-        try container.coreDataStack.loadPersistentStoreAsync { error in
+        container.coreDataStack.loadPersistentStoreAsync { error in
             defer { completion(error) }
             guard error == nil else { return }
             container.setup()
@@ -91,20 +91,19 @@ public class DataContainer {
     
     @discardableResult
     public func destroyStorage() throws -> Bool {
-        guard let storage = coreDataStack.storage as? ConcreteStorage else {
-            return false
-        }
-        
+        guard let storage = coreDataStack.storage as? ConcreteStorage,
+              coreDataStack.isLoaded()
+        else { return false }
         try coreDataStack.coordinator
             .destroyPersistentStore(
                 at: storage.storageUrl,
                 ofType: storage.storeType, options: nil)
         try storage.destroy()
-
         return true
     }
     
     public func buildStorage() throws {
+        guard coreDataStack.isLoaded() == false else { return }
         try coreDataStack.loadPersistentStore()
     }
     

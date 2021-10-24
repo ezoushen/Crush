@@ -60,8 +60,6 @@ final class ManagedObjectTests: XCTestCase {
         var testEntity = Relation.ToOne<TestEntity>("testEntity")
     }
 
-    class DummyEntity: Entity { }
-
     static var container: DataContainer! = try! DataContainer.load(
         storage: .inMemory(),
         dataModel: DataModel(

@@ -11,6 +11,7 @@ import XCTest
 
 @testable import Crush
 
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 class ReadOnlyTests: XCTestCase {
     class TestEntity: Entity {
         var integerValue = Value.Int16("integerValue")
@@ -21,18 +22,20 @@ class ReadOnlyTests: XCTestCase {
         var fetched = Fetched<TestEntity>("fetched") { $0.where(\.integerValue == 0) }
     }
     
-    let container = try! DataContainer.load(
-        storage: .sqlite(name: "Test"),
-        dataModel: DataModel(
-            name: "NAME",
-            concrete: [TestEntity()]))
+    var container: DataContainer!
     
-    override func setUp() {
-        try? container.buildStorage()
+    override func setUpWithError() throws {
+        container = try DataContainer.load(
+            storage: .sqlite(
+                name: "\(UUID())",
+                options: .sqlitePragmas(["journal_mode": "DELETE" as NSString])),
+            dataModel: DataModel(
+                name: "NAME",
+                concrete: [TestEntity()]))
     }
     
-    override func tearDown() {
-        try! container.destroyStorage()
+    override func tearDownWithError() throws {
+        try container.destroyStorage()
     }
     
     func test_readAttribute_shouldReturnUpdatedValue() {

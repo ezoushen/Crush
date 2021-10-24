@@ -52,8 +52,8 @@ public class ConcreteStorage: Storage {
 public class SQLiteStorage: ConcreteStorage {
     public override func destroy() throws {
         try super.destroy()
-        try FileManager.default.removeItem(atPath: storageUrl.path + "-shm")
-        try FileManager.default.removeItem(atPath: storageUrl.path + "-wal")
+        try FileManager.default.removeItemIfExists(atPath: storageUrl.path + "-shm")
+        try FileManager.default.removeItemIfExists(atPath: storageUrl.path + "-wal")
     }
 }
 
@@ -86,7 +86,9 @@ extension Storage {
     
     public static func sqlite(name: String, configuration: String? = nil, options: Option...) -> Storage {
         sqlite(
-            url: CurrentWorkingDirectory().appendingPathComponent(name),
+            url: CurrentWorkingDirectory()
+                .appendingPathComponent(name)
+                .appendingPathExtension("sqlite"),
             configuration: configuration,
             options: options)
     }

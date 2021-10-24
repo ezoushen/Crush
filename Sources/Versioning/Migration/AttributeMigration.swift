@@ -33,7 +33,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
 
     public let name: String?
     public let isOptional: Bool
-    // isTransient will be ignoed if derivedExpression is not nil
+    // isTransient will be ignoed if derivedExpression is defined
     public let isTransient: Bool
     public let derivedExpression: NSExpression?
     public let attributeType: NSAttributeType
@@ -136,6 +136,59 @@ public struct UpdateAttribute: AttributeMigration {
     public let isTransient: Bool?
     public let attributeType: NSAttributeType?
     public let transform: ((Any?) -> Any?)?
+    public let derivedExpression: NSExpression?
+
+    public init<T: FieldAttribute>(
+        _ originName: String,
+        name: String? = nil,
+        type attributeType: T.Type,
+        isOptional: Bool? = nil,
+        derivedExpression: NSExpression,
+        transform: @escaping (Any?) -> T.ManagedObjectValue
+    ) {
+        self.originPropertyName = String(originName.split(separator: ".")[0])
+        self.originKeyPath = originName
+        self.name = name
+        self.isOptional = isOptional
+        self.isTransient = false
+        self.attributeType = attributeType.nativeType
+        self.transform = { transform($0) }
+        self.derivedExpression = derivedExpression
+    }
+
+    public init(
+        _ originName: String,
+        name: String? = nil,
+        type attributeType: NSAttributeType,
+        isOptional: Bool? = nil,
+        derivedExpression: NSExpression,
+        transform: @escaping (Any?) -> Any?
+    ) {
+        self.originPropertyName = String(originName.split(separator: ".")[0])
+        self.originKeyPath = originName
+        self.name = name
+        self.isOptional = isOptional
+        self.isTransient = false
+        self.attributeType = attributeType
+        self.transform = transform
+        self.derivedExpression = derivedExpression
+    }
+
+    public init(
+        _ originName: String,
+        name: String? = nil,
+        isOptional: Bool? = nil,
+        derivedExpression: NSExpression
+    ) {
+        self.originPropertyName = String(originName.split(separator: ".")[0])
+        self.originKeyPath = originName
+        self.name = name
+        self.isOptional = isOptional
+        self.isTransient = false
+        self.attributeType = nil
+        self.transform = nil
+        self.derivedExpression = derivedExpression
+    }
 
     public init<T: FieldAttribute>(
         _ originName: String,
@@ -152,6 +205,7 @@ public struct UpdateAttribute: AttributeMigration {
         self.isTransient = isTransient
         self.attributeType = attributeType.nativeType
         self.transform = { transform($0) }
+        self.derivedExpression = nil
     }
 
     public init(
@@ -169,6 +223,7 @@ public struct UpdateAttribute: AttributeMigration {
         self.isTransient = isTransient
         self.attributeType = attributeType
         self.transform = transform
+        self.derivedExpression = nil
     }
 
     public init(
@@ -184,6 +239,7 @@ public struct UpdateAttribute: AttributeMigration {
         self.isTransient = isTransient
         self.attributeType = nil
         self.transform = nil
+        self.derivedExpression = nil
     }
 
     public func migrateAttribute(

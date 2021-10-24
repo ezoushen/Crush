@@ -24,7 +24,7 @@ public class CoreDataStack {
         storage: Storage,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy,
-        migrationPolicy: MigrationPolicy) throws
+        migrationPolicy: MigrationPolicy)
     {
         self.storage = storage
         self.dataModel = dataModel
@@ -44,13 +44,17 @@ public class CoreDataStack {
         }
     }
 
-    internal func loadPersistentStoreAsync(
-        _ completion: @escaping (Error?) -> Void) throws
-    {
-        try loadPersistentStore(async: true, completion: completion)
+    internal func loadPersistentStoreAsync(_ completion: @escaping (Error?) -> Void) {
+        do {
+            try loadPersistentStore(async: true, completion: completion)
+        } catch {
+            completion(error)
+        }
     }
 
-    private func loadPersistentStore(async flag: Bool, completion: @escaping (Error?) -> Void) throws {
+    private func loadPersistentStore(
+        async flag: Bool, completion: @escaping (Error?) -> Void) throws
+    {
         // Migrate store before reading
         try migrationPolicy.process(storage: storage, with: dataModel)
         // Setup persistent store description
@@ -64,6 +68,13 @@ public class CoreDataStack {
         NSPersistentStoreCoordinator
             .updateLastActiveVersionName(dataModel.name, in: storage)
         dataModel.managedObjectModel.save(name: dataModel.name)
+    }
+
+    internal func isLoaded() -> Bool {
+        guard let url = storage.url else {
+            return coordinator.persistentStores.contains { $0.url == nil }
+        }
+        return coordinator.persistentStore(for: url) != nil
     }
 
     internal func createWriterContext() -> NSManagedObjectContext {
