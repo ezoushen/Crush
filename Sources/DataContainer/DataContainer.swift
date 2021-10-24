@@ -175,7 +175,7 @@ extension DataContainer {
             mergePolicy: coreDataStack.mergePolicy)
     }
     
-    public func startUiSession(name: String? = nil) -> Session {
+    public func startInteractiveSession(name: String? = nil) -> Session {
         Session(
             context: uiSessionContext(name: name),
             mergePolicy: coreDataStack.mergePolicy)

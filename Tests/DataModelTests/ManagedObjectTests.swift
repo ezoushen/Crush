@@ -152,7 +152,7 @@ final class ManagedObjectTests: XCTestCase {
     func test_awakeFromSnapshotEvents_shouldBeCalled() {
         var called: Bool = false
         TestEntity.awakeFromSnapshotEvents = { _, _ in called = true }
-        let session = container.startUiSession()
+        let session = container.startInteractiveSession()
         session.enableUndoManager()
         session.enabledWarningForUnsavedChanges = false
         session.sync { context in
