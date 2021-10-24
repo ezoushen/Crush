@@ -8,36 +8,32 @@
 import CoreData
 import Foundation
 
+let CurrentModelVersionName = "CurrentModelVersionName"
 let CurrentModelVersion = "CurrentModelVersion"
 
 extension NSPersistentStoreCoordinator {
     static func lastActiveVersionName(in storage: Storage) -> String? {
         guard let url = storage.url else { return nil }
-        return lastActiveVersionName(storeType: storage.storeType, at: url)
+        let metadata = try? metadataForPersistentStore(
+            ofType: storage.storeType, at: url, options: nil)
+        return metadata?[CurrentModelVersionName] as? String
     }
 
-    static func lastActiveVersionName(
-        storeType: String, at url: URL) -> String?
-    {
+    static func lastActiveVersion(in storage: Storage) -> String? {
+        guard let url = storage.url else { return nil }
         let metadata = try? metadataForPersistentStore(
-            ofType: storeType, at: url, options: nil)
+            ofType: storage.storeType, at: url, options: nil)
         return metadata?[CurrentModelVersion] as? String
     }
 
-    static func updateLastActiveVersionName(
-        _ name: String, in storage: Storage)
-    {
+    static func updateLastActiveModel(_ dataModel: DataModel, in storage: Storage) {
         guard let url = storage.url else { return }
-        updateLastActiveVersionName(
-            name, storeType: storage.storeType, at: url)
-    }
-
-    static func updateLastActiveVersionName(
-        _ name: String, storeType: String, at url: URL)
-    {
         try? setMetadata(
-            [CurrentModelVersion: name],
-            forPersistentStoreOfType: storeType,
+            [
+                CurrentModelVersionName: dataModel.name,
+                CurrentModelVersion: dataModel.managedObjectModel.version,
+            ],
+            forPersistentStoreOfType: storage.storeType,
             at: url,
             options: nil)
     }
@@ -46,21 +42,29 @@ extension NSPersistentStoreCoordinator {
         guard let store = persistentStore(for: url) else {
             return nil
         }
-        return lastActiveVersionName(in: store)
+        return metadata(for: store)[CurrentModelVersionName] as? String
     }
 
-    func updateLastActiveVersionName(_ name: String, at url: URL) {
+    func lastActiveVersion(at url: URL) -> String? {
         guard let store = persistentStore(for: url) else {
+            return nil
+        }
+        return metadata(for: store)[CurrentModelVersion] as? String
+    }
+
+    func updateLastActiveModel(
+        name: String,
+        managedObjectModel: NSManagedObjectModel,
+        in storage: ConcreteStorage)
+    {
+        guard let store = persistentStore(for: storage.storageUrl) else {
             return
         }
-        updateLastActiveVersionName(name, in: store)
-    }
-
-    func lastActiveVersionName(in store: NSPersistentStore) -> String? {
-        metadata(for: store)[CurrentModelVersion] as? String
-    }
-
-    func updateLastActiveVersionName(_ name: String, in store: NSPersistentStore) {
-        setMetadata([CurrentModelVersion: name], for: store)
+        setMetadata(
+            [
+                CurrentModelVersionName: name,
+                CurrentModelVersion: managedObjectModel.version,
+            ],
+            for: store)
     }
 }

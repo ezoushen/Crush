@@ -24,7 +24,7 @@ open /*abstract*/ class Migrator {
     }
 
     @discardableResult
-    open func migrate() throws -> Bool {
+    open /*abstract*/ func migrate() throws -> Bool {
         return false
     }
 
@@ -34,8 +34,6 @@ open /*abstract*/ class Migrator {
         to destinationModel: NSManagedObjectModel,
         mappingModel: NSMappingModel) throws
     {
-        processModel(sourceModel)
-        processModel(destinationModel)
         let fileManager = FileManager.default
         var destinationURL = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(UUID().uuidString)
@@ -48,32 +46,32 @@ open /*abstract*/ class Migrator {
         }
         
         destinationURL.appendPathComponent(name)
-        
+
+        var options: [AnyHashable: Any] = [:]
+        if storage.storeType == NSSQLiteStoreType {
+            options = Storage.defaultSQLiteOptions()
+            options[NSSQLitePragmasOption] = ["journal_mode": "DELETE"]
+        }
+
         let manager = NSMigrationManager(sourceModel: sourceModel, destinationModel: destinationModel)
         try manager.migrateStore(
             from: storage.storageUrl,
             sourceType: storage.storeType,
-            options: nil,
+            options: options,
             with: mappingModel,
             toDestinationURL: destinationURL,
             destinationType: storage.storeType,
-            destinationOptions: nil
+            destinationOptions: options
         )
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: destinationModel)
         try coordinator.replacePersistentStore(
             at: storage.storageUrl,
-            destinationOptions: nil,
+            destinationOptions: options,
             withPersistentStoreFrom: destinationURL,
-            sourceOptions: nil,
+            sourceOptions: options,
             ofType: storage.storeType)
-        if let store = coordinator.persistentStore(for: storage.storageUrl) {
-            coordinator.updateLastActiveVersionName(name, in: store)
-        }
-    }
-    
-    func processModel(_ model: NSManagedObjectModel) {
-        model.entities.forEach {
-            $0.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
-        }
+        
+        coordinator.updateLastActiveModel(
+            name: name, managedObjectModel: destinationModel, in: storage)
     }
 }

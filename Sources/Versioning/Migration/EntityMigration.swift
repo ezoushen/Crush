@@ -357,13 +357,23 @@ public struct UpdateEntity: EntityMigration {
 }
 
 class CrushEntityMigrationPolicy: NSEntityMigrationPolicy {
-    @objc(performCustomAttributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:)
-    func performCustomAttributeMapping(of propertyMapping: NSPropertyMapping, entityMapping: NSEntityMapping, manager: NSMigrationManager, sourceValue: Any?) -> Any? {
+    @objc(customAttributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:)
+    func customAttributeMapping(of propertyMapping: NSPropertyMapping, entityMapping: NSEntityMapping, manager: NSMigrationManager, sourceValue: Any?) -> Any? {
         guard let mappingFuction = propertyMapping
                 .userInfo?[UserInfoKey.attributeMappingFunc] as? (Any?) -> Any? else {
             return nil
         }
         let result: Any? = mappingFuction(sourceValue)
-        return (result.isNil ? nil : result) ?? manager.destinationEntity(for: entityMapping)?.attributesByName[propertyMapping.name!]?.defaultValue
+        return result ?? manager.destinationEntity(for: entityMapping)?.attributesByName[propertyMapping.name!]?.defaultValue
+    }
+
+    @objc(attributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:)
+    func attributeMapping(of propertyMapping: NSPropertyMapping, entityMapping: NSEntityMapping, manager: NSMigrationManager, sourceValue: Any?) -> Any? {
+        return sourceValue ?? manager.destinationEntity(for: entityMapping)?.attributesByName[propertyMapping.name!]?.defaultValue
+    }
+
+    @objc(defaultValueForKey:propertyMapping:entityMapping:manager:)
+    func defaultValue(forKey: String, propertyMapping: NSPropertyMapping, entityMapping: NSEntityMapping, manager: NSMigrationManager) -> Any? {
+        manager.destinationEntity(for: entityMapping)?.attributesByName[propertyMapping.name!]?.defaultValue
     }
 }

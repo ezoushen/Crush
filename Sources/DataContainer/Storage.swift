@@ -98,13 +98,15 @@ extension Storage {
             storeType: NSSQLiteStoreType,
             url: url,
             configuration: configuration,
-            options: [
-                .options([
-                    NSPersistentHistoryTrackingKey: NSNumber(booleanLiteral: true),
-                    // Use string key for preventing os version check
-                    "NSPersistentStoreRemoteChangeNotificationOptionKey": NSNumber(booleanLiteral: true),
-                ])
-            ] + options)
+            options: [.options(defaultSQLiteOptions())] + options)
+    }
+
+    internal static func defaultSQLiteOptions() -> [String: NSObject] {
+        [
+            NSPersistentHistoryTrackingKey: NSNumber(booleanLiteral: true),
+            // Use string key for preventing os version check
+            "NSPersistentStoreRemoteChangeNotificationOptionKey": NSNumber(booleanLiteral: true),
+        ]
     }
 }
 

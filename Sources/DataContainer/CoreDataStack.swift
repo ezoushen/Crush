@@ -65,9 +65,9 @@ public class CoreDataStack {
         coordinator.addPersistentStore(with: description) {
             completion($1)
         }
-        NSPersistentStoreCoordinator
-            .updateLastActiveVersionName(dataModel.name, in: storage)
-        dataModel.managedObjectModel.save(name: dataModel.name)
+        let version = dataModel.managedObjectModel.version
+        NSPersistentStoreCoordinator.updateLastActiveModel(dataModel, in: storage)
+        dataModel.managedObjectModel.save(name: version)
     }
 
     internal func isLoaded() -> Bool {

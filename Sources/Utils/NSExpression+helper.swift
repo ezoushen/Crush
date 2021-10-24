@@ -9,18 +9,23 @@ import Foundation
 
 extension NSExpression {
     @inlinable
+    static func addAttribute(name: String) -> NSExpression {
+        NSExpression(format: "FUNCTION($entityPolicy , \"defaultValueForKey:propertyMapping:entityMapping:manager:\" , \"\(name)\" , $propertyMapping , $entityMapping , $manager)")
+    }
+
+    @inlinable
     static func relationshipMapping(from: String, to: String) -> NSExpression {
         NSExpression(format: "FUNCTION($manager, \"destinationInstancesForSourceRelationshipNamed:sourceInstances:\" , \"\(to)\", $source.\(from))")
     }
 
     @inlinable
     static func attributeMapping(from: String) -> NSExpression {
-        NSExpression(format: "FUNCTION($entityPolicy, \"_nonNilValueOrDefaultValueForAttribute:source:destination:\" , \"\(from)\", $source, $destination)")
+        NSExpression(format: "FUNCTION($entityPolicy, \"attributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:\", $propertyMapping , $entityMapping , $manager , $source.\(from))")
     }
     
     @inlinable
     static func customAttributeMapping(from: String) -> NSExpression {
-        NSExpression(format: "FUNCTION($entityPolicy, \"performCustomAttributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:\", $propertyMapping , $entityMapping , $manager , $source.\(from))")
+        NSExpression(format: "FUNCTION($entityPolicy, \"customAttributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:\", $propertyMapping , $entityMapping , $manager , $source.\(from))")
     }
 
     @inlinable

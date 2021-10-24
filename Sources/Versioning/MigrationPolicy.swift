@@ -176,34 +176,11 @@ public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
         dataModel: DataModel, in storage: Storage) throws -> Bool
     {
         guard let storage = storage as? ConcreteStorage else { return true }
-        try preprocessStore(at: storage.storageUrl, type: storage.storeType)
         let migrator = ChainMigrator(
             storage: storage,
             migrationChain: migrationChain,
             dataModel: dataModel)
         return try migrator.migrate()
-    }
-
-    private func preprocessStore(at url: URL, type: String) throws {
-        guard type == NSSQLiteStoreType else { return }
-        try forceWALCheckpointingForStore(at: url)
-    }
-
-    private func forceWALCheckpointingForStore(at storeURL: URL) throws {
-        guard let lastActiveModelName = NSPersistentStoreCoordinator
-                .lastActiveVersionName(storeType: NSSQLiteStoreType, at: storeURL),
-              let lastActiveModel = NSManagedObjectModel.load(name: lastActiveModelName)
-        else { return }
-        let persistentStoreCoordinator = NSPersistentStoreCoordinator(
-            managedObjectModel: lastActiveModel)
-        let storage = Storage.sqlite(
-            url: storeURL,
-            options: .sqlitePragmas(["journal_model": "DELETE" as NSObject]))
-        let description = storage.createDescription()
-        persistentStoreCoordinator.addPersistentStore(with: description) { _, _ in }
-        if let store = persistentStoreCoordinator.persistentStore(for: storeURL) {
-            try persistentStoreCoordinator.remove(store)
-        }
     }
 }
 

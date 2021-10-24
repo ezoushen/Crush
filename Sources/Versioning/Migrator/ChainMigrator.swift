@@ -34,6 +34,7 @@ internal final class ChainMigrator: Migrator {
             managedObjectModel: currentManagedObjectModel)
 
         while let node = iterator.next() {
+            print("Migrate to \(node.name)")
             try migrateStore(
                 name: node.name,
                 from: currentManagedObjectModel,

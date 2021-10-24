@@ -9,12 +9,20 @@ import CoreData
 import Foundation
 
 public protocol AttributeMigration: PropertyMigration {
+    var defaultValue: Any? { get set }
+
     func migrateAttribute(
         _ attribute: NSAttributeDescription?,
         callbackStore: inout [EntityMigrationCallback]) throws -> NSAttributeDescription?
 }
 
 extension AttributeMigration {
+    public func `default`(_ value: Any?) -> Self {
+        var migration = self
+        migration.defaultValue = value
+        return migration
+    }
+
     public func migrateProperty(
         _ property: NSPropertyDescription?,
         callbackStore: inout [EntityMigrationCallback]) throws -> NSPropertyDescription?
@@ -37,6 +45,8 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
     public let isTransient: Bool
     public let derivedExpression: NSExpression?
     public let attributeType: NSAttributeType
+
+    public var defaultValue: Any?
 
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
     public init<T: FieldAttribute>(
@@ -79,7 +89,6 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
         self.attributeType = attributeType.nativeType
     }
 
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
     public init(
         _ name: String,
         attributeType: NSAttributeType,
@@ -110,6 +119,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
         description.isOptional = isOptional
         description.isTransient = isTransient
         description.attributeType = attributeType
+        description.defaultValue = defaultValue
         return description
     }
 
@@ -120,6 +130,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
     {
         let propertyMapping = NSPropertyMapping()
         propertyMapping.name = name
+        propertyMapping.valueExpression = .addAttribute(name: name!)
         return propertyMapping
     }
 }
@@ -137,6 +148,8 @@ public struct UpdateAttribute: AttributeMigration {
     public let attributeType: NSAttributeType?
     public let transform: ((Any?) -> Any?)?
     public let derivedExpression: NSExpression?
+
+    public var defaultValue: Any?
 
     public init<T: FieldAttribute>(
         _ originName: String,
@@ -251,19 +264,49 @@ public struct UpdateAttribute: AttributeMigration {
                 .migrationTargetNotFound(
                     "attribute \(originPropertyName.contentDescription) not found")
         }
+        
+        var description: NSAttributeDescription
+        
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *),
+           let expression = derivedExpression {
+            let derivedDescription = NSDerivedAttributeDescription()
+            derivedDescription.derivationExpression = expression
+            description = derivedDescription
+        } else {
+            description = NSAttributeDescription()
+        }
+        
         if let name = name {
-            attribute.name = name
+            description.name = name
+        } else {
+            description.name = attribute.name
         }
+        
         if let isOptional = isOptional {
-            attribute.isOptional = isOptional
+            description.isOptional = isOptional
+        } else {
+            description.isOptional = attribute.isOptional
         }
+        
         if let isTransient = isTransient {
-            attribute.isTransient = isTransient
+            description.isTransient = isTransient
+        } else {
+            description.isTransient = attribute.isTransient
         }
+        
         if let attributeType = attributeType {
-            attribute.attributeType = attributeType
+            description.attributeType = attributeType
+        } else {
+            description.attributeType = attribute.attributeType
         }
-        return attribute
+
+        if let defaultValue = defaultValue {
+            description.defaultValue = defaultValue
+        } else {
+            description.defaultValue = attribute.defaultValue
+        }
+        
+        return description
     }
 
     public func createPropertyMapping(
