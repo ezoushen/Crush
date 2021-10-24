@@ -34,9 +34,21 @@ open /*abstract*/ class Migrator {
         to destinationModel: NSManagedObjectModel,
         mappingModel: NSMappingModel) throws
     {
-        let destinationURL = URL(fileURLWithPath: NSTemporaryDirectory())
+        processModel(sourceModel)
+        processModel(destinationModel)
+        let fileManager = FileManager.default
+        var destinationURL = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(UUID().uuidString)
-            .appendingPathComponent(name)
+        
+        if !fileManager.fileExists(atPath: destinationURL.path) {
+            try fileManager.createDirectory(
+                at: destinationURL,
+                withIntermediateDirectories: true,
+                attributes: nil)
+        }
+        
+        destinationURL.appendPathComponent(name)
+        
         let manager = NSMigrationManager(sourceModel: sourceModel, destinationModel: destinationModel)
         try manager.migrateStore(
             from: storage.storageUrl,
@@ -56,6 +68,12 @@ open /*abstract*/ class Migrator {
             ofType: storage.storeType)
         if let store = coordinator.persistentStore(for: storage.storageUrl) {
             coordinator.updateLastActiveVersionName(name, in: store)
+        }
+    }
+    
+    func processModel(_ model: NSManagedObjectModel) {
+        model.entities.forEach {
+            $0.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
         }
     }
 }

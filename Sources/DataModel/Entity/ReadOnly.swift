@@ -8,34 +8,34 @@
 import CoreData
 
 @dynamicMemberLookup
-public struct ReadOnly<Value: Entity> {
+public struct ReadOnly<Entity: Crush.Entity> {
     
-    internal let value: ManagedObject<Value>
+    internal let managedObject: ManagedObject<Entity>
     internal let context: NSManagedObjectContext
     
-    public init(_ value: ManagedObject<Value>) {
+    public init(_ value: ManagedObject<Entity>) {
         guard let context = value.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
-        self.value = value
+        self.managedObject = value
         self.context = context
     }
 
     @inline(__always)
     private func access<T: ValuedProperty>(
-        keyPath: KeyPath<Value, T>) -> T.PropertyValue
+        keyPath: KeyPath<Entity, T>) -> T.PropertyValue
     {
-        context.performSync { value[immutable: keyPath] }
+        context.performSync { managedObject[immutable: keyPath] }
     }
 
     public subscript<T: ValuedProperty>(
-        dynamicMember keyPath: KeyPath<Value, T>) -> T.PropertyValue
+        dynamicMember keyPath: KeyPath<Entity, T>) -> T.PropertyValue
     {
         access(keyPath: keyPath)
     }
 
     public subscript<T: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Value, T>
+        dynamicMember keyPath: KeyPath<Entity, T>
     ) -> T.Mapping.EntityType.ReadOnly?
     where
         T.Mapping == ToOne<T.Destination>
@@ -46,92 +46,92 @@ public struct ReadOnly<Value: Entity> {
     }
 
     public subscript<T: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Value, T>
+        dynamicMember keyPath: KeyPath<Entity, T>
     ) -> Set<T.Destination.ReadOnly>
     where
         T.Mapping == ToMany<T.Destination>
     {
         context.performSync {
-            let set = value[immutable: keyPath]
+            let set = managedObject[immutable: keyPath]
             return Set(set.map { ReadOnly<T.Destination>($0) })
         }
     }
     
     public subscript<T: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Value, T>
+        dynamicMember keyPath: KeyPath<Entity, T>
     ) -> OrderedSet<T.Destination.ReadOnly>
     where
         T.Mapping == ToOrdered<T.Destination>
     {
         context.performSync {
-            let orderedSet = value[immutable: keyPath]
+            let orderedSet = managedObject[immutable: keyPath]
             return OrderedSet(
                 orderedSet.map{ ReadOnly<T.Destination>($0) })
         }
     }
 }
 
-extension ReadOnly {
+extension ReadOnly: ManagedStatus {
     public var hasChanges: Bool {
-        value.hasChanges
+        managedObject.hasChanges
     }
     
     public var managedObjectID: NSManagedObjectID {
-        value.objectID
+        managedObject.objectID
     }
     
     public var hasPersistentChangedValues: Bool {
-        value.hasPersistentChangedValues
+        managedObject.hasPersistentChangedValues
     }
     
     public var isInserted: Bool {
-        value.isInserted
+        managedObject.isInserted
     }
     
     public var isDeleted: Bool {
-        value.isDeleted
+        managedObject.isDeleted
     }
     
     public var isUpdated: Bool {
-        value.isUpdated
+        managedObject.isUpdated
     }
     
     public var isFault: Bool {
-        value.isFault
+        managedObject.isFault
     }
     
     public var faultingState: Int {
-        value.faultingState
+        managedObject.faultingState
     }
     
     public func hasFault<T: RelationshipProtocol>(
-        forRelationship keyPath: KeyPath<Value, T>) -> Bool
+        forRelationship keyPath: KeyPath<Entity, T>) -> Bool
     {
-        value.hasFault(forRelationshipNamed: keyPath.propertyName)
+        managedObject.hasFault(forRelationshipNamed: keyPath.propertyName)
     }
     
     public func changedValues() -> [String: Any] {
-        value.changedValues()
+        managedObject.changedValues()
     }
     
     public func changedValuesForCurrentEvent() -> [String: Any] {
-        value.changedValuesForCurrentEvent()
+        managedObject.changedValuesForCurrentEvent()
     }
     
     public func commitedValues(forKeys keys: [String]?) -> [String: Any] {
-        value.committedValues(forKeys: keys)
+        managedObject.committedValues(forKeys: keys)
     }
 }
 
 extension ReadOnly: Equatable {
     public static func == (lhs: ReadOnly, rhs: ReadOnly) -> Bool {
-        lhs.value == rhs.value
+        lhs.managedObject == rhs.managedObject
     }
 }
 
 extension ReadOnly: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(value)
+        hasher.combine(managedObject)
     }
 }
 

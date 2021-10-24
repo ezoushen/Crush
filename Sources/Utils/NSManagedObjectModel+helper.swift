@@ -24,6 +24,8 @@ extension NSManagedObjectModel {
         }
         return directoryURL
     }()
+    
+    private static var modelCache = NSCache<NSURL, NSManagedObjectModel>()
 
     static func load(name: String) -> NSManagedObjectModel? {
         let url = managedobjectModelDirectory.appendingPathComponent(name)
@@ -31,8 +33,15 @@ extension NSManagedObjectModel {
     }
 
     static func load(from url: URL) -> NSManagedObjectModel? {
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        return NSKeyedUnarchiver.unarchiveObject(withFile: url.path) as? NSManagedObjectModel
+        if let cachedModel = modelCache.object(forKey: url as NSURL) {
+            return cachedModel
+        }
+        guard FileManager.default.fileExists(atPath: url.path),
+              let model = NSKeyedUnarchiver
+                .unarchiveObject(withFile: url.path) as? NSManagedObjectModel
+        else { return nil }
+        modelCache.setObject(model, forKey: url as NSURL)
+        return model
     }
 
     func save(name: String) {
@@ -43,7 +52,9 @@ extension NSManagedObjectModel {
     }
 
     func save(to url: URL) {
-        let data = NSKeyedArchiver.archivedData(withRootObject: self)
+        let copy = copy() as! NSManagedObjectModel
+        copy.entities.forEach { $0.managedObjectClassName = nil }
+        let data = NSKeyedArchiver.archivedData(withRootObject: copy)
         try! data.write(to: url)
     }
 }

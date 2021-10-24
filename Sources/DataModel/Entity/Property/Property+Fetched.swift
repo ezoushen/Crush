@@ -7,21 +7,33 @@
 
 import CoreData
 
-public final class FetchedProperty<T: Entity>: ValuedProperty, FieldConvertible {
-    public static func convert(value: [T.Managed]) -> [T.ReadOnly] {
+public protocol FetchedPropertyProtocol: ValuedProperty, FieldConvertible
+where
+    RuntimeObjectValue == [ReadOnly<Destination>],
+    ManagedObjectValue == [ManagedObject<Destination>],
+    PredicateValue == FieldConvertor.ManagedObjectValue,
+    Description == NSFetchedPropertyDescription
+{
+    associatedtype Destination: Entity
+}
+
+extension FetchedPropertyProtocol {
+    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
         value.map { ReadOnly($0) }
     }
-    
-    public static func convert(value: [T.ReadOnly]) -> [T.Managed] {
-        value.map { $0.value }
+
+    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
+        value.map { $0.managedObject }
     }
-    
+}
+
+public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
+    public typealias Destination = T
     public typealias RuntimeObjectValue = [T.ReadOnly]
     public typealias ManagedObjectValue = [T.Managed]
     public typealias FieldConvertor = FetchedProperty<T>
     public typealias PredicateValue = FieldConvertor.ManagedObjectValue
     public typealias PropertyValue = FieldConvertor.RuntimeObjectValue
-    public typealias Description = NSFetchedPropertyDescription
     public typealias Configuration = (PartialFetchBuilder<T, T.Managed, T.ReadOnly>) -> PartialFetchBuilder<T, T.Managed, T.ReadOnly>
 
     internal let configuration: Configuration

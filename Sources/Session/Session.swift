@@ -64,7 +64,7 @@ public class Session {
 
 extension Session {
     public func load<T: Entity>(_ entity: T.ReadOnly) -> T.ReadOnly {
-        present(entity.value)
+        present(entity.managedObject)
     }
 
     public func load<T: Entity>(objectID: NSManagedObjectID) -> T.ReadOnly? {

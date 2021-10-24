@@ -297,7 +297,6 @@ public struct UpdateEntity: EntityMigration {
         return try createEntityMapping(from: sourceEntity, to: destinationEntity)
     }
 
-    @inlinable
     func createEntityMapping(
         from sourceEntity: NSEntityDescription,
         to destinationEntity: NSEntityDescription) throws -> NSEntityMapping
@@ -308,7 +307,8 @@ public struct UpdateEntity: EntityMigration {
         entityMapping.destinationEntityName = destinationEntity.name
         entityMapping.sourceEntityVersionHash = sourceEntity.versionHash
         entityMapping.destinationEntityVersionHash = destinationEntity.versionHash
-        entityMapping.mappingType = .transformEntityMappingType
+        entityMapping.mappingType = .customEntityMappingType
+        entityMapping.entityMigrationPolicyClassName = NSStringFromClass(CrushEntityMigrationPolicy.self)
         entityMapping.sourceExpression = .allSource(name: originEntityName!)
         var attributeMappings: [NSPropertyMapping] = []
         var relationshipMappings: [NSPropertyMapping] = []
@@ -353,5 +353,17 @@ public struct UpdateEntity: EntityMigration {
         entityMapping.attributeMappings = attributeMappings
         entityMapping.relationshipMappings = relationshipMappings
         return entityMapping
+    }
+}
+
+class CrushEntityMigrationPolicy: NSEntityMigrationPolicy {
+    @objc(performCustomAttributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:)
+    func performCustomAttributeMapping(of propertyMapping: NSPropertyMapping, entityMapping: NSEntityMapping, manager: NSMigrationManager, sourceValue: Any?) -> Any? {
+        guard let mappingFuction = propertyMapping
+                .userInfo?[UserInfoKey.attributeMappingFunc] as? (Any?) -> Any? else {
+            return nil
+        }
+        let result: Any? = mappingFuction(sourceValue)
+        return (result.isNil ? nil : result) ?? manager.destinationEntity(for: entityMapping)?.attributesByName[propertyMapping.name!]?.defaultValue
     }
 }

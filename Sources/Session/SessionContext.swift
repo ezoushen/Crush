@@ -152,7 +152,7 @@ extension SessionContext where Self: RawContextProviderProtocol {
 extension SessionContext where Self: RawContextProviderProtocol {
     public func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T> {
         executionContext.performSync {
-            executionContext.receive(runtimeObject: object.value)
+            executionContext.receive(runtimeObject: object.managedObject)
         }
     }
 

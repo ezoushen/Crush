@@ -45,16 +45,15 @@ public struct AddRelationship: RelationshipMigration, AddPropertyMigration {
         _ name: String,
         toOne destinationEntity: String,
         inverse inverseRelationship: String? = nil,
-        isOptional: Bool = false,
+        isOptional: Bool = true,
         isTransient: Bool = false,
-        isOrdered: Bool = false,
         deleteRule: NSDeleteRule = .nullifyDeleteRule
     ) {
         self.init(
             name: name,
             isOptional: isOptional,
             isTransient: isTransient,
-            isOrdered: isOrdered,
+            isOrdered: false,
             destinationEntity: destinationEntity,
             inverseRelationship: inverseRelationship,
             minCount: 1,
@@ -68,7 +67,7 @@ public struct AddRelationship: RelationshipMigration, AddPropertyMigration {
         inverse inverseRelationship: String? = nil,
         minCount: Int = 0,
         maxCount: Int = 0,
-        isOptional: Bool = false,
+        isOptional: Bool = true,
         isTransient: Bool = false,
         isOrdered: Bool = false,
         deleteRule: NSDeleteRule = .nullifyDeleteRule

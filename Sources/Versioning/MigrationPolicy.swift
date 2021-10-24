@@ -57,6 +57,20 @@ public /*abstract*/ class LightWeightBackupMigrationPolicy: MigrationPolicy {
         description.shouldInferMappingModelAutomatically = lightWeightEnabled
         description.shouldMigrateStoreAutomatically = lightWeightEnabled
     }
+
+    public override func process(storage: Storage, with dataModel: DataModel) throws {
+        do {
+            try super.process(storage: storage, with: dataModel)
+        } catch {
+            if lightWeightEnabled {
+                LogHandler.default.log(
+                    .error,
+                    "Migration of \(Self.self) ends with error: \(error), will try to perform lightweight migration later")
+            } else {
+                throw error
+            }
+        }
+    }
 }
 
 extension MigrationPolicy {

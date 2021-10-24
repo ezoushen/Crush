@@ -11,11 +11,12 @@ public protocol RuntimeObject {
     associatedtype Entity: Crush.Entity
 }
 
-@dynamicMemberLookup
-public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject {
+public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject, ObjectDriver, ManagedStatus {
     internal lazy var canTriggerEvent: Bool = {
         managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
     }()
+
+    @inlinable public var managedObject: NSManagedObject { self }
 
     public override func willSave() {
         super.willSave()
@@ -71,93 +72,5 @@ public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject
         if canTriggerEvent {
             Entity.awake(self, fromSnapshotEvents: flags)
         }
-    }
-}
-
-extension ManagedObject {
-    public subscript<Property: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> MutableSet<ManagedObject<Property.Destination>>
-    where
-        Property.Mapping == ToMany<Property.Destination>
-    {
-        let key = keyPath.propertyName
-        let mutableSet = getMutableSet(key: key)
-        return Property.Mapping.convert(value: mutableSet)
-    }
-
-    public subscript<Property: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
-    where
-        Property.Mapping == ToOrdered<Property.Destination>
-    {
-        let key = keyPath.propertyName
-        let mutableOrderedSet = getMutableOrderedSet(key: key)
-        return Property.Mapping.convert(value: mutableOrderedSet)
-    }
-
-    public subscript<Property: ValuedProperty>(
-        dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> Property.PropertyValue {
-        return self[immutable: keyPath]
-    }
-
-    public subscript<Property: WritableValuedProperty>(
-        dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> Property.PropertyValue {
-        get {
-            return self[immutable: keyPath]
-        }
-        set {
-            setValue(Property.FieldConvertor.convert(value: newValue), key: keyPath.propertyName)
-        }
-    }
-
-    public subscript<Property: ValuedProperty>(
-        immutable keyPath: KeyPath<Entity, Property>
-    ) -> Property.PropertyValue {
-        return Property.FieldConvertor.convert(
-            value: getValue(key: keyPath.propertyName))
-    }
-}
-
-extension NSManagedObject {
-    @inline(__always)
-    internal func getValue<T>(key: String) -> T {
-        willAccessValue(forKey: key)
-        defer {
-            didAccessValue(forKey: key)
-        }
-        return primitiveValue(forKey: key) as! T
-    }
-
-    @inline(__always)
-    internal func setValue(_ value: Any?, key: String) {
-        willChangeValue(forKey: key)
-        defer {
-            didChangeValue(forKey: key)
-        }
-        value.isNil
-            ? setNilValueForKey(key)
-            : setPrimitiveValue(value, forKey: key)
-    }
-
-    @inline(__always)
-    internal func getMutableSet(key: String) -> NSMutableSet {
-        willAccessValue(forKey: key)
-        defer {
-            didAccessValue(forKey: key)
-        }
-        return mutableSetValue(forKey: key)
-    }
-
-    @inline(__always)
-    internal func getMutableOrderedSet(key: String) -> NSMutableOrderedSet {
-        willAccessValue(forKey: key)
-        defer {
-            didAccessValue(forKey: key)
-        }
-        return mutableOrderedSetValue(forKey: key)
     }
 }

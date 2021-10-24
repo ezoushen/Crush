@@ -192,8 +192,8 @@ extension DataContainer {
     }
     
     public func load<T: Entity>(_ object: T.ReadOnly) -> T.ReadOnly {
-        guard uiContext != object.value.managedObjectContext else { return object }
-        let newObject = uiContext.receive(runtimeObject: object.value)
+        guard uiContext != object.managedObject.managedObjectContext else { return object }
+        let newObject = uiContext.receive(runtimeObject: object.managedObject)
         return T.ReadOnly(newObject)
     }
 

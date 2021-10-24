@@ -212,3 +212,9 @@ extension OrderedSet: Encodable where T: Encodable {
         try container.encode(orderedSet.array as! [T])
     }
 }
+
+extension Array where Element: Hashable {
+    init(_ orderedSet: OrderedSet<Element>) {
+        self = orderedSet.orderedSet.array as! Array<Element>
+    }
+}

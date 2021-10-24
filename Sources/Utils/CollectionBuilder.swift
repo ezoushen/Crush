@@ -8,14 +8,18 @@
 import Foundation
 
 @resultBuilder
-struct CollectionBuilder<T> {
-    static func buildBlock(_ components: T...) -> [T] {
+public struct CollectionBuilder<T> {
+    public static func buildBlock(_ components: T...) -> [T] {
         return components
     }
 }
 
 extension CollectionBuilder where T: Hashable {
-    static func buildBlock(_ components: T...) -> Set<T> {
+    public static func buildBlock(_ components: T...) -> Set<T> {
         return Set(components)
+    }
+    
+    public static func buildBlock(_ components: T...) -> OrderedSet<T> {
+        return OrderedSet(components)
     }
 }

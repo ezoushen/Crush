@@ -22,6 +22,8 @@ extension EntityInheritance: Comparable, Hashable {
 }
 
 open class Entity {
+    internal static var registeredEntities: Set<ObjectIdentifier> = []
+    internal static var propertyNamesByEntity: [ObjectIdentifier: [String]] = [:]
     required public init() { }
     @objc open dynamic class func willSave(_ managedObject: NSManagedObject) { }
     @objc open dynamic class func didSave(_ managedObject: NSManagedObject) { }
@@ -60,19 +62,31 @@ extension Entity {
     static var entityCacheKey: String {
         String(reflecting: Self.self)
     }
+
+    static func isRegistered() -> Bool {
+        Self.registeredEntities.contains(ObjectIdentifier(Self.self))
+    }
+
+    static func propertyNames() -> [String]? {
+        Self.propertyNamesByEntity[ObjectIdentifier(Self.self)]
+    }
     
     func createEntityDescription(
         inhertanceData: [ObjectIdentifier: EntityInheritance]
     ) -> NSEntityDescription? {
         let identifier = ObjectIdentifier(Self.self)
+        let mirror = Mirror(reflecting: self)
+
+        defer {
+            Self.propertyNamesByEntity[ObjectIdentifier(Self.self)] = propertyNames(mirror: mirror)
+        }
 
         guard let inheritance = inhertanceData[identifier],
               inheritance != .embedded else {
             return nil
         }
-        
+
         let cache = Caches.entity
-        let mirror = Mirror(reflecting: self)
         
         // Setup properties
         let description = NSEntityDescription()
@@ -80,6 +94,7 @@ extension Entity {
             mirror: mirror,
             inhertanceData: inhertanceData)
 
+        description.userInfo?[UserInfoKey.entityClassName] = Self.entityCacheKey
         description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
         description.name = Self.fetchKey
         description.isAbstract = inheritance == .abstract
@@ -98,8 +113,19 @@ extension Entity {
         }
 
         cache.set(Self.entityCacheKey, value: description)
+        Self.registeredEntities.insert(ObjectIdentifier(Self.self))
         
         return description
+    }
+
+    private func propertyNames(mirror: Mirror) -> [String] {
+        let names = mirror.children
+            .compactMap { $0.value as? PropertyProtocol }
+            .map(\.name)
+        if let superMirror = mirror.superclassMirror {
+            return names + propertyNames(mirror: superMirror)
+        }
+        return names
     }
     
     private func createProperties(
@@ -180,4 +206,5 @@ extension Entity: ManagableObject { }
 
 extension ManagableObject where Self: Entity {
     public typealias Managed = ManagedObject<Self>
+    public typealias Driver = ManagedDriver<Self>
 }
