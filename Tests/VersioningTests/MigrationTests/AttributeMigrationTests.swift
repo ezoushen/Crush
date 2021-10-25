@@ -11,7 +11,7 @@ import XCTest
 
 @testable import Crush
 
-class AddAttributeMigrationTests: XCTestCase {
+class AddAttributeTests: XCTestCase {
     let sut = AddAttribute("name", type: String.self, isOptional: false, isTransient: true)
     
     func test_createProperty_shouldSetName() {

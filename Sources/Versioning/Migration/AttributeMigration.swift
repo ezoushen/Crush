@@ -280,6 +280,12 @@ public struct UpdateAttribute: AttributeMigration {
             } else {
                 description.defaultValue = attribute.defaultValue
             }
+
+            if let isTransient = isTransient {
+                description.isTransient = isTransient
+            } else {
+                description.isTransient = attribute.isTransient
+            }
         }
         
         if let name = name {
@@ -292,12 +298,6 @@ public struct UpdateAttribute: AttributeMigration {
             description.isOptional = isOptional
         } else {
             description.isOptional = attribute.isOptional
-        }
-        
-        if let isTransient = isTransient {
-            description.isTransient = isTransient
-        } else {
-            description.isTransient = attribute.isTransient
         }
         
         if let attributeType = attributeType {

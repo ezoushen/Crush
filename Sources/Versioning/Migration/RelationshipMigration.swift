@@ -112,6 +112,7 @@ public struct AddRelationship: RelationshipMigration, AddPropertyMigration {
         let description = NSRelationshipDescription()
         description.name = name!
         description.isOptional = isOptional
+        description.isTransient = isTransient
         description.deleteRule = deleteRule
         description.minCount = minCount
         description.maxCount = maxCount
@@ -134,7 +135,7 @@ public struct AddRelationship: RelationshipMigration, AddPropertyMigration {
         of sourceEntity: NSEntityDescription) -> NSPropertyMapping?
     {
         let propertyMapping = NSPropertyMapping()
-        propertyMapping.name = destinationProperty?.name
+        propertyMapping.name = name
         return propertyMapping
     }
 }
@@ -222,7 +223,7 @@ public struct UpdateRelationship: RelationshipMigration {
             isOptional: isOptional,
             isTransient: isTransient,
             isOrdered: isOrdered,
-            destinationEntity: nil,
+            destinationEntity: destinationEntity,
             inverseRelationship: nil,
             minCount: 1,
             maxCount: 1,
@@ -247,7 +248,7 @@ public struct UpdateRelationship: RelationshipMigration {
             isOptional: isOptional,
             isTransient: isTransient,
             isOrdered: isOrdered,
-            destinationEntity: nil,
+            destinationEntity: destinationEntity,
             inverseRelationship: nil,
             minCount: minCount,
             maxCount: maxCount,
@@ -312,7 +313,8 @@ public struct UpdateRelationship: RelationshipMigration {
         if let destinationEntity = destinationEntity {
             callbackStore.append {
                 guard let description = $0[destinationEntity]
-                else { return }
+                else { throw MigrationModelingError
+                    .migrationTargetNotFound("failed to find destination") }
                 relationship.destinationEntity = description
             }
         }
