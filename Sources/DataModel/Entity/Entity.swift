@@ -152,28 +152,31 @@ extension Entity {
         var indexPredicatesByName: [String: NSPredicate] = [:]
 
         for property in description.properties {
-            guard let element = property.userInfo?[UserInfoKey.index]
-                    as? NSFetchIndexElementDescription else { continue }
-            let indexName = property.userInfo?[UserInfoKey.indexName] as? String ?? property.name
-            let indexPredicate = property.userInfo?[UserInfoKey.indexPredicate] as? NSPredicate
+            guard let indexProtocols = property.userInfo?[UserInfoKey.indexes]
+                    as? [IndexProtocol] else { continue }
 
-            defer {
-                property.userInfo?[UserInfoKey.index] = nil
-                property.userInfo?[UserInfoKey.indexName] = nil
-                property.userInfo?[UserInfoKey.indexPredicate] = nil
-            }
+            property.userInfo?[UserInfoKey.indexes] = nil
 
-            var indexes = indexesByName[indexName] ?? []
-            indexes.append(element)
-            indexesByName[indexName] = indexes
+            for index in indexProtocols {
+                guard index.targetEntityName == nil ||
+                        index.targetEntityName == Self.fetchKey else { continue }
+                let indexName = index.indexName ?? property.name
+                let indexPredicate = index.predicate
 
-            guard let indexPredicate = indexPredicate else { continue }
+                var indexes = indexesByName[indexName] ?? []
+                let element = index
+                    .createFetchIndexElementDescription(from: property)
+                indexes.append(element)
+                indexesByName[indexName] = indexes
 
-            if let predicate = indexPredicatesByName[indexName] {
-                indexPredicatesByName[indexName] = NSCompoundPredicate(
-                    orPredicateWithSubpredicates: [indexPredicate, predicate])
-            } else {
-                indexPredicatesByName[indexName] = indexPredicate
+                guard let indexPredicate = indexPredicate else { continue }
+
+                if let predicate = indexPredicatesByName[indexName] {
+                    indexPredicatesByName[indexName] = NSCompoundPredicate(
+                        orPredicateWithSubpredicates: [indexPredicate, predicate])
+                } else {
+                    indexPredicatesByName[indexName] = indexPredicate
+                }
             }
         }
 

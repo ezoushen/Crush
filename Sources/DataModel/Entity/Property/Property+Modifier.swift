@@ -111,44 +111,68 @@ public class IndexedBySpotlight<T: WritableValuedProperty>: PropertyModifier<T, 
     }
 }
 
+public protocol IndexProtocol {
+    var predicate: NSPredicate? { get }
+    var collationType: NSFetchIndexElementType { get }
+    var indexName: String? { get }
+    var targetEntityName: String? { get }
+
+    func createFetchIndexElementDescription(
+        from description: NSPropertyDescription) -> NSFetchIndexElementDescription
+}
+
 @propertyWrapper
-public class Indexed<T: WritableValuedProperty>: PropertyModifier<T, String?> {
+public class Indexed<T: WritableValuedProperty>: PropertyModifier<T, String?>, IndexProtocol {
     @inlinable public var wrappedValue: T { property }
+    @inlinable public var indexName: String? { modifier }
 
     public let collationType: NSFetchIndexElementType
     public let predicate: NSPredicate?
+    public let targetEntityName: String?
 
-    public init(
+    public init<Entity: Crush.Entity>(
         wrappedValue: T,
         _ modifier: String? = nil,
+        target: Entity.Type? = nil,
         collationType: NSFetchIndexElementType = .binary,
         predicate: NSPredicate? = nil)
     {
         self.collationType = collationType
         self.predicate = predicate
+        self.targetEntityName = target?.fetchKey
         super.init(wrappedValue: wrappedValue, modifier)
     }
 
-    public init(
+    public convenience init<Entity: Crush.Entity>(
         wrappedValue: T,
         _ modifier: String? = nil,
+        target: Entity.Type? = nil,
         collationType: NSFetchIndexElementType = .binary,
         predicate: String)
     {
-        self.collationType = collationType
-        self.predicate = NSPredicate(format: predicate)
-        super.init(wrappedValue: wrappedValue, modifier)
+        self.init(
+            wrappedValue: wrappedValue,
+            modifier,
+            target: target,
+            collationType: collationType,
+            predicate: NSPredicate(format: predicate))
     }
 
     public override func createDescription() -> Description {
         let description = super.createDescription()
         var userInfo = description.userInfo ?? [:]
-        userInfo[UserInfoKey.indexName] = modifier
-        userInfo[UserInfoKey.index] = NSFetchIndexElementDescription(
-            property: description, collationType: collationType)
-        userInfo[UserInfoKey.indexPredicate] = predicate
+        var indexes = userInfo[UserInfoKey.indexes] as? [IndexProtocol] ?? []
+        indexes.append(self)
+        userInfo[UserInfoKey.indexes] = indexes
         description.userInfo = userInfo
         return description
+    }
+
+    public func createFetchIndexElementDescription(
+        from description: NSPropertyDescription) -> NSFetchIndexElementDescription
+    {
+        NSFetchIndexElementDescription(
+            property: description, collationType: collationType)
     }
 }
 

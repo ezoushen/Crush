@@ -9,9 +9,7 @@ import Foundation
 
 public enum UserInfoKey {
     // NSManagedObjectModel
-    static let index = "Index"
-    static let indexName = "IndexName"
-    static let indexPredicate = "IndexPredicate"
+    static let indexes = "Index"
     static let uniquenessConstraintName = "UniquenessConstraintName"
 
     // NSMappingModel

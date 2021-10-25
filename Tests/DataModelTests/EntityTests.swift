@@ -238,6 +238,48 @@ class EntityTests: XCTestCase {
         XCTAssertEqual(result?.indexes.first?.partialIndexPredicate, \TestEntity.value == 0)
     }
 
+    func test_createEntityDescription_indexesShouldBeGroupedByNameMultipleTimes() {
+        class TestEntity: Entity {
+            @Indexed("composite")
+            @Indexed
+            var value = Value.Int16("value")
+            @Indexed("composite")
+            var value2 = Value.Int16("value2")
+        }
+        let sut = TestEntity()
+        let data: [ObjectIdentifier: EntityInheritance] = [
+            ObjectIdentifier(TestEntity.self): .concrete
+        ]
+        let result = sut.createEntityDescription(inhertanceData: data)
+        let indexes = result?.indexes.sorted { $0.elements.count < $1.elements.count } ?? []
+        XCTAssertEqual(indexes.count, 2)
+        XCTAssertEqual(indexes.first?.elements.count, 1)
+        XCTAssertEqual(indexes.last?.elements.count, 2)
+    }
+
+    func test_createEntityDescription_indexesShouldBeInheritedAccordingToTargetEntityName() {
+        class TestEntity: Entity {
+            @Indexed("child", entity: ChildEntity.self)
+            var value = Value.Int16("value")
+            @Indexed(entity: AnotherChildEntity.self)
+            var value2 = Value.Int16("value2")
+        }
+        class AnotherChildEntity: TestEntity { }
+        class ChildEntity: TestEntity {
+            @Indexed("child")
+            var value3 = Value.Int16("value3")
+        }
+        let sut = ChildEntity()
+        let data: [ObjectIdentifier: EntityInheritance] = [
+            ObjectIdentifier(TestEntity.self): .embedded,
+            ObjectIdentifier(ChildEntity.self): .concrete
+        ]
+        let result = sut.createEntityDescription(inhertanceData: data)
+        let indexes = result?.indexes ?? []
+        XCTAssertEqual(indexes.count, 1)
+        XCTAssertEqual(indexes.first?.elements.count, 2)
+    }
+
     func test_createEntityDescription_uniquenessConstraintsShouldBeSet() {
         class TestEntity: Entity {
             @Unique
