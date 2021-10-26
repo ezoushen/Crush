@@ -34,7 +34,6 @@ internal final class ChainMigrator: Migrator {
             managedObjectModel: currentManagedObjectModel)
 
         while let node = iterator.next() {
-            print("Migrate to \(node.name)")
             try migrateStore(
                 name: node.name,
                 from: currentManagedObjectModel,
@@ -66,9 +65,7 @@ internal final class ChainMigrator: Migrator {
         guard let managedObjectModel = try chain.managedObjectModels().last else {
             throw MigrationError.incompatible
         }
-        if managedObjectModel.entityVersionHashesByName !=
-            dataModel.managedObjectModel.entityVersionHashesByName
-        {
+        if managedObjectModel.isCompactible(with: dataModel.managedObjectModel) {
             throw ChainMigratorError.migrationChainIncompatibleWithDataModel
         }
     }

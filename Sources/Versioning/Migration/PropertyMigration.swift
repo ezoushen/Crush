@@ -9,6 +9,7 @@ import CoreData
 import Foundation
 
 public protocol PropertyMigration {
+    var hashModifier: String? { get set }
     var originPropertyName: String? { get }
     var name: String? { get }
 
@@ -20,6 +21,22 @@ public protocol PropertyMigration {
         from sourceProperty: NSPropertyDescription?,
         to destinationProperty: NSPropertyDescription?,
         of sourceEntity: NSEntityDescription) throws -> NSPropertyMapping?
+
+    func versionHashModifier(_ modifier: String) -> Self
+}
+
+extension PropertyMigration {
+    public func versionHashModifier(_ modifier: String) -> Self {
+        var migration = self
+        migration.hashModifier = modifier
+        return migration
+    }
+
+    public func customize(_ block: (inout Self) -> Void) -> Self {
+        var migration = self
+        block(&migration)
+        return migration
+    }
 }
 
 public protocol AddPropertyMigration: PropertyMigration {
@@ -54,9 +71,24 @@ extension AddPropertyMigration where Self: RelationshipMigration {
     }
 }
 
+public protocol UpdatePropertyMigration: PropertyMigration {
+    var hashModifierUpdated: Bool { get set }
+}
+
+extension UpdatePropertyMigration {
+    public func versionHashModifier(_ modifier: String) -> Self {
+        var updateAttribute = self
+        updateAttribute.hashModifierUpdated = true
+        updateAttribute.hashModifier = modifier
+        return updateAttribute
+    }
+}
+
 public struct RemoveProperty: PropertyMigration {
     public var originPropertyName: String? { name }
     public let name: String?
+
+    public var hashModifier: String? = nil
 
     public init(_ name: String) {
         self.name = name

@@ -37,9 +37,11 @@ public struct AddRelationship: RelationshipMigration, AddPropertyMigration {
     public let isOrdered: Bool
     public let destinationEntity: String
     public let inverseRelationship: String?
-    public let minCount: Int
-    public let maxCount: Int
+    public var minCount: Int
+    public var maxCount: Int
     public let deleteRule: NSDeleteRule
+
+    public var hashModifier: String? = nil
 
     public init(
         _ name: String,
@@ -117,6 +119,7 @@ public struct AddRelationship: RelationshipMigration, AddPropertyMigration {
         description.minCount = minCount
         description.maxCount = maxCount
         description.isOrdered = isOrdered
+        description.versionHashModifier = hashModifier
         callbackStore.append {
             guard let desitnation = $0[destinationEntity]
             else { return }
@@ -142,7 +145,7 @@ public struct AddRelationship: RelationshipMigration, AddPropertyMigration {
 
 public typealias RemoveRelationship = RemoveProperty
 
-public struct UpdateRelationship: RelationshipMigration {
+public struct UpdateRelationship: RelationshipMigration, UpdatePropertyMigration {
     public let originPropertyName: String?
     public let originKeyPath: String
 
@@ -157,6 +160,9 @@ public struct UpdateRelationship: RelationshipMigration {
     public let deleteRule: NSDeleteRule?
 
     private let updateInverseRelationship: Bool
+
+    public var hashModifier: String? = nil
+    public var hashModifierUpdated: Bool = false
 
     public init(
         _ originPropertyName: String,
@@ -291,6 +297,9 @@ public struct UpdateRelationship: RelationshipMigration {
             let name = originPropertyName.contentDescription
             throw MigrationModelingError
                 .migrationTargetNotFound("relationship \(name) not found")
+        }
+        if hashModifierUpdated {
+            relationship.versionHashModifier = hashModifier
         }
         if let name = name {
             relationship.name = name

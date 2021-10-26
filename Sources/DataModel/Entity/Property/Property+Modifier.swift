@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-public class PropertyModifier<T: WritableValuedProperty, S>: WritableValuedProperty {
+open class PropertyModifier<T: WritableValuedProperty, S>: WritableValuedProperty {
     public typealias Description = T.Description
     public typealias PropertyValue = T.PropertyValue
     public typealias PredicateValue = T.PredicateValue
@@ -25,7 +25,7 @@ public class PropertyModifier<T: WritableValuedProperty, S>: WritableValuedPrope
         self.modifier = modifier
     }
 
-    public func createDescription() -> Description {
+    open func createDescription() -> Description {
         property.createDescription()
     }
 }
@@ -329,5 +329,16 @@ public class UnidirectionalInverse<T: RelationshipProtocol>: PropertyModifier<T,
     public init(wrappedValue: T) {
         super.init(wrappedValue: wrappedValue, true)
         self.isUniDirectional = true
+    }
+}
+
+@propertyWrapper
+public class VersionModifier<T: WritableValuedProperty>: PropertyModifier<T, String> {
+    @inlinable public var wrappedValue: T { property }
+
+    public override func createDescription() -> Description {
+        let description = super.createDescription()
+        description.versionHashModifier = modifier
+        return description
     }
 }

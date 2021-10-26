@@ -47,6 +47,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
     public let attributeType: NSAttributeType
 
     public var defaultValue: Any?
+    public var hashModifier: String? = nil
 
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
     public init<T: FieldAttribute>(
@@ -109,12 +110,14 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
             let derivedExpression = derivedExpression
         {
             let description = NSDerivedAttributeDescription()
+            description.versionHashModifier = hashModifier
             description.name = name!
             description.isOptional = isOptional
             description.derivationExpression = derivedExpression
             return description
         }
         let description = NSAttributeDescription()
+        description.versionHashModifier = hashModifier
         description.name = name!
         description.isOptional = isOptional
         description.isTransient = isTransient
@@ -137,7 +140,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
 
 public typealias RemoveAttribute = RemoveProperty
 
-public struct UpdateAttribute: AttributeMigration {
+public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
 
     public let originPropertyName: String?
     public let originKeyPath: String
@@ -150,6 +153,8 @@ public struct UpdateAttribute: AttributeMigration {
     public let derivedExpression: NSExpression?
 
     public var defaultValue: Any?
+    public var hashModifier: String? = nil
+    public var hashModifierUpdated: Bool = false
 
     public init<T: FieldAttribute>(
         _ originName: String,
@@ -304,6 +309,12 @@ public struct UpdateAttribute: AttributeMigration {
             description.attributeType = attributeType
         } else {
             description.attributeType = attribute.attributeType
+        }
+
+        if hashModifierUpdated {
+            description.versionHashModifier = hashModifier
+        } else {
+            description.versionHashModifier = attribute.versionHashModifier
         }
         
         return description
