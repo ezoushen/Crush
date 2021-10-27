@@ -14,13 +14,13 @@ extension NSManagedObjectModel {
     var version: String {
         let nameHash: UInt64 = versionIdentifiers
             .compactMap { $0.base as? String }
-            .map { Hash.hash(string: $0) }
-            .reduce(0) { Hash.unorderedHash(lhs: $0, rhs: $1) }
+            .map { PersistentHash.fromString($0) }
+            .reduce(0) { PersistentHash.unordered($0, $1) }
         let entityHash: UInt64 = entityVersionHashesByName
             .mapValues { $0.withUnsafeBytes { UInt64($0.load(as: UInt32.self))} }
             .sorted { $0.key < $1.key }
-            .reduce(0) { Hash.orderedHash(lhs: $0, rhs: $1.value) }
-        return String(Hash.orderedHash(lhs: nameHash, rhs: entityHash))
+            .reduce(0) { PersistentHash.ordered($0, $1.value) }
+        return String(PersistentHash.ordered(nameHash, entityHash))
     }
 
     private static let directoryName: String = "CrushManagedObjectModels"
@@ -48,6 +48,10 @@ extension NSManagedObjectModel {
                 .unarchiveObject(withFile: url.path) as? NSManagedObjectModel
         else { return nil }
         return model
+    }
+
+    func save() {
+        save(name: version)
     }
 
     func save(name: String) {

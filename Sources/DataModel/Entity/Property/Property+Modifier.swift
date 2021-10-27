@@ -333,7 +333,7 @@ public class UnidirectionalInverse<T: RelationshipProtocol>: PropertyModifier<T,
 }
 
 @propertyWrapper
-public class VersionModifier<T: WritableValuedProperty>: PropertyModifier<T, String> {
+public class VersionModifier<T: WritableValuedProperty>: PropertyModifier<T, String?> {
     @inlinable public var wrappedValue: T { property }
 
     public override func createDescription() -> Description {
