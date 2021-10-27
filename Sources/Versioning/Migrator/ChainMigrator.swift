@@ -22,8 +22,6 @@ internal final class ChainMigrator: Migrator {
 
     @discardableResult
     internal override func migrate() throws -> Bool {
-        try validateMigrationChainAndDataModel(chain: migrationChain, model: dataModel)
-
         guard var currentManagedObjectModel =
                 try findCompatibleModel(in: migrationChain)
         else {
@@ -57,16 +55,5 @@ internal final class ChainMigrator: Migrator {
             .metadataForPersistentStore(ofType: storage.storeType, at: storage.storageUrl)
         return managedObjectModel.isConfiguration(
             withName: storage.configuration, compatibleWithStoreMetadata: metadata)
-    }
-
-    internal func validateMigrationChainAndDataModel(
-        chain: MigrationChain, model: DataModel) throws
-    {
-        guard let managedObjectModel = try chain.managedObjectModels().last else {
-            throw MigrationError.incompatible
-        }
-        if managedObjectModel.isCompactible(with: dataModel.managedObjectModel) {
-            throw ChainMigratorError.migrationChainIncompatibleWithDataModel
-        }
     }
 }

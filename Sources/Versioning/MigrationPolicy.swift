@@ -9,6 +9,12 @@ import Foundation
 import CoreData
 
 public class MigrationPolicy {
+    let forceValidateModel: Bool
+
+    internal init(forceValidateModel: Bool) {
+        self.forceValidateModel = forceValidateModel
+    }
+
     public func isStoreCompatible(
         in storage: Storage, with dataModel: DataModel) -> Bool
     {
@@ -22,12 +28,26 @@ public class MigrationPolicy {
     }
 
     public func process(storage: Storage, with dataModel: DataModel) throws {
-        guard !isStoreCompatible(in: storage, with: dataModel)
-        else { return }
+        if forceValidateModel {
+            try validateModel(dataModel, in: storage)
+        }
+
+        if isStoreCompatible(in: storage, with: dataModel) { return }
+
+        if !forceValidateModel {
+            try validateModel(dataModel, in: storage)
+        }
+        
         let result = try resolveIncompatible(dataModel: dataModel, in: storage)
         if result == false {
             throw MigrationError.notMigrated
         }
+    }
+
+    public /*abstract*/ func validateModel(
+        _ dataModel: DataModel, in storage: Storage) throws
+    {
+        // Implementation
     }
 
     public /*abstract*/ func configureStoreDescription(
@@ -39,6 +59,7 @@ public class MigrationPolicy {
     public /*abstract*/ func resolveIncompatible(
         dataModel: DataModel, in storage: Storage) throws -> Bool
     {
+        // Implementation
         return false
     }
 }
@@ -47,8 +68,10 @@ public /*abstract*/ class LightWeightBackupMigrationPolicy: MigrationPolicy {
 
     public let lightWeightEnabled: Bool
 
-    internal init(lightWeightEnabled: Bool) {
+    internal init(lightWeightEnabled: Bool, forceValidateModel: Bool) {
         self.lightWeightEnabled = lightWeightEnabled
+        super.init(
+            forceValidateModel: forceValidateModel)
     }
 
     public override func configureStoreDescription(
@@ -74,6 +97,14 @@ public /*abstract*/ class LightWeightBackupMigrationPolicy: MigrationPolicy {
 }
 
 extension MigrationPolicy {
+    internal static var defaultForceValidateModel: Bool {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }
+
     public static var error: MigrationPolicy {
         ErrorMigrationPolicy()
     }
@@ -84,27 +115,40 @@ extension MigrationPolicy {
 
     public static func adHoc(
         migrations: Set<AdHocMigration>,
-        lightWeightBackup flag: Bool = true) -> MigrationPolicy
+        lightWeightBackup flag: Bool = true,
+        forceValidateModel: Bool? = nil) -> MigrationPolicy
     {
-        AdHocMigrationPolicy(migrations, lightWeightBackup: flag)
+        AdHocMigrationPolicy(
+            migrations,
+            lightWeightBackup: flag,
+            forceValidateModel: forceValidateModel
+                ?? defaultForceValidateModel)
     }
 
     public static func chain(
         _ chain: MigrationChain,
-        lightWeightBackup flag: Bool = true) -> MigrationPolicy
+        lightWeightBackup flag: Bool = true,
+        forceValidateModel: Bool? = nil) -> MigrationPolicy
     {
-        ChainMigrationPolicy(chain, lightWeightBackup: flag)
+        ChainMigrationPolicy(
+            chain,
+            lightWeightBackup: flag,
+            forceValidateModel: forceValidateModel
+                ?? defaultForceValidateModel)
     }
 
     public static func adHocChainComposite(
         adHoc: Set<AdHocMigration>,
         chain: MigrationChain,
-        lightWeightBackup flag: Bool = true) -> MigrationPolicy
+        lightWeightBackup flag: Bool = true,
+        forceValidateModel: Bool? = nil) -> MigrationPolicy
     {
         AdHocChainCompositeMigrationPolicy(
             adHocMigrations: adHoc,
             migrationChain: chain,
-            lightWeightBackup: flag)
+            lightWeightBackup: flag,
+            forceValidateModel: forceValidateModel
+                ?? defaultForceValidateModel)
     }
 }
 
@@ -112,7 +156,7 @@ extension MigrationPolicy {
 
 public class ErrorMigrationPolicy: LightWeightBackupMigrationPolicy {
     public init() {
-        super.init(lightWeightEnabled: false)
+        super.init(lightWeightEnabled: false, forceValidateModel: false)
     }
 }
 
@@ -120,7 +164,7 @@ public class ErrorMigrationPolicy: LightWeightBackupMigrationPolicy {
 
 public class LightWeightMigrationPolicy: LightWeightBackupMigrationPolicy {
     public init() {
-        super.init(lightWeightEnabled: true)
+        super.init(lightWeightEnabled: true, forceValidateModel: false)
     }
 
     public override func resolveIncompatible(
@@ -136,9 +180,40 @@ public class AdHocMigrationPolicy: LightWeightBackupMigrationPolicy {
 
     public let adHocMigrations: Set<AdHocMigration>
 
-    public init(_ adHocMigrations: Set<AdHocMigration>, lightWeightBackup: Bool) {
+    private var matchedMigration: AdHocMigration?
+
+    public init(
+        _ adHocMigrations: Set<AdHocMigration>,
+        lightWeightBackup: Bool,
+        forceValidateModel: Bool)
+    {
         self.adHocMigrations = adHocMigrations
-        super.init(lightWeightEnabled: lightWeightBackup)
+        super.init(
+            lightWeightEnabled: lightWeightBackup,
+            forceValidateModel: forceValidateModel)
+    }
+
+    public override func validateModel(
+        _ dataModel: DataModel, in storage: Storage) throws
+    {
+        guard let storage = storage as? ConcreteStorage,
+              let sourceName = NSPersistentStoreCoordinator
+                .lastActiveVersionName(in: storage) else { return }
+        matchedMigration = findCompatibleMigration(
+            sourceName: sourceName, desitnationName: dataModel.name)
+        if matchedMigration != nil {
+            throw MigrationError.incompatible
+        }
+    }
+
+    private func findCompatibleMigration(
+        sourceName: String, desitnationName: String) -> AdHocMigration?
+    {
+        adHocMigrations
+            .first {
+                $0.sourceName == sourceName &&
+                $0.migration.name == desitnationName
+            }
     }
 
     public override func resolveIncompatible(
@@ -146,14 +221,10 @@ public class AdHocMigrationPolicy: LightWeightBackupMigrationPolicy {
     {
         guard let storage = storage as? ConcreteStorage,
               let sourceName = NSPersistentStoreCoordinator
-                .lastActiveVersionName(in: storage) else { return true }
-        let migration = adHocMigrations
-            .first {
-                $0.sourceName == sourceName &&
-                $0.migration.name == dataModel.name }
-        guard let migration = migration else {
-            throw MigrationError.incompatible
-        }
+                .lastActiveVersionName(in: storage),
+              let migration = matchedMigration ?? findCompatibleMigration(
+                    sourceName: sourceName, desitnationName: dataModel.name)
+        else { return true }
         let migrator = AdHocMigrator(
             storage: storage, sourceModelName: sourceName,
             migration: migration.migration, dataModel: dataModel)
@@ -167,9 +238,24 @@ public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
 
     public let migrationChain: MigrationChain
 
-    public init(_ migrationChain: MigrationChain, lightWeightBackup: Bool) {
+    public init(
+        _ migrationChain: MigrationChain,
+        lightWeightBackup: Bool,
+        forceValidateModel: Bool)
+    {
         self.migrationChain = migrationChain
-        super.init(lightWeightEnabled: lightWeightBackup)
+        super.init(
+            lightWeightEnabled: lightWeightBackup,
+            forceValidateModel: forceValidateModel)
+    }
+
+    public override func validateModel(_ model: DataModel, in storage: Storage) throws {
+        guard let managedObjectModel = try migrationChain.managedObjectModels().last else {
+            throw MigrationError.incompatible
+        }
+        if managedObjectModel.isCompactible(with: model.managedObjectModel) {
+            throw ChainMigratorError.migrationChainIncompatibleWithDataModel
+        }
     }
 
     public override func resolveIncompatible(
@@ -189,15 +275,32 @@ public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
 public class AdHocChainCompositeMigrationPolicy: AdHocMigrationPolicy {
     public let migrationChain: MigrationChain
     private lazy var chainMigrationPolicy =
-        ChainMigrationPolicy(migrationChain, lightWeightBackup: lightWeightEnabled)
+        ChainMigrationPolicy(
+            migrationChain,
+            lightWeightBackup: lightWeightEnabled,
+            forceValidateModel: forceValidateModel)
 
     public init(
         adHocMigrations: Set<AdHocMigration>,
         migrationChain: MigrationChain,
-        lightWeightBackup: Bool)
+        lightWeightBackup: Bool,
+        forceValidateModel: Bool)
     {
         self.migrationChain = migrationChain
-        super.init(adHocMigrations, lightWeightBackup: lightWeightBackup)
+        super.init(
+            adHocMigrations,
+            lightWeightBackup: lightWeightBackup,
+            forceValidateModel: forceValidateModel)
+    }
+
+    public override func validateModel(
+        _ dataModel: DataModel, in storage: Storage) throws
+    {
+        do {
+            try super.validateModel(dataModel, in: storage)
+        } catch {
+            try chainMigrationPolicy.validateModel(dataModel, in: storage)
+        }
     }
 
     public override func resolveIncompatible(
