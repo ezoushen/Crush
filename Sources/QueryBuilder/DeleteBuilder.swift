@@ -26,13 +26,16 @@ extension DeletionConfig: RequestConfig {
     }
 }
 
-public final class DeleteBuilder<Target: Entity>: RequestBuilder {
-    var config: DeletionConfig<Target>
+public final class DeleteBuilder<Target: Entity>: PredicateRequestBuilder<Target> {
     let context: Context
+    var config: DeletionConfig<Target> {
+        @inline(__always) get { requestConfig as! DeletionConfig<Target> }
+        @inline(__always) set { requestConfig = newValue }
+    }
     
-    required init(config: Config, context: Context) {
-        self.config = config
+    required init(config: DeletionConfig<Target>, context: Context) {
         self.context = context
+        super.init(config: config)
     }
 }
 

@@ -22,7 +22,7 @@ public struct ReadOnly<Entity: Crush.Entity> {
     }
 
     @inline(__always)
-    private func access<T: ValuedProperty>(
+    public func access<T: ValuedProperty>(
         keyPath: KeyPath<Entity, T>) -> T.PropertyValue
     {
         context.performSync { managedObject[immutable: keyPath] }
@@ -72,38 +72,14 @@ public struct ReadOnly<Entity: Crush.Entity> {
 }
 
 extension ReadOnly: ManagedStatus {
-    public var hasChanges: Bool {
-        managedObject.hasChanges
+    public var contentHashValue: Int {
+        managedObject.contentHashValue
     }
-    
-    public var managedObjectID: NSManagedObjectID {
-        managedObject.objectID
+
+    public subscript<T>(dynamicMember keyPath: KeyPath<ManagedObject<Entity>, T>) -> T {
+        managedObject[keyPath: keyPath]
     }
-    
-    public var hasPersistentChangedValues: Bool {
-        managedObject.hasPersistentChangedValues
-    }
-    
-    public var isInserted: Bool {
-        managedObject.isInserted
-    }
-    
-    public var isDeleted: Bool {
-        managedObject.isDeleted
-    }
-    
-    public var isUpdated: Bool {
-        managedObject.isUpdated
-    }
-    
-    public var isFault: Bool {
-        managedObject.isFault
-    }
-    
-    public var faultingState: Int {
-        managedObject.faultingState
-    }
-    
+
     public func hasFault<T: RelationshipProtocol>(
         forRelationship keyPath: KeyPath<Entity, T>) -> Bool
     {
@@ -111,15 +87,15 @@ extension ReadOnly: ManagedStatus {
     }
     
     public func changedValues() -> [String: Any] {
-        managedObject.changedValues()
+        context.performSync { managedObject.changedValues() }
     }
     
     public func changedValuesForCurrentEvent() -> [String: Any] {
-        managedObject.changedValuesForCurrentEvent()
+        context.performSync { managedObject.changedValuesForCurrentEvent() }
     }
     
     public func commitedValues(forKeys keys: [String]?) -> [String: Any] {
-        managedObject.committedValues(forKeys: keys)
+        context.performSync { managedObject.committedValues(forKeys: keys) }
     }
 }
 

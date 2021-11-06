@@ -26,7 +26,7 @@ public enum FetchSorterOption {
     }
 }
 
-public struct FetchConfig<T: Entity>: RequestConfig {
+public struct FetchConfig<Entity: Crush.Entity>: RequestConfig {
     var predicate: NSPredicate? = nil
     var sorters: [NSSortDescriptor]? = nil
     var resultType: NSFetchRequestResultType = .managedObjectResultType
@@ -38,8 +38,8 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     var asFaults: Bool = true
     var includePendingChanges: Bool = false
     
-    func createStoreRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        let request = T.fetchRequest()
+    func createStoreRequest() -> NSPersistentStoreRequest {
+        let request = Entity.fetchRequest()
         configureRequest(request)
         return request
     }
@@ -58,14 +58,19 @@ public struct FetchConfig<T: Entity>: RequestConfig {
     }
 }
 
-public class PartialFetchBuilder<Target, Received, Result> where Target: Entity {
-    
-    internal var config: Config
+public class PartialFetchBuilder<Target, Received, Result>: PredicateRequestBuilder<Target>
+where
+    Target: Entity
+{
     internal let context: Context
+    internal var config: FetchConfig<Target> {
+        @inline(__always) get { requestConfig as! FetchConfig<Target> }
+        @inline(__always) set { requestConfig = newValue }
+    }
 
-    internal required init(config: Config, context: Context) {
-        self.config = config
+    internal required init(config: FetchConfig<Target>, context: Context) {
         self.context = context
+        super.init(config: config)
     }
     
     public func limit(_ size: Int) -> PartialFetchBuilder<Target, Received, Result> {
@@ -137,15 +142,10 @@ public class PartialFetchBuilder<Target, Received, Result> where Target: Entity 
     }
 }
 
-extension PartialFetchBuilder: RequestBuilder {
-    typealias Config = FetchConfig<Target>
-}
-
 extension PartialFetchBuilder where Received == ManagedObject<Target> {
     private func received() -> [Received] {
-        let request = config.createStoreRequest()
-        return try! context.execute(
-            request: request,
+        try! context.execute(
+            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>,
             on: config.includePendingChanges
             ? \.executionContext
             : \.rootContext)
@@ -158,7 +158,7 @@ public class FetchBuilder<Target, Received, Result>:
     public func count() -> Int {
         config.resultType = .countResultType
         return context.count(
-            request: config.createStoreRequest(),
+            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>,
             on: config.includePendingChanges
                 ? \.executionContext
                 : \.rootContext)

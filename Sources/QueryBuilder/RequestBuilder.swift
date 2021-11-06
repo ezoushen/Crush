@@ -22,28 +22,29 @@ public protocol MutableQueryerProtocol {
 }
 
 protocol RequestConfig {
-    associatedtype Request
-
     var predicate: NSPredicate? { get set }
-    func createStoreRequest() -> Request
+    func createStoreRequest() -> NSPersistentStoreRequest
 }
 
 protocol RequestBuilder: AnyObject {
     typealias Context = Crush.SessionContext & RawContextProviderProtocol
 
     associatedtype Target: Entity
-    associatedtype Config: RequestConfig
-    
-    var config: Config { get set }
 }
 
-extension RequestBuilder {
+public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
+    internal var requestConfig: RequestConfig
+
+    internal init(config: RequestConfig) {
+        self.requestConfig = config
+    }
+
     public func `where`(_ predicateString: String) -> Self {
         return `where`(TypedPredicate(format: predicateString))
     }
 
     public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
-        config.predicate = predicate
+        requestConfig.predicate = predicate
         return self
     }
 
@@ -52,24 +53,24 @@ extension RequestBuilder {
     }
 
     public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
-        guard let oldPredicate = config.predicate else {
-            config.predicate = predicate
+        guard let oldPredicate = requestConfig.predicate else {
+            requestConfig.predicate = predicate
             return self
         }
-        config.predicate = oldPredicate && predicate
+        requestConfig.predicate = oldPredicate && predicate
         return self
     }
-    
+
     public func orWhere(_ predicateString: String) -> Self {
         return orWhere(TypedPredicate(format: predicateString))
     }
 
     public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {
-        guard let oldPredicate = config.predicate else {
-            config.predicate = predicate
+        guard let oldPredicate = requestConfig.predicate else {
+            requestConfig.predicate = predicate
             return self
         }
-        config.predicate = oldPredicate || predicate
+        requestConfig.predicate = oldPredicate || predicate
         return self
     }
 }

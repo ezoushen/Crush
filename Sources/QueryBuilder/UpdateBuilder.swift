@@ -39,13 +39,16 @@ extension UpdateConfig {
     }
 }
 
-public final class UpdateBuilder<Target: Entity> {
+public final class UpdateBuilder<Target: Entity>: PredicateRequestBuilder<Target> {
     internal let context: Context
-    internal var config: UpdateConfig<Target>
+    internal var config: UpdateConfig<Target> {
+        @inline(__always) get { requestConfig as! UpdateConfig<Target> }
+        @inline(__always) set { requestConfig = newValue }
+    }
     
-    internal init(config: Config, context: Context) {
+    internal init(config: UpdateConfig<Target>, context: Context) {
         self.context = context
-        self.config = config
+        super.init(config: config)
     }
 }
 
@@ -60,7 +63,7 @@ extension UpdateBuilder where Target: Entity {
     }
 }
 
-extension UpdateBuilder: RequestBuilder {
+extension UpdateBuilder {
     public func exec() throws -> [NSManagedObjectID] {
         try config.batch
             ? executeBatchUpdate()

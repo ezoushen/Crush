@@ -8,6 +8,14 @@
 import CoreData
 
 public final class TypedPredicate<T: Entity>: NSPredicate {
+    @inlinable public static var `true`: TypedPredicate<T> {
+        TypedPredicate(format: "TRUEPREDICATE")
+    }
+
+    @inlinable public static var `false`: TypedPredicate<T> {
+        TypedPredicate(format: "FALSEPREDICATE")
+    }
+
     @inlinable public static prefix func ! (_ predicate: TypedPredicate<T>) -> TypedPredicate<T> {
         TypedPredicate<T>(format: NSCompoundPredicate(notPredicateWithSubpredicate: predicate).predicateFormat)
     }

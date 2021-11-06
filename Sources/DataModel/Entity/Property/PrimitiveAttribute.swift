@@ -89,7 +89,7 @@ extension Bool: PredicateEquatableAttribute, PredicateExpressedByString {
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Date: PredicateEquatableAttribute, PredicateExpressedByString {
+extension Date: PredicateComparableAttribute, PredicateExpressedByString {
     public static var nativeType: NSAttributeType { .dateAttributeType }
     public var predicateValue: NSObject { self as NSDate }
 }

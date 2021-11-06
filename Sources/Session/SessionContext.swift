@@ -20,6 +20,7 @@ public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func delete<T: Entity>(_ object: ManagedObject<T>)
     func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>?
     func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T>
+    func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>]
 
     func commit(_ handler: @escaping (Error?) -> Void) throws
     func commit() throws
@@ -153,6 +154,14 @@ extension SessionContext where Self: RawContextProviderProtocol {
     public func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T> {
         executionContext.performSync {
             executionContext.receive(runtimeObject: object.managedObject)
+        }
+    }
+
+    public func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>] {
+        objects.map { object in
+            executionContext.performSync {
+                executionContext.receive(runtimeObject: object.managedObject)
+            }
         }
     }
 

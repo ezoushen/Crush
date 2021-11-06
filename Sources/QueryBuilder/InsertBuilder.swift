@@ -26,13 +26,16 @@ extension InsertionConfig: RequestConfig {
     }
 }
 
-public final class InsertBuilder<Target: Entity>: RequestBuilder {
-    var config: InsertionConfig<Target>
+public final class InsertBuilder<Target: Entity>: PredicateRequestBuilder<Target> {
     let context: Context
+    var config: InsertionConfig<Target> {
+        @inline(__always) get { requestConfig as! InsertionConfig<Target> }
+        @inline(__always) set { requestConfig = newValue }
+    }
     
-    required init(config: Config, context: Context) {
+    required init(config: InsertionConfig<Target>, context: Context) {
         self.context = context
-        self.config = config
+        super.init(config: config)
     }
 }
 
