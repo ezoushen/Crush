@@ -11,6 +11,20 @@ public protocol RuntimeObject {
     associatedtype Entity: Crush.Entity
 }
 
+public class ManagedObjectBase: NSManagedObject {
+    internal func originalValidateForDelete() throws {
+        try super.validateForDelete()
+    }
+
+    internal func originalValidateForUpdate() throws {
+        try super.validateForUpdate()
+    }
+
+    internal func originalValidateForInsert() throws {
+        try super.validateForInsert()
+    }
+}
+
 public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject, ObjectDriver, ManagedStatus {
     internal lazy var canTriggerEvent: Bool = {
         managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
@@ -71,6 +85,30 @@ public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject
         super.awake(fromSnapshotEvents: flags)
         if canTriggerEvent {
             Entity.awake(self, fromSnapshotEvents: flags)
+        }
+    }
+
+    public override func validateForDelete() throws {
+        if canTriggerEvent {
+            try Entity.validateForDelete(self)
+        } else {
+            try super.validateForDelete()
+        }
+    }
+    
+    public override func validateForInsert() throws {
+        if canTriggerEvent {
+            try Entity.validateForInsert(self)
+        } else {
+            try super.validateForInsert()
+        }
+    }
+
+    public override func validateForUpdate() throws {
+        if canTriggerEvent {
+            try Entity.validateForUpdate(self)
+        } else {
+            try super.validateForUpdate()
         }
     }
 }

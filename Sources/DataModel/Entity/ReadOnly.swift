@@ -34,46 +34,23 @@ public struct ReadOnly<Entity: Crush.Entity> {
         access(keyPath: keyPath)
     }
 
-    public subscript<T: RelationshipProtocol>(
+    public subscript<T: ValuedProperty>(
         dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> T.Mapping.EntityType.ReadOnly?
+    ) -> T.PropertyValue.Safe
     where
-        T.Mapping == ToOne<T.Destination>
+        T.PropertyValue: UnsafeSessionProperty
     {
-        guard let value = access(keyPath: keyPath)
-        else { return nil }
-        return ReadOnly<T.Destination>(value)
-    }
-
-    public subscript<T: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> Set<T.Destination.ReadOnly>
-    where
-        T.Mapping == ToMany<T.Destination>
-    {
-        context.performSync {
-            let set = managedObject[immutable: keyPath]
-            return Set(set.map { ReadOnly<T.Destination>($0) })
-        }
-    }
-    
-    public subscript<T: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> OrderedSet<T.Destination.ReadOnly>
-    where
-        T.Mapping == ToOrdered<T.Destination>
-    {
-        context.performSync {
-            let orderedSet = managedObject[immutable: keyPath]
-            return OrderedSet(
-                orderedSet.map{ ReadOnly<T.Destination>($0) })
-        }
+        context.performSync { managedObject[immutable: keyPath].wrapped() }
     }
 }
 
 extension ReadOnly: ManagedStatus {
     public var contentHashValue: Int {
         managedObject.contentHashValue
+    }
+
+    public var isInaccessible: Bool {
+        managedObject.managedObjectContext == nil
     }
 
     public subscript<T>(dynamicMember keyPath: KeyPath<ManagedObject<Entity>, T>) -> T {

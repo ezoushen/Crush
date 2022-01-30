@@ -8,11 +8,15 @@
 import CoreData
 import Foundation
 
-public class Storage {
+public class Storage: CustomStringConvertible {
     let storeType: String
     let url: URL?
     let configuration: String?
     let options: [Option]
+
+    public var description: String {
+        "\(String(reflecting: Self.self))(storeType:\"\(storeType)\",url:\"\(url == nil ? "nil" : "\(url!)")\")"
+    }
 
     init(storeType: String, url: URL?, configuration: String?, options: [Option]) {
         self.storeType = storeType

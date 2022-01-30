@@ -63,6 +63,12 @@ extension ObjectDriver {
         Property.FieldConvertor.convert(
             value: managedObject.getValue(key: keyPath.propertyName))
     }
+
+    public subscript<Value>(
+        dynamicMember keyPath: KeyPath<NSManagedObject, Value>) -> Value
+    {
+        managedObject[keyPath: keyPath]
+    }
 }
 
 extension NSManagedObject {
@@ -105,7 +111,7 @@ extension NSManagedObject {
     }
 }
 
-public class ManagedDriver<Entity: Crush.Entity>: ObjectDriver {
+public class ManagedDriver<Entity: Crush.Entity>: ObjectDriver, ManagedStatus {
 
     public let managedObject: NSManagedObject
 

@@ -203,8 +203,7 @@ extension PartialFetchBuilder where
     }
 
     public func exec() -> [Result] {
-        received().map { ReadOnly<Target>(context.present($0))
-        }
+        received().map { ReadOnly<Target>(context.present($0)) }
     }
 }
 

@@ -44,6 +44,10 @@ public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
     }
 
     public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
+        return `where`(predicate as NSPredicate)
+    }
+
+    public func `where`(_ predicate: NSPredicate) -> Self {
         requestConfig.predicate = predicate
         return self
     }
@@ -53,6 +57,10 @@ public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
     }
 
     public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
+        return andWhere(predicate as NSPredicate)
+    }
+
+    public func andWhere(_ predicate: NSPredicate) -> Self {
         guard let oldPredicate = requestConfig.predicate else {
             requestConfig.predicate = predicate
             return self
@@ -66,11 +74,19 @@ public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
     }
 
     public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {
+        return orWhere(predicate as NSPredicate)
+    }
+
+    public func orWhere(_ predicate: NSPredicate) -> Self {
         guard let oldPredicate = requestConfig.predicate else {
             requestConfig.predicate = predicate
             return self
         }
         requestConfig.predicate = oldPredicate || predicate
         return self
+    }
+
+    public func createRequest() -> NSPersistentStoreRequest {
+        requestConfig.createStoreRequest()
     }
 }

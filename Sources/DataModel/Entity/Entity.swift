@@ -34,6 +34,15 @@ open class Entity {
     @objc open dynamic class func awakeFromInsert(_ managedObject: NSManagedObject) { }
     @objc open dynamic class func awake(_ managedObject: NSManagedObject,
                                         fromSnapshotEvents: NSSnapshotEventType) { }
+    @objc open dynamic class func validateForDelete(_ managedObject: NSManagedObject) throws {
+        try (managedObject as? ManagedObjectBase)?.originalValidateForDelete()
+    }
+    @objc open dynamic class func validateForInsert(_ managedObject: NSManagedObject) throws {
+        try (managedObject as? ManagedObjectBase)?.originalValidateForInsert()
+    }
+    @objc open dynamic class func validateForUpdate(_ managedObject: NSManagedObject) throws {
+        try (managedObject as? ManagedObjectBase)?.originalValidateForUpdate()
+    }
 }
 
 extension Entity: Hashable {

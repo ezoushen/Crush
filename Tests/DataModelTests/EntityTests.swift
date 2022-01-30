@@ -259,9 +259,9 @@ class EntityTests: XCTestCase {
 
     func test_createEntityDescription_indexesShouldBeInheritedAccordingToTargetEntityName() {
         class TestEntity: Entity {
-            @Indexed("child", entity: ChildEntity.self)
+            @Indexed("child", target: ChildEntity.self)
             var value = Value.Int16("value")
-            @Indexed(entity: AnotherChildEntity.self)
+            @Indexed(target: AnotherChildEntity.self)
             var value2 = Value.Int16("value2")
         }
         class AnotherChildEntity: TestEntity { }

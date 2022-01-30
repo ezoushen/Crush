@@ -113,8 +113,8 @@ internal class PersistentHistoryTracker {
         let uiContext = context.uiContext
         let rootContext = context.rootContext
         rootContext.performAsync {
-            for transaction in self.loadPersistentHistory() {
-                let txNotification = transaction.objectIDNotification()
+            for session in self.loadPersistentHistory() {
+                let txNotification = session.objectIDNotification()
                 // Merge changes into root context
                 rootContext.mergeChanges(fromContextDidSave: txNotification)
                 // Merge changes into ui context

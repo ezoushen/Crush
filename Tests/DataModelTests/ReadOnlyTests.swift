@@ -11,27 +11,40 @@ import XCTest
 
 @testable import Crush
 
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 class ReadOnlyTests: XCTestCase {
     class TestEntity: Entity {
         var integerValue = Value.Int16("integerValue")
-        var derived = Derived.Int16("derived", from: \TestEntity.integerValue)
         var ordered = Relation.ToOrdered<TestEntity>("ordered")
         var many = Relation.ToMany<TestEntity>("many")
         var one = Relation.ToOne<TestEntity>("one")
         var fetched = Fetched<TestEntity>("fetched") { $0.where(\.integerValue == 0) }
     }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    class DerivedTestEntity: Entity {
+        var integerValue = Value.Int16("integerValue")
+        var derived = Derived.Int16("derived", from: \TestEntity.integerValue)
+    }
     
     var container: DataContainer!
     
     override func setUpWithError() throws {
+        let dataModel: DataModel = {
+            if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *) {
+                return DataModel(
+                    name: "NAME",
+                    concrete: [TestEntity(), DerivedTestEntity()])
+            } else {
+                return DataModel(
+                    name: "NAME",
+                    concrete: [TestEntity()])
+            }
+        }()
         container = try DataContainer.load(
             storage: .sqlite(
                 name: "\(UUID())",
                 options: .sqlitePragmas(["journal_mode": "DELETE" as NSString])),
-            dataModel: DataModel(
-                name: "NAME",
-                concrete: [TestEntity()]))
+            dataModel: dataModel)
     }
     
     override func tearDownWithError() throws {
@@ -39,7 +52,7 @@ class ReadOnlyTests: XCTestCase {
     }
     
     func test_readAttribute_shouldReturnUpdatedValue() {
-        let entity: TestEntity.ReadOnly =  container.startSession().sync {
+        let entity: TestEntity.ReadOnly = container.startSession().sync {
             context -> TestEntity.Managed in
             let entity = context.create(entity: TestEntity.self)
             entity.integerValue = 10
@@ -49,19 +62,8 @@ class ReadOnlyTests: XCTestCase {
         XCTAssertEqual(entity.integerValue, 10)
     }
     
-    func test_readDerivedAttribute_shouldReturnDerivedValue() {
-        let entity: TestEntity.ReadOnly =  container.startSession().sync {
-            context -> TestEntity.Managed in
-            let entity = context.create(entity: TestEntity.self)
-            entity.integerValue = 10
-            try! context.commit()
-            return entity
-        }
-        XCTAssertEqual(entity.derived, 10)
-    }
-    
     func test_readOrderedRelations_shouldReturnOrderedSet() {
-        let entity: TestEntity.ReadOnly =  container.startSession().sync {
+        let entity: TestEntity.ReadOnly = container.startSession().sync {
             context -> TestEntity.Managed in
             let entity = context.create(entity: TestEntity.self)
             let entity2 = context.create(entity: TestEntity.self)
@@ -73,7 +75,7 @@ class ReadOnlyTests: XCTestCase {
     }
     
     func test_readManyRelations_shouldReturnSet() {
-        let entity: TestEntity.ReadOnly =  container.startSession().sync {
+        let entity: TestEntity.ReadOnly = container.startSession().sync {
             context -> TestEntity.Managed in
             let entity = context.create(entity: TestEntity.self)
             let entity2 = context.create(entity: TestEntity.self)
@@ -85,7 +87,7 @@ class ReadOnlyTests: XCTestCase {
     }
     
     func test_readOneRelation_shouldReturnReadOnlyObject() {
-        let entity: TestEntity.ReadOnly =  container.startSession().sync {
+        let entity: TestEntity.ReadOnly = container.startSession().sync {
             context -> TestEntity.Managed in
             let entity = context.create(entity: TestEntity.self)
             let entity2 = context.create(entity: TestEntity.self)
@@ -97,7 +99,7 @@ class ReadOnlyTests: XCTestCase {
     }
     
     func test_readFetchProperty_shouldReturnObjects() {
-        let entity: TestEntity.ReadOnly =  container.startSession().sync {
+        let entity: TestEntity.ReadOnly = container.startSession().sync {
             context -> TestEntity.Managed in
             let entity = context.create(entity: TestEntity.self)
             let entity2 = context.create(entity: TestEntity.self)
@@ -106,5 +108,66 @@ class ReadOnlyTests: XCTestCase {
             return entity
         }
         XCTAssertEqual(entity.fetched.count, 1)
+    }
+
+    func createDefaultEntity(integerValue: Int16) -> TestEntity.ReadOnly {
+        container.startSession().sync {
+            context -> TestEntity.Managed in
+            let entity = context.create(entity: TestEntity.self)
+            entity.integerValue = integerValue
+            try! context.commit()
+            return entity
+        }
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    func test_readDerivedAttribute_shouldReturnDerivedValue() {
+        let entity: DerivedTestEntity.ReadOnly = container.startSession().sync {
+            context -> DerivedTestEntity.Managed in
+            let entity = context.create(entity: DerivedTestEntity.self)
+            entity.integerValue = 10
+            try! context.commit()
+            return entity
+        }
+        XCTAssertEqual(entity.derived, 10)
+    }
+
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func test_combineKVOPublisher_shouldGetInitialValue() throws {
+        let entity = createDefaultEntity(integerValue: 10)
+        let value: Int16? = try awaitPublisher(
+            entity.observe(\.integerValue, options: [.initial, .new]).first())
+        XCTAssertEqual(value, 10)
+    }
+
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func test_combineKVOPublisher_shouldGetNewValue() throws {
+        let entity = createDefaultEntity(integerValue: 10)
+        let value: Int16? = try
+            awaitPublisher(entity.observe(\.integerValue, options: [.new]).first()) {
+                try container.startSession().sync { context in
+                    let entity = context.edit(object: entity)
+                    entity.integerValue = 11
+                    try context.commit()
+                }
+            }
+        XCTAssertEqual(value, 11)
+    }
+
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func test_combineKVOPublisher_shouldGetNewAndOldValues() throws {
+        let entity = createDefaultEntity(integerValue: 10)
+        let value: [Int16?] = try
+            awaitPublisher(
+                entity.observe(\.integerValue, options: [.new, .old])
+                    .removeDuplicates().prefix(2).collect()
+            ) {
+                try container.startSession().sync { context in
+                    let entity = context.edit(object: entity)
+                    entity.integerValue = 11
+                    try context.commit()
+                }
+            }
+        XCTAssertEqual(value, [10, 11])
     }
 }
