@@ -34,7 +34,7 @@ public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
     public typealias FieldConvertor = FetchedProperty<T>
     public typealias PredicateValue = FieldConvertor.ManagedObjectValue
     public typealias PropertyValue = FieldConvertor.RuntimeObjectValue
-    public typealias Configuration = (PartialFetchBuilder<T, T.Managed, T.ReadOnly>) -> PartialFetchBuilder<T, T.Managed, T.ReadOnly>
+    public typealias Configuration = (FetchBuilder<T, T.ReadOnly>) -> FetchBuilder<T, T.ReadOnly>
 
     internal let configuration: Configuration
 
@@ -48,7 +48,7 @@ public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
 
     public func createDescription() -> NSFetchedPropertyDescription {
         let builder = configuration(
-            PartialFetchBuilder(
+            FetchBuilder(
                 config: .init(), context: DummyContext())
         )
         let description = NSFetchedPropertyDescription()

@@ -43,7 +43,7 @@ class FetchedPropertyTests: XCTestCase {
         let configuration: Fetched<TestEntity>.Configuration = {
             $0.where(\.value == 1)
         }
-        let fetchBuilder = FetchBuilder<TestEntity, TestEntity.Managed, TestEntity.ReadOnly>(
+        let fetchBuilder = FetchBuilder<TestEntity, TestEntity.ReadOnly>(
             config: .init(), context: DummyContext())
         let request = configuration(fetchBuilder).config.createStoreRequest()
         let description = model.managedObjectModel

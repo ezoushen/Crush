@@ -49,7 +49,7 @@ extension SessionContext where Self: RawContextProviderProtocol {
             .persistentStores.contains { $0.type != NSSQLiteStoreType } == false
     }
 
-    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, ManagedObject<T>> {
+    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>> {
         .init(config: .init(), context: self)
     }
     

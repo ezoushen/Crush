@@ -146,6 +146,14 @@ extension KeyPath where
         }
         return TypedPredicate<Root>(format: "\(lhs.propertyName) != %@", value)
     }
+
+    public static func == (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) == \(rhs.propertyName)")
+    }
+
+    public static func != (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) != \(rhs.propertyName)")
+    }
 }
 
 extension KeyPath where
@@ -171,6 +179,22 @@ extension KeyPath where
 
     public static func <> (lhs: KeyPath, rhs: ClosedRange<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
+    }
+
+    public static func > (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) > \(rhs.propertyName)")
+    }
+
+    public static func < (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) < \(rhs.propertyName)")
+    }
+
+    public static func >= (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) >= \(rhs.propertyName)")
+    }
+
+    public static func <= (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) <= \(rhs.propertyName)")
     }
 }
 
@@ -237,3 +261,29 @@ public func || (lhs: NSPredicate, rhs: NSPredicate) -> NSPredicate {
 public prefix func ! (predicat: NSPredicate) -> NSPredicate {
     NSCompoundPredicate(notPredicateWithSubpredicate: predicat)
 }
+
+extension TypedPredicate {
+    public static func subquery<Property: RelationshipProtocol>(
+        _ keyPath: KeyPath<T, Property>, predicate: TypedPredicate<Property.Destination>
+    ) -> TypedPredicate<T>
+    where
+        Property.Mapping == ToOne<Property.Destination>
+    {
+        TypedPredicate(format: "\(keyPath.propertyName).\(predicate.predicateFormat)")
+    }
+
+    public static func subquery<Property: RelationshipProtocol>(
+        _ keyPath: KeyPath<T, Property>,
+        predicate: TypedPredicate<Property.Destination>,
+        collectionQuery: CollectionQuery<Property.Destination>
+    ) -> TypedPredicate<T>
+    where
+        Property.Mapping == ToMany<Property.Destination>
+    {
+        TypedPredicate(
+            format: "SUBQUERY(\(keyPath.propertyName)," +
+                    "$x,$x.\(predicate.predicateFormat))" +
+                    ".\(collectionQuery.predicateString)")
+    }
+}
+

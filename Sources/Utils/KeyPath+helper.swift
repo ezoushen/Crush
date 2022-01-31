@@ -15,7 +15,7 @@ public protocol Expressible {
 
 private var propertyNameCache: NSCache<AnyKeyPath, NSString> = .init()
 
-extension PartialKeyPath: CustomStringConvertible where Root: Entity {
+extension PartialKeyPath where Root: Entity {
     var optionalPropertyName: String? {
         guard let name = propertyNameCache.object(forKey: self) else {
             if let name = (Root.init()[keyPath: self] as? PropertyProtocol)?.name {
@@ -25,10 +25,6 @@ extension PartialKeyPath: CustomStringConvertible where Root: Entity {
             return nil
         }
         return name as String
-    }
-
-    public var description: String {
-        optionalPropertyName ?? "\(self)"
     }
 }
 

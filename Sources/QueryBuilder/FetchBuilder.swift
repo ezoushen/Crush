@@ -2,7 +2,7 @@
 //  PartialQueryBuilder.swift
 //  Crush
 //
-//  Created by 沈昱佐 on 2020/1/17.
+//  Created by ezou on 2020/1/17.
 //  Copyright © 2020 ezou. All rights reserved.
 //
 
@@ -37,7 +37,9 @@ public struct FetchConfig<Entity: Crush.Entity>: RequestConfig {
     var batch: Int = 0
     var asFaults: Bool = true
     var includePendingChanges: Bool = false
-    
+
+    var postPredicate: NSPredicate? = nil
+
     func createStoreRequest() -> NSPersistentStoreRequest {
         let request = Entity.fetchRequest()
         configureRequest(request)
@@ -58,7 +60,7 @@ public struct FetchConfig<Entity: Crush.Entity>: RequestConfig {
     }
 }
 
-public class PartialFetchBuilder<Target, Received, Result>: PredicateRequestBuilder<Target>
+public final class FetchBuilder<Target, Received>: PredicateRequestBuilder<Target>
 where
     Target: Entity
 {
@@ -73,17 +75,17 @@ where
         super.init(config: config)
     }
     
-    public func limit(_ size: Int) -> PartialFetchBuilder<Target, Received, Result> {
+    public func limit(_ size: Int) -> FetchBuilder<Target, Received> {
         config.limit = size
         return self
     }
 
-    public func offset(_ step: Int) -> PartialFetchBuilder<Target, Received, Result> {
+    public func offset(_ step: Int) -> FetchBuilder<Target, Received> {
         config.offset = step
         return self
     }
     
-    public func batch(_ size: Int) -> PartialFetchBuilder<Target, Received, Result> {
+    public func batch(_ size: Int) -> FetchBuilder<Target, Received> {
         config.batch = size
         return self
     }
@@ -92,31 +94,12 @@ where
         config.includePendingChanges = true
         return self
     }
-    
-    public func groupAndCount<V: WritableValuedProperty>(
-        col keyPath: KeyPath<Target, V>
-    ) -> PartialFetchBuilder<Target, Dictionary<String, Any>, Dictionary<String, Any>> {
-        let name = keyPath.propertyName
-        let keypathExp = NSExpression(forKeyPath: name)
-        let countDesc = NSExpressionDescription()
-        countDesc.name = "count"
-        countDesc.expressionResultType = .integer64AttributeType
-        countDesc.expression = NSExpression(forFunction: "count:",
-                                            arguments: [keypathExp])
-        let groupBy = config.groupBy ?? []
-        config.groupBy = groupBy + [keyPath]
-        config.prefetched = [keyPath, countDesc]
-        config.resultType = .dictionaryResultType
-        return .init(
-            config: config,
-            context: context)
-    }
 
     public func sort<V: WritableValuedProperty>(
         _ keyPath: KeyPath<Target, V>,
         ascending: Bool,
         option: FetchSorterOption = .default
-    ) -> PartialFetchBuilder<Target, Received, Result> {
+    ) -> FetchBuilder<Target, Received> {
         let sorters = config.sorters ?? []
         let descriptor = NSSortDescriptor(
             key: keyPath.propertyName,
@@ -128,7 +111,7 @@ where
 
     public func select(
         _ keyPaths: PartialKeyPath<Target>...
-    ) -> PartialFetchBuilder<Target, Received, Result> {
+    ) -> FetchBuilder<Target, Received> {
         let fetched = config.prefetched ?? []
         let expressibles = keyPaths.compactMap{ $0 as? Expressible }
         config.prefetched = fetched + expressibles
@@ -140,21 +123,7 @@ where
         config.asFaults = flag
         return self
     }
-}
 
-extension PartialFetchBuilder where Received == ManagedObject<Target> {
-    private func received() -> [Received] {
-        try! context.execute(
-            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>,
-            on: config.includePendingChanges
-            ? \.executionContext
-            : \.rootContext)
-    }
-}
-
-public class FetchBuilder<Target, Received, Result>:
-    PartialFetchBuilder<Target, Received, Result> where Target: Entity
-{
     public func count() -> Int {
         config.resultType = .countResultType
         return context.count(
@@ -163,21 +132,81 @@ public class FetchBuilder<Target, Received, Result>:
                 ? \.executionContext
                 : \.rootContext)
     }
+
+    private func received() -> [ManagedObject<Target>] {
+        let objects: [ManagedObject<Target>] = try! context.execute(
+            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>,
+            on: config.includePendingChanges
+                ? \.executionContext
+                : \.rootContext)
+        if let predicate = config.postPredicate {
+            return (objects as NSArray).filtered(using: predicate) as! [ManagedObject<Target>]
+        }
+        return objects
+    }
 }
 
-extension PartialFetchBuilder where
-    Received == Result,
-    Result == ManagedObject<Target>
+extension FetchBuilder {
+    public func predicate(_ predicateString: String, _ args: CVarArg...) -> Self {
+        return predicate(NSPredicate(format: predicateString, argumentArray: args))
+    }
+
+    public func predicate(_ pred: TypedPredicate<Target>) -> Self {
+        return predicate(pred as NSPredicate)
+    }
+
+    public func predicate(_ predicate: NSPredicate) -> Self {
+        config.postPredicate = predicate
+        return self
+    }
+
+    public func andPredicate(_ predicateString: String, _ args: CVarArg...) -> Self {
+        return andPredicate(TypedPredicate(format: predicateString))
+    }
+
+    public func andPredicate(_ predicate: TypedPredicate<Target>) -> Self {
+        return andPredicate(predicate as NSPredicate)
+    }
+
+    public func andPredicate(_ predicate: NSPredicate) -> Self {
+        guard let oldPredicate = config.postPredicate else {
+            config.postPredicate = predicate
+            return self
+        }
+        config.postPredicate = oldPredicate && predicate
+        return self
+    }
+
+    public func orPredicate(_ predicateString: String, _ args: CVarArg...) -> Self {
+        return orPredicate(TypedPredicate(format: predicateString))
+    }
+
+    public func orPredicate(_ predicate: TypedPredicate<Target>) -> Self {
+        return orPredicate(predicate as NSPredicate)
+    }
+
+    public func orPredicate(_ predicate: NSPredicate) -> Self {
+        guard let oldPredicate = config.postPredicate else {
+            config.postPredicate = predicate
+            return self
+        }
+        config.postPredicate = oldPredicate || predicate
+        return self
+    }
+}
+
+extension FetchBuilder where
+    Received == ManagedObject<Target>
 {
     public func exists() -> Bool {
         findOne() != nil
     }
 
-    public func findOne() -> Result? {
+    public func findOne() -> Received? {
         limit(1).exec().first
     }
     
-    public func exec() -> [Result] {
+    public func exec() -> [Received] {
         received().map {
             let object = context.receive($0)
             if config.includePendingChanges {
@@ -189,20 +218,18 @@ extension PartialFetchBuilder where
     }
 }
 
-extension PartialFetchBuilder where
-    Target: Entity,
-    Result == ReadOnly<Target>,
-    Received == ManagedObject<Target>
+extension FetchBuilder where
+    Received == ReadOnly<Target>
 {
     public func exists() -> Bool {
         findOne() != nil
     }
 
-    public func findOne() -> Result? {
+    public func findOne() -> Received? {
         limit(1).exec().first
     }
 
-    public func exec() -> [Result] {
+    public func exec() -> [Received] {
         received().map { ReadOnly<Target>(context.present($0)) }
     }
 }

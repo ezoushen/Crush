@@ -8,11 +8,11 @@
 import CoreData
 
 public protocol QueryerProtocol {
-    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, ManagedObject<T>>
+    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>>
 }
 
 public protocol ReadOnlyQueryerProtocol {
-    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, ManagedObject<T>, T.ReadOnly>
+    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, T.ReadOnly>
 }
 
 public protocol MutableQueryerProtocol {
@@ -39,8 +39,8 @@ public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
         self.requestConfig = config
     }
 
-    public func `where`(_ predicateString: String) -> Self {
-        return `where`(TypedPredicate(format: predicateString))
+    public func `where`(_ predicateString: String, _ args: CVarArg...) -> Self {
+        return `where`(NSPredicate(format: predicateString, argumentArray: args))
     }
 
     public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
@@ -52,7 +52,7 @@ public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
         return self
     }
 
-    public func andWhere(_ predicateString: String) -> Self {
+    public func andWhere(_ predicateString: String, _ args: CVarArg...) -> Self {
         return andWhere(TypedPredicate(format: predicateString))
     }
 
@@ -69,7 +69,7 @@ public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
         return self
     }
 
-    public func orWhere(_ predicateString: String) -> Self {
+    public func orWhere(_ predicateString: String, _ args: CVarArg...) -> Self {
         return orWhere(TypedPredicate(format: predicateString))
     }
 
