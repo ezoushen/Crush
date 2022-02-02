@@ -26,6 +26,11 @@ protocol RequestConfig {
     func createStoreRequest() -> NSPersistentStoreRequest
 }
 
+protocol RequestExecutor: AnyObject {
+    associatedtype Received
+    func exec() throws -> [Received]
+}
+
 protocol RequestBuilder: AnyObject {
     typealias Context = Crush.SessionContext & RawContextProviderProtocol
 

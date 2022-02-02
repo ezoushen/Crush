@@ -55,16 +55,14 @@ public class CoreDataStack {
     private func loadPersistentStore(
         async flag: Bool, completion: @escaping (Error?) -> Void) throws
     {
-        // Migrate store before reading
+        // Migrate store before loading
         try migrationPolicy.process(storage: storage, with: dataModel)
         // Setup persistent store description
         let description = storage.createDescription()
         migrationPolicy.configureStoreDescription(description)
         description.shouldAddStoreAsynchronously = flag
         // Load persistent store
-        coordinator.addPersistentStore(with: description) {
-            completion($1)
-        }
+        coordinator.addPersistentStore(with: description) { completion($1) }
         NSPersistentStoreCoordinator.updateLastActiveModel(dataModel, in: storage)
         dataModel.managedObjectModel.save()
     }

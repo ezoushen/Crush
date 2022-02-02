@@ -39,7 +39,7 @@ public final class DeleteBuilder<Target: Entity>: PredicateRequestBuilder<Target
     }
 }
 
-extension DeleteBuilder {
+extension DeleteBuilder: RequestExecutor {
     public func exec() throws -> [NSManagedObjectID] {
         return try config.batch
             ? executeBatchDelete()

@@ -26,7 +26,10 @@ extension InsertionConfig: RequestConfig {
     }
 }
 
-public final class InsertBuilder<Target: Entity>: PredicateRequestBuilder<Target> {
+public final class InsertBuilder<Target: Entity>:
+    PredicateRequestBuilder<Target>,
+    RequestExecutor
+{
     let context: Context
     var config: InsertionConfig<Target> {
         @inline(__always) get { requestConfig as! InsertionConfig<Target> }

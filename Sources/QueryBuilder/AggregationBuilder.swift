@@ -7,7 +7,7 @@
 
 import CoreData
 
-public final class AggregationBuilder<Target: Crush.Entity>: RequestBuilder {
+public final class AggregationBuilder<Target: Crush.Entity>: RequestBuilder, RequestExecutor {
 
     let context: Context
 

@@ -215,13 +215,26 @@ extension FetchBuilder {
     }
 }
 
-public final class ManagedFetchBuilder<Target: Entity>: FetchBuilder<Target> {
+public class ExecutableFetchBuilder<Target: Entity, ReveivedType>:
+    FetchBuilder<Target>,
+    RequestExecutor
+{
+    public typealias Received = ReveivedType
+
     @inlinable
-    public func findOne() -> Target.Managed? {
+    public func findOne() -> Received? {
         limit(1).exec().first
     }
 
-    public func exec() -> [Target.Managed] {
+    public func exec() -> [Received] {
+        fatalError("unimplemented")
+    }
+}
+
+public final class ManagedFetchBuilder<Target: Entity>:
+    ExecutableFetchBuilder<Target, Target.Managed>
+{
+    public override func exec() -> [Target.Managed] {
         let result = received()
         guard result.count > 0,
               result.first?.managedObjectContext != context.executionContext
@@ -230,14 +243,13 @@ public final class ManagedFetchBuilder<Target: Entity>: FetchBuilder<Target> {
     }
 }
 
-public final class ReadOnlyFetchBuilder<Target: Entity>: FetchBuilder<Target> {
-    @inlinable
-    public func findOne() -> Target.ReadOnly? {
-        limit(1).exec().first
-    }
-
-    public func exec() -> [Target.ReadOnly] {
-        received().map { ReadOnly<Target>(context.present($0)) }
+public final class ReadOnlyFetchBuilder<Target: Entity>:
+    ExecutableFetchBuilder<Target, Target.ReadOnly>
+{
+    public override func exec() -> [Target.ReadOnly] {
+        received().map {
+            ReadOnly<Target>(context.present($0))
+        }
     }
 }
 

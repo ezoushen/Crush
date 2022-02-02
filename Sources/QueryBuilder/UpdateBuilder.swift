@@ -39,7 +39,10 @@ extension UpdateConfig {
     }
 }
 
-public final class UpdateBuilder<Target: Entity>: PredicateRequestBuilder<Target> {
+public final class UpdateBuilder<Target: Entity>:
+    PredicateRequestBuilder<Target>,
+    RequestExecutor
+{
     internal let context: Context
     internal var config: UpdateConfig<Target> {
         @inline(__always) get { requestConfig as! UpdateConfig<Target> }
