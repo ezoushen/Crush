@@ -141,7 +141,7 @@ internal class PersistentHistoryTracker {
     internal func notifyOnMainThread() {
         DispatchQueue.performMainThreadTask {
             NotificationCenter.default.post(
-                name: .DataContainerDidRefreshUiContext,
+                name: DataContainer.uiContextDidRefresh,
                 object: self, userInfo: nil)
         }
     }

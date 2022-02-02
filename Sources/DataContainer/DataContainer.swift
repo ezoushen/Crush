@@ -8,11 +8,9 @@
 
 import CoreData
 
-extension Notification.Name {
-    public static let DataContainerDidRefreshUiContext = Notification.Name("DataContainerDidRefreshUiContext")
-}
-
 public class DataContainer {
+    public static let uiContextDidRefresh = Notification.Name("DataContainerDidRefreshUiContext")
+
     internal let coreDataStack: CoreDataStack
     internal var writerContext: NSManagedObjectContext!
     internal var uiContext: NSManagedObjectContext!
