@@ -23,7 +23,7 @@ public enum DerivedAggregation: String {
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol {
+public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFieldConvertible {
     public typealias Description = NSDerivedAttributeDescription
     public typealias PropertyValue = F.RuntimeObjectValue
     public typealias FieldConvertor = F

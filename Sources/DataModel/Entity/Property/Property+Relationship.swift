@@ -92,7 +92,8 @@ public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, Fiel
 
 public final class Relationship<R: RelationMapping>:
     RelationshipProtocol,
-    TransientProperty
+    TransientProperty,
+    AnyFieldConvertible
 {
     public typealias FieldConvertor = R
     public typealias PredicateValue = R.ManagedObjectValue

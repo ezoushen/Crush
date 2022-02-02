@@ -58,9 +58,18 @@ public struct FetchConfig<Entity: Crush.Entity>: RequestConfig {
         request.includesPendingChanges = true
         request.fetchBatchSize = batch
     }
+
+    mutating func group(by property: Expressible) {
+        groupBy = (groupBy?.filter { !$0.equal(to: property) } ?? []) + [property]
+        prefetch(property: property)
+    }
+
+    mutating func prefetch(property: Expressible) {
+        prefetched = (prefetched?.filter { !$0.equal(to: property) } ?? []) + [property]
+    }
 }
 
-public final class FetchBuilder<Target, Received>: PredicateRequestBuilder<Target>
+public class FetchBuilder<Target>: PredicateRequestBuilder<Target>
 where
     Target: Entity
 {
@@ -75,17 +84,17 @@ where
         super.init(config: config)
     }
     
-    public func limit(_ size: Int) -> FetchBuilder<Target, Received> {
+    public func limit(_ size: Int) -> Self {
         config.limit = size
         return self
     }
 
-    public func offset(_ step: Int) -> FetchBuilder<Target, Received> {
+    public func offset(_ step: Int) -> Self {
         config.offset = step
         return self
     }
     
-    public func batch(_ size: Int) -> FetchBuilder<Target, Received> {
+    public func batch(_ size: Int) -> Self {
         config.batch = size
         return self
     }
@@ -98,8 +107,8 @@ where
     public func sort<V: WritableValuedProperty>(
         _ keyPath: KeyPath<Target, V>,
         ascending: Bool,
-        option: FetchSorterOption = .default
-    ) -> FetchBuilder<Target, Received> {
+        option: FetchSorterOption = .default) -> Self
+    {
         let sorters = config.sorters ?? []
         let descriptor = NSSortDescriptor(
             key: keyPath.propertyName,
@@ -110,8 +119,8 @@ where
     }
 
     public func select(
-        _ keyPaths: PartialKeyPath<Target>...
-    ) -> FetchBuilder<Target, Received> {
+        _ keyPaths: PartialKeyPath<Target>...) -> Self
+    {
         let fetched = config.prefetched ?? []
         let expressibles = keyPaths.compactMap{ $0 as? Expressible }
         config.prefetched = fetched + expressibles
@@ -133,7 +142,12 @@ where
                 : \.rootContext)
     }
 
-    private func received() -> [ManagedObject<Target>] {
+    public func exists() -> Bool {
+        config.resultType = .countResultType
+        return limit(1).count() > 0
+    }
+
+    fileprivate func received() -> [ManagedObject<Target>] {
         let objects: [ManagedObject<Target>] = try! context.execute(
             request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>,
             on: config.includePendingChanges
@@ -195,46 +209,43 @@ extension FetchBuilder {
     }
 }
 
-extension FetchBuilder where
-    Received == ManagedObject<Target>
-{
-    public func exists() -> Bool {
-        findOne() != nil
-    }
-
-    public func findOne() -> Received? {
-        limit(1).exec().first
-    }
-    
-    public func exec() -> [Received] {
-        received().map {
-            let object = context.receive($0)
-            if config.includePendingChanges {
-                return object
-            }
-            object.awakeFromFetch()
-            return object
-        }
+extension FetchBuilder {
+    public func aggregate() -> AggregationBuilder<Target> {
+        AggregationBuilder(config: config, context: context)
     }
 }
 
-extension FetchBuilder where
-    Received == ReadOnly<Target>
-{
-    public func exists() -> Bool {
-        findOne() != nil
-    }
-
-    public func findOne() -> Received? {
+public final class ManagedFetchBuilder<Target: Entity>: FetchBuilder<Target> {
+    @inlinable
+    public func findOne() -> Target.Managed? {
         limit(1).exec().first
     }
 
-    public func exec() -> [Received] {
+    public func exec() -> [Target.Managed] {
+        let result = received()
+        guard result.count > 0,
+              result.first?.managedObjectContext != context.executionContext
+        else { return result }
+        return result.map(context.receive(_:))
+    }
+}
+
+public final class ReadOnlyFetchBuilder<Target: Entity>: FetchBuilder<Target> {
+    @inlinable
+    public func findOne() -> Target.ReadOnly? {
+        limit(1).exec().first
+    }
+
+    public func exec() -> [Target.ReadOnly] {
         received().map { ReadOnly<Target>(context.present($0)) }
     }
 }
 
 extension NSExpressionDescription: Expressible {
+    public func getHashValue() -> Int {
+        hashValue
+    }
+
     public func asExpression() -> Any {
         self
     }

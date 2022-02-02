@@ -44,7 +44,8 @@ public protocol ConcreteAttriuteProcotol: AttributeProtocol { }
 // MARK: - EntityAttributeType
 public class Attribute<F: FieldAttribute>:
     ConcreteAttriuteProcotol,
-    TransientProperty
+    TransientProperty,
+    AnyFieldConvertible
 {
     public typealias PropertyValue = F.RuntimeObjectValue
     public typealias FieldConvertor = F

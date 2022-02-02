@@ -11,6 +11,13 @@ import CoreData
 
 public protocol Expressible {
     func asExpression() -> Any
+    func getHashValue() -> Int
+}
+
+extension Expressible {
+    func equal(to: Expressible) -> Bool {
+        getHashValue() == to.getHashValue()
+    }
 }
 
 private var propertyNameCache: NSCache<AnyKeyPath, NSString> = .init()
@@ -49,6 +56,10 @@ extension KeyPath where Root: Entity, Value: PropertyProtocol {
 
 
 extension KeyPath: Expressible where Root: Entity, Value: PropertyProtocol {
+    public func getHashValue() -> Int {
+        propertyName.hashValue
+    }
+
     public func asExpression() -> Any {
         propertyName
     }

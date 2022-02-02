@@ -34,7 +34,7 @@ public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
     public typealias FieldConvertor = FetchedProperty<T>
     public typealias PredicateValue = FieldConvertor.ManagedObjectValue
     public typealias PropertyValue = FieldConvertor.RuntimeObjectValue
-    public typealias Configuration = (FetchBuilder<T, T.ReadOnly>) -> FetchBuilder<T, T.ReadOnly>
+    public typealias Configuration = (FetchBuilder<T>) -> FetchBuilder<T>
 
     internal let configuration: Configuration
 

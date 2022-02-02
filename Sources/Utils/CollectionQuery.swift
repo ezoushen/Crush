@@ -43,7 +43,7 @@ public final class CollectionQuery<T: Entity> {
     public static func sum<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@sum.\(selector.propertyName) == \(value)")
     }
@@ -52,7 +52,7 @@ public final class CollectionQuery<T: Entity> {
     public static func sum<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@sum.\(selector.propertyName) > \(value)")
     }
@@ -61,7 +61,7 @@ public final class CollectionQuery<T: Entity> {
     public static func sum<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@sum.\(selector.propertyName) >= \(value)")
     }
@@ -70,7 +70,7 @@ public final class CollectionQuery<T: Entity> {
     public static func sum<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@sum.\(selector.propertyName) < \(value)")
     }
@@ -79,7 +79,7 @@ public final class CollectionQuery<T: Entity> {
     public static func sum<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@sum.\(selector.propertyName) <= \(value)")
     }
@@ -90,7 +90,7 @@ public final class CollectionQuery<T: Entity> {
     public static func avg<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@avg.\(selector.propertyName) == \(value)")
     }
@@ -99,7 +99,7 @@ public final class CollectionQuery<T: Entity> {
     public static func avg<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@avg.\(selector.propertyName) > \(value)")
     }
@@ -108,7 +108,7 @@ public final class CollectionQuery<T: Entity> {
     public static func avg<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@avg.\(selector.propertyName) >= \(value)")
     }
@@ -117,7 +117,7 @@ public final class CollectionQuery<T: Entity> {
     public static func avg<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@avg.\(selector.propertyName) < \(value)")
     }
@@ -126,7 +126,7 @@ public final class CollectionQuery<T: Entity> {
     public static func avg<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@avg.\(selector.propertyName) <= \(value)")
     }
@@ -137,7 +137,7 @@ public final class CollectionQuery<T: Entity> {
     public static func min<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@min.\(selector.propertyName) == \(value)")
     }
@@ -146,7 +146,7 @@ public final class CollectionQuery<T: Entity> {
     public static func min<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@min.\(selector.propertyName) > \(value)")
     }
@@ -155,7 +155,7 @@ public final class CollectionQuery<T: Entity> {
     public static func min<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@min.\(selector.propertyName) >= \(value)")
     }
@@ -164,7 +164,7 @@ public final class CollectionQuery<T: Entity> {
     public static func min<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@min.\(selector.propertyName) < \(value)")
     }
@@ -173,7 +173,7 @@ public final class CollectionQuery<T: Entity> {
     public static func min<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@min.\(selector.propertyName) <= \(value)")
     }
@@ -184,7 +184,7 @@ public final class CollectionQuery<T: Entity> {
     public static func max<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@max.\(selector.propertyName) == \(value)")
     }
@@ -193,7 +193,7 @@ public final class CollectionQuery<T: Entity> {
     public static func max<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@max.\(selector.propertyName) > \(value)")
     }
@@ -202,7 +202,7 @@ public final class CollectionQuery<T: Entity> {
     public static func max<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@max.\(selector.propertyName) >= \(value)")
     }
@@ -211,7 +211,7 @@ public final class CollectionQuery<T: Entity> {
     public static func max<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@max.\(selector.propertyName) < \(value)")
     }
@@ -220,7 +220,7 @@ public final class CollectionQuery<T: Entity> {
     public static func max<S: ValuedProperty>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateAggregatable
+        S.FieldConvertor: PredicateComputable
     {
         CollectionQuery("@max.\(selector.propertyName) <= \(value)")
     }

@@ -8,16 +8,22 @@
 import Foundation
 
 @dynamicMemberLookup
-public final class PartialObject<T: Entity> {
-    
+public final class PartialObject<T> {
     internal var store: [String: Any] = [:]
 
-    public init(_ pairs: EntityKeyValuePair<T>...) {
-        store = pairs.reduce(into: [String: Any]()) {
+    internal init(store: [String: Any]) {
+        self.store = store
+    }
+}
+
+extension PartialObject where T: Entity {
+    public convenience init(_ pairs: EntityKeyValuePair<T>...) {
+        let store = pairs.reduce(into: [String: Any]()) {
             $0[$1.key] = $1.value
         }
+        self.init(store: store)
     }
-    
+
     public subscript<S: AttributeProtocol>(
         dynamicMember keyPath: KeyPath<T, S>) -> S.PropertyValue
     {

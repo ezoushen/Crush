@@ -167,7 +167,8 @@ final class ManagedObjectTests: XCTestCase {
         var called: Bool = false
         TestEntity.awakeFromFetchEvent = { _ in called = true }
         container.startSession().sync {
-            _ = $0.fetch(for: TestEntity.self).findOne()
+            _ = $0.fetch(for: TestEntity.self)
+                .asFaults(false).findOne()
         }
         XCTAssertTrue(called)
     }

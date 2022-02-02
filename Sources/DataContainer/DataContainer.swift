@@ -148,7 +148,7 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
         coreDataStack.storage.storeType == NSSQLiteStoreType
     }
 
-    public func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, T.ReadOnly> {
+    public func fetch<T: Entity>(for type: T.Type) -> ReadOnlyFetchBuilder<T> {
         .init(config: .init(), context: querySessionContext())
     }
     
