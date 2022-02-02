@@ -8,224 +8,194 @@
 
 import CoreData
 
-extension Notification.Name {
-    public static let DataContainerDidRefreshUiContext: Notification.Name = .init("Notification.Name.DataContainerDidRefreshUiContext")
-}
-
 public class DataContainer {
+    public static let uiContextDidRefresh = Notification.Name("DataContainerDidRefreshUiContext")
+
+    internal let coreDataStack: CoreDataStack
     internal var writerContext: NSManagedObjectContext!
     internal var uiContext: NSManagedObjectContext!
+    internal let createdDate: Date = Date()
 
-    public enum LogLevel {
-        case info, warning, error, critical
-    }
+    internal lazy var persistentHistoryTracker =
+        PersistentHistoryTracker(
+            context: backgroundSessionContext(),
+            coordinator: coreDataStack.coordinator)
 
     public var logger: LogHandler = .default
-    
-    let connection: Connection
-    
-    let mergePolicy: NSMergePolicy
-        
-    public init(
-        connection: Connection,
+
+    private init(
+        storage: Storage,
+        dataModel: DataModel,
+        mergePolicy: NSMergePolicy,
+        migrationPolicy: MigrationPolicy)
+    {
+        coreDataStack = CoreDataStack(
+            storage: storage,
+            dataModel: dataModel,
+            mergePolicy: mergePolicy,
+            migrationPolicy: migrationPolicy)
+    }
+
+    public static func load(
+        storage: Storage,
+        dataModel: DataModel,
         mergePolicy: NSMergePolicy = .error,
-        completion: @escaping () -> Void = {}
-    ) throws {
-        self.connection = connection
-        self.mergePolicy = mergePolicy
-        
-        let block = { [weak self] in
-            guard let `self` = self else { return }
-            self.initializeAllContext()
-            DispatchQueue.main.async(execute: completion)
+        migrationPolicy: MigrationPolicy = .lightWeight
+    ) throws -> DataContainer {
+        let container = DataContainer(
+            storage: storage,
+            dataModel: dataModel,
+            mergePolicy: mergePolicy,
+            migrationPolicy: migrationPolicy)
+        try container.coreDataStack.loadPersistentStore()
+        container.setup()
+        return container
+    }
+
+    public static func loadAsync(
+        storage: Storage,
+        dataModel: DataModel,
+        mergePolicy: NSMergePolicy = .error,
+        migrationPolicy: MigrationPolicy = .lightWeight,
+        completion: @escaping (Error?) -> Void
+    ) -> DataContainer {
+        let container = DataContainer(
+            storage: storage,
+            dataModel: dataModel,
+            mergePolicy: mergePolicy,
+            migrationPolicy: migrationPolicy)
+        container.coreDataStack.loadPersistentStoreAsync { error in
+            defer { completion(error) }
+            guard error == nil else { return }
+            container.setup()
         }
-        
-        connection.isConnected
-            ? block()
-            : try connection.connect(completion: block)
+        return container
+    }
+
+    private func setup() {
+        initializeAllContext()
+        persistentHistoryTracker.enable()
     }
     
     private func initializeAllContext() {
-        writerContext = createWriterContext()
-        uiContext = createUiContext(parent: writerContext)
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(writerContextDidSave),
-            name: Notification.Name.NSManagedObjectContextDidSave,
-            object: writerContext)
+        writerContext = coreDataStack.createWriterContext()
+        uiContext = coreDataStack.createUiContext(parent: writerContext)
     }
     
-    @objc private func writerContextDidSave(notification: Notification) {
-        uiContext.perform(
-            #selector(self.uiContext.mergeChanges(fromContextDidSave:)),
-            on: .main,
-            with: notification,
-            waitUntilDone: Thread.isMainThread)
-
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(
-                name: .DataContainerDidRefreshUiContext, object: self, userInfo: nil)
-        }
+    public func rebuildStorage() throws {
+        guard try destroyStorage() else { return }
+        try buildStorage()
     }
     
-    private func createWriterContext() -> NSManagedObjectContext {
-        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        context.persistentStoreCoordinator = connection.persistentStoreCoordinator
-        context.mergePolicy = mergePolicy
-        context.automaticallyMergesChangesFromParent = false
-        return context
+    @discardableResult
+    public func destroyStorage() throws -> Bool {
+        guard let storage = coreDataStack.storage as? ConcreteStorage,
+              coreDataStack.isLoaded()
+        else { return false }
+        try coreDataStack.coordinator
+            .destroyPersistentStore(
+                at: storage.storageUrl,
+                ofType: storage.storeType, options: nil)
+        try storage.destroy()
+        return true
     }
     
-    private func createUiContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
-        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-        context.parent = parent
-        context.automaticallyMergesChangesFromParent = true
-        return context
+    public func buildStorage() throws {
+        guard coreDataStack.isLoaded() == false else { return }
+        try coreDataStack.loadPersistentStore()
     }
     
-    private func createContext(parent: NSManagedObjectContext, concurrencyType: NSManagedObjectContextConcurrencyType) -> NSManagedObjectContext {
-        autoreleasepool {
-            let context = NSManagedObjectContext(concurrencyType: concurrencyType)
-            context.parent = parent
-            context.automaticallyMergesChangesFromParent = false
-            return context
-        }
-    }
-    
-    private func createBackgroundContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
-        createContext(parent: parent, concurrencyType: .privateQueueConcurrencyType)
-    }
-    
-    private func createMainThreadContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
-        createContext(parent: parent, concurrencyType: .mainQueueConcurrencyType)
-    }
-    
-    public func reduceMemoryUsage() {
-        uiContext.performSync {
-            uiContext.reset()
-        }
-        writerContext.performSync {
-            writerContext.reset()
-        }
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
+    public func loadTransactionHistory(date: Date?) -> [NSPersistentHistoryTransaction] {
+        persistentHistoryTracker.loadPersistentHistory(date: date ?? createdDate)
     }
 }
 
 extension DataContainer {
-    internal func backgroundTransactionContext() -> _TransactionContext {
-        _TransactionContext(executionContext: createBackgroundContext(parent: writerContext),
-                            rootContext: writerContext,
-                            uiContext: uiContext,
-                            logger: logger)
+    internal func backgroundSessionContext(name: String? = nil) -> _SessionContext {
+        let context = coreDataStack.createBackgroundContext(parent: writerContext)
+        context.name = name ?? "background"
+        return _SessionContext(
+            executionContext: context,
+            rootContext: writerContext,
+            uiContext: uiContext,
+            logger: logger)
     }
     
-    internal func uiTransactionContext() -> _TransactionContext {
-        let context = createMainThreadContext(parent: writerContext)
-        return _TransactionContext(executionContext: context,
-                                   rootContext: writerContext,
-                                   uiContext: context,
-                                   logger: logger)
+    internal func uiSessionContext(name: String? = nil) -> _SessionContext {
+        let context = coreDataStack.createMainThreadContext(parent: writerContext)
+        context.name = name ?? "ui"
+        return _SessionContext(
+            executionContext: context,
+            rootContext: writerContext,
+            uiContext: context,
+            logger: logger)
     }
     
-    internal func queryTransactionContext() -> _TransactionContext {
-        _TransactionContext(executionContext: uiContext,
-                            rootContext: writerContext,
-                            uiContext: uiContext,
-                            logger: logger)
+    internal func querySessionContext(name: String? = nil) -> _SessionContext {
+        return _SessionContext(
+            executionContext: uiContext,
+            rootContext: writerContext,
+            uiContext: uiContext,
+            logger: logger)
     }
 }
 
 extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
-    public func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, T, T.ReadOnly> {
-        .init(config: .init(), context: queryTransactionContext(), onUiContext: true)
+    private func canUseBatchRequest() -> Bool {
+        coreDataStack.storage.storeType == NSSQLiteStoreType
+    }
+
+    public func fetch<T: Entity>(for type: T.Type) -> ReadOnlyFetchBuilder<T> {
+        .init(config: .init(), context: querySessionContext())
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
-        .init(config: .init(), context: backgroundTransactionContext())
+        .init(config: .init(batch: canUseBatchRequest()),
+              context: backgroundSessionContext())
     }
     
     public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
-        .init(config: .init(), context: backgroundTransactionContext())
+        .init(config: .init(batch: canUseBatchRequest()),
+              context: backgroundSessionContext())
     }
     
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
-        .init(config: .init(), context: backgroundTransactionContext())
+        .init(config: .init(batch: canUseBatchRequest()),
+              context: backgroundSessionContext())
     }
 }
 
 extension DataContainer {
-    public func startTransaction() -> Transaction {
-        Transaction(context: backgroundTransactionContext(), mergePolicy: mergePolicy)
+    public func startSession(name: String? = nil) -> Session {
+        Session(
+            context: backgroundSessionContext(name: name),
+            mergePolicy: coreDataStack.mergePolicy)
     }
     
-    public func startUiTransaction() -> Transaction {
-        Transaction(context: uiTransactionContext(), mergePolicy: mergePolicy)
+    public func startInteractiveSession(name: String? = nil) -> Session {
+        Session(
+            context: uiSessionContext(name: name),
+            mergePolicy: coreDataStack.mergePolicy)
     }
     
-    public func load<T: HashableEntity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
-        guard let object = uiContext.object(with: objectID) as? T else { return nil }
+    public func load<T: Entity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
+        guard let object = uiContext.object(with: objectID) as? ManagedObject<T> else { return nil }
         return T.ReadOnly(object)
     }
     
-    public func load<T: HashableEntity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
+    public func load<T: Entity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
         objectIDs.map(load(objectID:))
     }
     
-    public func load<T: HashableEntity>(_ object: T.ReadOnly) -> T.ReadOnly {
-        guard uiContext != object.value.rawObject.managedObjectContext else { return object }
-        let newObject = uiContext.receive(runtimeObject: object.value) as! T
+    public func load<T: Entity>(_ object: T.ReadOnly) -> T.ReadOnly {
+        guard uiContext != object.managedObject.managedObjectContext else { return object }
+        let newObject = uiContext.receive(runtimeObject: object.managedObject)
         return T.ReadOnly(newObject)
     }
-}
 
-extension DataContainer {
-    public struct LogHandler {
-        public static var `default`: LogHandler {
-            .init(
-                info: { print($0) },
-                warning: { print($0)},
-                error: { msg, err in print(msg) },
-                critical: { msg, err in print(msg) })
-        }
-
-        private static let queue: DispatchQueue = .init(
-            label: "\(Bundle.main.bundleIdentifier ?? "").DataContainer.LogHandler",
-            qos: .background)
-
-        public enum Level {
-            case info, warning, error, critical
-        }
-
-        private let _info: (String) -> Void
-        private let _warning: (String) -> Void
-        private let _error: (String, Error?) -> Void
-        private let _critical: (String, Error?) -> Void
-
-        public init(
-            info: @escaping (String) -> Void,
-            warning: @escaping (String) -> Void,
-            error: @escaping (String, Error?) -> Void,
-            critical: @escaping (String, Error?) -> Void)
-        {
-            _info = info
-            _warning = warning
-            _error = error
-            _critical = critical
-        }
-
-        func log(_ level: Level, _ message: String, error: Error? = nil) {
-            Self.queue.async {
-                switch level {
-                case .info: return _info(message)
-                case .warning: return _warning(message)
-                case .error: return _error(message, error)
-                case .critical: return _critical(message, error)
-                }
-            }
-        }
+    public func faultAllObjects() {
+        uiContext.refreshAllObjects()
+        writerContext.refreshAllObjects()
     }
 }

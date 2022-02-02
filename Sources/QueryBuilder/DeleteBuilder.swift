@@ -9,60 +9,59 @@ import CoreData
 
 struct DeletionConfig<Target: Entity> {
     var predicate: NSPredicate?
+    let batch: Bool
 }
 
 extension DeletionConfig: RequestConfig {
-    func createFetchRequest() -> NSBatchDeleteRequest {
-        let name = Target.entityDescription().name ?? String(describing: Self.self)
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: name)
+    func createStoreRequest() -> NSPersistentStoreRequest {
+        let fetchRequest = Target.fetchRequest()
         fetchRequest.predicate = predicate
-        let description = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-        description.resultType = .resultTypeObjectIDs
-        return description
+        if batch {
+            let description = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            description.resultType = .resultTypeObjectIDs
+            return description
+        }
+        fetchRequest.resultType = .managedObjectResultType
+        return fetchRequest
     }
 }
 
-public final class DeleteBuilder<Target: Entity> {
-    var _config: DeletionConfig<Target>
-    let _context: Context
+public final class DeleteBuilder<Target: Entity>: PredicateRequestBuilder<Target> {
+    let context: Context
+    var config: DeletionConfig<Target> {
+        @inline(__always) get { requestConfig as! DeletionConfig<Target> }
+        @inline(__always) set { requestConfig = newValue }
+    }
     
-    required init(config: Config, context: Context) {
-        _config = config
-        _context = context
+    required init(config: DeletionConfig<Target>, context: Context) {
+        self.context = context
+        super.init(config: config)
     }
 }
 
-extension DeleteBuilder: RequestBuilder {
-    public func `where`(_ predicate: NSPredicate) -> Self {
-        _config = _config.updated(\.predicate, value: predicate)
-        return self
+extension DeleteBuilder: RequestExecutor {
+    public func exec() throws -> [NSManagedObjectID] {
+        return try config.batch
+            ? executeBatchDelete()
+            : executeLegacyBatchDelete()
     }
-    
-    public func andWhere(_ predicate: NSPredicate) -> Self {
-        let newPredicate: NSPredicate = {
-            if let pred = _config.predicate {
-                return NSCompoundPredicate(andPredicateWithSubpredicates: [pred, predicate])
-            }
-            return predicate
-        }()
-        _config = _config.updated(\.predicate, value: newPredicate)
-        return self
-    }
-    
-    public func orWhere(_ predicate: NSPredicate) -> Self {
-        let newPredicate: NSPredicate = {
-            if let pred = _config.predicate {
-                return NSCompoundPredicate(orPredicateWithSubpredicates: [pred, predicate])
-            }
-            return predicate
-        }()
-        _config = _config.updated(\.predicate, value: newPredicate)
-        return self
-    }
-}
 
-extension DeleteBuilder {
-    public func exec() throws -> NSBatchDeleteResult {
-        try _context.execute(request: _config.createFetchRequest(), on: \.rootContext)
+    private func executeBatchDelete() throws -> [NSManagedObjectID] {
+        let request = config.createStoreRequest()
+        let result: NSBatchDeleteResult = try context
+            .execute(request: request, on: \.rootContext)
+        return result.result as! [NSManagedObjectID]
+    }
+
+    private func executeLegacyBatchDelete() throws -> [NSManagedObjectID] {
+        let request = config.createStoreRequest()
+        let context = context.rootContext
+        return try context.performSync {
+            let request = request as! NSFetchRequest<NSManagedObject>
+            let objects = try context.fetch(request)
+            objects.forEach(context.delete)
+            try context.save()
+            return objects.map(\.objectID)
+        }
     }
 }

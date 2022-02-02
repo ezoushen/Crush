@@ -8,11 +8,11 @@
 import CoreData
 
 public protocol QueryerProtocol {
-    func fetch<T: Entity>(for type: T.Type) -> FetchBuilder<T, T, T>
+    func fetch<T: Entity>(for type: T.Type) -> ManagedFetchBuilder<T>
 }
 
 public protocol ReadOnlyQueryerProtocol {
-    func fetch<T: HashableEntity>(for type: T.Type) -> FetchBuilder<T, T, T.ReadOnly>
+    func fetch<T: Entity>(for type: T.Type) -> ReadOnlyFetchBuilder<T>
 }
 
 public protocol MutableQueryerProtocol {
@@ -22,29 +22,76 @@ public protocol MutableQueryerProtocol {
 }
 
 protocol RequestConfig {
-    associatedtype Request
-    
-    func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self
-    func createFetchRequest() -> Request
-}
-
-protocol PredicatibleRequestConfig: RequestConfig {
     var predicate: NSPredicate? { get set }
+    func createStoreRequest() -> NSPersistentStoreRequest
 }
 
-extension RequestConfig {
-    func updated<V>(_ keyPath: KeyPath<Self, V>, value: V) -> Self {
-        guard let keyPath = keyPath as? WritableKeyPath<Self, V> else { return self }
-        var config = self
-        config[keyPath: keyPath] = value
-        return config
-    }
+protocol RequestExecutor: AnyObject {
+    associatedtype Received
+    func exec() throws -> [Received]
 }
 
 protocol RequestBuilder: AnyObject {
-    typealias Context = Crush.TransactionContext & RawContextProviderProtocol
-    
-    associatedtype Config: RequestConfig
-    
-    var _config: Config { get set }
+    typealias Context = Crush.SessionContext & RawContextProviderProtocol
+
+    associatedtype Target: Entity
+}
+
+public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
+    internal var requestConfig: RequestConfig
+
+    internal init(config: RequestConfig) {
+        self.requestConfig = config
+    }
+
+    public func `where`(_ predicateString: String, _ args: CVarArg...) -> Self {
+        return `where`(NSPredicate(format: predicateString, argumentArray: args))
+    }
+
+    public func `where`(_ predicate: TypedPredicate<Target>) -> Self {
+        return `where`(predicate as NSPredicate)
+    }
+
+    public func `where`(_ predicate: NSPredicate) -> Self {
+        requestConfig.predicate = predicate
+        return self
+    }
+
+    public func andWhere(_ predicateString: String, _ args: CVarArg...) -> Self {
+        return andWhere(TypedPredicate(format: predicateString))
+    }
+
+    public func andWhere(_ predicate: TypedPredicate<Target>) -> Self {
+        return andWhere(predicate as NSPredicate)
+    }
+
+    public func andWhere(_ predicate: NSPredicate) -> Self {
+        guard let oldPredicate = requestConfig.predicate else {
+            requestConfig.predicate = predicate
+            return self
+        }
+        requestConfig.predicate = oldPredicate && predicate
+        return self
+    }
+
+    public func orWhere(_ predicateString: String, _ args: CVarArg...) -> Self {
+        return orWhere(TypedPredicate(format: predicateString))
+    }
+
+    public func orWhere(_ predicate: TypedPredicate<Target>) -> Self {
+        return orWhere(predicate as NSPredicate)
+    }
+
+    public func orWhere(_ predicate: NSPredicate) -> Self {
+        guard let oldPredicate = requestConfig.predicate else {
+            requestConfig.predicate = predicate
+            return self
+        }
+        requestConfig.predicate = oldPredicate || predicate
+        return self
+    }
+
+    public func createRequest() -> NSPersistentStoreRequest {
+        requestConfig.createStoreRequest()
+    }
 }

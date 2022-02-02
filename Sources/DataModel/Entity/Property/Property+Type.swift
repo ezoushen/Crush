@@ -8,115 +8,45 @@
 
 import Foundation
 
-public typealias Value = Required.Value
-public typealias Relation = Required.Relation
+public typealias Fetched<T: Entity> = FetchedProperty<T>
 
-public enum Optional {
-    public struct Relation {
-        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToMany<S>, ToOne<D>>
-        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToMany<S>, ToMany<D>>
-        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToOne<S>, ToOne<D>>
-        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<Nullable, ToOne<S>, ToMany<D>>
-    }
-    
-    public struct Value {
-        public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<Nullable, T>
-        public typealias Codable<T: CodableProperty> = Attribute<Nullable, T>
-        public typealias Int16 = Attribute<Nullable, Swift.Int16>
-        public typealias Int32 = Attribute<Nullable, Swift.Int32>
-        public typealias Int64 = Attribute<Nullable, Swift.Int64>
-        public typealias DecimalNumber = Attribute<Nullable, NSDecimalNumber>
-        public typealias Double = Attribute<Nullable, Swift.Double>
-        public typealias Float = Attribute<Nullable, Swift.Float>
-        public typealias String = Attribute<Nullable, Swift.String>
-        public typealias Bool = Attribute<Nullable, Swift.Bool>
-        public typealias Date = Attribute<Nullable, Foundation.Date>
-        public typealias Data = Attribute<Nullable, Foundation.Data>
-        public typealias UUID = Attribute<Nullable, Foundation.UUID>
-        public typealias Enum<E: Enumerator> = Attribute<Nullable, E>
-    }
+public enum Relation {
+    public typealias ToOne<D: Entity> = Relationship<Crush.ToOne<D>>
+    public typealias ToMany<D: Entity> = Relationship<Crush.ToMany<D>>
+    public typealias ToOrdered<D: Entity> = Relationship<Crush.ToOrdered<D>>
 }
 
-public enum Required {
-    public struct Relation {
-        public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToMany<S>, ToOne<D>>
-        public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToMany<S>, ToMany<D>>
-        public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToOne<S>, ToOne<D>>
-        public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Relationship<NotNull, ToOne<S>, ToMany<D>>
-    }
-
-    public struct Value {
-        public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Attribute<NotNull, T>
-        public typealias Codable<T: CodableProperty> = Attribute<NotNull, T>
-        public typealias Int16 = Attribute<NotNull, Swift.Int16>
-        public typealias Int32 = Attribute<NotNull, Swift.Int32>
-        public typealias Int64 = Attribute<NotNull, Swift.Int64>
-        public typealias DecimalNumber = Attribute<NotNull, NSDecimalNumber>
-        public typealias Double = Attribute<NotNull, Swift.Double>
-        public typealias Float = Attribute<NotNull, Swift.Float>
-        public typealias String = Attribute<NotNull, Swift.String>
-        public typealias Bool = Attribute<NotNull, Swift.Bool>
-        public typealias Date = Attribute<NotNull, Foundation.Date>
-        public typealias Data = Attribute<NotNull, Foundation.Data>
-        public typealias UUID = Attribute<NotNull, Foundation.UUID>
-        public typealias Enum<E: Enumerator> = Attribute<NotNull, E>
-    }
+public enum Value {
+    public typealias Transform<T: NSCoding & FieldAttribute> = Attribute<T>
+    public typealias Codable<T: CodableProperty> = Attribute<T>
+    public typealias Int16 = Attribute<Swift.Int16>
+    public typealias Int32 = Attribute<Swift.Int32>
+    public typealias Int64 = Attribute<Swift.Int64>
+    public typealias DecimalNumber = Attribute<NSDecimalNumber>
+    public typealias Double = Attribute<Swift.Double>
+    public typealias Float = Attribute<Swift.Float>
+    public typealias String = Attribute<Swift.String>
+    public typealias Bool = Attribute<Swift.Bool>
+    public typealias Date = Attribute<Foundation.Date>
+    public typealias Data = Attribute<Foundation.Data>
+    public typealias UUID = Attribute<Foundation.UUID>
+    public typealias Enum<E: Enumerator> = Attribute<E>
 }
 
-enum Transient {
-    public typealias Value = Required.Value
-    public typealias Relation = Required.Relation
-    
-    public enum Optional {
-        public struct Relation {
-            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToMany<S>, ToOne<D>>>
-            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToMany<S>, ToMany<D>>>
-            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToOne<S>, ToOne<D>>>
-            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<Nullable, ToOne<S>, ToMany<D>>>
-        }
-        
-        public struct Value {
-            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Temporary<Attribute<Nullable, T>>
-            public typealias Codable<T: CodableProperty> = Temporary<Attribute<Nullable, T>>
-            public typealias Int16 = Temporary<Attribute<Nullable, Swift.Int16>>
-            public typealias Int32 = Temporary<Attribute<Nullable, Swift.Int32>>
-            public typealias Int64 = Temporary<Attribute<Nullable, Swift.Int64>>
-            public typealias DecimalNumber = Temporary<Attribute<Nullable, NSDecimalNumber>>
-            public typealias Double = Temporary<Attribute<Nullable, Swift.Double>>
-            public typealias Float = Temporary<Attribute<Nullable, Swift.Float>>
-            public typealias String = Temporary<Attribute<Nullable, Swift.String>>
-            public typealias Bool = Temporary<Attribute<Nullable, Swift.Bool>>
-            public typealias Date = Temporary<Attribute<Nullable, Foundation.Date>>
-            public typealias Data = Temporary<Attribute<Nullable, Foundation.Data>>
-            public typealias UUID = Temporary<Attribute<Nullable, Foundation.UUID>>
-            public typealias Enum<E: Enumerator> = Temporary<Attribute<Nullable, E>>
-
-        }
-    }
-
-    public enum Required {
-        public struct Relation {
-            public typealias ManyToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToMany<S>, ToOne<D>>>
-            public typealias ManyToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToMany<S>, ToMany<D>>>
-            public typealias OneToOne<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToOne<S>, ToOne<D>>>
-            public typealias OneToMany<S: HashableEntity, D: HashableEntity> = Temporary<Relationship<NotNull, ToOne<S>, ToMany<D>>>
-        }
-
-        public struct Value {
-            public typealias Transform<T: NSCoding & FieldAttribute & Hashable> = Temporary<Attribute<NotNull, T>>
-            public typealias Codable<T: CodableProperty> = Temporary<Attribute<NotNull, T>>
-            public typealias Int16 = Temporary<Attribute<NotNull, Swift.Int16>>
-            public typealias Int32 = Temporary<Attribute<NotNull, Swift.Int32>>
-            public typealias Int64 = Temporary<Attribute<NotNull, Swift.Int64>>
-            public typealias DecimalNumber = Temporary<Attribute<NotNull, NSDecimalNumber>>
-            public typealias Double = Temporary<Attribute<NotNull, Swift.Double>>
-            public typealias Float = Temporary<Attribute<NotNull, Swift.Float>>
-            public typealias String = Temporary<Attribute<NotNull, Swift.String>>
-            public typealias Bool = Temporary<Attribute<NotNull, Swift.Bool>>
-            public typealias Date = Temporary<Attribute<NotNull, Foundation.Date>>
-            public typealias Data = Temporary<Attribute<NotNull, Foundation.Data>>
-            public typealias UUID = Temporary<Attribute<NotNull, Foundation.UUID>>
-            public typealias Enum<E: Enumerator> = Temporary<Attribute<NotNull, E>>
-        }
-    }
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+public enum Derived {
+    public typealias Transform<T: NSCoding & FieldAttribute> = DerivedAttribute<T>
+    public typealias Codable<T: CodableProperty> = DerivedAttribute<T>
+    public typealias Int16 = DerivedAttribute<Swift.Int16>
+    public typealias Int32 = DerivedAttribute<Swift.Int32>
+    public typealias Int64 = DerivedAttribute<Swift.Int64>
+    public typealias DecimalNumber = DerivedAttribute<NSDecimalNumber>
+    public typealias Double = DerivedAttribute<Swift.Double>
+    public typealias Float = DerivedAttribute<Swift.Float>
+    public typealias String = DerivedAttribute<Swift.String>
+    public typealias Bool = DerivedAttribute<Swift.Bool>
+    public typealias Date = DerivedAttribute<Foundation.Date>
+    public typealias Data = DerivedAttribute<Foundation.Data>
+    public typealias UUID = DerivedAttribute<Foundation.UUID>
+    public typealias Enum<E: Enumerator> = DerivedAttribute<E>
 }

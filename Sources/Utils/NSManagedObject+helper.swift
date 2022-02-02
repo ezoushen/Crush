@@ -9,65 +9,49 @@
 import CoreData
 
 extension NSManagedObjectContext {
-    func receive<T: RuntimeObject>(runtimeObject: T) -> NSManagedObject {
-        let object = self.object(with: runtimeObject.rawObject.objectID)
-        if !runtimeObject.rawObject.isFault,
-            let name = object.entity.attributesByName.keys.first {
-            object.willAccessValue(forKey: name)
-            defer {
-                object.didAccessValue(forKey: name)
-            }
-            _ = object.value(forKey: name)
+    func receive<T: NSManagedObject>(runtimeObject: T) -> T {
+        let result = object(with: runtimeObject.objectID) as! T
+        if runtimeObject.isFault == false {
+            result.fireFault()
         }
-        return object
+        return result
+    }
+    
+    func refresh(
+        _ object: NSManagedObject,
+        mergeChanges: Bool,
+        preserveFaultingState flag: Bool)
+    {
+        let isFault = object.isFault
+        defer { isFault && flag ? () : object.fireFault() }
+        refresh(object, mergeChanges: mergeChanges)
     }
 }
-
-// MARK: - Value getter
 
 extension NSManagedObject {
-    class var entityName: String {
-        return entity().name ?? String(reflecting: self)
+    func fireFault() {
+        let description = Self.entity()
+        let key = description.allAttributeKeys().first ??
+                    description.allToOneRelationshipKeys().first ??
+                    description.allToManyRelationshipKeys().first!
+        willAccessValue(forKey: key)
     }
 }
 
-// MARK: - Clone self
+extension NSEntityDescription {
+    open func allAttributeKeys() -> [String] {
+        Array(attributesByName.keys)
+    }
 
-protocol NSManagedObjectCloner: NSManagedObject { }
+    open func allToOneRelationshipKeys() -> [String] {
+        relationshipsByName
+            .filter { !$0.value.isToMany }
+            .map { $0.key }
+    }
 
-extension NSManagedObject: NSManagedObjectCloner { }
-
-extension NSManagedObjectCloner {
-    func cloned(in context: NSManagedObjectContext) -> Self {
-        let cloned = Self.init(entity: Self.entity(), insertInto: context)
-        
-        // Copy attributes
-        self.entity.attributesByName.keys.forEach {
-            let value = self.value(forKey: $0)
-            cloned.setValue(value, forKey: $0)
-        }
-        
-        //Loop through all relationships, and clone them.
-        let relationships = NSEntityDescription.entity(forEntityName: Self.entity().name ?? "",
-                                                       in: context)?.relationshipsByName
-        
-        func mappingRelationships(_ name: String, _ description: NSRelationshipDescription) {
-            if description.isToMany {
-                let sourceSet = mutableSetValue(forKey: name)
-                let clonedSet = cloned.mutableSetValue(forKey: name)
-                let enumerator = sourceSet.objectEnumerator()
-                
-                while let relatedObject = enumerator.nextObject() as? NSManagedObject {
-                    clonedSet.add(relatedObject)
-                }
-            } else if let value = self.value(forKey: name) as? NSManagedObject {
-                let target = context.object(with: value.objectID)
-                cloned.setValue(target, forKey: name)
-            }
-        }
-        
-        relationships?.forEach(mappingRelationships)
-        
-        return cloned
+    open func allToManyRelationshipKeys() -> [String] {
+        relationshipsByName
+            .filter { $0.value.isToMany }
+            .map { $0.key }
     }
 }

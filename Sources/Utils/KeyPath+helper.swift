@@ -9,42 +9,58 @@
 import Foundation
 import CoreData
 
-public protocol KeyPathProvider {
-    func getKeyPathString(_ keyPath: AnyKeyPath) -> String?
-}
-
-public enum KeyPathProviderContainer {
-    public static var provider: KeyPathProvider!
-}
-
-extension AnyKeyPath {
-    public var stringValue: String {
-        KeyPathProviderContainer.provider.getKeyPathString(self)!
-    }
-}
-
 public protocol Expressible {
     func asExpression() -> Any
+    func getHashValue() -> Int
 }
 
-public protocol RootTracableKeyPathProtocol: Expressible {
-    var rootType: Entity.Type { get }
-    var keyPath: AnyKeyPath { get }
-    var stringValue: String { get }
+extension Expressible {
+    func equal(to: Expressible) -> Bool {
+        getHashValue() == to.getHashValue()
+    }
 }
 
-extension KeyPath: Expressible where Root: RuntimeObject {
+private var propertyNameCache: NSCache<AnyKeyPath, NSString> = .init()
+
+extension PartialKeyPath where Root: Entity {
+    var optionalPropertyName: String? {
+        guard let name = propertyNameCache.object(forKey: self) else {
+            if let name = (Root.init()[keyPath: self] as? PropertyProtocol)?.name {
+                propertyNameCache.setObject(name as NSString, forKey: self)
+                return name
+            }
+            return nil
+        }
+        return name as String
+    }
+}
+
+extension KeyPath where Root: Entity, Value: PropertyProtocol {
+    var propertyName: String {
+        guard let name = propertyNameCache.object(forKey: self) else {
+            let name = Root.init()[keyPath: self].name
+            propertyNameCache.setObject(name as NSString, forKey: self)
+            return name
+        }
+        return name as String
+    }
+
+    public static func == (lhs: KeyPath, rhs: String) -> Bool {
+        lhs.propertyName == rhs
+    }
+
+    public static func == (lhs: String, rhs: KeyPath) -> Bool {
+        lhs == rhs.propertyName
+    }
+}
+
+
+extension KeyPath: Expressible where Root: Entity, Value: PropertyProtocol {
+    public func getHashValue() -> Int {
+        propertyName.hashValue
+    }
+
     public func asExpression() -> Any {
-        stringValue
-    }
-}
-
-extension KeyPath: RootTracableKeyPathProtocol where Root: NeutralEntityObject, Value: Field {
-    public var rootType: Entity.Type {
-        return Root.self
-    }
-
-    public var keyPath: AnyKeyPath {
-        return self
+        propertyName
     }
 }
