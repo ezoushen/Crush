@@ -16,7 +16,7 @@ struct InsertionConfig<Target: Entity> {
 extension InsertionConfig: RequestConfig {
     func createStoreRequest() -> NSPersistentStoreRequest {
         let entity = Target.entity()
-        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), batch {
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *), batch {
             let description = NSBatchInsertRequest(entity: entity, objects: objects)
             description.resultType = .objectIDs
             return description

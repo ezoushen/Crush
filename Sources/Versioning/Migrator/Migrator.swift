@@ -49,7 +49,6 @@ open /*abstract*/ class Migrator {
 
         var options: [AnyHashable: Any] = [:]
         if storage.storeType == NSSQLiteStoreType {
-            options = Storage.defaultSQLiteOptions()
             options[NSSQLitePragmasOption] = ["journal_mode": "DELETE"]
         }
 

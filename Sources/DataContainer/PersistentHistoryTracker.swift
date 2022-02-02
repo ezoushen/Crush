@@ -16,25 +16,30 @@ internal class PersistentHistoryTracker {
 
     internal var context: _SessionContext
     internal var coordinator: NSPersistentStoreCoordinator
+    internal let legacyMode: Bool
     
     internal var transactionLifetime: TimeInterval = 604_800
 
     internal init(context: _SessionContext, coordinator: NSPersistentStoreCoordinator) {
         self.context = context
         self.coordinator = coordinator
-
+        self.legacyMode = !coordinator.persistentStores.contains(where: {
+            guard let value = $0.options?["NSPersistentStoreRemoteChangeNotificationOptionKey"]
+                    as? NSObject else { return false }
+            return value == NSNumber(booleanLiteral: true)
+        })
         setup()
     }
 
     internal func setup() {
-        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *) {
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *), !legacyMode {
             purgeHistory()
             loadHistoryToken()
         }
     }
 
     internal func enable() {
-        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *) {
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *), !legacyMode {
             NotificationCenter.default.addObserver(
                 self,
                 selector: #selector(persistentStoreHistoryChanged(_:)),
@@ -50,7 +55,7 @@ internal class PersistentHistoryTracker {
     }
 
     internal func disable() {
-        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *) {
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *), !legacyMode {
             NotificationCenter.default.removeObserver(
                 self,
                 name: Notification.Name("NSPersistentStoreRemoteChangeNotification"),

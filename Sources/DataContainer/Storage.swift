@@ -62,7 +62,6 @@ public class SQLiteStorage: ConcreteStorage {
 }
 
 extension Storage {
-
     public static func binary(url: URL, configuration: String? = nil, options: Option...) -> Storage {
         ConcreteStorage(storeType: NSBinaryStoreType, url: url, configuration: configuration, options: options)
     }
@@ -102,14 +101,13 @@ extension Storage {
             storeType: NSSQLiteStoreType,
             url: url,
             configuration: configuration,
-            options: [.options(defaultSQLiteOptions())] + options)
+            options: defaultSQLiteOptions() + options)
     }
 
-    internal static func defaultSQLiteOptions() -> [String: NSObject] {
+    internal static func defaultSQLiteOptions() -> [Option] {
         [
-            NSPersistentHistoryTrackingKey: NSNumber(booleanLiteral: true),
-            // Use string key for preventing os version check
-            "NSPersistentStoreRemoteChangeNotificationOptionKey": NSNumber(booleanLiteral: true),
+            .persistentHistoryTracking(true),
+            .remoteChangeNotification(true),
         ]
     }
 }
@@ -123,13 +121,29 @@ extension Storage {
 #endif
 
 extension Storage {
-    public enum Option: Equatable {
+    public enum Option {
         case readOnly
         case timeout(TimeInterval)
-        // Only effects on sqlite storage
-        case sqlitePragmas([String: NSObject])
+        case remoteChangeNotification(Bool)
+        case persistentHistoryTracking(Bool)
+        case persistentStoreForceDestroy(Bool)
+
         // Override advanced features
-        case options([String: NSObject])
+        case custom(key: String, value: NSObject)
+
+        // Only effects on sqlite storage
+        case sqlitePragma(key: String, value: NSObject)
+        case sqliteAnalyze
+        case sqliteManualVacuum
+
+#if !os(iOS)
+        // Only effects on xml storage
+        case validateXMLStore
+#endif
+
+#if !os(macOS)
+        case persistentStoreFileProtection(FileProtectionType)
+#endif
 
         func apply(on description: NSPersistentStoreDescription) {
             switch self {
@@ -137,31 +151,43 @@ extension Storage {
                 description.isReadOnly = true
             case .timeout(let timeInterval):
                 description.timeout = timeInterval
-            case .sqlitePragmas(let dictionary):
-                for (key, value) in dictionary {
-                    description.setValue(value, forPragmaNamed: key)
-                }
-            case .options(let dictionary):
-                for (key, value) in dictionary {
-                    description.setOption(value, forKey: key)
-                }
-            }
-        }
-
-        public static func == (lhs: Option, rhs: Option) -> Bool {
-            return lhs.index == rhs.index
-        }
-
-        private var index: Int {
-            switch self {
-            case .readOnly:
-                return 0
-            case .timeout:
-                return 1
-            case .sqlitePragmas:
-                return 2
-            case .options:
-                return 3
+            case .persistentHistoryTracking(let enabled):
+                description.setOption(
+                    NSNumber(booleanLiteral: enabled),
+                    forKey: NSPersistentHistoryTrackingKey)
+            case .persistentStoreForceDestroy(let enabled):
+                description.setOption(
+                    NSNumber(booleanLiteral: enabled),
+                    forKey: NSPersistentStoreForceDestroyOption)
+            case .remoteChangeNotification(let enabled):
+                // Use string key for preventing os version check
+                description.setOption(
+                    NSNumber(booleanLiteral: enabled),
+                    forKey: "NSPersistentStoreRemoteChangeNotificationOptionKey")
+            case .sqlitePragma(let key, let value):
+                description.setValue(value, forPragmaNamed: key)
+            case .sqliteAnalyze:
+                description.setOption(
+                    NSNumber(booleanLiteral: true),
+                    forKey: NSSQLiteAnalyzeOption)
+            case .sqliteManualVacuum:
+                description.setOption(
+                    NSNumber(booleanLiteral: true),
+                    forKey: NSSQLiteManualVacuumOption)
+#if !os(iOS)
+            case .validateXMLStore:
+                description.setOption(
+                    NSNumber(booleanLiteral: true),
+                    forKey: NSValidateXMLStoreOption)
+#endif
+#if !os(macOS)
+            case .persistentStoreFileProtection(let type):
+                description.setOption(
+                    type as NSObject,
+                    forKey: NSPersistentStoreFileProtectionKey)
+#endif
+            case .custom(let key, let value):
+                description.setOption(value, forKey: key)
             }
         }
     }
