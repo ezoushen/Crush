@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 public enum DerivedStringMapping: String {
     case canonical = "canonical:"
     case uppercase = "uppercase:"
@@ -16,13 +16,13 @@ public enum DerivedStringMapping: String {
     case plain = ""
 }
 
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 public enum DerivedAggregation: String {
     case count
     case sum
 }
 
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFieldConvertible {
     public typealias Description = NSDerivedAttributeDescription
     public typealias PropertyValue = F.RuntimeObjectValue
@@ -62,7 +62,7 @@ public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFi
     }
 }
 
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 extension DerivedAttribute where F == String {
     public convenience init<T: Entity, S: AttributeProtocol>(
         _ name: String,
@@ -77,14 +77,14 @@ extension DerivedAttribute where F == String {
     }
 }
 
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 extension DerivedAttribute where F == Date {
     public convenience init(_ name: String) {
         self.init(name: name, derivation: .dateNow())
     }
 }
 
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 extension DerivedAttribute where F: CoreDataInteger {
     public convenience init<T: Entity, S: RelationshipProtocol>(
         _ name: String,

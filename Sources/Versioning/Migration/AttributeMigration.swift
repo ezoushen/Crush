@@ -106,7 +106,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
     public func createProperty(
         callbackStore: inout [EntityMigrationCallback]) -> NSPropertyDescription
     {
-        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *),
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *),
             let derivedExpression = derivedExpression
         {
             let description = NSDerivedAttributeDescription()
@@ -272,7 +272,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         
         var description: NSAttributeDescription
         
-        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *),
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *),
            let expression = derivedExpression {
             let derivedDescription = NSDerivedAttributeDescription()
             derivedDescription.derivationExpression = expression

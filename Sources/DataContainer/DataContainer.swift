@@ -35,7 +35,9 @@ public class DataContainer {
 
     public var logger: LogHandler = .default
 
+#if os(iOS) || os(macOS)
     public private(set) var spotlightIndexer: CoreSpotlightIndexer?
+#endif
 
     private init(
         storage: Storage,

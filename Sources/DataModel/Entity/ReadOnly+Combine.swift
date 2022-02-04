@@ -9,7 +9,7 @@
 import Foundation
 import Combine
 
-@available(iOS 13.0, macOS 10.15, *)
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 extension ManagedObject {
     public struct KVOPublisher<T: ValuedProperty>: Combine.Publisher {
         public typealias Output = T.PropertyValue
@@ -90,7 +90,7 @@ extension ManagedObject {
     }
 }
 
-@available(iOS 13.0, macOS 10.15, *)
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 extension ReadOnly {
     public func observe<T: ValuedProperty>(
         _ keyPath: KeyPath<Entity, T>, options: NSKeyValueObservingOptions

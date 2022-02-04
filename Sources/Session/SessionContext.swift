@@ -137,7 +137,7 @@ extension SessionContext where Self: RawContextProviderProtocol {
                 return [
                     NSUpdatedObjectsKey: result.result ?? []
                 ]
-            } else if #available(iOS 13.0, watchOS 6.0, macOS 10.15, *), let result = result as? NSBatchInsertResult {
+            } else if #available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *), let result = result as? NSBatchInsertResult {
                 return [
                     NSInsertedObjectsKey: result.result ?? []
                 ]

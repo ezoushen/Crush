@@ -221,7 +221,7 @@ public class SQLiteStorageOption: PersistentStorageOption {
     }
 }
 
-#if !os(iOS)
+#if !os(iOS) && !os(tvOS) && !os(watchOS)
 public class XMLStorageOption: PersistentStorageOption {
     public static var validateXMLStore: Self {
         self.init("validateXMLStore") { $0.setOption(true as NSNumber, forKey: NSValidateXMLStoreOption) }
