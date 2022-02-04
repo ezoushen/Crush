@@ -16,10 +16,22 @@ public class DataContainer {
     internal var uiContext: NSManagedObjectContext!
     internal let createdDate: Date = Date()
 
-    internal lazy var persistentHistoryTracker =
-        PersistentHistoryTracker(
-            context: backgroundSessionContext(),
-            coordinator: coreDataStack.coordinator)
+    internal lazy var notifier: UiContextNotifier = {
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *),
+           coreDataStack.coordinator.persistentStores.contains(where: {
+               let remoteChangeKey = "NSPersistentStoreRemoteChangeNotificationOptionKey"
+               return ($0.options?[remoteChangeKey] as? NSObject) == (true as NSNumber) &&
+               ($0.options?[NSPersistentHistoryTrackingKey] as? NSObject) == (true as NSNumber)
+           }) {
+            return PersistentHistoryNotifier(
+                context: backgroundSessionContext(),
+                coordinator: coreDataStack.coordinator)
+        } else {
+            return ContextDidSaveNotifier(
+                context: backgroundSessionContext(),
+                coordinator: coreDataStack.coordinator)
+        }
+    }()
 
     public var logger: LogHandler = .default
 
@@ -74,7 +86,7 @@ public class DataContainer {
 
     private func setup() {
         initializeAllContext()
-        persistentHistoryTracker.enable()
+        notifier.enable()
     }
     
     private func initializeAllContext() {
@@ -107,7 +119,11 @@ public class DataContainer {
     
     @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
     public func loadTransactionHistory(date: Date?) -> [NSPersistentHistoryTransaction] {
-        persistentHistoryTracker.loadPersistentHistory(date: date ?? createdDate)
+        guard let persistentHistoryTracker = notifier as? PersistentHistoryNotifier else {
+            logger.log(.warning, "loadTransactionHistory is not available")
+            return []
+        }
+        return persistentHistoryTracker.loadPersistentHistory(date: date ?? createdDate)
     }
 }
 
