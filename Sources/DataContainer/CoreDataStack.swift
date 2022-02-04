@@ -65,7 +65,7 @@ public class CoreDataStack {
         description.shouldAddStoreAsynchronously = flag
         // Load persistent store
         coordinator.addPersistentStore(with: description) { [unowned self] in
-//            persistentStoreDescriptions[coordinator.persis]
+            persistentStoreDescriptions[storage] = $0
             completion($1)
         }
         NSPersistentStoreCoordinator.updateLastActiveModel(dataModel, in: storage)
