@@ -12,13 +12,13 @@ public class Storage: CustomStringConvertible {
     let storeType: String
     let url: URL?
     let configuration: String?
-    let options: [Option]
+    let options: [StorageOption]
 
     public var description: String {
         "\(String(reflecting: Self.self))(storeType:\"\(storeType)\",url:\"\(url == nil ? "nil" : "\(url!)")\")"
     }
 
-    init(storeType: String, url: URL?, configuration: String?, options: [Option]) {
+    init(storeType: String, url: URL?, configuration: String?, options: [StorageOption]) {
         self.storeType = storeType
         self.url = url
         self.configuration = configuration
@@ -38,13 +38,13 @@ public class Storage: CustomStringConvertible {
 public class ConcreteStorage: Storage {
     public let storageUrl: URL
 
-    internal init(storeType: String, url: URL, configuration: String?, options: [Storage.Option]) {
+    internal init(storeType: String, url: URL, configuration: String?, options: [StorageOption]) {
         self.storageUrl = url
         super.init(storeType: storeType, url: url, configuration: configuration, options: options)
     }
 
     @available(*, unavailable)
-    private override init(storeType: String, url: URL?, configuration: String?, options: [Storage.Option]) {
+    private override init(storeType: String, url: URL?, configuration: String?, options: [StorageOption]) {
         fatalError("this initializer in unavailable")
     }
     
@@ -62,11 +62,19 @@ public class SQLiteStorage: ConcreteStorage {
 }
 
 extension Storage {
-    public static func binary(url: URL, configuration: String? = nil, options: Option...) -> Storage {
+    public static func binary(
+        url: URL,
+        configuration: String? = nil,
+        options: PersistentStorageOption...) -> Storage
+    {
         ConcreteStorage(storeType: NSBinaryStoreType, url: url, configuration: configuration, options: options)
     }
 
-    public static func binary(name: String, configuration: String? = nil, options: Option...) -> Storage {
+    public static func binary(
+        name: String,
+        configuration: String? = nil,
+        options: PersistentStorageOption...) -> Storage
+    {
         ConcreteStorage(
             storeType: NSBinaryStoreType,
             url: CurrentWorkingDirectory().appendingPathComponent(name),
@@ -74,20 +82,35 @@ extension Storage {
             options: options)
     }
 
-    public static func inMemory(configuration: String? = nil, options: Option...) -> Storage {
-        Storage(storeType: NSInMemoryStoreType, url: nil, configuration: configuration, options: options)
+    public static func inMemory(
+        configuration: String? = nil,
+        options: StorageOption...) -> Storage
+    {
+        Storage(
+            storeType: NSInMemoryStoreType,
+            url: nil,
+            configuration: configuration,
+            options: options)
     }
 }
 
 extension Storage {
-    public static func sqlite(url: URL, configuration: String? = nil, options: Option...) -> Storage {
+    public static func sqlite(
+        url: URL,
+        configuration: String? = nil,
+        options: SQLiteStorageOption...) -> Storage
+    {
         sqlite(
             url: url,
             configuration: configuration,
             options: options)
     }
     
-    public static func sqlite(name: String, configuration: String? = nil, options: Option...) -> Storage {
+    public static func sqlite(
+        name: String,
+        configuration: String? = nil,
+        options: SQLiteStorageOption...) -> Storage
+    {
         sqlite(
             url: CurrentWorkingDirectory()
                 .appendingPathComponent(name)
@@ -96,99 +119,105 @@ extension Storage {
             options: options)
     }
     
-    private static func sqlite(url: URL, configuration: String? = nil, options: [Option]) -> Storage {
+    private static func sqlite(
+        url: URL,
+        configuration: String? = nil,
+        options: [SQLiteStorageOption]) -> Storage
+    {
         SQLiteStorage(
             storeType: NSSQLiteStoreType,
             url: url,
             configuration: configuration,
-            options: defaultSQLiteOptions() + options)
-    }
-
-    internal static func defaultSQLiteOptions() -> [Option] {
-        [
-            .persistentHistoryTracking(true),
-            .remoteChangeNotification(true),
-        ]
+            options: options)
     }
 }
 
-#if !os(iOS)
-extension Storage {
-    public static func xml(url: URL, configuration: String? = nil, options: Option...) -> Storage {
-        Storage(storeType: NSXMLStoreType, url: url, configuration: configuration, options: options)
+public class StorageOption {
+    internal let block: (NSPersistentStoreDescription) -> Void
+
+    public required init(_ block: @escaping (NSPersistentStoreDescription) -> Void) {
+        self.block = block
+    }
+
+    func apply(on description: NSPersistentStoreDescription) {
+        block(description)
     }
 }
-#endif
 
-extension Storage {
-    public enum Option {
-        case readOnly
-        case timeout(TimeInterval)
-        case remoteChangeNotification(Bool)
-        case persistentHistoryTracking(Bool)
-        case persistentStoreForceDestroy(Bool)
+extension StorageOption {
+    public static var readOnly: Self {
+        self.init { $0.isReadOnly = true }
+    }
 
-        // Override advanced features
-        case custom(key: String, value: NSObject)
+    public static func timeout(_ interval: TimeInterval) -> Self {
+        self.init { $0.timeout = interval }
+    }
 
-        // Only effects on sqlite storage
-        case sqlitePragma(key: String, value: NSObject)
-        case sqliteAnalyze
-        case sqliteManualVacuum
+    public static func setOption(key: String, value: NSObject?) -> Self {
+        self.init { $0.setOption(value, forKey: key) }
+    }
+}
 
-#if !os(iOS)
-        // Only effects on xml storage
-        case validateXMLStore
-#endif
+public class PersistentStorageOption: StorageOption {
+    public static func persistentStoreForceDestory(_ flag: Bool) -> Self {
+        self.init { $0.setOption(
+            flag as NSNumber,
+            forKey: NSPersistentStoreForceDestroyOption)}
+    }
 
 #if !os(macOS)
-        case persistentStoreFileProtection(FileProtectionType)
+    public static func persistentStoreFileProtection(type: FileProtectionType) -> Self {
+        self.init { $0.setOption(
+            type as NSObject,
+            forKey: NSPersistentStoreFileProtectionKey)}
+    }
 #endif
+}
 
-        func apply(on description: NSPersistentStoreDescription) {
-            switch self {
-            case .readOnly:
-                description.isReadOnly = true
-            case .timeout(let timeInterval):
-                description.timeout = timeInterval
-            case .persistentHistoryTracking(let enabled):
-                description.setOption(
-                    NSNumber(booleanLiteral: enabled),
-                    forKey: NSPersistentHistoryTrackingKey)
-            case .persistentStoreForceDestroy(let enabled):
-                description.setOption(
-                    NSNumber(booleanLiteral: enabled),
-                    forKey: NSPersistentStoreForceDestroyOption)
-            case .remoteChangeNotification(let enabled):
-                // Use string key for preventing os version check
-                description.setOption(
-                    NSNumber(booleanLiteral: enabled),
-                    forKey: "NSPersistentStoreRemoteChangeNotificationOptionKey")
-            case .sqlitePragma(let key, let value):
-                description.setValue(value, forPragmaNamed: key)
-            case .sqliteAnalyze:
-                description.setOption(
-                    NSNumber(booleanLiteral: true),
-                    forKey: NSSQLiteAnalyzeOption)
-            case .sqliteManualVacuum:
-                description.setOption(
-                    NSNumber(booleanLiteral: true),
-                    forKey: NSSQLiteManualVacuumOption)
-#if !os(iOS)
-            case .validateXMLStore:
-                description.setOption(
-                    NSNumber(booleanLiteral: true),
-                    forKey: NSValidateXMLStoreOption)
-#endif
-#if !os(macOS)
-            case .persistentStoreFileProtection(let type):
-                description.setOption(
-                    type as NSObject,
-                    forKey: NSPersistentStoreFileProtectionKey)
-#endif
-            case .custom(let key, let value):
-                description.setOption(value, forKey: key)
-            }
-        }
+public class SQLiteStorageOption: PersistentStorageOption {
+    public static func remoteChangeNotification(_ flag: Bool) -> Self {
+        self.init { $0.setOption(
+            flag as NSNumber,
+            forKey: "NSPersistentStoreRemoteChangeNotificationOptionKey") }
+    }
+
+    public static func persistentHistoryTracking(_ flag: Bool) -> Self {
+        self.init { $0.setOption(
+            flag as NSNumber,
+            forKey: NSPersistentHistoryTrackingKey)}
+    }
+
+    public static func sqlitePragma(key: String, value: NSObject?) -> Self {
+        self.init { $0.setValue(value, forPragmaNamed: key) }
+    }
+
+    public static var sqliteAnalyze: Self {
+        self.init { $0.setOption(true as NSNumber, forKey: NSSQLiteAnalyzeOption) }
+    }
+
+    public static var sqliteManualVacuum: Self {
+        self.init { $0.setOption(true as NSNumber, forKey: NSSQLiteManualVacuumOption) }
     }
 }
+
+#if !os(iOS)
+public class XMLStorageOption: PersistentStorageOption {
+    public static var validateXMLStore: Self {
+        self.init { $0.setOption(true as NSNumber, forKey: NSValidateXMLStoreOption) }
+    }
+}
+
+extension Storage {
+    public static func xml(
+        url: URL,
+        configuration: String? = nil,
+        options: XMLStorageOption...) -> Storage
+    {
+        Storage(
+            storeType: NSXMLStoreType,
+            url: url,
+            configuration: configuration,
+            options: options)
+    }
+}
+#endif

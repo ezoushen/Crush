@@ -42,7 +42,8 @@ class ReadOnlyTests: XCTestCase {
         }()
         container = try DataContainer.load(
             storage: .sqlite(
-                name: "\(UUID())", options: .sqlitePragma(key: "journal_mode", value: "DELETE" as NSObject)),
+                name: "\(UUID())",
+                options: .sqlitePragma(key: "journal_mode", value: "DELETE" as NSObject)),
             dataModel: dataModel)
     }
     

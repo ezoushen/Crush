@@ -45,56 +45,56 @@ class StorageTests: XCTestCase {
     }
 
     func test_descriptionOptions_shouldSetSQLitePragma() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.sqlitePragma(key: "JOURNAL_MODE", value: "DELETE" as NSString)])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.sqlitePragma(key: "JOURNAL_MODE", value: "DELETE" as NSString)])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.sqlitePragmas["JOURNAL_MODE"], "DELETE" as NSString)
     }
 
     func test_descriptionOptions_shouldEnablePersistentHistoryTracking() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.persistentHistoryTracking(true)])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.persistentHistoryTracking(true)])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options[NSPersistentHistoryTrackingKey], NSNumber(booleanLiteral: true))
     }
 
     func test_descriptionOptions_shouldEnablePersistentStoreForceDestroy() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.persistentStoreForceDestroy(true)])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.persistentStoreForceDestory(true)])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options[NSPersistentStoreForceDestroyOption], NSNumber(booleanLiteral: true))
     }
 
     func test_descriptionOptions_shouldEnableRemoteChangeNotification() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.remoteChangeNotification(true)])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.remoteChangeNotification(true)])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options["NSPersistentStoreRemoteChangeNotificationOptionKey"], NSNumber(booleanLiteral: true))
     }
 
     func test_descriptionOptions_shouldSetSQLiteAnalyze() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.sqliteAnalyze])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.sqliteAnalyze])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options[NSSQLiteAnalyzeOption], NSNumber(booleanLiteral: true))
     }
 
     func test_descriptionOptions_shouldSetSQLiteManualVacuum() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.sqliteManualVacuum])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.sqliteManualVacuum])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options[NSSQLiteManualVacuumOption], NSNumber(booleanLiteral: true))
     }
 
     func test_descriptionOptions_shouldSetCustomOption() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.custom(key: NSPersistentStoreTimeoutOption, value: 10 as NSNumber)])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.setOption(key: NSPersistentStoreTimeoutOption, value: 10 as NSNumber)])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options[NSPersistentStoreTimeoutOption], 10 as NSNumber)
     }
 #if !os(iOS)
     func test_descriptionOptions_shouldValidateXMLStore() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.validateXMLStore])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [XMLStorageOption.validateXMLStore])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options[NSValidateXMLStoreOption], NSNumber(booleanLiteral: true))
     }
 #endif
 #if !os(macOS)
     func test_descriptionOptions_shouldSetPersistentStoreFileProtection() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [.persistentStoreFileProtection(.completeUnlessOpen)])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.persistentStoreFileProtection(.completeUnlessOpen)])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options[NSPersistentStoreFileProtectionKey], FileProtectionType.completeUnlessOpen as NSObject)
     }
