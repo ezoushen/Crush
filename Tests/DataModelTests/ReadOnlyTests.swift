@@ -48,7 +48,7 @@ class ReadOnlyTests: XCTestCase {
     }
     
     override func tearDownWithError() throws {
-        try container.destroyStorage()
+        try container.destroyStorages()
     }
     
     func test_readAttribute_shouldReturnUpdatedValue() {

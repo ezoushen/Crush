@@ -8,11 +8,22 @@
 import CoreData
 import Foundation
 
-public class Storage: CustomStringConvertible {
+public class Storage: CustomStringConvertible, Hashable {
+    public static func == (lhs: Storage, rhs: Storage) -> Bool {
+        lhs.hashValue == rhs.hashValue
+    }
+
     let storeType: String
     let url: URL?
     let configuration: String?
     let options: [StorageOption]
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(storeType)
+        hasher.combine(url)
+        hasher.combine(configuration)
+        hasher.combine(options)
+    }
 
     public var description: String {
         "\(String(reflecting: Self.self))(storeType:\"\(storeType)\",url:\"\(url == nil ? "nil" : "\(url!)")\")"
@@ -132,11 +143,21 @@ extension Storage {
     }
 }
 
-public class StorageOption {
-    internal let block: (NSPersistentStoreDescription) -> Void
+public class StorageOption: Hashable {
+    public static func == (lhs: StorageOption, rhs: StorageOption) -> Bool {
+        lhs.name == rhs.name
+    }
 
-    public required init(_ block: @escaping (NSPersistentStoreDescription) -> Void) {
+    internal let block: (NSPersistentStoreDescription) -> Void
+    internal let name: String
+
+    public required init(_ name: String, _ block: @escaping (NSPersistentStoreDescription) -> Void) {
         self.block = block
+        self.name = name
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
     }
 
     func apply(on description: NSPersistentStoreDescription) {
@@ -146,28 +167,28 @@ public class StorageOption {
 
 extension StorageOption {
     public static var readOnly: Self {
-        self.init { $0.isReadOnly = true }
+        self.init("readOnly") { $0.isReadOnly = true }
     }
 
     public static func timeout(_ interval: TimeInterval) -> Self {
-        self.init { $0.timeout = interval }
+        self.init("timeout") { $0.timeout = interval }
     }
 
     public static func setOption(key: String, value: NSObject?) -> Self {
-        self.init { $0.setOption(value, forKey: key) }
+        self.init("setOption") { $0.setOption(value, forKey: key) }
     }
 }
 
 public class PersistentStorageOption: StorageOption {
     public static func persistentStoreForceDestory(_ flag: Bool) -> Self {
-        self.init { $0.setOption(
+        self.init("persistentStoreForceDestory") { $0.setOption(
             flag as NSNumber,
             forKey: NSPersistentStoreForceDestroyOption)}
     }
 
 #if !os(macOS)
     public static func persistentStoreFileProtection(type: FileProtectionType) -> Self {
-        self.init { $0.setOption(
+        self.init("persistentStoreFileProtection") { $0.setOption(
             type as NSObject,
             forKey: NSPersistentStoreFileProtectionKey)}
     }
@@ -176,34 +197,34 @@ public class PersistentStorageOption: StorageOption {
 
 public class SQLiteStorageOption: PersistentStorageOption {
     public static func remoteChangeNotification(_ flag: Bool) -> Self {
-        self.init { $0.setOption(
+        self.init("remoteChangeNotification") { $0.setOption(
             flag as NSNumber,
             forKey: "NSPersistentStoreRemoteChangeNotificationOptionKey") }
     }
 
     public static func persistentHistoryTracking(_ flag: Bool) -> Self {
-        self.init { $0.setOption(
+        self.init("persistentHistoryTracking") { $0.setOption(
             flag as NSNumber,
             forKey: NSPersistentHistoryTrackingKey)}
     }
 
     public static func sqlitePragma(key: String, value: NSObject?) -> Self {
-        self.init { $0.setValue(value, forPragmaNamed: key) }
+        self.init("sqlitePragma") { $0.setValue(value, forPragmaNamed: key) }
     }
 
     public static var sqliteAnalyze: Self {
-        self.init { $0.setOption(true as NSNumber, forKey: NSSQLiteAnalyzeOption) }
+        self.init("sqliteAnalyze") { $0.setOption(true as NSNumber, forKey: NSSQLiteAnalyzeOption) }
     }
 
     public static var sqliteManualVacuum: Self {
-        self.init { $0.setOption(true as NSNumber, forKey: NSSQLiteManualVacuumOption) }
+        self.init("sqliteManualVacuum") { $0.setOption(true as NSNumber, forKey: NSSQLiteManualVacuumOption) }
     }
 }
 
 #if !os(iOS)
 public class XMLStorageOption: PersistentStorageOption {
     public static var validateXMLStore: Self {
-        self.init { $0.setOption(true as NSNumber, forKey: NSValidateXMLStoreOption) }
+        self.init("validateXMLStore") { $0.setOption(true as NSNumber, forKey: NSValidateXMLStoreOption) }
     }
 }
 

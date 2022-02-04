@@ -41,7 +41,7 @@ class ManagedDriverTests: XCTestCase {
     }
 
     override func tearDown() {
-        try! container.rebuildStorage()
+        try! container.rebuildStorages()
     }
     
     func test_keyPathLookupValue_shouldBeSet() {

@@ -70,6 +70,12 @@ extension SessionContext where Self: RawContextProviderProtocol {
     public func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>? {
         executionContext.object(with: objectID) as? ManagedObject<T>
     }
+
+    public func load<T: Entity>(forURIRepresentation uri: String) -> ManagedObject<T>? {
+        guard let managedObjectID = rootContext.persistentStoreCoordinator!
+                .managedObjectID(forURIRepresentation: URL(string: uri)!) else { return nil }
+        return load(objectID: managedObjectID)
+    }
 }
 
 internal struct DummyContext: SessionContext, RawContextProviderProtocol {

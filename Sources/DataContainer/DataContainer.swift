@@ -35,6 +35,8 @@ public class DataContainer {
 
     public var logger: LogHandler = .default
 
+    public private(set) var spotlightIndexer: CoreSpotlightIndexer?
+
     private init(
         storage: Storage,
         dataModel: DataModel,
@@ -59,7 +61,7 @@ public class DataContainer {
             dataModel: dataModel,
             mergePolicy: mergePolicy,
             migrationPolicy: migrationPolicy)
-        try container.coreDataStack.loadPersistentStore()
+        try container.coreDataStack.loadPersistentStore(storage: storage)
         container.setup()
         return container
     }
@@ -76,7 +78,7 @@ public class DataContainer {
             dataModel: dataModel,
             mergePolicy: mergePolicy,
             migrationPolicy: migrationPolicy)
-        container.coreDataStack.loadPersistentStoreAsync { error in
+        container.coreDataStack.loadPersistentStoreAsync(storage: storage) { error in
             defer { completion(error) }
             guard error == nil else { return }
             container.setup()
@@ -94,27 +96,32 @@ public class DataContainer {
         uiContext = coreDataStack.createUiContext(parent: writerContext)
     }
     
-    public func rebuildStorage() throws {
-        guard try destroyStorage() else { return }
-        try buildStorage()
+    public func rebuildStorages() throws {
+        for storage in coreDataStack.storages {
+            guard try destroy(storage: storage) else { continue }
+            try build(storage: storage)
+        }
+    }
+
+    public func destroyStorages() throws {
+        for storage in coreDataStack.storages {
+            try destroy(storage: storage)
+        }
     }
     
     @discardableResult
-    public func destroyStorage() throws -> Bool {
-        guard let storage = coreDataStack.storage as? ConcreteStorage,
-              coreDataStack.isLoaded()
-        else { return false }
+    public func destroy(storage: Storage) throws -> Bool {
+        guard let storage = storage as? ConcreteStorage,
+              coreDataStack.isLoaded(storage: storage) else { return false }
         try coreDataStack.coordinator
-            .destroyPersistentStore(
-                at: storage.storageUrl,
-                ofType: storage.storeType, options: nil)
+            .destroyPersistentStore(at: storage.storageUrl, ofType: storage.storeType)
         try storage.destroy()
         return true
     }
     
-    public func buildStorage() throws {
-        guard coreDataStack.isLoaded() == false else { return }
-        try coreDataStack.loadPersistentStore()
+    public func build(storage: Storage) throws {
+        guard coreDataStack.isLoaded(storage: storage) == false else { return }
+        try coreDataStack.loadPersistentStore(storage: storage)
     }
     
     @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
@@ -158,8 +165,19 @@ extension DataContainer {
 }
 
 extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
-    private func canUseBatchRequest() -> Bool {
-        coreDataStack.storage.storeType == NSSQLiteStoreType
+    private func canUseBatchRequest<T: Entity>(type: T.Type) -> Bool {
+        let managedObjectModel = coreDataStack.dataModel.managedObjectModel
+
+        for store in coreDataStack.coordinator.persistentStores
+        where
+            managedObjectModel
+                .entities(forConfigurationName: store.configurationName)?
+                .contains(where: { $0.name == T.fetchKey}) == true &&
+            store.type == NSSQLiteStoreType
+        {
+            return true
+        }
+        return false
     }
 
     public func fetch<T: Entity>(for type: T.Type) -> ReadOnlyFetchBuilder<T> {
@@ -167,17 +185,17 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
     }
     
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
-        .init(config: .init(batch: canUseBatchRequest()),
+        .init(config: .init(batch: canUseBatchRequest(type: type)),
               context: backgroundSessionContext())
     }
     
     public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
-        .init(config: .init(batch: canUseBatchRequest()),
+        .init(config: .init(batch: canUseBatchRequest(type: type)),
               context: backgroundSessionContext())
     }
     
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
-        .init(config: .init(batch: canUseBatchRequest()),
+        .init(config: .init(batch: canUseBatchRequest(type: type)),
               context: backgroundSessionContext())
     }
 }
@@ -203,6 +221,12 @@ extension DataContainer {
     public func load<T: Entity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
         objectIDs.map(load(objectID:))
     }
+
+    public func load<T: Entity>(forURIRepresentation uri: String) -> T.ReadOnly? {
+        guard let managedObjectID = coreDataStack.coordinator
+                .managedObjectID(forURIRepresentation: URL(string: uri)!) else { return nil }
+        return load(objectID: managedObjectID)
+    }
     
     public func load<T: Entity>(_ object: T.ReadOnly) -> T.ReadOnly {
         guard uiContext != object.managedObject.managedObjectContext else { return object }
@@ -215,3 +239,25 @@ extension DataContainer {
         writerContext.refreshAllObjects()
     }
 }
+
+#if os(iOS) || os(macOS)
+import CoreSpotlight
+
+@available(iOS 13.0, macOS 10.15, *)
+extension DataContainer {
+    @discardableResult
+    public func initializeCoreSpotlightIndexer(
+        for storage: Storage,
+        provider: @escaping (NSManagedObject) -> CSSearchableItemAttributeSet) -> Bool
+    {
+        guard let description = coreDataStack.persistentStoreDescriptions[storage] else {
+            return false
+        }
+        spotlightIndexer = CoreSpotlightIndexer(
+            provider: CoreSpotlightAttributeSetProviderProxy(provider),
+            storeDescription: description,
+            coordinator: coreDataStack.coordinator)
+        return true
+    }
+}
+#endif

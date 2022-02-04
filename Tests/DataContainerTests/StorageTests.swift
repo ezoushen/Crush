@@ -94,7 +94,7 @@ class StorageTests: XCTestCase {
 #endif
 #if !os(macOS)
     func test_descriptionOptions_shouldSetPersistentStoreFileProtection() {
-        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.persistentStoreFileProtection(.completeUnlessOpen)])
+        let storage = Storage(storeType: NSSQLiteStoreType, url: nil, configuration: nil, options: [SQLiteStorageOption.persistentStoreFileProtection(type: .completeUnlessOpen)])
         let sut = storage.createDescription()
         XCTAssertEqual(sut.options[NSPersistentStoreFileProtectionKey], FileProtectionType.completeUnlessOpen as NSObject)
     }

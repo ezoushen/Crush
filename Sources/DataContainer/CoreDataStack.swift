@@ -13,12 +13,14 @@ internal let WriterContextName: String = "DefaultContext.writer"
 internal let UiContextName: String = "DefaultContext.ui"
 
 public class CoreDataStack {
-    public let storage: Storage
+    public let storages: [Storage]
     public let dataModel: DataModel
     public let mergePolicy: NSMergePolicy
     public let migrationPolicy: MigrationPolicy
 
     internal let coordinator: NSPersistentStoreCoordinator!
+
+    internal var persistentStoreDescriptions: [Storage: NSPersistentStoreDescription] = [:]
 
     init(
         storage: Storage,
@@ -26,7 +28,7 @@ public class CoreDataStack {
         mergePolicy: NSMergePolicy,
         migrationPolicy: MigrationPolicy)
     {
-        self.storage = storage
+        self.storages = [storage]
         self.dataModel = dataModel
         self.mergePolicy = mergePolicy
         self.migrationPolicy = migrationPolicy
@@ -34,26 +36,26 @@ public class CoreDataStack {
             managedObjectModel: dataModel.managedObjectModel)
     }
 
-    internal func loadPersistentStore() throws {
+    internal func loadPersistentStore(storage: Storage) throws {
         var error: Error?
 
-        try loadPersistentStore(async: false) { error = $0 }
+        try loadPersistentStore(storage: storage, async: false) { error = $0 }
 
         if let error = error {
             throw error
         }
     }
 
-    internal func loadPersistentStoreAsync(_ completion: @escaping (Error?) -> Void) {
+    internal func loadPersistentStoreAsync(storage: Storage, _ completion: @escaping (Error?) -> Void) {
         do {
-            try loadPersistentStore(async: true, completion: completion)
+            try loadPersistentStore(storage: storage, async: true, completion: completion)
         } catch {
             completion(error)
         }
     }
 
     private func loadPersistentStore(
-        async flag: Bool, completion: @escaping (Error?) -> Void) throws
+        storage: Storage, async flag: Bool, completion: @escaping (Error?) -> Void) throws
     {
         // Migrate store before loading
         try migrationPolicy.process(storage: storage, with: dataModel)
@@ -62,16 +64,16 @@ public class CoreDataStack {
         migrationPolicy.configureStoreDescription(description)
         description.shouldAddStoreAsynchronously = flag
         // Load persistent store
-        coordinator.addPersistentStore(with: description) { completion($1) }
+        coordinator.addPersistentStore(with: description) { [unowned self] in
+//            persistentStoreDescriptions[coordinator.persis]
+            completion($1)
+        }
         NSPersistentStoreCoordinator.updateLastActiveModel(dataModel, in: storage)
         dataModel.managedObjectModel.save()
     }
 
-    internal func isLoaded() -> Bool {
-        guard let url = storage.url else {
-            return coordinator.persistentStores.contains { $0.url == nil }
-        }
-        return coordinator.persistentStore(for: url) != nil
+    internal func isLoaded(storage: Storage) -> Bool {
+        persistentStoreDescriptions[storage] != nil
     }
 
     internal func createWriterContext() -> NSManagedObjectContext {

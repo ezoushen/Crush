@@ -76,6 +76,12 @@ extension Session {
         objectIDs.map(load(objectID:))
     }
 
+    public func load<T: Entity>(forURIRepresentation uri: String) -> T.ReadOnly? {
+        guard let managedObjectID = context.rootContext.persistentStoreCoordinator!
+                .managedObjectID(forURIRepresentation: URL(string: uri)!) else { return nil }
+        return load(objectID: managedObjectID)
+    }
+
     public func commit(_ completion: @escaping (Error?) -> Void) throws {
         try context.commit(completion)
     }
