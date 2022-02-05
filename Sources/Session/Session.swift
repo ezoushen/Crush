@@ -2,7 +2,7 @@
 //  Session.swift
 //  Crush
 //
-//  Created by 沈昱佐 on 2020/2/11.
+//  Created by ezou on 2020/2/11.
 //
 
 import CoreData
@@ -82,12 +82,10 @@ extension Session {
         return load(objectID: managedObjectID)
     }
 
-    public func commit(_ completion: @escaping (Error?) -> Void) throws {
-        try context.commit(completion)
-    }
-
     public func commit() throws {
-        try context.commit()
+        try context.performSync {
+            try context.commit()
+        }
     }
 
     func present<T: Entity>(_ entity: ManagedObject<T>) -> T.ReadOnly {
@@ -230,5 +228,51 @@ extension _SessionContext {
 
     func performSyncUndoable<T>(_ block: () throws -> T) rethrows -> T {
         try executionContext.performSyncUndoable(block)
+    }
+}
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+extension Session {
+    public func async<T>(
+        name: String? = nil,
+        block: @escaping (SessionContext) throws -> T) async throws -> T
+    {
+        let context = context
+        let executionContext = context.executionContext
+        return try await executionContext.performAsyncUndoable { () throws -> T in
+            executionContext.transactionAuthor = name
+            defer { executionContext.transactionAuthor = nil }
+            return try block(context)
+        }
+    }
+
+    public func async<T: UnsafeSessionProperty>(
+        name: String? = nil,
+        block: @escaping (SessionContext) throws -> T) async throws -> T.Safe
+    {
+        let context = context
+        let executionContext = context.executionContext
+        let result = try await executionContext.performAsyncUndoable { () throws -> T in
+            executionContext.transactionAuthor = name
+            defer { executionContext.transactionAuthor = nil }
+            return try block(context)
+        }
+        return result.wrapped(in: self)
+    }
+}
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+extension NSManagedObjectContext {
+    func performAsyncUndoable<T>(_ block: @escaping () throws -> T) async throws -> T {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
+            self.perform {
+                do {
+                    let result = try self.undoable(block)
+                    continuation.resume(returning: result)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
     }
 }

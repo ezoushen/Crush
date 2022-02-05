@@ -29,6 +29,24 @@ protocol RequestConfig {
 protocol RequestExecutor: AnyObject {
     associatedtype Received
     func exec() throws -> [Received]
+    func execAsync(completion: @escaping ([Received]?, Error?) -> Void)
+}
+
+protocol NonThrowingRequestExecutor: RequestExecutor {
+    func exec() -> [Received]
+    func execAsync(completion: @escaping ([Received]) -> Void)
+}
+
+extension NonThrowingRequestExecutor {
+    public func exec() throws -> [Received] {
+        return exec()
+    }
+
+    public func execAsync(completion: @escaping ([Received]?, Error?) -> Void) {
+        execAsync { received in
+            completion(received, nil)
+        }
+    }
 }
 
 protocol RequestBuilder: AnyObject {
@@ -95,3 +113,31 @@ public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
         requestConfig.createStoreRequest()
     }
 }
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+extension RequestExecutor {
+    public func execAsync() async throws -> [Received] {
+        return try await withCheckedThrowingContinuation {
+            (continuation: CheckedContinuation<[Received], Error>) in
+            self.execAsync { value, error in
+                guard let value = value else {
+                    return continuation.resume(throwing: error!)
+                }
+                continuation.resume(returning: value)
+            }
+        }
+    }
+}
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+extension NonThrowingRequestExecutor {
+    public func execAsync() async -> [Received] {
+        return await withCheckedContinuation {
+            (continuation: CheckedContinuation<[Received], Never>) in
+            self.execAsync { value in
+                continuation.resume(returning: value)
+            }
+        }
+    }
+}
+

@@ -66,12 +66,25 @@ extension InsertBuilder {
         config.objects = objects + values.map(\.store)
         return self
     }
-    
+}
+
+extension InsertBuilder {
     public func exec() throws -> [NSManagedObjectID] {
         if #available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *), config.batch {
             return try executeBatchInsert()
         } else {
             return try executeLegacyBatchInsert()
+        }
+    }
+
+    public func execAsync(completion: @escaping ([NSManagedObjectID]?, Error?) -> Void) {
+        context.rootContext.performAsync {
+            do {
+                let result = try self.exec()
+                completion(result, nil)
+            } catch {
+                completion(nil, error)
+            }
         }
     }
 

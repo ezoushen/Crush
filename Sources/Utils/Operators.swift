@@ -270,16 +270,16 @@ extension KeyPath where
     }
 }
 
-@inlinable public func && <T: NSPredicate>(lhs: T, rhs: T) -> T {
-    T(format: "(\(lhs)) AND (\(rhs))", argumentArray: nil)
+@inlinable public func && <T: NSPredicate>(lhs: T, rhs: T) -> NSPredicate {
+    NSCompoundPredicate(andPredicateWithSubpredicates: [lhs, rhs])
 }
 
-@inlinable public func || <T: NSPredicate>(lhs: T, rhs: T) -> T {
-    T(format: "(\(lhs)) OR (\(rhs))", argumentArray: nil)
+@inlinable public func || <T: NSPredicate>(lhs: T, rhs: T) -> NSPredicate {
+    NSCompoundPredicate(orPredicateWithSubpredicates: [lhs, rhs])
 }
 
-@inlinable public prefix func ! <T: NSPredicate>(predicate: T) -> T {
-    T(format: "NOT (\(predicate))", argumentArray: nil)
+@inlinable public prefix func ! <T: NSPredicate>(predicate: T) -> NSPredicate {
+    NSCompoundPredicate(notPredicateWithSubpredicate: predicate)
 }
 
 extension TypedPredicate {

@@ -217,7 +217,7 @@ extension FetchBuilder {
 
 public class ExecutableFetchBuilder<Target: Entity, ReveivedType>:
     FetchBuilder<Target>,
-    RequestExecutor
+    NonThrowingRequestExecutor
 {
     public typealias Received = ReveivedType
 
@@ -228,6 +228,15 @@ public class ExecutableFetchBuilder<Target: Entity, ReveivedType>:
 
     public func exec() -> [Received] {
         fatalError("unimplemented")
+    }
+
+    public func execAsync(completion: @escaping ([Received]) -> Void) {
+        let context = config.includePendingChanges
+            ? context.executionContext : context.rootContext
+        context.performAsync {
+            let result = self.exec()
+            completion(result)
+        }
     }
 }
 

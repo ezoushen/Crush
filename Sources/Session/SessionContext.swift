@@ -22,7 +22,6 @@ public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T>
     func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>]
 
-    func commit(_ handler: @escaping (Error?) -> Void) throws
     func commit() throws
 }
 
@@ -196,28 +195,16 @@ extension SessionContext where Self: RawContextProviderProtocol {
         guard let error = error else { return }
         fatalError("Unhandled error: \(error)")
     }
-    
+
     public func commit() throws {
-        try commit(Self.defaultCommitCompletionHandler)
-    }
-    
-    public func commit(_ handler: @escaping (Error?) -> Void) throws {
-        try executionContext.performSync {
-            let objectIDs = try saveExecutionContext {
-                rootContext.performAsync {
-                    do {
-                        try saveRootContext()
-                    } catch let error as NSError {
-                        handler(error.customError())
-                    }
-                }
-            }
-            refreshObjects(objectIDs)
+        let objectIDs = try saveExecutionContext()
+        try rootContext.performSync {
+            try saveRootContext()
         }
+        refreshObjects(objectIDs)
     }
     
-    internal func saveExecutionContext(
-        _ completion: @escaping () throws -> Void) throws -> Set<NSManagedObjectID>
+    internal func saveExecutionContext() throws -> Set<NSManagedObjectID>
     {
         guard executionContext.hasChanges else {
             return []
@@ -237,9 +224,6 @@ extension SessionContext where Self: RawContextProviderProtocol {
                 error: error)
             throw error
         }
-
-        try completion()
-
         return objectIDs
     }
 

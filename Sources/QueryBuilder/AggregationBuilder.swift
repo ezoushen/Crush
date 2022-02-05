@@ -7,7 +7,7 @@
 
 import CoreData
 
-public final class AggregationBuilder<Target: Crush.Entity>: RequestBuilder, RequestExecutor {
+public final class AggregationBuilder<Target: Crush.Entity>: RequestBuilder, NonThrowingRequestExecutor {
 
     let context: Context
 
@@ -70,6 +70,13 @@ public final class AggregationBuilder<Target: Crush.Entity>: RequestBuilder, Req
                 dictionary.updateValue(newValue, forKey: key)
             }
             return dictionary
+        }
+    }
+
+    public func execAsync(completion: @escaping ([[String: Any]]) -> Void) {
+        context.rootContext.performAsync {
+            let result = self.exec()
+            completion(result)
         }
     }
 }

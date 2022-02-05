@@ -73,6 +73,17 @@ extension UpdateBuilder {
             : executeLegacyBatchUpdate()
     }
 
+    public func execAsync(completion: @escaping ([NSManagedObjectID]?, Error?) -> Void) {
+        context.rootContext.performAsync {
+            do {
+                let result = try self.exec()
+                completion(result, nil)
+            } catch {
+                completion(nil, error)
+            }
+        }
+    }
+
     private func executeBatchUpdate() throws -> [NSManagedObjectID] {
         let request = config.createStoreRequest()
         let result: NSBatchUpdateResult = try context
