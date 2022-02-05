@@ -73,7 +73,7 @@ public class CoreDataStack {
     }
 
     internal func isLoaded(storage: Storage) -> Bool {
-        persistentStoreDescriptions[storage] != nil
+        coordinator.persistentStore(of: storage) != nil
     }
 
     internal func createWriterContext() -> NSManagedObjectContext {

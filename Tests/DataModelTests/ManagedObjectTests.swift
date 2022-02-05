@@ -60,13 +60,17 @@ final class ManagedObjectTests: XCTestCase {
         var testEntity = Relation.ToOne<TestEntity>("testEntity")
     }
 
+    static var storage: Storage = .sqliteInMemory(
+        options: .sqlitePragma(key: "journal_mode", value: "DELETE" as NSObject))
     static var container: DataContainer! = try! DataContainer.load(
-        storage: .inMemory(),
+        storage: storage,
         dataModel: DataModel(
             name: "model",
             concrete: [TestEntity()]))
 
     let container: DataContainer = ManagedObjectTests.container
+    let storage: Storage = ManagedObjectTests.storage
+
     var sut: ReadOnly<TestEntity>!
 
     override class func tearDown() {
@@ -91,7 +95,8 @@ final class ManagedObjectTests: XCTestCase {
     }
 
     override func tearDown() {
-        try! container.rebuildStorages()
+        try? container.destroyStorages()
+        try! container.build(storage: storage)
     }
 
     func test_willSaveEvent_shouldBeCalled() {

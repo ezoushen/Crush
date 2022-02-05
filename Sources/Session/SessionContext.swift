@@ -76,6 +76,15 @@ extension SessionContext where Self: RawContextProviderProtocol {
                 .managedObjectID(forURIRepresentation: URL(string: uri)!) else { return nil }
         return load(objectID: managedObjectID)
     }
+
+    public func assign(object: NSManagedObject, to storage: Storage) {
+        guard let store = rootContext.persistentStoreCoordinator!
+                .persistentStore(of: storage) else {
+            logger.log(.error, "Persistent store for \(storage) not found")
+            return
+        }
+        executionContext.assign(object, to: store)
+    }
 }
 
 internal struct DummyContext: SessionContext, RawContextProviderProtocol {

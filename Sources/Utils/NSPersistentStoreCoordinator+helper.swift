@@ -67,4 +67,12 @@ extension NSPersistentStoreCoordinator {
             ],
             for: store)
     }
+
+    func persistentStore(of storage: Storage) -> NSPersistentStore? {
+        if let url = storage.url {
+            return persistentStore(for: url)
+        } else {
+            return persistentStores.first(where: { $0.type == storage.storeType })
+        }
+    }
 }
