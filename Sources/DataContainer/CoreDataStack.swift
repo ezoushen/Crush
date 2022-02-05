@@ -13,10 +13,13 @@ internal let WriterContextName: String = "DefaultContext.writer"
 internal let UiContextName: String = "DefaultContext.ui"
 
 public class CoreDataStack {
-    public let storages: [Storage]
     public let dataModel: DataModel
     public let mergePolicy: NSMergePolicy
     public let migrationPolicy: MigrationPolicy
+    
+    public var storages: [Storage] {
+        Array(persistentStoreDescriptions.keys)
+    }
 
     internal let coordinator: NSPersistentStoreCoordinator!
 
@@ -28,7 +31,6 @@ public class CoreDataStack {
         mergePolicy: NSMergePolicy,
         migrationPolicy: MigrationPolicy)
     {
-        self.storages = [storage]
         self.dataModel = dataModel
         self.mergePolicy = mergePolicy
         self.migrationPolicy = migrationPolicy

@@ -17,20 +17,7 @@ extension NSPredicate {
     }
 }
 
-public final class TypedPredicate<T: Entity>: NSPredicate {
-
-    @inlinable public static prefix func ! (_ predicate: TypedPredicate<T>) -> TypedPredicate<T> {
-        TypedPredicate<T>(format: NSCompoundPredicate(notPredicateWithSubpredicate: predicate).predicateFormat)
-    }
-
-    @inlinable public static func && (lhs: NSPredicate, rhs: TypedPredicate) -> TypedPredicate {
-        TypedPredicate<T>(format: NSCompoundPredicate(andPredicateWithSubpredicates: [lhs, rhs]).predicateFormat)
-    }
-
-    @inlinable public static func || (lhs: NSPredicate, rhs: TypedPredicate) -> TypedPredicate {
-        TypedPredicate<T>(format: NSCompoundPredicate(orPredicateWithSubpredicates: [lhs, rhs]).predicateFormat)
-    }
-}
+public final class TypedPredicate<T: Entity>: NSPredicate { }
 
 @inlinable func BEGINSWITH(_ string: SearchString) -> String {
     "BEGINSWITH\(string.type.modifier) \"\(string.string)\""
@@ -54,35 +41,43 @@ public final class TypedPredicate<T: Entity>: NSPredicate {
 
 // MARK: - Property Condition
 
-public final class PropertyCondition: NSPredicate {
-    public convenience init<T: PredicateComparable>(in rhs: ClosedRange<T>) {
+public final class PropertyCondition<T>: NSPredicate { }
+
+extension PropertyCondition where T: PredicateEquatable {
+    public convenience init(in rhs: Array<T>) {
+        self.init(format: "SELF IN %@", NSArray(array: rhs))
+    }
+}
+
+extension PropertyCondition where T: PredicateEquatable & Hashable {
+    public convenience init(in rhs: Set<T>) {
+        self.init(format: "SELF IN %@", NSSet(set: rhs))
+    }
+}
+
+extension PropertyCondition where T: PredicateComparable & Comparable {
+    public convenience init(in rhs: ClosedRange<T>) {
         self.init(format: "SELF BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
     }
 
-    public convenience init<T: PredicateEquatable>(in rhs: Array<T>) {
-        self.init(format: "SELF IN %@", NSArray(array: rhs))
-    }
-
-    public convenience init<T: PredicateEquatable>(in rhs: Set<T>) {
-        self.init(format: "SELF IN %@", NSSet(set: rhs))
-    }
-
-    public convenience init(largerThanOrEqualsTo rhs: PredicateComparable) {
+    public convenience init(largerThanOrEqualTo rhs: T) {
         self.init(format: "SELF >= \(rhs)")
     }
 
-    public convenience init(smallerThanOrEqualsTo rhs: PredicateComparable) {
+    public convenience init(smallerThanOrEqualTo rhs: T) {
         self.init(format: "SELF <= \(rhs)")
     }
-
-    public convenience init(largerThan rhs: PredicateComparable) {
+    
+    public convenience init(largerThan rhs: T) {
         self.init(format: "SELF > \(rhs)")
     }
 
-    public convenience init(smallerThan rhs: PredicateComparable) {
+    public convenience init(smallerThan rhs: T) {
         self.init(format: "SELF < \(rhs)")
     }
+}
 
+extension PropertyCondition where T == String {
     public convenience init(endsWith rhs: SearchString) {
         self.init(format: "SELF \(ENDSWITH(rhs))")
     }
@@ -101,6 +96,28 @@ public final class PropertyCondition: NSPredicate {
 
     public convenience init(contains rhs: SearchString) {
         self.init(format: "SELF \(CONTAINS(rhs))")
+    }
+}
+
+extension PropertyCondition where T: PredicateExpressibleByString {
+    public convenience init(endsWith rhs: SearchString) {
+        self.init(format: "SELF.stringValue \(ENDSWITH(rhs))")
+    }
+
+    public convenience init(beginsWith rhs: SearchString) {
+        self.init(format: "SELF.stringValue \(BEGINSWITH(rhs))")
+    }
+
+    public convenience init(like rhs: SearchString) {
+        self.init(format: "SELF.stringValue \(LIKE(rhs))")
+    }
+
+    public convenience init(matches rhs: SearchString) {
+        self.init(format: "SELF.stringValue \(MATCHES(rhs))")
+    }
+
+    public convenience init(contains rhs: SearchString) {
+        self.init(format: "SELF.stringValue \(CONTAINS(rhs))")
     }
 }
 
@@ -230,7 +247,7 @@ extension KeyPath where
 extension KeyPath where
     Root: Entity,
     Value: AttributeProtocol,
-    Value.PredicateValue: PredicateExpressedByString
+    Value.PredicateValue: PredicateExpressibleByString
 {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(BEGINSWITH(rhs))")
@@ -253,16 +270,16 @@ extension KeyPath where
     }
 }
 
-public func && (lhs: NSPredicate, rhs: NSPredicate) -> NSPredicate {
-    NSCompoundPredicate(andPredicateWithSubpredicates: [lhs, rhs])
+@inlinable public func && <T: NSPredicate>(lhs: T, rhs: T) -> T {
+    T(format: "(\(lhs)) AND (\(rhs))", argumentArray: nil)
 }
 
-public func || (lhs: NSPredicate, rhs: NSPredicate) -> NSPredicate {
-    NSCompoundPredicate(orPredicateWithSubpredicates: [lhs, rhs])
+@inlinable public func || <T: NSPredicate>(lhs: T, rhs: T) -> T {
+    T(format: "(\(lhs)) OR (\(rhs))", argumentArray: nil)
 }
 
-public prefix func ! (predicat: NSPredicate) -> NSPredicate {
-    NSCompoundPredicate(notPredicateWithSubpredicate: predicat)
+@inlinable public prefix func ! <T: NSPredicate>(predicate: T) -> T {
+    T(format: "NOT (\(predicate))", argumentArray: nil)
 }
 
 extension TypedPredicate {

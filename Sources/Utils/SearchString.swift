@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct SearchString {
+public struct SearchString: Equatable {
     public enum Category {
         case caseInsensitive, diacriticInsensitive, caseDiacriticInsensitive, plain
         

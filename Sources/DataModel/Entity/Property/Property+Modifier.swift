@@ -224,12 +224,12 @@ public class ExternalBinaryDataStorage<T: AttributeProtocol>: PropertyModifier<T
 }
 
 @propertyWrapper
-public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondition> {
+public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondition<T.FieldConvertor>> {
     @inlinable public var wrappedValue: T { property }
     public let warning: String
 
     public init(
-        wrappedValue: T, _ modifier: PropertyCondition, warning: String = "")
+        wrappedValue: T, _ modifier: PropertyCondition<T.FieldConvertor>, warning: String = "")
     {
         self.warning = warning
         super.init(wrappedValue: wrappedValue, modifier)

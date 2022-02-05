@@ -184,7 +184,7 @@ class AttributeTests: XCTestCase {
     }
 
     func test_attributeOption_validationsShouldBeSet() {
-        let predicate = PropertyCondition(format: "SELF == NO")
+        let predicate = PropertyCondition<Bool>(format: "SELF == NO")
         let warning = "warning"
         let attribute = Validation(wrappedValue: Value.Bool("attribute"), predicate, warning: "warning")
         let description = attribute.createPropertyDescription() as! NSAttributeDescription

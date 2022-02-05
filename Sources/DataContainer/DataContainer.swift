@@ -97,28 +97,38 @@ public class DataContainer {
         writerContext = coreDataStack.createWriterContext()
         uiContext = coreDataStack.createUiContext(parent: writerContext)
     }
+
+    @discardableResult
+    private func _destroy(storage: Storage) throws -> Bool {
+        if let storage = storage as? ConcreteStorage {
+            try coreDataStack.coordinator.destroyPersistentStore(
+                at: storage.storageUrl, ofType: storage.storeType)
+            try storage.destroy()
+        } else if let store = coreDataStack.coordinator.persistentStore(of: storage) {
+            try coreDataStack.coordinator.remove(store)
+        } else {
+            return false
+        }
+        return true
+    }
     
     public func rebuildStorages() throws {
         for storage in coreDataStack.storages {
-            guard try destroy(storage: storage) else { continue }
+            guard try _destroy(storage: storage) else { continue }
             try build(storage: storage)
         }
     }
 
     public func destroyStorages() throws {
         for storage in coreDataStack.storages {
-            try destroy(storage: storage)
+            try _destroy(storage: storage)
         }
     }
     
     @discardableResult
     public func destroy(storage: Storage) throws -> Bool {
-        guard let storage = storage as? ConcreteStorage,
-              coreDataStack.isLoaded(storage: storage) else { return false }
-        try coreDataStack.coordinator
-            .destroyPersistentStore(at: storage.storageUrl, ofType: storage.storeType)
-        try storage.destroy()
-        return true
+        guard coreDataStack.isLoaded(storage: storage) else { return false }
+        return try _destroy(storage: storage)
     }
     
     public func build(storage: Storage) throws {

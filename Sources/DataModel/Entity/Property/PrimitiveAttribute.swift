@@ -38,7 +38,7 @@ extension FieldConvertible {
     }
 }
 
-public protocol PredicateExpressedByString { }
+public protocol PredicateExpressibleByString { }
 
 public protocol PredicateComputable { }
 
@@ -72,32 +72,32 @@ where
 public typealias PredicateComparableAttribute = PrimitiveAttribute & PredicateComparable
 public typealias PredicateEquatableAttribute = PrimitiveAttribute & PredicateEquatable
 
-extension Int64: PredicateComparableAttribute, PredicateExpressedByString, PredicateComputable {
+extension Int64: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .integer64AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int32: PredicateComparableAttribute, PredicateExpressedByString, PredicateComputable {
+extension Int32: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .integer32AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int16: PredicateComparableAttribute, PredicateExpressedByString, PredicateComputable {
+extension Int16: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .integer16AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension NSDecimalNumber: PredicateComparableAttribute, PredicateExpressedByString, PredicateComputable {
+extension NSDecimalNumber: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .decimalAttributeType }
     public var predicateValue: NSObject { self }
 }
 
-extension Double: PredicateComparableAttribute, PredicateExpressedByString, PredicateComputable {
+extension Double: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .doubleAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Float: PredicateComparableAttribute, PredicateExpressedByString, PredicateComputable {
+extension Float: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .floatAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
@@ -107,12 +107,12 @@ extension String: PrimitiveAttribute, PredicateComparable {
     public var predicateValue: NSObject { NSString(string: self) }
 }
 
-extension Bool: PredicateEquatableAttribute, PredicateExpressedByString {
+extension Bool: PredicateEquatableAttribute, PredicateExpressibleByString {
     public static var nativeType: NSAttributeType { .booleanAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Date: PredicateComparableAttribute, PredicateExpressedByString {
+extension Date: PredicateComparableAttribute, PredicateExpressibleByString {
     public static var nativeType: NSAttributeType { .dateAttributeType }
     public var predicateValue: NSObject { self as NSDate }
 }
@@ -130,7 +130,7 @@ extension NSNull: FieldConvertible {
     public static func convert(value: NSNull) -> NSNull { value }
 }
 
-extension UUID: PredicateEquatableAttribute, PredicateExpressedByString {
+extension UUID: PredicateEquatableAttribute, PredicateExpressibleByString {
     public static var nativeType: NSAttributeType { .UUIDAttributeType }
     public var predicateValue: NSObject { self as NSUUID }
 }
