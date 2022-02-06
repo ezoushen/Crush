@@ -22,6 +22,9 @@ class OperatorsTests: XCTestCase {
         var stringProperty = Value.String("stringProperty")
 
         @Optional
+        var uuid = Value.UUID("uuid")
+
+        @Optional
         var object = Relation.ToOne<Entity>("object")
 
         @Optional
@@ -30,16 +33,19 @@ class OperatorsTests: XCTestCase {
 
     class Object: NSObject {
         override func isEqual(_ object: Any?) -> Bool {
-            property == (object as? Object)?.property &&
+            let objectsEqual = self.objects == (object as? Object)?.objects
+            return property == (object as? Object)?.property &&
             property2 == (object as? Object)?.property2 &&
             stringProperty == (object as? Object)?.stringProperty &&
+            uuid == (object as? Object)?.uuid &&
             self.object == (object as? Object)?.object &&
-            self.objects == (object as? Object)?.objects
+            objectsEqual
         }
 
         @objc dynamic var property: NSNumber?
         @objc dynamic var property2: NSNumber?
         @objc dynamic var stringProperty: String?
+        @objc dynamic var uuid: UUID?
 
         @objc dynamic var object: Object?
         @objc dynamic var objects: [Object]?
@@ -59,6 +65,10 @@ class OperatorsTests: XCTestCase {
 
         init(_ objects: [Object]) {
             self.objects = objects
+        }
+        
+        init(_ uuid: UUID) {
+            self.uuid = uuid
         }
     }
 
@@ -332,7 +342,7 @@ class OperatorsTests: XCTestCase {
     }
 
     func test_subquery_shouldReturnObjectsWhichObjectPropertyEqualTo1() {
-        let sut: TypedPredicate<Entity> = .subquery(\.object, predicate: \Entity.property == 1)
+        let sut = TypedPredicate<Entity>.join(\.object, predicate: \Entity.property == 1)
         let target = NSArray(array: [
             Object(Object(1)), Object(Object(0)), Object(Object(3))
         ])
@@ -341,7 +351,7 @@ class OperatorsTests: XCTestCase {
     }
 
     func test_subquery_shouldReturnObjectsWhichAmountOfObjectsWithPropertyGreaterThan1GreaterThan2() {
-        let sut: TypedPredicate<Entity> = .subquery(\.objects, predicate: \Entity.property > 1, collectionQuery: .count(greaterThan: 2))
+        let sut = TypedPredicate<Entity>.subquery(\.objects, predicate: \Entity.property > 1, collectionQuery: .count(greaterThan: 2))
         let target = NSArray(array: [
             Object([Object(1), Object(2), Object(3)]),
             Object([Object(4), Object(1), Object(3)]),
@@ -349,5 +359,16 @@ class OperatorsTests: XCTestCase {
         ])
         let result = target.filtered(using: sut) as! [Object]
         XCTAssertEqual(result, [Object([Object(4), Object(5), Object(3)])])
+    }
+
+    func test_subqueryUUID_shouldNotThrowingException() {
+        let uuids = [UUID(), UUID(), UUID()]
+        let sut = TypedPredicate<Entity>.join(
+            \.object, predicate: \Entity.uuid == uuids[0] && \.property == nil)
+        let target = NSArray(array: [
+            Object(Object(UUID())), Object(Object(UUID())), Object(Object(uuids[0]))
+        ])
+        let result = target.filtered(using: sut) as! [Object]
+        XCTAssertEqual(result, [Object(Object(uuids[0]))])
     }
 }

@@ -9,32 +9,38 @@ import Foundation
 
 public final class CollectionQuery<T: Entity> {
 
-    let predicateString: String
+    let function: String
+    let keyPath: String?
+    let `operator`: NSComparisonPredicate.Operator
+    let value: Int
 
-    init(_ string: String) {
-        predicateString = string
+    init(_ string: String, keyPath: String?, operator: NSComparisonPredicate.Operator, value: Int) {
+        self.function = string
+        self.operator = `operator`
+        self.value = value
+        self.keyPath = keyPath
     }
 
     // MARK: @count
 
     public static func count(equalTo value: Int) -> CollectionQuery {
-        CollectionQuery("@count == \(value)")
+        CollectionQuery("count:", keyPath: nil, operator: .equalTo, value: value)
     }
 
     public static func count(greaterThan value: Int) -> CollectionQuery {
-        CollectionQuery("@count > \(value)")
+        CollectionQuery("count:", keyPath: nil, operator: .greaterThan, value: value)
     }
 
     public static func count(greaterThanOrEqualTo value: Int) -> CollectionQuery {
-        CollectionQuery("@count >= \(value)")
+        CollectionQuery("count:", keyPath: nil, operator: .greaterThanOrEqualTo, value: value)
     }
 
     public static func count(lessThan value: Int) -> CollectionQuery {
-        CollectionQuery("@count < \(value)")
+        CollectionQuery("count:", keyPath: nil, operator: .lessThan, value: value)
     }
 
     public static func count(lessThanOrEqualTo value: Int) -> CollectionQuery {
-        CollectionQuery("@count <= \(value)")
+        CollectionQuery("count:", keyPath: nil, operator: .lessThanOrEqualTo, value: value)
     }
 
     // MARK: @sum
@@ -45,7 +51,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@sum.\(selector.propertyName) == \(value)")
+        CollectionQuery("sum:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
     /// `sum` only work with in-memory storage / array
@@ -54,7 +60,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@sum.\(selector.propertyName) > \(value)")
+        CollectionQuery("sum:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
     /// `sum` only work with in-memory storage / array
@@ -63,7 +69,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@sum.\(selector.propertyName) >= \(value)")
+        CollectionQuery("sum:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
     /// `sum` only work with in-memory storage / array
@@ -72,7 +78,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@sum.\(selector.propertyName) < \(value)")
+        CollectionQuery("sum:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
     /// `sum` only work with in-memory storage / array
@@ -81,7 +87,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@sum.\(selector.propertyName) <= \(value)")
+        CollectionQuery("sum:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
 
     // MARK: @avg
@@ -92,7 +98,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@avg.\(selector.propertyName) == \(value)")
+        CollectionQuery("avg:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
     /// `avg` only work with in-memory storage / array
@@ -101,7 +107,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@avg.\(selector.propertyName) > \(value)")
+        CollectionQuery("avg:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
     /// `avg` only work with in-memory storage / array
@@ -110,7 +116,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@avg.\(selector.propertyName) >= \(value)")
+        CollectionQuery("avg:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
     /// `avg` only work with in-memory storage / array
@@ -119,7 +125,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@avg.\(selector.propertyName) < \(value)")
+        CollectionQuery("avg:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
     /// `avg` only work with in-memory storage / array
@@ -128,7 +134,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@avg.\(selector.propertyName) <= \(value)")
+        CollectionQuery("avg:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
 
     // MARK: @min
@@ -139,7 +145,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@min.\(selector.propertyName) == \(value)")
+        CollectionQuery("min:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
     /// `min` only work with in-memory storage / array
@@ -148,7 +154,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@min.\(selector.propertyName) > \(value)")
+        CollectionQuery("min:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
     /// `min` only work with in-memory storage / array
@@ -157,7 +163,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@min.\(selector.propertyName) >= \(value)")
+        CollectionQuery("min:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
     /// `min` only work with in-memory storage / array
@@ -166,7 +172,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@min.\(selector.propertyName) < \(value)")
+        CollectionQuery("min:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
     /// `min` only work with in-memory storage / array
@@ -175,7 +181,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@min.\(selector.propertyName) <= \(value)")
+        CollectionQuery("min:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
 
     // MARK: @max
@@ -186,7 +192,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@max.\(selector.propertyName) == \(value)")
+        CollectionQuery("max:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
     /// `max` only work with in-memory storage / array
@@ -195,7 +201,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@max.\(selector.propertyName) > \(value)")
+        CollectionQuery("max:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
     /// `max` only work with in-memory storage / array
@@ -204,7 +210,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@max.\(selector.propertyName) >= \(value)")
+        CollectionQuery("max:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
     /// `max` only work with in-memory storage / array
@@ -213,7 +219,7 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@max.\(selector.propertyName) < \(value)")
+        CollectionQuery("max:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
     /// `max` only work with in-memory storage / array
@@ -222,6 +228,6 @@ public final class CollectionQuery<T: Entity> {
     where
         S.FieldConvertor: PredicateComputable
     {
-        CollectionQuery("@max.\(selector.propertyName) <= \(value)")
+        CollectionQuery("max:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
 }

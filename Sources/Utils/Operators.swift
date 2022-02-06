@@ -270,40 +270,81 @@ extension KeyPath where
     }
 }
 
-@inlinable public func && <T: NSPredicate>(lhs: T, rhs: T) -> NSPredicate {
-    NSCompoundPredicate(andPredicateWithSubpredicates: [lhs, rhs])
+private func cast<T: NSObject>(_ object: NSObject) -> T {
+    if let object = object as? T { return object }
+    let clazz: AnyClass = object_getClass(object)!
+    object_setClass(object, T.self)
+    defer { object_setClass(object, clazz) }
+    return object as! T
 }
 
-@inlinable public func || <T: NSPredicate>(lhs: T, rhs: T) -> NSPredicate {
-    NSCompoundPredicate(orPredicateWithSubpredicates: [lhs, rhs])
+@inline(__always)
+public func && <T: NSPredicate>(lhs: T, rhs: T) -> T {
+    cast(NSCompoundPredicate(andPredicateWithSubpredicates: [lhs, rhs]))
 }
 
-@inlinable public prefix func ! <T: NSPredicate>(predicate: T) -> NSPredicate {
-    NSCompoundPredicate(notPredicateWithSubpredicate: predicate)
+@inline(__always)
+public func || <T: NSPredicate>(lhs: T, rhs: T) -> NSPredicate {
+    cast(NSCompoundPredicate(orPredicateWithSubpredicates: [lhs, rhs]))
+}
+
+@inline(__always)
+public prefix func ! (predicate: NSPredicate) -> NSPredicate {
+    cast(NSCompoundPredicate(notPredicateWithSubpredicate: predicate))
 }
 
 extension TypedPredicate {
-    public static func subquery<Property: RelationshipProtocol>(
+    private static func updatePredicate(_ predicate: NSPredicate, block: (NSComparisonPredicate) -> Void) {
+        if let predicate = predicate as? NSCompoundPredicate {
+            for subpredicate in predicate.subpredicates {
+                updatePredicate(subpredicate as! NSPredicate, block: block)
+            }
+        } else if let predicate = predicate as? NSComparisonPredicate {
+            block(predicate)
+        }
+    }
+
+    public static func join<Property: RelationshipProtocol>(
         _ keyPath: KeyPath<T, Property>, predicate: TypedPredicate<Property.Destination>
-    ) -> TypedPredicate<T>
+    ) -> Self
     where
         Property.Mapping == ToOne<Property.Destination>
     {
-        TypedPredicate(format: "\(keyPath.propertyName).\(predicate.predicateFormat)")
+        let keyPath = keyPath.propertyName
+        updatePredicate(predicate) { predicate in
+            let originKeyPath = predicate.leftExpression.keyPath
+            let expression = NSExpression(forKeyPath: "\(keyPath).\(originKeyPath)")
+            predicate.setValue(expression, forKey: "_lhs")
+        }
+        return cast(predicate)
     }
 
     public static func subquery<Property: RelationshipProtocol>(
         _ keyPath: KeyPath<T, Property>,
         predicate: TypedPredicate<Property.Destination>,
         collectionQuery: CollectionQuery<Property.Destination>
-    ) -> TypedPredicate<T>
+    ) -> Self
     where
         Property.Mapping == ToMany<Property.Destination>
     {
-        TypedPredicate(
-            format: "SUBQUERY(\(keyPath.propertyName)," +
-                    "$x,$x.\(predicate.predicateFormat))" +
-                    ".\(collectionQuery.predicateString)")
+        updatePredicate(predicate) { predicate in
+            let expression = NSExpression(
+                forFunction: NSExpression(forVariable: "x"),
+                selectorName: "valueForKeyPath:",
+                arguments: [NSExpression(forConstantValue: predicate.leftExpression.keyPath)])
+            predicate.setValue(expression, forKey: "_lhs")
+        }
+        return cast(NSComparisonPredicate(
+            leftExpression: NSExpression(forFunction: collectionQuery.function, arguments: [
+                NSExpression(
+                    forSubquery: NSExpression(forKeyPath: keyPath.propertyName),
+                    usingIteratorVariable: "x",
+                    predicate: predicate)
+            ]),
+            rightExpression: NSExpression(forConstantValue: collectionQuery.value),
+            modifier: .direct,
+            type: collectionQuery.operator,
+            options: .init(rawValue: 0)))
     }
 }
 
