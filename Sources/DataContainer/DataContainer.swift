@@ -164,6 +164,20 @@ public class DataContainer {
         }
         return persistentHistoryTracker.loadPersistentHistory(date: date ?? createdDate)
     }
+
+    public func setMetadata(_ metadata: [String: Any], storage: Storage) throws {
+        guard let store = coreDataStack.coordinator.persistentStore(of: storage) else {
+            return
+        }
+        coreDataStack.coordinator.setMetadata(metadata, for: store)
+    }
+
+    public func metadata(of storage: Storage) throws -> [String: Any]? {
+        guard let store = coreDataStack.coordinator.persistentStore(of: storage) else {
+            return nil
+        }
+        return coreDataStack.coordinator.metadata(for: store)
+    }
 }
 
 extension DataContainer {
