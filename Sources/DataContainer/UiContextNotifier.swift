@@ -9,6 +9,9 @@ import CoreData
 import Foundation
 
 internal protocol UiContextNotifier {
+    var container: DataContainer { get }
+    var context: _SessionContext { get }
+
     func enable()
     func disable()
 }
@@ -18,21 +21,34 @@ extension UiContextNotifier {
         DispatchQueue.performMainThreadTask {
             NotificationCenter.default.post(
                 name: DataContainer.uiContextDidRefresh,
-                object: self, userInfo: nil)
+                object: container, userInfo: nil)
         }
     }
 }
 
-internal class ContextDidSaveNotifier: UiContextNotifier {
+internal /*abstract*/ class _UiContextNotifier: UiContextNotifier {
     internal var context: _SessionContext
-    internal var coordinator: NSPersistentStoreCoordinator
 
-    internal init(context: _SessionContext, coordinator: NSPersistentStoreCoordinator) {
-        self.context = context
-        self.coordinator = coordinator
+    internal unowned let container: DataContainer
+
+    internal init(container: DataContainer) {
+        self.context = container.backgroundSessionContext()
+        self.container = container
     }
 
     func enable() {
+        assertionFailure("Not implemented")
+    }
+
+    func disable() {
+        assertionFailure("Not implemented")
+    }
+
+    deinit { disable() }
+}
+
+internal class ContextDidSaveNotifier: _UiContextNotifier {
+    override func enable() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(contextDidSave(notification:)),
@@ -40,7 +56,7 @@ internal class ContextDidSaveNotifier: UiContextNotifier {
             object: context.rootContext)
     }
 
-    func disable() {
+    override func disable() {
         NotificationCenter.default.removeObserver(
             self,
             name: .NSManagedObjectContextDidSave,
@@ -57,27 +73,20 @@ internal class ContextDidSaveNotifier: UiContextNotifier {
 
         notifyOnMainThread()
     }
-
-    deinit {
-        disable()
-    }
 }
 
 @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
-internal class PersistentHistoryNotifier: UiContextNotifier {
+internal class PersistentHistoryNotifier: _UiContextNotifier {
 
+    internal let coordinator: NSPersistentStoreCoordinator
     internal var lastHistoryToken: NSPersistentHistoryToken?
+    internal var transactionLifetime: TimeInterval = 604_800
 
     private let logger = LogHandler.default
 
-    internal var context: _SessionContext
-    internal var coordinator: NSPersistentStoreCoordinator
-    
-    internal var transactionLifetime: TimeInterval = 604_800
-
-    internal init(context: _SessionContext, coordinator: NSPersistentStoreCoordinator) {
-        self.context = context
-        self.coordinator = coordinator
+    internal override init(container: DataContainer) {
+        coordinator = container.coreDataStack.coordinator
+        super.init(container: container)
         setup()
     }
 
@@ -86,7 +95,7 @@ internal class PersistentHistoryNotifier: UiContextNotifier {
         loadHistoryToken()
     }
 
-    internal func enable() {
+    internal override func enable() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(persistentStoreHistoryChanged(_:)),
@@ -94,15 +103,11 @@ internal class PersistentHistoryNotifier: UiContextNotifier {
             object: coordinator)
     }
 
-    internal func disable() {
+    internal override func disable() {
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name("NSPersistentStoreRemoteChangeNotification"),
             object: coordinator)
-    }
-
-    deinit {
-        disable()
     }
 
     private var persistentHistoryQueue: DispatchQueue =

@@ -22,13 +22,9 @@ public class DataContainer {
                return ($0.options?[remoteChangeKey] as? NSObject) == (true as NSNumber) &&
                ($0.options?[NSPersistentHistoryTrackingKey] as? NSObject) == (true as NSNumber)
            }) {
-            return PersistentHistoryNotifier(
-                context: backgroundSessionContext(),
-                coordinator: coreDataStack.coordinator)
+            return PersistentHistoryNotifier(container: self)
         } else {
-            return ContextDidSaveNotifier(
-                context: backgroundSessionContext(),
-                coordinator: coreDataStack.coordinator)
+            return ContextDidSaveNotifier(container: self)
         }
     }()
 
