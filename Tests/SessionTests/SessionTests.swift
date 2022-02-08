@@ -21,7 +21,7 @@ class SessionTests: XCTestCase {
 
     override func setUpWithError() throws {
         try container = .load(
-            storage: storage,
+            storages: storage,
             dataModel: DataModel(name: "DATAMODEL", concrete: [TestEntity()]))
     }
 

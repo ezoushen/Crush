@@ -26,7 +26,6 @@ public class CoreDataStack {
     internal var persistentStoreDescriptions: [Storage: NSPersistentStoreDescription] = [:]
 
     init(
-        storage: Storage,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy,
         migrationPolicy: MigrationPolicy)
@@ -53,6 +52,19 @@ public class CoreDataStack {
             try loadPersistentStore(storage: storage, async: true, completion: completion)
         } catch {
             completion(error)
+        }
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+    internal func loadPersistentStoreAsync(storage: Storage) async throws {
+        try await withCheckedThrowingContinuation {
+            (continuation: CheckedContinuation<Void, Error>) in
+            self.loadPersistentStoreAsync(storage: storage) { error in
+                if let error = error {
+                    return continuation.resume(throwing: error)
+                }
+                return continuation.resume()
+            }
         }
     }
 

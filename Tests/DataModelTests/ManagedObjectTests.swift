@@ -63,7 +63,7 @@ final class ManagedObjectTests: XCTestCase {
     static var storage: Storage = .sqliteInMemory(
         options: .sqlitePragma(key: "journal_mode", value: "DELETE" as NSObject))
     static var container: DataContainer! = try! DataContainer.load(
-        storage: storage,
+        storages: storage,
         dataModel: DataModel(
             name: "model",
             concrete: [TestEntity()]))

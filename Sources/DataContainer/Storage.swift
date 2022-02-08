@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-public class Storage: CustomStringConvertible, Hashable {
+public class Storage: CustomDebugStringConvertible, Hashable {
     public static func == (lhs: Storage, rhs: Storage) -> Bool {
         lhs.hashValue == rhs.hashValue
     }
@@ -25,8 +25,10 @@ public class Storage: CustomStringConvertible, Hashable {
         hasher.combine(options)
     }
 
-    public var description: String {
-        "\(String(reflecting: Self.self))(storeType:\"\(storeType)\",url:\"\(url == nil ? "nil" : "\(url!)")\")"
+    public var debugDescription: String {
+        let mirror = Mirror(reflecting: self)
+        let content = mirror.children.map { "\($0.label!):\($0.value)" }.joined(separator: ",")
+        return "\(String(reflecting: Self.self))(\(content)"
     }
 
     init(storeType: String, url: URL?, configuration: String?, options: [StorageOption]) {
@@ -55,7 +57,9 @@ public class ConcreteStorage: Storage {
     }
 
     @available(*, unavailable)
-    private override init(storeType: String, url: URL?, configuration: String?, options: [StorageOption]) {
+    private override init(
+        storeType: String, url: URL?, configuration: String?, options: [StorageOption])
+    {
         fatalError("this initializer in unavailable")
     }
     
@@ -68,6 +72,17 @@ public class ConcreteStorage: Storage {
 }
 
 public class SQLiteStorage: ConcreteStorage {
+    private override init(
+        storeType: String, url: URL, configuration: String?, options: [StorageOption])
+    {
+        super.init(storeType: storeType, url: url, configuration: configuration, options: options)
+    }
+
+    internal init(url: URL, configuration: String? = nil, options: [SQLiteStorageOption] = []) {
+        super.init(
+            storeType: NSSQLiteStoreType, url: url, configuration: configuration, options: options)
+    }
+
     public override func destroy() throws {
         try super.destroy()
         try? FileManager.default.removeItemIfExists(atPath: storageUrl.path + "-shm")
@@ -81,7 +96,11 @@ extension Storage {
         configuration: String? = nil,
         options: PersistentStorageOption...) -> Storage
     {
-        ConcreteStorage(storeType: NSBinaryStoreType, url: url, configuration: configuration, options: options)
+        ConcreteStorage(
+            storeType: NSBinaryStoreType,
+            url: url,
+            configuration: configuration,
+            options: options)
     }
 
     public static func binary(
@@ -149,7 +168,6 @@ extension Storage {
         options: [SQLiteStorageOption]) -> Storage
     {
         SQLiteStorage(
-            storeType: NSSQLiteStoreType,
             url: url,
             configuration: configuration,
             options: options)

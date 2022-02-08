@@ -11,7 +11,6 @@ import CoreData
 public class DataContainer {
     public static let uiContextDidRefresh = Notification.Name("DataContainerDidRefreshUiContext")
 
-    internal let coreDataStack: CoreDataStack
     internal var writerContext: NSManagedObjectContext!
     internal var uiContext: NSManagedObjectContext!
     internal let createdDate: Date = Date()
@@ -33,6 +32,7 @@ public class DataContainer {
         }
     }()
 
+    public let coreDataStack: CoreDataStack
     public var logger: LogHandler = .default
 
 #if os(iOS) || os(macOS)
@@ -40,51 +40,75 @@ public class DataContainer {
 #endif
 
     private init(
-        storage: Storage,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy,
         migrationPolicy: MigrationPolicy)
     {
         coreDataStack = CoreDataStack(
-            storage: storage,
             dataModel: dataModel,
             mergePolicy: mergePolicy,
             migrationPolicy: migrationPolicy)
     }
 
     public static func load(
-        storage: Storage,
+        storages: Storage...,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy = .error,
         migrationPolicy: MigrationPolicy = .lightWeight
     ) throws -> DataContainer {
         let container = DataContainer(
-            storage: storage,
             dataModel: dataModel,
             mergePolicy: mergePolicy,
             migrationPolicy: migrationPolicy)
-        try container.coreDataStack.loadPersistentStore(storage: storage)
+        for storage in storages {
+            try container.coreDataStack.loadPersistentStore(storage: storage)
+        }
         container.setup()
         return container
     }
 
     public static func loadAsync(
-        storage: Storage,
+        storages: Storage...,
         dataModel: DataModel,
         mergePolicy: NSMergePolicy = .error,
         migrationPolicy: MigrationPolicy = .lightWeight,
         completion: @escaping (Error?) -> Void
     ) -> DataContainer {
         let container = DataContainer(
-            storage: storage,
             dataModel: dataModel,
             mergePolicy: mergePolicy,
             migrationPolicy: migrationPolicy)
-        container.coreDataStack.loadPersistentStoreAsync(storage: storage) { error in
-            defer { completion(error) }
-            guard error == nil else { return }
-            container.setup()
+        for storage in storages {
+            container.coreDataStack.loadPersistentStoreAsync(storage: storage) { error in
+                defer { completion(error) }
+                guard error == nil else { return }
+                container.setup()
+            }
         }
+        return container
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+    public static func loadAsync(
+        storages: Storage...,
+        dataModel: DataModel,
+        mergePolicy: NSMergePolicy = .error,
+        migrationPolicy: MigrationPolicy = .lightWeight) async throws -> DataContainer
+    {
+        let container = DataContainer(
+            dataModel: dataModel,
+            mergePolicy: mergePolicy,
+            migrationPolicy: migrationPolicy)
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for storage in storages {
+                group.addTask {
+                    try await container.coreDataStack
+                        .loadPersistentStoreAsync(storage: storage)
+                }
+            }
+            try await group.waitForAll()
+        }
+        container.setup()
         return container
     }
 

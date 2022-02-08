@@ -8,8 +8,8 @@
 import CoreData
 import Foundation
 
-let CurrentModelVersionName = "CurrentModelVersionName"
-let CurrentModelVersion = "CurrentModelVersion"
+let CurrentModelVersionName = "Crush.CurrentModelVersionName"
+let CurrentModelVersion = "Crush.CurrentModelVersion"
 
 extension NSPersistentStoreCoordinator {
     static func lastActiveVersionName(in storage: Storage) -> String? {
