@@ -22,11 +22,11 @@ public protocol PropertyMigration {
         to destinationProperty: NSPropertyDescription?,
         of sourceEntity: NSEntityDescription) throws -> NSPropertyMapping?
 
-    func versionHashModifier(_ modifier: String) -> Self
+    func versionHashModifier(_ modifier: String?) -> Self
 }
 
 extension PropertyMigration {
-    public func versionHashModifier(_ modifier: String) -> Self {
+    public func versionHashModifier(_ modifier: String?) -> Self {
         var migration = self
         migration.hashModifier = modifier
         return migration
