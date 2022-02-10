@@ -153,7 +153,6 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
 
         os_unfair_lock_lock(&lock)
 
-        let id = UUID()
         let uiContext = context.uiContext
         let rootContext = context.rootContext
         let transactions = loadPersistentHistory(storeURL: storeURL)
