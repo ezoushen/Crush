@@ -79,8 +79,10 @@ internal class ContextDidSaveNotifier: _UiContextNotifier {
 internal class PersistentHistoryNotifier: _UiContextNotifier {
 
     internal let coordinator: NSPersistentStoreCoordinator
-    internal var lastHistoryToken: NSPersistentHistoryToken?
+    internal var lastHistoryTokens: [URL: NSPersistentHistoryToken] = [:]
     internal var transactionLifetime: TimeInterval = 604_800
+
+    private var lock = os_unfair_lock()
 
     private let logger = LogHandler.default
 
@@ -92,7 +94,14 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
 
     internal func setup() {
         purgeHistory()
-        loadHistoryToken()
+
+        for store in coordinator.persistentStores
+        where store.url != nil &&
+              store.options?[NSPersistentHistoryTrackingKey] as? NSNumber == true &&
+              store.options?["NSPersistentStoreRemoteChangeNotificationOptionKey"] as? NSNumber == true
+        {
+            loadHistoryToken(for: store.url!)
+        }
     }
 
     internal override func enable() {
@@ -110,79 +119,74 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
             object: coordinator)
     }
 
-    private var persistentHistoryQueue: DispatchQueue =
-        DispatchQueue(label: (Bundle.main.bundleIdentifier ?? "") + ".persistentHistoryQueue" )
-
-    internal lazy var tokenFileURL: URL = {
-        let fileManager = FileManager.default
-        let url = CurrentWorkingDirectory()
-            .appendingPathComponent("CrushMeta", isDirectory: true)
-
-        try! fileManager
-            .createDirectory(
-                at: url,
-                withIntermediateDirectories: true,
-                attributes: nil)
-
-        return url.appendingPathComponent("token.data", isDirectory: false)
-    }()
-
-    internal func storeHistoryToken(_ token: NSPersistentHistoryToken) {
+    internal func storeHistoryToken(_ token: NSPersistentHistoryToken, for storeURL: URL) {
         do {
+            let tokenFileURL = storeURL.appendingPathExtension(".tokendata")
             let data = try NSKeyedArchiver
                 .archivedData(withRootObject: token, requiringSecureCoding: true)
             try data.write(to: tokenFileURL)
-            lastHistoryToken = token
+            lastHistoryTokens[storeURL] = token
         } catch {
             logger.log(.error, "Failed to store history token", error: error)
         }
     }
 
-    internal func loadHistoryToken() {
+    internal func loadHistoryToken(for storeURL: URL) {
         do {
+            let tokenFileURL = storeURL.appendingPathExtension(".tokendata")
             let tokenData = try Data(contentsOf: tokenFileURL)
-            lastHistoryToken = try NSKeyedUnarchiver
+            lastHistoryTokens[storeURL] = try NSKeyedUnarchiver
                 .unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
-        } catch {
-            logger.log(.error, "Failed to load history token", error: error)
+        } catch let error {
+            switch (error as NSError).code {
+            case 260: break // File not found
+            case 4864: break // Data corrupted
+            default:
+                logger.log(.error, "Failed to load history token", error: error)
+            }
         }
     }
 
     @objc
     internal func persistentStoreHistoryChanged(_ notification: Notification) {
+        guard let storeURL = notification.userInfo?["storeURL"] as? URL else { return }
+
+        os_unfair_lock_lock(&lock)
+
+        let id = UUID()
         let uiContext = context.uiContext
         let rootContext = context.rootContext
-        rootContext.performAsync {
-            for session in self.loadPersistentHistory() {
-                let txNotification = session.objectIDNotification()
-                // Merge changes into root context
-                rootContext.mergeChanges(fromContextDidSave: txNotification)
-                // Merge changes into ui context
-                uiContext.perform(
-                    #selector(uiContext.mergeChanges(fromContextDidSave:)),
-                    on: .main,
-                    with: txNotification,
-                    waitUntilDone: Thread.isMainThread)
-            }
+        let transactions = loadPersistentHistory(storeURL: storeURL)
 
-            self.notifyOnMainThread()
+        if let lastToken = notification.userInfo?["historyToken"]
+            as? NSPersistentHistoryToken {
+            storeHistoryToken(lastToken, for: storeURL)
+        }
 
-            if let lastToken = notification.userInfo?["historyToken"]
-                    as? NSPersistentHistoryToken {
-                self.storeHistoryToken(lastToken)
-            }
+        for transaction in transactions.sorted(by: { $0.timestamp < $1.timestamp }) {
+            let notification = transaction.objectIDNotification()
+
+            guard let changes = notification.userInfo else { continue }
+
+            NSManagedObjectContext.mergeChanges(
+                fromRemoteContextSave: changes, into: [rootContext, uiContext])
+        }
+
+        os_unfair_lock_unlock(&lock)
+
+        if transactions.isEmpty == false {
+            notifyOnMainThread()
         }
     }
 
-    internal func loadPersistentHistory() -> [NSPersistentHistoryTransaction] {
+    private func loadPersistentHistory(storeURL: URL) -> [NSPersistentHistoryTransaction] {
         let fetchHistoryRequest = NSPersistentHistoryChangeRequest
-            .fetchHistory(after: lastHistoryToken)
+            .fetchHistory(after: lastHistoryTokens[storeURL])
         return executePersistentHistoryRequest(fetchHistoryRequest)
     }
     
     internal func loadPersistentHistory(date: Date) -> [NSPersistentHistoryTransaction] {
-        let fetchHistoryRequest = NSPersistentHistoryChangeRequest
-            .fetchHistory(after: lastHistoryToken)
+        let fetchHistoryRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: date)
         return executePersistentHistoryRequest(fetchHistoryRequest)
     }
     
