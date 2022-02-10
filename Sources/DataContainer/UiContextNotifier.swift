@@ -204,8 +204,12 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
 
     internal func purgeHistory() {
         let sevenDaysAgo = Date(timeIntervalSinceNow: -transactionLifetime)
+        return deleteHistory(before: sevenDaysAgo)
+    }
+
+    internal func deleteHistory(before date: Date) {
         let purgeHistoryRequest = NSPersistentHistoryChangeRequest
-            .deleteHistory(before: sevenDaysAgo)
+            .deleteHistory(before: date)
         do {
             try context.rootContext.execute(purgeHistoryRequest)
         } catch {

@@ -165,6 +165,14 @@ public class DataContainer {
         return persistentHistoryTracker.loadPersistentHistory(date: date ?? createdDate)
     }
 
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
+    public func clearTransactionHistory() {
+        guard let persistentHistoryTracker = notifier as? PersistentHistoryNotifier else {
+            return logger.log(.warning, "loadTransactionHistory is not available")
+        }
+        return persistentHistoryTracker.deleteHistory(before: Date())
+    }
+
     public func setMetadata(_ metadata: [String: Any], storage: Storage) throws {
         guard let store = coreDataStack.coordinator.persistentStore(of: storage) else {
             return
