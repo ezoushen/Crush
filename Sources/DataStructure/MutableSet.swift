@@ -17,6 +17,10 @@ public final class MutableSet<T: Hashable>:
         i + 1
     }
 
+    public func makeIterator() -> FastEnumerationIterator<T> {
+        FastEnumerationIterator(mutableSet.makeIterator())
+    }
+
     public subscript(bounds: Range<Index>) -> SubSequence {
         (mutableSet.allObjects as! [T])[bounds]
     }
@@ -175,8 +179,6 @@ extension MutableSet: SetAlgebra {
         mutableSet.union(other.mutableSet.toSet())
         mutableSet.minus(tempSet.toSet())
     }
-
-
 }
 
 private extension NSSet {

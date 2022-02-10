@@ -15,6 +15,10 @@ public struct OrderedSet<T: Hashable>:
     Hashable,
     CustomStringConvertible
 {
+    public func makeIterator() -> FastEnumerationIterator<T> {
+        FastEnumerationIterator(orderedSet.makeIterator())
+    }
+
     public subscript(position: Int) -> T {
         return orderedSet[position] as! T
     }

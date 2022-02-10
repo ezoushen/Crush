@@ -15,6 +15,10 @@ public final class MutableOrderedSet<T: Hashable>:
     SetAlgebra,
     CustomStringConvertible
 {
+    public func makeIterator() -> FastEnumerationIterator<T> {
+        FastEnumerationIterator(orderedSet.makeIterator())
+    }
+
     public static func == (lhs: MutableOrderedSet<T>, rhs: MutableOrderedSet<T>) -> Bool {
         lhs.orderedSet == rhs.orderedSet
     }
