@@ -302,7 +302,7 @@ extension DataContainer {
     @discardableResult
     public func initializeCoreSpotlightIndexer(
         for storage: Storage,
-        provider: @escaping (NSManagedObject) -> CSSearchableItemAttributeSet) -> Bool
+        provider: @escaping (NSManagedObject) -> CSSearchableItemAttributeSet?) -> Bool
     {
         guard let description = coreDataStack.persistentStoreDescriptions[storage] else {
             return false
