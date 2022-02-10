@@ -19,8 +19,8 @@ extension DataContainer {
             .init(
                 info: { print($0) },
                 warning: { print($0)},
-                error: { msg, err in print(msg) },
-                critical: { msg, err in print(msg) })
+                error: { msg, err in print("\(msg), error: \(err)") },
+                critical: { msg, err in print("\(msg), error: \(err)") })
         }
 
         private static let queue: DispatchQueue = .init(
