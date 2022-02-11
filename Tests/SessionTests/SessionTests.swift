@@ -49,14 +49,39 @@ class SessionTests: XCTestCase {
         }
         XCTAssertEqual(result.integerValue, 11)
     }
-
-    func test_asd() async throws {
-        try await container.startSession().`async` { context in
-            let entity = context.create(entity: TestEntity.self)
-            entity.integerValue = 11
-            try context.commit()
+    
+    func test_async_shouldNotBlock() {
+        var flag = false
+        container.startSession().async { _ in
+            sleep(10)
+            flag = true
         }
-        let result = await container.fetch(for: TestEntity.self).execAsync()
-        print(result)
+        XCTAssertFalse(flag)
+    }
+    
+    func test_sync_shouldBlock() {
+        var flag = false
+        container.startSession().sync { _ in
+            flag = true
+        }
+        XCTAssertTrue(flag)
+    }
+    
+    func test_sync_shouldReturnIntegerValue() {
+        let result: Int = container.startSession().sync { _ in 11 }
+        XCTAssertEqual(result, 11)
+    }
+    
+    func test_sync_shouldReturnEntity() throws {
+        var objectID: NSManagedObjectID?
+        let result: TestEntity.ReadOnly = try container.startSession().sync {
+            context -> TestEntity.Managed in
+            let entity = context.create(entity: TestEntity.self)
+            try context.commit()
+            try context.obtainPermanentIDs(for: [entity])
+            objectID = entity.objectID
+            return entity
+        }
+        XCTAssertEqual(result.objectID, objectID)
     }
 }

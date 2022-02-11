@@ -22,6 +22,7 @@ public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T>
     func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>]
 
+    func obtainPermanentIDs(for objects: [NSManagedObject]) throws
     func commit() throws
 }
 
@@ -83,6 +84,10 @@ extension SessionContext where Self: RawContextProviderProtocol {
             return
         }
         executionContext.assign(object, to: store)
+    }
+    
+    public func obtainPermanentIDs(for objects: [NSManagedObject]) throws {
+        try executionContext.obtainPermanentIDs(for: objects)
     }
 }
 
