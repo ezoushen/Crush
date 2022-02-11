@@ -56,16 +56,20 @@ extension Entity: Hashable {
 }
 
 extension Entity {
-    public static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
+    @inlinable public static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
         Self.Managed.fetchRequest()
     }
     
-    public static func entity() -> NSEntityDescription {
+    @inlinable public static func entity() -> NSEntityDescription {
         Self.Managed.entity()
     }
 
-    public static var fetchKey: String {
+    @inlinable public static var fetchKey: String {
         String(describing: Self.self)
+    }
+    
+    @inlinable public static var name: String {
+        fetchKey
     }
 
     static var entityCacheKey: String {
