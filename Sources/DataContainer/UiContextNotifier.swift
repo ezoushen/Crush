@@ -315,3 +315,18 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         }
     }
 }
+
+extension Entity {
+    public static func hasChanges(
+        userInfo: [AnyHashable: Any], entities: [Entity.Type]) -> Bool
+    {
+        let inserted = userInfo[NSInsertedObjectIDsKey] as! AnySequence<NSManagedObjectID>
+        let updated = userInfo[NSUpdatedObjectIDsKey] as! AnySequence<NSManagedObjectID>
+        let deleted = userInfo[NSDeletedObjectIDsKey] as! AnySequence<NSManagedObjectID>
+        let entityNames = Set(entities.map { $0.name as String? })
+        
+        return inserted.contains { entityNames.contains($0.entity.name) } ||
+            updated.contains { entityNames.contains($0.entity.name) } ||
+            deleted.contains { entityNames.contains($0.entity.name) }
+    }
+}
