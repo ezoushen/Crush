@@ -64,7 +64,7 @@ public class ConcreteStorage: Storage {
     }
     
     public func destroy() throws {
-        if storageUrl == URL(fileURLWithPath: "/dev/null") {
+        if storageUrl.path.starts(with: "/dev/null") {
             return
         }
         try FileManager.default.removeItem(at: storageUrl)
@@ -133,7 +133,7 @@ extension Storage {
         options: SQLiteStorageOption...) -> Storage
     {
         sqlite(
-            url: URL(fileURLWithPath: "/dev/null"),
+            url: URL(fileURLWithPath: "/dev/null/\(UUID()).sqlite"),
             configuration: configuration,
             options: options)
     }

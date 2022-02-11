@@ -8,6 +8,85 @@
 import CoreData
 import Foundation
 
+// MARK: User Info
+
+internal struct NSManagedObjectIDIterator: IteratorProtocol {
+    private var iterators: AnyIterator<AnyIterator<Any>>
+    private var iterator: AnyIterator<Any>?
+    
+    init<I: IteratorProtocol>(_ iterators: I) where I.Element == AnyIterator<Any> {
+        self.iterators = AnyIterator(iterators)
+    }
+    
+    mutating func next() -> NSManagedObjectID? {
+        if iterator == nil {
+            iterator = iterators.next()
+        }
+        return iterator?.next() as? NSManagedObjectID
+    }
+}
+
+internal class UserInfoMerger {
+    var insertedObjectIDIterators: [AnyIterator<Any>] = []
+    var updatedObjectIDIterators: [AnyIterator<Any>] = []
+    var deletedObjectIDIterators: [AnyIterator<Any>] = []
+    
+    init(userInfo: [AnyHashable: Any]) {
+        merge(userInfo: userInfo)
+    }
+    
+    init(userInfos: [[AnyHashable: Any]]) {
+        userInfos.forEach(merge(userInfo:))
+    }
+    
+    init() { }
+    
+    func merge(userInfo: [AnyHashable: Any]?) {
+        guard let userInfo = userInfo else { return }
+        
+        if let insertedObjectIDs = userInfo[NSInsertedObjectIDsKey] as? NSMutableSet {
+            insertedObjectIDIterators.append(AnyIterator(insertedObjectIDs.makeIterator()))
+        }
+        if let insertedObjects = userInfo[NSInsertedObjectsKey] as? NSMutableSet {
+            insertedObjectIDIterators.append(AnyIterator(
+                insertedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+        }
+        if let updatedObjectIDs = userInfo[NSUpdatedObjectIDsKey] as? NSMutableSet {
+            updatedObjectIDIterators.append(AnyIterator(updatedObjectIDs.makeIterator()))
+        }
+        if let updatedObjects = userInfo[NSUpdatedObjectsKey] as? NSMutableSet {
+            updatedObjectIDIterators.append(AnyIterator(
+                updatedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+        }
+        if let deletedObjectIDs = userInfo[NSDeletedObjectIDsKey] as? NSMutableSet {
+            deletedObjectIDIterators.append(AnyIterator(deletedObjectIDs.makeIterator()))
+        }
+        if let deletdeObjects = userInfo[NSDeletedObjectsKey] as? NSMutableSet {
+            deletedObjectIDIterators.append(AnyIterator(
+                deletdeObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+        }
+    }
+    
+    func createUserInfo() -> [AnyHashable: Any] {
+        let inserted = insertedObjectIDIterators
+        let updated = updatedObjectIDIterators
+        let deleted = deletedObjectIDIterators
+        return [
+            NSInsertedObjectIDsKey: AnySequence<NSManagedObjectID> {
+                NSManagedObjectIDIterator(inserted.makeIterator())
+            },
+            NSUpdatedObjectIDsKey: AnySequence<NSManagedObjectID> {
+                NSManagedObjectIDIterator(updated.makeIterator())
+            },
+            NSDeletedObjectIDsKey: AnySequence<NSManagedObjectID> {
+                NSManagedObjectIDIterator(deleted.makeIterator())
+            },
+        ]
+    }
+}
+
+// MARK: UiContextNotifier
+
 internal protocol UiContextNotifier {
     var container: DataContainer { get }
     var context: _SessionContext { get }
@@ -17,11 +96,11 @@ internal protocol UiContextNotifier {
 }
 
 extension UiContextNotifier {
-    internal func notifyOnMainThread() {
+    internal func notifyOnMainThread(userInfo: [AnyHashable: Any]) {
         DispatchQueue.performMainThreadTask {
             NotificationCenter.default.post(
                 name: DataContainer.uiContextDidRefresh,
-                object: container, userInfo: nil)
+                object: container, userInfo: userInfo)
         }
     }
 }
@@ -70,8 +149,12 @@ internal class ContextDidSaveNotifier: _UiContextNotifier {
             on: Thread.main,
             with: notification,
             waitUntilDone: Thread.isMainThread)
-
-        notifyOnMainThread()
+        if let userInfo = notification.userInfo {
+            let merger = UserInfoMerger(userInfo: userInfo)
+            notifyOnMainThread(userInfo: merger.createUserInfo())
+        } else {
+            notifyOnMainThread(userInfo: [:])
+        }
     }
 }
 
@@ -120,20 +203,25 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
     }
 
     internal func storeHistoryToken(_ token: NSPersistentHistoryToken, for storeURL: URL) {
+        if storeURL.path.starts(with: "/dev/null") { return }
         do {
-            let tokenFileURL = storeURL.appendingPathExtension(".tokendata")
+            lastHistoryTokens[storeURL] = token
+            let tokenFileURL = tokenURL(for: storeURL)
+            
+            guard try tokenFileURL.checkResourceIsReachable() else { return }
+            
             let data = try NSKeyedArchiver
                 .archivedData(withRootObject: token, requiringSecureCoding: true)
             try data.write(to: tokenFileURL)
-            lastHistoryTokens[storeURL] = token
         } catch {
             logger.log(.error, "Failed to store history token", error: error)
         }
     }
 
     internal func loadHistoryToken(for storeURL: URL) {
+        if storeURL.path.starts(with: "/dev/null") { return }
         do {
-            let tokenFileURL = storeURL.appendingPathExtension(".tokendata")
+            let tokenFileURL = tokenURL(for: storeURL)
             let tokenData = try Data(contentsOf: tokenFileURL)
             lastHistoryTokens[storeURL] = try NSKeyedUnarchiver
                 .unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
@@ -146,6 +234,10 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
             }
         }
     }
+    
+    private func tokenURL(for storeURL: URL) -> URL {
+        storeURL.appendingPathExtension("tokendata")
+    }
 
     @objc
     internal func persistentStoreHistoryChanged(_ notification: Notification) {
@@ -156,7 +248,8 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         let uiContext = context.uiContext
         let rootContext = context.rootContext
         let transactions = loadPersistentHistory(storeURL: storeURL)
-
+        let merger = UserInfoMerger()
+        
         if let lastToken = notification.userInfo?["historyToken"]
             as? NSPersistentHistoryToken {
             storeHistoryToken(lastToken, for: storeURL)
@@ -167,6 +260,8 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
 
             guard let changes = notification.userInfo else { continue }
 
+            merger.merge(userInfo: changes)
+            
             NSManagedObjectContext.mergeChanges(
                 fromRemoteContextSave: changes, into: [rootContext, uiContext])
         }
@@ -174,7 +269,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         os_unfair_lock_unlock(&lock)
 
         if transactions.isEmpty == false {
-            notifyOnMainThread()
+            notifyOnMainThread(userInfo: merger.createUserInfo())
         }
     }
 
