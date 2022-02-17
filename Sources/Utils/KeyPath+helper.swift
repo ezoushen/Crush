@@ -20,37 +20,38 @@ extension Expressible {
     }
 }
 
-private var propertyNameCache: NSCache<AnyKeyPath, NSString> = .init()
+extension AnyKeyPath {
+    fileprivate static var lock = os_unfair_lock()
+    fileprivate static var propertyNameCache: [ObjectIdentifier: String] = [:]
+}
 
 extension PartialKeyPath where Root: Entity {
     var optionalPropertyName: String? {
-        guard let name = propertyNameCache.object(forKey: self) else {
-            if let name = (Root.init()[keyPath: self] as? PropertyProtocol)?.name {
-                propertyNameCache.setObject(name as NSString, forKey: self)
+        let key = ObjectIdentifier(self)
+        os_unfair_lock_lock(&Self.lock)
+        defer { os_unfair_lock_unlock(&Self.lock) }
+        guard let name = Self.propertyNameCache[key] else {
+            if let name = (Root()[keyPath: self] as? PropertyProtocol)?.name {
+                Self.propertyNameCache[key] = name
                 return name
             }
             return nil
         }
-        return name as String
+        return name
     }
 }
 
 extension KeyPath where Root: Entity, Value: PropertyProtocol {
     var propertyName: String {
-        guard let name = propertyNameCache.object(forKey: self) else {
-            let name = Root.init()[keyPath: self].name
-            propertyNameCache.setObject(name as NSString, forKey: self)
+        let key = ObjectIdentifier(self)
+        os_unfair_lock_lock(&Self.lock)
+        defer { os_unfair_lock_unlock(&Self.lock) }
+        guard let name = Self.propertyNameCache[key] else {
+            let name = Root()[keyPath: self].name
+            Self.propertyNameCache[key] = name
             return name
         }
-        return name as String
-    }
-
-    public static func == (lhs: KeyPath, rhs: String) -> Bool {
-        lhs.propertyName == rhs
-    }
-
-    public static func == (lhs: String, rhs: KeyPath) -> Bool {
-        lhs == rhs.propertyName
+        return name
     }
 }
 
