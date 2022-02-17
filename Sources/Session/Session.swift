@@ -235,24 +235,51 @@ extension _SessionContext {
 extension Session {
     public func async<T>(
         name: String? = nil,
+        block: @escaping (SessionContext) -> T) async -> T
+    {
+        let context = context
+        let executionContext = context.executionContext
+        return await executionContext.performAsyncUndoable { () -> T in
+            executionContext.transactionAuthor = name
+            defer { executionContext.transactionAuthor = nil }
+            return block(context)
+        }
+    }
+
+    public func async<T: UnsafeSessionProperty>(
+        name: String? = nil,
+        block: @escaping (SessionContext) -> T) async -> T.Safe
+    {
+        let context = context
+        let executionContext = context.executionContext
+        let result = await executionContext.performAsyncUndoable { () -> T in
+            executionContext.transactionAuthor = name
+            defer { executionContext.transactionAuthor = nil }
+            return block(context)
+        }
+        return result.wrapped(in: self)
+    }
+
+    public func asyncThrowing<T>(
+        name: String? = nil,
         block: @escaping (SessionContext) throws -> T) async throws -> T
     {
         let context = context
         let executionContext = context.executionContext
-        return try await executionContext.performAsyncUndoable { () throws -> T in
+        return try await executionContext.performAsyncThrowingUndoable { () throws -> T in
             executionContext.transactionAuthor = name
             defer { executionContext.transactionAuthor = nil }
             return try block(context)
         }
     }
 
-    public func async<T: UnsafeSessionProperty>(
+    public func asyncThrowing<T: UnsafeSessionProperty>(
         name: String? = nil,
         block: @escaping (SessionContext) throws -> T) async throws -> T.Safe
     {
         let context = context
         let executionContext = context.executionContext
-        let result = try await executionContext.performAsyncUndoable { () throws -> T in
+        let result = try await executionContext.performAsyncThrowingUndoable { () throws -> T in
             executionContext.transactionAuthor = name
             defer { executionContext.transactionAuthor = nil }
             return try block(context)
@@ -263,7 +290,16 @@ extension Session {
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 extension NSManagedObjectContext {
-    func performAsyncUndoable<T>(_ block: @escaping () throws -> T) async throws -> T {
+    func performAsyncUndoable<T>(_ block: @escaping () -> T) async -> T {
+        await withCheckedContinuation { (continuation: CheckedContinuation<T, Never>) in
+            self.perform {
+                let result = self.undoable(block)
+                continuation.resume(returning: result)
+            }
+        }
+    }
+
+    func performAsyncThrowingUndoable<T>(_ block: @escaping () throws -> T) async throws -> T {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
             self.perform {
                 do {

@@ -30,7 +30,7 @@ class SessionTests: XCTestCase {
     }
 
     func test_asyncReturnPlainProperty_shouldReturnSameProperty() async throws {
-        let result = try await container.startSession().`async` { context -> Int16? in
+        let result = try await container.startSession().asyncThrowing { context -> Int16? in
             let entity = context.create(entity: TestEntity.self)
             entity.integerValue = 10
             try context.commit()
@@ -40,7 +40,7 @@ class SessionTests: XCTestCase {
     }
 
     func test_asyncReturnUnsafeProperty_shouldBeWrapped() async throws {
-        let result: TestEntity.ReadOnly = try await container.startSession().`async` {
+        let result: TestEntity.ReadOnly = try await container.startSession().asyncThrowing {
             context -> TestEntity.Managed in
             let entity = context.create(entity: TestEntity.self)
             entity.integerValue = 11
