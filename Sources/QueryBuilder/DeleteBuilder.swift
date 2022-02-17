@@ -29,8 +29,8 @@ extension DeletionConfig: RequestConfig {
 public final class DeleteBuilder<Target: Entity>: PredicateRequestBuilder<Target> {
     let context: Context
     var config: DeletionConfig<Target> {
-        @inline(__always) get { requestConfig as! DeletionConfig<Target> }
-        @inline(__always) set { requestConfig = newValue }
+        get { requestConfig as! DeletionConfig<Target> }
+        set { requestConfig = newValue }
     }
     
     required init(config: DeletionConfig<Target>, context: Context) {

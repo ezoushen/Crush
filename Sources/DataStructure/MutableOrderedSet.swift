@@ -87,7 +87,7 @@ public final class MutableOrderedSet<T: Hashable>:
 
     internal var orderedSet: NSMutableOrderedSet
 
-    internal required init(_ orderedSet: NSMutableOrderedSet) {
+    public required init(_ orderedSet: NSMutableOrderedSet) {
         self.orderedSet = orderedSet
     }
 
@@ -244,7 +244,6 @@ extension MutableOrderedSet {
 }
 
 extension MutableOrderedSet {
-    @inline(__always)
     private func copy() -> Self {
         Self.init(orderedSet.mutableCopy() as! NSMutableOrderedSet)
     }

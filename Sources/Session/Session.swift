@@ -7,7 +7,6 @@
 
 import CoreData
 
-@inline(__always)
 fileprivate func warning(
     _ condition: @autoclosure () -> Bool,
     _ message: @autoclosure () -> String)
@@ -52,7 +51,6 @@ public class Session {
         context.executionContext.undoManager?.redo()
     }
 
-    @inline(__always)
     internal func checkUndoManager() {
         #if DEBUG
         if context.executionContext.undoManager == nil {
@@ -104,7 +102,6 @@ extension Session {
         }
     }
 
-    @inline(__always)
     private func warnUnsavedChangesIfNeeded() {
         warning(shouldWarnUnsavedChangesOnPrivateContext(),
                 "You should commit changes in session before return")

@@ -116,7 +116,6 @@ public struct ModelMigration: Hashable {
         return newModel
     }
 
-    @inline(__always)
     private func deepCopyEntitiesByName(
         _ entities: [NSEntityDescription]) -> [String: NSEntityDescription]
     {

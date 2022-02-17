@@ -18,13 +18,13 @@ public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Ha
 }
 
 extension CodableProperty {
-    @inline(__always)
+    @inlinable
     public static func convert(value: Data?) -> Self? {
         guard let value = value else { return nil }
         return try! Self.decoder.decode(Self.self, from: value)
     }
 
-    @inline(__always)
+    @inlinable
     public static func convert(value: Self?) -> Data? {
         guard let value = value else { return nil }
         return try! Self.encoder.encode(value)

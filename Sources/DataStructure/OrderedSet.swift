@@ -111,7 +111,6 @@ public struct OrderedSet<T: Hashable>:
 }
 
 extension OrderedSet {
-    @inline(__always)
     private func mutableCopy() -> NSMutableOrderedSet {
         orderedSet.mutableCopy() as! NSMutableOrderedSet
     }

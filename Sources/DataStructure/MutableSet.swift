@@ -65,7 +65,7 @@ public final class MutableSet<T: Hashable>:
 
     internal var mutableSet: NSMutableSet
 
-    internal init(_ mutableSet: NSMutableSet) {
+    public init(_ mutableSet: NSMutableSet) {
         self.mutableSet = mutableSet
     }
 
@@ -101,7 +101,6 @@ extension MutableSet: SetAlgebra {
         endIndex == 0
     }
 
-    @inline(__always)
     private func copy() -> NSMutableSet {
         mutableSet.mutableCopy() as! NSMutableSet
     }
@@ -182,7 +181,6 @@ extension MutableSet: SetAlgebra {
 }
 
 private extension NSSet {
-    @inline(__always)
     func toSet() -> Set<AnyHashable> {
         Set(_immutableCocoaSet: copy() as! NSSet)
     }

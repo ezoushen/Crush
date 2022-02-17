@@ -21,7 +21,6 @@ public struct ReadOnly<Entity: Crush.Entity> {
         self.context = context
     }
 
-    @inline(__always)
     public func access<T: ValuedProperty>(
         keyPath: KeyPath<Entity, T>) -> T.PropertyValue
     {

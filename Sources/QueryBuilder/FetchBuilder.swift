@@ -75,8 +75,8 @@ where
 {
     internal let context: Context
     internal var config: FetchConfig<Target> {
-        @inline(__always) get { requestConfig as! FetchConfig<Target> }
-        @inline(__always) set { requestConfig = newValue }
+        get { requestConfig as! FetchConfig<Target> }
+        set { requestConfig = newValue }
     }
 
     internal required init(config: FetchConfig<Target>, context: Context) {

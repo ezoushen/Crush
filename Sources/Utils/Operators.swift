@@ -278,17 +278,14 @@ private func cast<T: NSObject>(_ object: NSObject) -> T {
     return object as! T
 }
 
-@inline(__always)
 public func && <T: NSPredicate>(lhs: T, rhs: T) -> T {
     cast(NSCompoundPredicate(andPredicateWithSubpredicates: [lhs, rhs]))
 }
 
-@inline(__always)
 public func || <T: NSPredicate>(lhs: T, rhs: T) -> NSPredicate {
     cast(NSCompoundPredicate(orPredicateWithSubpredicates: [lhs, rhs]))
 }
 
-@inline(__always)
 public prefix func ! (predicate: NSPredicate) -> NSPredicate {
     cast(NSCompoundPredicate(notPredicateWithSubpredicate: predicate))
 }

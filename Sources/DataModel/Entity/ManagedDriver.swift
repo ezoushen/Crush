@@ -56,7 +56,6 @@ extension ObjectDriver {
         }
     }
 
-    @inline(__always)
     internal subscript<Property: ValuedProperty>(
         immutable keyPath: KeyPath<Entity, Property>
     ) -> Property.PropertyValue {
@@ -72,7 +71,7 @@ extension ObjectDriver {
 }
 
 extension NSManagedObject {
-    @inline(__always)
+    @inlinable
     internal func getValue<T>(key: String) -> T {
         willAccessValue(forKey: key)
         defer {
@@ -81,7 +80,7 @@ extension NSManagedObject {
         return primitiveValue(forKey: key) as! T
     }
 
-    @inline(__always)
+    @inlinable
     internal func setValue(_ value: Any?, key: String) {
         willChangeValue(forKey: key)
         defer {
@@ -92,7 +91,7 @@ extension NSManagedObject {
         : setPrimitiveValue(value, forKey: key)
     }
 
-    @inline(__always)
+    @inlinable
     internal func getMutableSet(key: String) -> NSMutableSet {
         willAccessValue(forKey: key)
         defer {
@@ -101,7 +100,7 @@ extension NSManagedObject {
         return mutableSetValue(forKey: key)
     }
 
-    @inline(__always)
+    @inlinable
     internal func getMutableOrderedSet(key: String) -> NSMutableOrderedSet {
         willAccessValue(forKey: key)
         defer {

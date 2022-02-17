@@ -65,7 +65,7 @@ where
     RuntimeObjectValue == Self?,
     RuntimeObjectValue == ManagedObjectValue
 {
-    @inline(__always)
+    @inlinable
     public static func convert(value: Self?) -> Self? { value }
 }
 

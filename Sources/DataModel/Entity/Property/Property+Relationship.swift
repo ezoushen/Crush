@@ -45,7 +45,7 @@ public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, FieldConv
     public static var maxCount: Int { 1 }
     public static var minCount: Int { 1 }
     
-    @inline(__always)
+    @inlinable
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
         guard let value = value else { return nil }
         return value
@@ -60,12 +60,11 @@ public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, FieldCo
     public static var maxCount: Int { 0 }
     public static var minCount: Int { 0 }
     
-    @inline(__always)
+    @inlinable
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
         return MutableSet(value)
     }
     
-    @inline(__always)
     public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
         return value.mutableSet
     }
@@ -79,12 +78,11 @@ public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, Fiel
     public static var maxCount: Int { 0 }
     public static var minCount: Int { 0 }
     
-    @inline(__always)
+    @inlinable
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
         return MutableOrderedSet(value)
     }
     
-    @inline(__always)
     public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
         return value.orderedSet
     }
