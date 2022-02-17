@@ -19,6 +19,7 @@ public enum Relation {
 public enum Value {
     public typealias Transform<T: NSCoding & FieldAttribute> = Attribute<T>
     public typealias Codable<T: CodableProperty> = Attribute<T>
+    public typealias Int = Attribute<Swift.Int>
     public typealias Int16 = Attribute<Swift.Int16>
     public typealias Int32 = Attribute<Swift.Int32>
     public typealias Int64 = Attribute<Swift.Int64>
@@ -37,6 +38,7 @@ public enum Value {
 public enum Derived {
     public typealias Transform<T: NSCoding & FieldAttribute> = DerivedAttribute<T>
     public typealias Codable<T: CodableProperty> = DerivedAttribute<T>
+    public typealias Int = Attribute<Swift.Int>
     public typealias Int16 = DerivedAttribute<Swift.Int16>
     public typealias Int32 = DerivedAttribute<Swift.Int32>
     public typealias Int64 = DerivedAttribute<Swift.Int64>

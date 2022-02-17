@@ -72,17 +72,30 @@ where
 public typealias PredicateComparableAttribute = PrimitiveAttribute & PredicateComparable
 public typealias PredicateEquatableAttribute = PrimitiveAttribute & PredicateEquatable
 
-extension Int64: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
+public typealias IntegerAttribute = PredicateComparableAttribute & PredicateExpressibleByString & PredicateComputable
+
+extension Int: IntegerAttribute {
+    public static var nativeType: NSAttributeType {
+#if (arch(x86_64) || arch(arm64))
+        return .integer64AttributeType
+#else
+        return .integer32AttributeType
+#endif
+    }
+    public var predicateValue: NSObject { NSNumber(value: self) }
+}
+
+extension Int64: IntegerAttribute {
     public static var nativeType: NSAttributeType { .integer64AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int32: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
+extension Int32: IntegerAttribute {
     public static var nativeType: NSAttributeType { .integer32AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int16: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
+extension Int16: IntegerAttribute {
     public static var nativeType: NSAttributeType { .integer16AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
