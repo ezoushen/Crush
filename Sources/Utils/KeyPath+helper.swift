@@ -21,40 +21,43 @@ extension Expressible {
 }
 
 extension AnyKeyPath {
-    fileprivate static var lock = os_unfair_lock()
-    fileprivate static var propertyNameCache: [ObjectIdentifier: String] = [:]
+    fileprivate static var mutex: pthread_mutex_t = {
+        var lock = pthread_mutex_t()
+        pthread_mutex_init(&lock, nil)
+        return lock
+    }()
+    
+    fileprivate static var propertyNameCache: [AnyKeyPath: String] = [:]
+
+    fileprivate var propertyNameCache: [AnyKeyPath: String] {
+        get { Self.propertyNameCache }
+        set { Self.propertyNameCache = newValue }
+    }
 }
 
 extension PartialKeyPath where Root: Entity {
     var optionalPropertyName: String? {
-        let key = ObjectIdentifier(self)
-        os_unfair_lock_lock(&Self.lock)
-        defer { os_unfair_lock_unlock(&Self.lock) }
-        guard let name = Self.propertyNameCache[key] else {
-            if let name = (Root()[keyPath: self] as? PropertyProtocol)?.name {
-                Self.propertyNameCache[key] = name
-                return name
-            }
-            return nil
-        }
-        return name
+        pthread_mutex_lock(&Self.mutex)
+        defer { pthread_mutex_unlock(&Self.mutex) }
+        return propertyNameCache[self] ?? {
+            let name = (Root()[keyPath: self] as? PropertyProtocol)?.name
+            defer { if let name = name { propertyNameCache[self] = name } }
+            return name
+        }()
     }
 }
 
 extension KeyPath where Root: Entity, Value: PropertyProtocol {
     var propertyName: String {
-        let key = ObjectIdentifier(self)
-        os_unfair_lock_lock(&Self.lock)
-        defer { os_unfair_lock_unlock(&Self.lock) }
-        guard let name = Self.propertyNameCache[key] else {
+        pthread_mutex_lock(&Self.mutex)
+        defer { pthread_mutex_unlock(&Self.mutex) }
+        return propertyNameCache[self] ?? {
             let name = Root()[keyPath: self].name
-            Self.propertyNameCache[key] = name
+            defer { propertyNameCache[self] = name }
             return name
-        }
-        return name
+        }()
     }
 }
-
 
 extension KeyPath: Expressible where Root: Entity, Value: PropertyProtocol {
     public func getHashValue() -> Int {

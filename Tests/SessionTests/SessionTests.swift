@@ -5,6 +5,7 @@
 //  Created by ezou on 2022/2/5.
 //
 
+import CoreData
 import XCTest
 
 @testable import Crush
