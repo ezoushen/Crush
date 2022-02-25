@@ -253,7 +253,7 @@ public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
         guard let managedObjectModel = try migrationChain.managedObjectModels().last else {
             throw MigrationError.incompatible
         }
-        if managedObjectModel.isCompactible(with: model.managedObjectModel) {
+        if managedObjectModel.isCompactible(with: model.managedObjectModel) == false {
             throw ChainMigratorError.migrationChainIncompatibleWithDataModel
         }
     }

@@ -34,6 +34,7 @@ public final class MigrationChain {
         let managedObjectModels = try migrations.map {
             migration -> NSManagedObjectModel in
             lastModel = try migration.migrateModel(lastModel)
+            lastModel.versionIdentifiers = [migration.name]
             return lastModel
         }
         _managedObjectModels = managedObjectModels
