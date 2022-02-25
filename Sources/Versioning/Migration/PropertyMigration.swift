@@ -76,7 +76,7 @@ public protocol UpdatePropertyMigration: PropertyMigration {
 }
 
 extension UpdatePropertyMigration {
-    public func versionHashModifier(_ modifier: String) -> Self {
+    public func versionHashModifier(_ modifier: String?) -> Self {
         var updateAttribute = self
         updateAttribute.hashModifierUpdated = true
         updateAttribute.hashModifier = modifier

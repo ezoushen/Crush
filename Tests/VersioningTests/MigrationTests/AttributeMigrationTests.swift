@@ -46,6 +46,12 @@ class AddAttributeTests: XCTestCase {
         XCTAssertEqual(description.defaultValue as? String, "123")
     }
     
+    func test_createProperty_shouldSetVersionHashModifier() {
+        var store: [EntityMigrationCallback] = []
+        let description = sut.versionHashModifier("MODIFIER").createProperty(callbackStore: &store) as! NSAttributeDescription
+        XCTAssertEqual(description.versionHashModifier, "MODIFIER")
+    }
+    
     func test_createPropertyMapping_shouldSetName() {
         let mapping = sut.createPropertyMapping(from: nil, to: nil, of: NSEntityDescription())
         XCTAssertEqual(mapping?.name, sut.name)
@@ -106,6 +112,27 @@ class UpdateAttributeTests: XCTestCase {
         description.name = "originName"
         description = try sut.migrateAttribute(description, callbackStore: &store)!
         XCTAssertEqual(description.defaultValue as? String, "123")
+    }
+    
+    func test_migrateAttribute_shouldUpdateVersionHashModifier() throws {
+        var store: [EntityMigrationCallback] = []
+        let sut = UpdateAttribute("originName")
+            .versionHashModifier("MODIFIER")
+        var description = NSAttributeDescription()
+        description.name = "originName"
+        description = try sut.migrateAttribute(description, callbackStore: &store)!
+        XCTAssertEqual(description.versionHashModifier, "MODIFIER")
+    }
+    
+    func test_migrateAttribute_shouldResetVersionHashModifier() throws {
+        var store: [EntityMigrationCallback] = []
+        let sut = UpdateAttribute("originName")
+            .versionHashModifier(nil)
+        var description = NSAttributeDescription()
+        description.versionHashModifier = "MODIFIER"
+        description.name = "originName"
+        description = try sut.migrateAttribute(description, callbackStore: &store)!
+        XCTAssertEqual(description.versionHashModifier, nil)
     }
 
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
