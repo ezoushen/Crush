@@ -28,6 +28,7 @@ public struct AddEntity: EntityMigration {
     public let parent: String?
     public let isAbstract: Bool
     public let properties: [AddPropertyMigration]
+    public let uniquenessConstraints: Set<[String]>
 
     public var originEntityName: String? { nil }
 
@@ -35,18 +36,21 @@ public struct AddEntity: EntityMigration {
         _ name: String,
         parent: String? = nil,
         isAbstract: Bool = false,
+        uniquenessConstraints: Set<[String]> = [],
         properties: [AddPropertyMigration]
     ) {
         self.name = name
         self.parent = parent
         self.isAbstract = isAbstract
         self.properties = properties
+        self.uniquenessConstraints = uniquenessConstraints
     }
 
     public init(
         _ name: String,
         parent: String? = nil,
         isAbstract: Bool = false,
+        uniquenessConstraints: Set<[String]> = [],
         @CollectionBuilder<AddPropertyMigration>
         properties: () -> [AddPropertyMigration]
     ) {
@@ -54,17 +58,20 @@ public struct AddEntity: EntityMigration {
         self.parent = parent
         self.isAbstract = isAbstract
         self.properties = properties()
+        self.uniquenessConstraints = uniquenessConstraints
     }
 
     internal init(
         _ name: String,
         parent: String? = nil,
-        isAbstract: Bool = false
+        isAbstract: Bool = false,
+        uniquenessConstraints: Set<[String]> = []
     ) {
         self.name = name
         self.parent = parent
         self.isAbstract = isAbstract
         self.properties = []
+        self.uniquenessConstraints = uniquenessConstraints
     }
 
     public func migrateEntity(
@@ -80,7 +87,10 @@ public struct AddEntity: EntityMigration {
             callbackStore.append {
                 guard let parentEntityDescription = $0[parent] else { return }
                 parentEntityDescription.subentities.append(entityDescription)
+                entityDescription.uniquenessConstraints = Array(uniquenessConstraints)
             }
+        } else {
+            entityDescription.uniquenessConstraints = Array(uniquenessConstraints)
         }
         return entityDescription
     }
@@ -199,6 +209,8 @@ public struct UpdateEntity: EntityMigration {
 
     public let parent: String?
     public let isAbstract: Bool?
+    public var removedUniquenessConstraints: Set<[String]> = []
+    public var addedUniquenessConstraints: Set<[String]> = []
     public let properties: [PropertyMigration]
 
     public init(
@@ -228,6 +240,18 @@ public struct UpdateEntity: EntityMigration {
         self.parent = parent
         self.isAbstract = isAbstract
         self.properties = properties()
+    }
+    
+    public func addUniquenessConstraint(_ constraint: String...) -> UpdateEntity {
+        var newValue = self
+        newValue.addedUniquenessConstraints.insert(constraint)
+        return newValue
+    }
+    
+    public func removeUniquenessConstraint(_ constraint: String...) -> UpdateEntity {
+        var newValue = self
+        newValue.removedUniquenessConstraints.insert(constraint)
+        return newValue
     }
 
     public func migrateEntity(
@@ -279,6 +303,15 @@ public struct UpdateEntity: EntityMigration {
                 }
             }
             entity.properties = Array(propertiesByName.values)
+        }
+        
+        if removedUniquenessConstraints.isEmpty == false ||
+           addedUniquenessConstraints.isEmpty == false,
+           let constraints = entity.uniquenessConstraints as? [[String]]
+        {
+            entity.uniquenessConstraints = Array(Set(constraints)
+                .subtracting(removedUniquenessConstraints)
+                .union(addedUniquenessConstraints))
         }
 
         return entity
