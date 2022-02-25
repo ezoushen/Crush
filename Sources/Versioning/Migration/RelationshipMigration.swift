@@ -19,7 +19,7 @@ extension RelationshipMigration {
         _ property: NSPropertyDescription?,
         callbackStore: inout [EntityMigrationCallback]) throws -> NSPropertyDescription?
     {
-        guard property == nil || property is NSAttributeDescription else {
+        guard property == nil || property is NSRelationshipDescription else {
             throw MigrationModelingError.internalTypeMismatch
         }
         return try migrateRelationship(
@@ -171,7 +171,6 @@ public struct UpdateRelationship: RelationshipMigration, UpdatePropertyMigration
         inverse inverseRelationship: String?,
         isOptional: Bool? = nil,
         isTransient: Bool? = nil,
-        isOrdered: Bool? = nil,
         deleteRule: NSDeleteRule? = nil
     ) {
         self.init(
@@ -179,7 +178,7 @@ public struct UpdateRelationship: RelationshipMigration, UpdatePropertyMigration
             name: name,
             isOptional: isOptional,
             isTransient: isTransient,
-            isOrdered: isOrdered,
+            isOrdered: nil,
             destinationEntity: destinationEntity,
             inverseRelationship: inverseRelationship,
             minCount: 1,
@@ -220,7 +219,6 @@ public struct UpdateRelationship: RelationshipMigration, UpdatePropertyMigration
         toOne destinationEntity: String? = nil,
         isOptional: Bool? = nil,
         isTransient: Bool? = nil,
-        isOrdered: Bool? = nil,
         deleteRule: NSDeleteRule? = nil
     ) {
         self.init(
@@ -228,7 +226,7 @@ public struct UpdateRelationship: RelationshipMigration, UpdatePropertyMigration
             name: name,
             isOptional: isOptional,
             isTransient: isTransient,
-            isOrdered: isOrdered,
+            isOrdered: nil,
             destinationEntity: destinationEntity,
             inverseRelationship: nil,
             minCount: 1,
@@ -318,6 +316,9 @@ public struct UpdateRelationship: RelationshipMigration, UpdatePropertyMigration
         }
         if let minCount = minCount {
             relationship.minCount = minCount
+        }
+        if let isOrdered = isOrdered {
+            relationship.isOrdered = isOrdered
         }
         if let destinationEntity = destinationEntity {
             callbackStore.append {

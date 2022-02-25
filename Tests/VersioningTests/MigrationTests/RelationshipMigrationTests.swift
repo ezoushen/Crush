@@ -132,7 +132,7 @@ class UpdateRelationshipTests: XCTestCase {
         XCTAssertFalse(description?.isOptional ?? true)
     }
 
-    func test_migrateRelationship_shouldupdateDeleteRule() throws {
+    func test_migrateRelationship_shouldUpdateDeleteRule() throws {
         let sut = UpdateRelationship("name", deleteRule: .cascadeDeleteRule)
         let description = try sut.migrateRelationship(relationship, callbackStore: &store)
         XCTAssertEqual(description?.deleteRule, .cascadeDeleteRule)
@@ -215,6 +215,12 @@ class UpdateRelationshipTests: XCTestCase {
         XCTAssertThrowsError(try store.forEach { try $0(entitiesByName) })
     }
 
+    func test_migrateRelationship_shouldUpdateIsOrdered() throws {
+        let sut = UpdateRelationship("name", isOrdered: true)
+        let description = try sut.migrateRelationship(relationship, callbackStore: &store)
+        XCTAssertEqual(description?.isOrdered, true)
+    }
+    
     func test_createPropertyMapping_shouldThrowIfSourceOrDestinationNotSpecified() {
         let sut = UpdateRelationship("name", name: "newName")
         XCTAssertThrowsError(try sut.createPropertyMapping(from: nil, to: nil, of: NSEntityDescription()))
