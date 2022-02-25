@@ -207,9 +207,6 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         do {
             lastHistoryTokens[storeURL] = token
             let tokenFileURL = tokenURL(for: storeURL)
-            
-            guard try tokenFileURL.checkResourceIsReachable() else { return }
-            
             let data = try NSKeyedArchiver
                 .archivedData(withRootObject: token, requiringSecureCoding: true)
             try data.write(to: tokenFileURL)
