@@ -57,7 +57,10 @@ extension PropertyCondition where T: PredicateEquatable & Hashable {
 
 extension PropertyCondition where T: PredicateComparable & Comparable {
     public convenience init(in rhs: ClosedRange<T>) {
-        self.init(format: "SELF BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
+        self.init(
+            format: "SELF BETWEEN {%@, %@}",
+            rhs.lowerBound.predicateValue,
+            rhs.upperBound.predicateValue)
     }
 
     public convenience init(largerThanOrEqualTo rhs: T) {
@@ -136,13 +139,23 @@ infix operator |*|
 
 // MARK: - Operator overloading for Entity
 
-extension KeyPath where Root: Entity, Value: WritableValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable & Hashable {
+extension KeyPath
+where
+    Root: Entity,
+    Value: WritableValuedProperty,
+    Value.PredicateValue: PredicateEquatable & Equatable & Hashable
+{
     public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) IN %@", NSSet(set: rhs))
     }
 }
 
-extension KeyPath where Root: Entity, Value: WritableValuedProperty, Value.PredicateValue: PredicateEquatable & Equatable {
+extension KeyPath
+where
+    Root: Entity,
+	Value: WritableValuedProperty,
+    Value.PredicateValue: PredicateEquatable & Equatable
+{
     public static func <> (lhs: KeyPath, rhs: Array<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) IN %@", NSArray(array: rhs))
     }
@@ -197,23 +210,44 @@ extension KeyPath where
         TypedPredicate<Root>(format: "\(lhs.propertyName) <= %@", rhs.predicateValue)
     }
 
-    public static func <> (lhs: KeyPath, rhs: ClosedRange<Value.PredicateValue>) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) BETWEEN {%@, %@}", rhs.lowerBound.predicateValue, rhs.upperBound.predicateValue)
+    public static func <> (
+        lhs: KeyPath, rhs: ClosedRange<Value.PredicateValue>) -> TypedPredicate<Root>
+    {
+        TypedPredicate<Root>(
+            format: "\(lhs.propertyName) BETWEEN {%@, %@}",
+            rhs.lowerBound.predicateValue,
+            rhs.upperBound.predicateValue)
     }
-
-    public static func > (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+    
+    public static func > <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where
+        T: WritableValuedProperty,
+        T.PredicateValue == Value.PredicateValue
+    {
         TypedPredicate<Root>(format: "\(lhs.propertyName) > \(rhs.propertyName)")
     }
 
-    public static func < (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+    public static func < <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where
+        T: WritableValuedProperty,
+        T.PredicateValue == Value.PredicateValue
+    {
         TypedPredicate<Root>(format: "\(lhs.propertyName) < \(rhs.propertyName)")
     }
 
-    public static func >= (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+    public static func >= <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where
+        T: WritableValuedProperty,
+        T.PredicateValue == Value.PredicateValue
+    {
         TypedPredicate<Root>(format: "\(lhs.propertyName) >= \(rhs.propertyName)")
     }
 
-    public static func <= (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+    public static func <= <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where
+        T: WritableValuedProperty,
+        T.PredicateValue == Value.PredicateValue
+    {
         TypedPredicate<Root>(format: "\(lhs.propertyName) <= \(rhs.propertyName)")
     }
 }
@@ -291,7 +325,9 @@ public prefix func ! (predicate: NSPredicate) -> NSPredicate {
 }
 
 extension TypedPredicate {
-    private static func updatePredicate(_ predicate: NSPredicate, block: (NSComparisonPredicate) -> Void) {
+    private static func updatePredicate(
+        _ predicate: NSPredicate, block: (NSComparisonPredicate) -> Void)
+    {
         if let predicate = predicate as? NSCompoundPredicate {
             for subpredicate in predicate.subpredicates {
                 updatePredicate(subpredicate as! NSPredicate, block: block)
