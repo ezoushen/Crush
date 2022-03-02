@@ -27,15 +27,12 @@ extension NSPersistentStoreCoordinator {
     }
 
     static func updateLastActiveModel(_ dataModel: DataModel, in storage: Storage) {
-        guard let url = storage.url else { return }
-        try? setMetadata(
-            [
-                CurrentModelVersionName: dataModel.name,
-                CurrentModelVersion: dataModel.managedObjectModel.version,
-            ],
-            forPersistentStoreOfType: storage.storeType,
-            at: url,
-            options: nil)
+        guard let url = storage.url,
+                var data = try? metadataForPersistentStore(
+                    ofType: storage.storeType, at: url, options: nil) else { return }
+        data[CurrentModelVersionName] = dataModel.name
+        data[CurrentModelVersion] = dataModel.managedObjectModel.version
+        try? setMetadata(data, forPersistentStoreOfType: storage.storeType, at: url, options: nil)
     }
 
     func lastActiveVersionName(at url: URL) -> String? {
@@ -60,12 +57,10 @@ extension NSPersistentStoreCoordinator {
         guard let store = persistentStore(for: storage.storageUrl) else {
             return
         }
-        setMetadata(
-            [
-                CurrentModelVersionName: name,
-                CurrentModelVersion: managedObjectModel.version,
-            ],
-            for: store)
+        var data = metadata(for: store)
+        data[CurrentModelVersionName] = name
+        data[CurrentModelVersion] = managedObjectModel.version
+        setMetadata(data, for: store)
     }
 
     func persistentStore(of storage: Storage) -> NSPersistentStore? {

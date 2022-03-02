@@ -172,15 +172,51 @@ public class DataContainer {
         }
         return persistentHistoryTracker.deleteHistory(before: Date())
     }
+}
 
-    public func setMetadata(_ metadata: [String: Any], storage: Storage) throws {
+// MARK: Metadata
+
+extension DataContainer {
+    public func setMetadata(key: String, value: Any, storage: Storage) {
+        let metadata: [String: Any] = {
+            guard var metadata = self.metadata(of: storage) else { return [key: value] }
+            metadata[key] = value
+            return metadata
+        }()
+        updateMetadata(metadata, storage: storage)
+    }
+
+    public func setMetadata(_ metadata: [String: Any], storage: Storage) {
+        let newMetaData: [String: Any] = {
+            guard var newMetaData = self.metadata(of: storage) else { return metadata }
+            newMetaData.merge(metadata, uniquingKeysWith: { $1 })
+            return newMetaData
+        }()
+        updateMetadata(newMetaData, storage: storage)
+    }
+
+    public func removeMetadata(key: String, storage: Storage) {
+        guard var metadata = metadata(of: storage) else { return }
+        metadata[key] = nil
+        updateMetadata(metadata, storage: storage)
+    }
+
+    public func removeMetadata(keys: [String], storage: Storage) {
+        guard var metadata = metadata(of: storage) else { return }
+        for key in keys {
+            metadata[key] = nil
+        }
+        updateMetadata(metadata, storage: storage)
+    }
+
+    private func updateMetadata(_ metadata: [String: Any], storage: Storage) {
         guard let store = coreDataStack.coordinator.persistentStore(of: storage) else {
             return
         }
         coreDataStack.coordinator.setMetadata(metadata, for: store)
     }
 
-    public func metadata(of storage: Storage) throws -> [String: Any]? {
+    public func metadata(of storage: Storage) -> [String: Any]? {
         guard let store = coreDataStack.coordinator.persistentStore(of: storage) else {
             return nil
         }
