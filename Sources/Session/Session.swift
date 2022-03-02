@@ -232,11 +232,12 @@ extension _SessionContext {
 extension Session {
     public func async<T>(
         name: String? = nil,
+        schedule: NSManagedObjectContext.ScheduledType = .immediate,
         block: @escaping (SessionContext) -> T) async -> T
     {
         let context = context
         let executionContext = context.executionContext
-        return await executionContext.performAsyncUndoable { () -> T in
+        return await executionContext.performAsyncUndoable(schedule: schedule) { () -> T in
             executionContext.transactionAuthor = name
             defer { executionContext.transactionAuthor = nil }
             return block(context)
@@ -245,11 +246,12 @@ extension Session {
 
     public func async<T: UnsafeSessionProperty>(
         name: String? = nil,
+        schedule: NSManagedObjectContext.ScheduledType = .immediate,
         block: @escaping (SessionContext) -> T) async -> T.Safe
     {
         let context = context
         let executionContext = context.executionContext
-        let result = await executionContext.performAsyncUndoable { () -> T in
+        let result = await executionContext.performAsyncUndoable(schedule: schedule) { () -> T in
             executionContext.transactionAuthor = name
             defer { executionContext.transactionAuthor = nil }
             return block(context)
@@ -259,11 +261,13 @@ extension Session {
 
     public func asyncThrowing<T>(
         name: String? = nil,
+        schedule: NSManagedObjectContext.ScheduledType = .immediate,
         block: @escaping (SessionContext) throws -> T) async throws -> T
     {
         let context = context
         let executionContext = context.executionContext
-        return try await executionContext.performAsyncThrowingUndoable { () throws -> T in
+        return try await executionContext.performAsyncThrowingUndoable(schedule: schedule) {
+            () throws -> T in
             executionContext.transactionAuthor = name
             defer { executionContext.transactionAuthor = nil }
             return try block(context)
@@ -272,11 +276,13 @@ extension Session {
 
     public func asyncThrowing<T: UnsafeSessionProperty>(
         name: String? = nil,
+        schedule: NSManagedObjectContext.ScheduledType = .immediate,
         block: @escaping (SessionContext) throws -> T) async throws -> T.Safe
     {
         let context = context
         let executionContext = context.executionContext
-        let result = try await executionContext.performAsyncThrowingUndoable { () throws -> T in
+        let result = try await executionContext.performAsyncThrowingUndoable(schedule: schedule) {
+            () throws -> T in
             executionContext.transactionAuthor = name
             defer { executionContext.transactionAuthor = nil }
             return try block(context)
@@ -287,23 +293,68 @@ extension Session {
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 extension NSManagedObjectContext {
-    func performAsyncUndoable<T>(_ block: @escaping () -> T) async -> T {
-        await withCheckedContinuation { (continuation: CheckedContinuation<T, Never>) in
-            self.perform {
-                let result = self.undoable(block)
-                continuation.resume(returning: result)
+    public enum ScheduledType {
+        case immediate, enqueued
+
+        @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+        func toScheduledTaskType() -> ScheduledTaskType {
+            switch self {
+            case .enqueued: return .enqueued
+            case .immediate: return .immediate
             }
         }
     }
 
-    func performAsyncThrowingUndoable<T>(_ block: @escaping () throws -> T) async throws -> T {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
-            self.perform {
-                do {
-                    let result = try self.undoable(block)
+    func performAsyncUndoable<T>(
+        schedule: ScheduledType,
+        _ block: @escaping () -> T) async -> T
+    {
+        if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
+            return await perform(schedule: schedule.toScheduledTaskType()) {
+                let result = self.undoable(block)
+                return result
+            }
+        } else {
+            return await withCheckedContinuation { (continuation: CheckedContinuation<T, Never>) in
+                let block = {
+                    let result = self.undoable(block)
                     continuation.resume(returning: result)
-                } catch {
-                    continuation.resume(throwing: error)
+                }
+                switch schedule {
+                case .immediate:
+                    self.performAndWait(block)
+                case .enqueued:
+                    self.perform(block)
+                }
+            }
+        }
+    }
+
+    func performAsyncThrowingUndoable<T>(
+        schedule: ScheduledType,
+        _ block: @escaping () throws -> T) async throws -> T
+    {
+        if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
+            return try await perform(schedule: schedule.toScheduledTaskType()) {
+                let result = try self.undoable(block)
+                return result
+            }
+        } else {
+            return try await withCheckedThrowingContinuation {
+                (continuation: CheckedContinuation<T, Error>) in
+                let block = {
+                    do {
+                        let result = try self.undoable(block)
+                        continuation.resume(returning: result)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+                switch schedule {
+                case .immediate:
+                    self.performAndWait(block)
+                case .enqueued:
+                    self.perform(block)
                 }
             }
         }
