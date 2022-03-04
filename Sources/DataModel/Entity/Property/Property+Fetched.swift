@@ -19,11 +19,11 @@ where
 
 extension FetchedPropertyProtocol {
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        value.map { ReadOnly($0) }
+        value.lazy.map { ReadOnly($0) }
     }
 
     public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        value.map { $0.managedObject }
+        value.lazy.map { $0.managedObject }
     }
 }
 

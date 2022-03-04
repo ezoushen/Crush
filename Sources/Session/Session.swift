@@ -71,7 +71,7 @@ extension Session {
     }
 
     public func load<T: Entity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
-        objectIDs.map(load(objectID:))
+        objectIDs.lazy.map(load(objectID:))
     }
 
     public func load<T: Entity>(forURIRepresentation uri: String) -> T.ReadOnly? {

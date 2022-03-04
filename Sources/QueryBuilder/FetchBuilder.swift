@@ -256,7 +256,7 @@ public final class ReadOnlyFetchBuilder<Target: Entity>:
     ExecutableFetchBuilder<Target, Target.ReadOnly>
 {
     public override func exec() -> [Target.ReadOnly] {
-        received().map {
+        received().lazy.map {
             ReadOnly<Target>(context.present($0))
         }
     }
