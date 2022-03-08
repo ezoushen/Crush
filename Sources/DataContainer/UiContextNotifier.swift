@@ -245,7 +245,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         let uiContext = context.uiContext
         let rootContext = context.rootContext
         let transactions = loadPersistentHistory(storeURL: storeURL)
-        let merger = UserInfoMerger()
+        var mergers: [String?: UserInfoMerger] = [:]
         
         if let lastToken = notification.userInfo?["historyToken"]
             as? NSPersistentHistoryToken {
@@ -257,6 +257,12 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
 
             guard let changes = notification.userInfo else { continue }
 
+            let merger: UserInfoMerger = mergers[transaction.author] ?? {
+                let merger = UserInfoMerger()
+                mergers[transaction.author] = merger
+                return merger
+            }()
+            
             merger.merge(userInfo: changes)
             
             NSManagedObjectContext.mergeChanges(
@@ -266,7 +272,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         os_unfair_lock_unlock(&lock)
 
         if transactions.isEmpty == false {
-            notifyOnMainThread(userInfo: merger.createUserInfo())
+            notifyOnMainThread(userInfo: mergers.mapValues { $0.createUserInfo() })
         }
     }
 
