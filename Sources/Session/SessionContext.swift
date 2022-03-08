@@ -202,9 +202,12 @@ extension SessionContext where Self: RawContextProviderProtocol {
     }
 
     public func commit() throws {
+        let author = executionContext.transactionAuthor
         let objectIDs = try saveExecutionContext()
         try rootContext.performSync {
+            rootContext.transactionAuthor = author
             try saveRootContext()
+            rootContext.transactionAuthor = nil
         }
         refreshObjects(objectIDs)
     }

@@ -82,7 +82,10 @@ extension Session {
 
     public func commit() throws {
         try context.performSync {
+            let executionContext = context.executionContext
+            executionContext.transactionAuthor = executionContext.name
             try context.commit()
+            executionContext.transactionAuthor = nil
         }
     }
 
@@ -115,7 +118,7 @@ extension Session {
         let context = context
         let executionContext = context.executionContext
         context.performAsyncUndoable {
-            executionContext.transactionAuthor = name
+            executionContext.transactionAuthor = name ?? executionContext.name
             defer { executionContext.transactionAuthor = nil }
             do {
                 try block(context)
@@ -137,7 +140,7 @@ extension Session {
         let context = context
         let executionContext = context.executionContext
         let result: Property = try context.performSyncUndoable {
-            executionContext.transactionAuthor = name
+            executionContext.transactionAuthor = name ?? executionContext.name
             defer { executionContext.transactionAuthor = nil }
             return try block(context)
         }
@@ -151,7 +154,7 @@ extension Session {
     ) rethrows -> T {
         let executionContext = context.executionContext
         let result: T = try context.performSyncUndoable {
-            executionContext.transactionAuthor = name
+            executionContext.transactionAuthor = name ?? executionContext.name
             defer { executionContext.transactionAuthor = nil }
             return try block(context)
         }
@@ -238,7 +241,7 @@ extension Session {
         let context = context
         let executionContext = context.executionContext
         return await executionContext.performAsyncUndoable(schedule: schedule) { () -> T in
-            executionContext.transactionAuthor = name
+            executionContext.transactionAuthor = name ?? executionContext.name
             defer { executionContext.transactionAuthor = nil }
             return block(context)
         }
@@ -252,7 +255,7 @@ extension Session {
         let context = context
         let executionContext = context.executionContext
         let result = await executionContext.performAsyncUndoable(schedule: schedule) { () -> T in
-            executionContext.transactionAuthor = name
+            executionContext.transactionAuthor = name ?? executionContext.name
             defer { executionContext.transactionAuthor = nil }
             return block(context)
         }
@@ -268,7 +271,7 @@ extension Session {
         let executionContext = context.executionContext
         return try await executionContext.performAsyncThrowingUndoable(schedule: schedule) {
             () throws -> T in
-            executionContext.transactionAuthor = name
+            executionContext.transactionAuthor = name ?? executionContext.name
             defer { executionContext.transactionAuthor = nil }
             return try block(context)
         }
@@ -283,7 +286,7 @@ extension Session {
         let executionContext = context.executionContext
         let result = try await executionContext.performAsyncThrowingUndoable(schedule: schedule) {
             () throws -> T in
-            executionContext.transactionAuthor = name
+            executionContext.transactionAuthor = name ?? executionContext.name
             defer { executionContext.transactionAuthor = nil }
             return try block(context)
         }
