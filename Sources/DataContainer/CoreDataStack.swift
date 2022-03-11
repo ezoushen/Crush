@@ -54,7 +54,7 @@ public class CoreDataStack {
             completion(error)
         }
     }
-
+#if canImport(_Concurrency) && compiler(>=5.5.2)
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     internal func loadPersistentStoreAsync(storage: Storage) async throws {
         try await withCheckedThrowingContinuation {
@@ -67,7 +67,7 @@ public class CoreDataStack {
             }
         }
     }
-
+#endif
     private func loadPersistentStore(
         storage: Storage, async flag: Bool, completion: @escaping (Error?) -> Void) throws
     {

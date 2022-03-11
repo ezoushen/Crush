@@ -83,7 +83,7 @@ public class DataContainer {
         }
         return container
     }
-
+#if canImport(_Concurrency) && compiler(>=5.5.2)
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     public static func loadAsync(
         storages: Storage...,
@@ -107,7 +107,7 @@ public class DataContainer {
         container.setup()
         return container
     }
-
+#endif
     private func setup() {
         initializeAllContext()
         notifier.enable()

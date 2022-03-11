@@ -9,7 +9,7 @@ import CoreData
 import XCTest
 
 @testable import Crush
-
+#if canImport(_Concurrency) && compiler(>=5.5.2)
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 class SessionTests: XCTestCase {
     class TestEntity: Entity {
@@ -86,3 +86,4 @@ class SessionTests: XCTestCase {
         XCTAssertEqual(result.objectID, objectID)
     }
 }
+#endif

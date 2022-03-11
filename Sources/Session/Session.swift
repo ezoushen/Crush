@@ -230,7 +230,7 @@ extension _SessionContext {
         try executionContext.performSyncUndoable(block)
     }
 }
-
+#if canImport(_Concurrency) && compiler(>=5.5.2)
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 extension Session {
     public func async<T>(
@@ -363,3 +363,4 @@ extension NSManagedObjectContext {
         }
     }
 }
+#endif
