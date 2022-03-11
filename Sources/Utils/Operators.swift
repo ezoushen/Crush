@@ -7,6 +7,15 @@
 
 import CoreData
 
+public protocol RangeProtocol: RangeExpression {
+    var upperBound: Bound { get }
+    var lowerBound: Bound { get }
+}
+
+extension Range: RangeProtocol { }
+
+extension ClosedRange: RangeProtocol { }
+
 extension NSPredicate {
     @inlinable public static var `true`: Self {
         Self.init(value: true)
@@ -56,7 +65,7 @@ extension PropertyCondition where T: PredicateEquatable & Hashable {
 }
 
 extension PropertyCondition where T: PredicateComparable & Comparable {
-    public convenience init(in rhs: ClosedRange<T>) {
+    public convenience init<R: RangeProtocol>(in rhs: R) where R.Bound == T {
         self.init(
             format: "SELF BETWEEN {%@, %@}",
             rhs.lowerBound.predicateValue,
@@ -210,8 +219,8 @@ extension KeyPath where
         TypedPredicate<Root>(format: "\(lhs.propertyName) <= %@", rhs.predicateValue)
     }
 
-    public static func <> (
-        lhs: KeyPath, rhs: ClosedRange<Value.PredicateValue>) -> TypedPredicate<Root>
+    public static func <> <R: RangeProtocol>(
+        lhs: KeyPath, rhs: R) -> TypedPredicate<Root> where R.Bound == Value.PredicateValue
     {
         TypedPredicate<Root>(
             format: "\(lhs.propertyName) BETWEEN {%@, %@}",
