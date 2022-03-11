@@ -94,3 +94,37 @@ extension Entity: ReadaleObject { }
 extension ReadaleObject where Self: Entity {
     public typealias ReadOnly = Crush.ReadOnly<Self>
 }
+
+#if canImport(SwiftUI) && canImport(Combine)
+import Combine
+import SwiftUI
+
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+public final class ObservableReadOnly<Entity: Crush.Entity>: ObservableObject {
+
+    internal let readOnly: ReadOnly<Entity>
+    internal var cancellable: AnyCancellable!
+
+    internal init(_ readOnly: ReadOnly<Entity>) {
+        self.readOnly = readOnly
+        self.cancellable = readOnly.managedObject
+            .objectWillChange
+            .sink { [unowned self] in objectWillChange.send() }
+    }
+
+    public subscript<T: ValuedProperty>(
+        dynamicMember keyPath: KeyPath<Entity, T>) -> T.PropertyValue
+    {
+        readOnly.access(keyPath: keyPath)
+    }
+
+    public subscript<T: ValuedProperty>(
+        dynamicMember keyPath: KeyPath<Entity, T>
+    ) -> T.PropertyValue.Safe
+    where
+        T.PropertyValue: UnsafeSessionProperty
+    {
+        readOnly[dynamicMember: keyPath]
+    }
+}
+#endif
