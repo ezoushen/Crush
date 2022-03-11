@@ -151,7 +151,9 @@ internal class ContextDidSaveNotifier: _UiContextNotifier {
             waitUntilDone: Thread.isMainThread)
         if let userInfo = notification.userInfo {
             let merger = UserInfoMerger(userInfo: userInfo)
-            notifyOnMainThread(userInfo: merger.createUserInfo())
+            notifyOnMainThread(userInfo: [
+                AnyHashable(Swift.Optional<String>.none): merger.createUserInfo()
+            ])
         } else {
             notifyOnMainThread(userInfo: [:])
         }
