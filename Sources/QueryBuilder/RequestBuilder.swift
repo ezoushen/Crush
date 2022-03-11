@@ -26,13 +26,13 @@ protocol RequestConfig {
     func createStoreRequest() -> NSPersistentStoreRequest
 }
 
-protocol RequestExecutor: AnyObject {
+public protocol RequestExecutor: AnyObject {
     associatedtype Received
     func exec() throws -> [Received]
     func execAsync(completion: @escaping ([Received]?, Error?) -> Void)
 }
 
-protocol NonThrowingRequestExecutor: RequestExecutor {
+public protocol NonThrowingRequestExecutor: RequestExecutor {
     func exec() -> [Received]
     func execAsync(completion: @escaping ([Received]) -> Void)
 }
@@ -113,7 +113,7 @@ public class PredicateRequestBuilder<Target: Entity>: RequestBuilder {
         requestConfig.createStoreRequest()
     }
 }
-
+#if canImport(_Concurrency) && compiler(>=5.5.2)
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 extension RequestExecutor {
     public func execAsync() async throws -> [Received] {
@@ -140,4 +140,4 @@ extension NonThrowingRequestExecutor {
         }
     }
 }
-
+#endif
