@@ -205,7 +205,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
     }
 
     internal func storeHistoryToken(_ token: NSPersistentHistoryToken, for storeURL: URL) {
-        if storeURL.path.starts(with: "/dev/null") { return }
+        if storeURL.isDevNull { return }
         do {
             lastHistoryTokens[storeURL] = token
             let tokenFileURL = tokenURL(for: storeURL)
@@ -218,7 +218,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
     }
 
     internal func loadHistoryToken(for storeURL: URL) {
-        if storeURL.path.starts(with: "/dev/null") { return }
+        if storeURL.isDevNull { return }
         do {
             let tokenFileURL = tokenURL(for: storeURL)
             let tokenData = try Data(contentsOf: tokenFileURL)

@@ -64,7 +64,7 @@ public class ConcreteStorage: Storage {
     }
     
     public func destroy() throws {
-        if storageUrl.path.starts(with: "/dev/null") {
+        if storageUrl.isDevNull {
             return
         }
         try FileManager.default.removeItem(at: storageUrl)
@@ -273,3 +273,9 @@ extension Storage {
     }
 }
 #endif
+
+extension URL {
+    var isDevNull: Bool {
+        path.starts(with: "/dev/null")
+    }
+}
