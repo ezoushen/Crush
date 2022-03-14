@@ -230,6 +230,21 @@ extension DataContainer {
 }
 
 extension DataContainer {
+    internal func detachedSessionContext(name: String? = nil) -> _DetachedSessionContext {
+        let context = coreDataStack.createBackgroundDetachedContext()
+        if context.persistentStoreCoordinator?.persistentStores.contains(
+            where: { $0.url?.isDevNull == true }) == false
+        {
+            try! context.setQueryGenerationFrom(.current)
+        }
+        context.name = name ?? "backgroundDetached"
+        return _DetachedSessionContext(
+            executionContext: context,
+            rootContext: writerContext,
+            uiContext: uiContext,
+            logger: logger)
+    }
+    
     internal func backgroundSessionContext(name: String? = nil) -> _SessionContext {
         let context = coreDataStack.createBackgroundContext(parent: writerContext)
         context.name = name ?? "background"
@@ -296,6 +311,12 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
 }
 
 extension DataContainer {
+    public func startDetachedSession(name: String? = nil) -> Session {
+        Session(
+            context: detachedSessionContext(name: name),
+            mergePolicy: coreDataStack.mergePolicy)
+    }
+    
     public func startSession(name: String? = nil) -> Session {
         Session(
             context: backgroundSessionContext(name: name),

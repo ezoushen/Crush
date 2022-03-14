@@ -90,8 +90,7 @@ extension InsertBuilder {
 
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     private func executeBatchInsert() throws -> [NSManagedObjectID] {
-        let result: NSBatchInsertResult = try context.execute(
-            request: config.createStoreRequest(), on: \.rootContext)
+        let result: NSBatchInsertResult = try context.execute(request: config.createStoreRequest())
         context.executionContext.reset()
         return result.result as! [NSManagedObjectID]
     }

@@ -13,6 +13,15 @@ public protocol RawContextProviderProtocol {
     var rootContext: NSManagedObjectContext { get }
     var uiContext: NSManagedObjectContext { get }
     var logger: DataContainer.LogHandler { get }
+    
+    func context(for fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext
+    func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext
+}
+
+extension RawContextProviderProtocol {
+    func context(for asyncFetchRequest: NSAsynchronousFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext {
+        context(for: asyncFetchRequest.fetchRequest)
+    }
 }
 
 public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
@@ -96,9 +105,12 @@ internal struct DummyContext: SessionContext, RawContextProviderProtocol {
     internal var executionContext: NSManagedObjectContext { fatalError() }
     internal var rootContext: NSManagedObjectContext { fatalError() }
     internal var uiContext: NSManagedObjectContext { fatalError() }
+    internal func commit() throws { fatalError() }
+    internal func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext { fatalError() }
+    internal func context(for fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext { fatalError() }
 }
 
-internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
+internal struct _DetachedSessionContext: SessionContext, RawContextProviderProtocol {
     internal let executionContext: NSManagedObjectContext
     internal let rootContext: NSManagedObjectContext
     internal let uiContext: NSManagedObjectContext
@@ -110,12 +122,56 @@ internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
         self.uiContext = uiContext
         self.logger = logger
     }
+    
+    internal func commit() throws {
+        let result = try saveExecutionContext(executionContext)
+        refreshObjects(result, contexts: rootContext, uiContext)
+    }
+    
+    internal func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext {
+        executionContext
+    }
+    
+    internal func context(for fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext {
+        executionContext
+    }
+}
+
+internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
+    internal let executionContext: NSManagedObjectContext
+    internal let rootContext: NSManagedObjectContext
+    internal let uiContext: NSManagedObjectContext
+    internal let logger: DataContainer.LogHandler
+    
+    internal func commit() throws {
+        let author = executionContext.transactionAuthor
+        let result = try saveExecutionContext(executionContext)
+        try rootContext.performSync {
+            rootContext.transactionAuthor = author
+            try saveRootContext(rootContext)
+            rootContext.transactionAuthor = nil
+        }
+        refreshObjects(result, contexts: uiContext)
+    }
+    
+    internal func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext {
+        rootContext
+    }
+    
+    internal func context(for fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext {
+        if fetchRequest.includesPendingChanges {
+            return executionContext
+        } else {
+            fetchRequest.includesPendingChanges = true
+            return rootContext
+        }
+    }
 }
 
 extension SessionContext where Self: RawContextProviderProtocol {
-    func count(request: NSFetchRequest<NSFetchRequestResult>, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) -> Int {
+    func count(request: NSFetchRequest<NSFetchRequestResult>) -> Int {
         var result: Int? = nil
-        let context = self[keyPath: context]
+        let context = context(for: request)
         context.performAndWait {
             do {
                 result = try context.count(for: request)
@@ -127,16 +183,18 @@ extension SessionContext where Self: RawContextProviderProtocol {
         return result ?? 0
     }
     
-    func execute<T>(request: NSFetchRequest<NSFetchRequestResult>, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) throws -> [T] {
-        let context = self[keyPath: context]
+    func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) throws -> [T] {
+        let context = context(for: request)
         return try context.performSync {
-            context.processPendingChanges()
+            if request.includesPendingChanges == false, rootContext != executionContext {
+                request.includesPendingChanges = true
+            }
             return try context.fetch(request) as! [T]
         }
     }
     
-    func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest, on context: KeyPath<RawContextProviderProtocol, NSManagedObjectContext>) throws -> T {
-        let context = self[keyPath: context]
+    func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest) throws -> T {
+        let context = context(for: request)
         let result: T = try context.performSync {
             context.processPendingChanges()
             return try context.execute(request) as! T
@@ -196,62 +254,49 @@ extension SessionContext where Self: RawContextProviderProtocol {
         }
     }
     
-    private static func defaultCommitCompletionHandler(_ error: Error?) {
-        guard let error = error else { return }
-        fatalError("Unhandled error: \(error)")
-    }
-
-    public func commit() throws {
-        let author = executionContext.transactionAuthor
-        let objectIDs = try saveExecutionContext()
-        try rootContext.performSync {
-            rootContext.transactionAuthor = author
-            try saveRootContext()
-            rootContext.transactionAuthor = nil
-        }
-        refreshObjects(objectIDs)
-    }
+    typealias ExecutionResult = (
+        inserted: [NSManagedObjectID], updated: [NSManagedObjectID], deleted: [NSManagedObjectID])
     
-    internal func saveExecutionContext() throws -> Set<NSManagedObjectID>
+    internal func saveExecutionContext(
+        _ executionContext: NSManagedObjectContext) throws -> ExecutionResult
     {
         guard executionContext.hasChanges else {
-            return []
+            return ([], [], [])
         }
-        let objectIDs = Set(
-            executionContext.updatedObjects
-                .union(executionContext.deletedObjects)
-                .union(executionContext.insertedObjects)
-                .map(\.objectID))
+        let deletedObjectIDs = executionContext.deletedObjects.map(\.objectID)
+        let updatedObjectIDs = executionContext.updatedObjects.map(\.objectID)
+        let insertedObjectIDs = executionContext.insertedObjects.map(\.objectID)
+        
         do {
             try executionContext.save()
         } catch let error as NSError {
             let error = error.customError()
             logger.log(
                 .error,
-                "Merge changes to the writer context ended with error",
+                "Merge changes from execution context ended with error",
                 error: error)
             throw error
         }
-        return objectIDs
+        return (inserted: insertedObjectIDs, updated: updatedObjectIDs, deleted: deletedObjectIDs)
     }
 
-    internal func refreshObjects(_ objectIDs: Set<NSManagedObjectID>) {
-        DispatchQueue.performMainThreadTask {
-            objectIDs
-                .intersection(uiContext.registeredObjects.map(\.objectID))
-                .map(uiContext.object(with:))
-                .forEach {
-                    uiContext.refresh(
-                        $0, mergeChanges: true, preserveFaultingState: true)
-                }
-        }
+    internal func refreshObjects(
+        _ executionResult: ExecutionResult, contexts: NSManagedObjectContext...)
+    {
+        NSManagedObjectContext.mergeChanges(
+            fromRemoteContextSave: [
+                NSInsertedObjectsKey: executionResult.inserted,
+                NSUpdatedObjectsKey: executionResult.updated,
+                NSDeletedObjectsKey: executionResult.deleted,
+            ],
+            into: contexts)
     }
     
-    internal func saveRootContext() throws {
+    internal func saveRootContext(_ rootContext: NSManagedObjectContext) throws {
         do {
             try rootContext.save()
         } catch let error as NSError {
-            logger.log(.error, "Merge changes to the persistent container ended with error", error: error)
+            logger.log(.error, "Merge changes from root context ended with error", error: error)
             rootContext.rollback()
             throw error
         }

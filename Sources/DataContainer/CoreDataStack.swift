@@ -106,6 +106,14 @@ public class CoreDataStack {
         context.name = UiContextName
         return context
     }
+    
+    internal func createBackgroundDetachedContext() -> NSManagedObjectContext {
+        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        context.persistentStoreCoordinator = coordinator
+        context.mergePolicy = mergePolicy
+        context.automaticallyMergesChangesFromParent = false
+        return context
+    }
 
     internal func createBackgroundContext(parent: NSManagedObjectContext?) -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)

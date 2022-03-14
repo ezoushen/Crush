@@ -20,7 +20,7 @@ fileprivate func warning(
 }
 
 public class Session {
-    internal let context: _SessionContext
+    internal let context: SessionContext & RawContextProviderProtocol
     public var enabledWarningForUnsavedChanges: Bool = true
     public var mergePolicy: NSMergePolicy {
         didSet {
@@ -28,9 +28,11 @@ public class Session {
         }
     }
 
-    internal init(context: _SessionContext, mergePolicy: NSMergePolicy) {
+    internal init(context: SessionContext & RawContextProviderProtocol, mergePolicy: NSMergePolicy) {
         self.context = context
         self.mergePolicy = mergePolicy
+        
+        context.executionContext.mergePolicy = mergePolicy
     }
     
     public func enableUndoManager() {
@@ -74,9 +76,9 @@ extension Session {
         objectIDs.lazy.map(load(objectID:))
     }
 
-    public func load<T: Entity>(forURIRepresentation uri: String) -> T.ReadOnly? {
+    public func load<T: Entity>(forURIRepresentation uri: URL) -> T.ReadOnly? {
         guard let managedObjectID = context.rootContext.persistentStoreCoordinator!
-                .managedObjectID(forURIRepresentation: URL(string: uri)!) else { return nil }
+                .managedObjectID(forURIRepresentation: uri) else { return nil }
         return load(objectID: managedObjectID)
     }
 
@@ -212,8 +214,7 @@ extension NSManagedObjectContext {
     }
 }
 
-
-extension _SessionContext {
+extension SessionContext where Self: RawContextProviderProtocol {
     func performAsync(_ block: @escaping () -> Void) {
         executionContext.performAsync(block)
     }

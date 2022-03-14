@@ -55,7 +55,7 @@ public struct FetchConfig<Entity: Crush.Entity>: RequestConfig {
         request.fetchLimit = limit ?? 0
         request.fetchOffset = offset ?? 0
         request.returnsObjectsAsFaults = asFaults
-        request.includesPendingChanges = true
+        request.includesPendingChanges = includePendingChanges
         request.fetchBatchSize = batch
     }
 
@@ -136,10 +136,7 @@ where
     public func count() -> Int {
         config.resultType = .countResultType
         return context.count(
-            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>,
-            on: config.includePendingChanges
-                ? \.executionContext
-                : \.rootContext)
+            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>)
     }
 
     public func exists() -> Bool {
@@ -149,10 +146,7 @@ where
 
     fileprivate func received() -> [ManagedObject<Target>] {
         let objects: [ManagedObject<Target>] = try! context.execute(
-            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>,
-            on: config.includePendingChanges
-                ? \.executionContext
-                : \.rootContext)
+            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>)
         if let predicate = config.postPredicate {
             return (objects as NSArray).filtered(using: predicate) as! [ManagedObject<Target>]
         }
@@ -256,7 +250,6 @@ public final class ReadOnlyFetchBuilder<Target: Entity>:
     ExecutableFetchBuilder<Target, Target.ReadOnly>
 {
     public override func exec() -> [Target.ReadOnly] {
-        
         received().lazy.map {
             ReadOnly<Target>(context.present($0))
         }

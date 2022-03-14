@@ -86,8 +86,7 @@ extension UpdateBuilder {
 
     private func executeBatchUpdate() throws -> [NSManagedObjectID] {
         let request = config.createStoreRequest()
-        let result: NSBatchUpdateResult = try context
-            .execute(request: request, on: \.rootContext)
+        let result: NSBatchUpdateResult = try context.execute(request: request)
         return result.result as! [NSManagedObjectID]
     }
 

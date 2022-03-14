@@ -54,8 +54,7 @@ public final class AggregationBuilder<Target: Crush.Entity>: RequestBuilder, Non
     private func received() -> [[String: Any]] {
         config.resultType = .dictionaryResultType
         let result: NSAsynchronousFetchResult<NSFetchRequestResult> = try! context.execute(
-            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>,
-            on: config.includePendingChanges ? \.executionContext : \.rootContext)
+            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>)
         return (result.finalResult ?? []) as! [[String: Any]]
     }
 
