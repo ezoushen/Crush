@@ -222,6 +222,11 @@ extension DataContainer {
         }
         return coreDataStack.coordinator.metadata(for: store)
     }
+    
+    public func saveMetadata() throws {
+        let context = coreDataStack.createBackgroundDetachedContext()
+        try context.performSync { try context.save() }
+    }
 }
 
 extension DataContainer {
