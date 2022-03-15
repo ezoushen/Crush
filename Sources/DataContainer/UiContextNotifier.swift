@@ -180,10 +180,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
     internal func setup() {
         purgeHistory()
 
-        for store in coordinator.persistentStores
-        where store.url != nil &&
-              store.options?[NSPersistentHistoryTrackingKey] as? NSNumber == true &&
-              store.options?["NSPersistentStoreRemoteChangeNotificationOptionKey"] as? NSNumber == true
+        for store in coordinator.persistentStores where store.url != nil
         {
             loadHistoryToken(for: store.url!)
         }

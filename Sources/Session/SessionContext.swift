@@ -55,7 +55,7 @@ extension SessionContext where Self: RawContextProviderProtocol {
     private func canUseBatchRequest() -> Bool {
         rootContext
             .persistentStoreCoordinator?
-            .persistentStores.contains { $0.type != NSSQLiteStoreType } == false
+            .checkRequirement([.sqliteStore, .concreteFile]) ?? false
     }
 
     public func fetch<T: Entity>(for type: T.Type) -> ManagedFetchBuilder<T> {

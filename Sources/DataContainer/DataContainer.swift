@@ -17,11 +17,10 @@ public class DataContainer {
 
     internal lazy var notifier: UiContextNotifier = {
         if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *),
-           coreDataStack.coordinator.persistentStores.contains(where: {
-               let remoteChangeKey = "NSPersistentStoreRemoteChangeNotificationOptionKey"
-               return ($0.options?[remoteChangeKey] as? NSObject) == (true as NSNumber) &&
-               ($0.options?[NSPersistentHistoryTrackingKey] as? NSObject) == (true as NSNumber)
-           }) {
+           coreDataStack.coordinator.checkRequirement([
+            .sqliteStore, .remoteChangeNotificationEnabled, .persistentHistoryEnabled
+           ])
+        {
             return PersistentHistoryNotifier(container: self)
         } else {
             return ContextDidSaveNotifier(container: self)
@@ -232,9 +231,9 @@ extension DataContainer {
 extension DataContainer {
     internal func detachedSessionContext(name: String? = nil) -> _DetachedSessionContext {
         let context = coreDataStack.createBackgroundDetachedContext()
-        if context.persistentStoreCoordinator?.persistentStores.contains(
-            where: { $0.url?.isDevNull == true }) == false
-        {
+        if context.persistentStoreCoordinator?.checkRequirement([
+            .sqliteStore, .concreteFile
+        ]) ?? false {
             try! context.setQueryGenerationFrom(.current)
         }
         context.name = name ?? "backgroundDetached"
