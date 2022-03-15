@@ -244,7 +244,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         let uiContext = context.uiContext
         let rootContext = context.rootContext
         let transactions = loadPersistentHistory(storeURL: storeURL)
-        var mergers: [String?: UserInfoMerger] = [:]
+        var mergers: [AnyHashable: UserInfoMerger] = [:]
         
         if let lastToken = notification.userInfo?["historyToken"]
             as? NSPersistentHistoryToken {
@@ -256,9 +256,9 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
 
             guard let changes = notification.userInfo else { continue }
 
-            let merger: UserInfoMerger = mergers[transaction.author] ?? {
+            let merger: UserInfoMerger = mergers[AnyHashable(transaction.author)] ?? {
                 let merger = UserInfoMerger()
-                mergers[transaction.author] = merger
+                mergers[AnyHashable(transaction.author)] = merger
                 return merger
             }()
             
