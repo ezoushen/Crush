@@ -13,6 +13,7 @@ public protocol OptionalProtocol {
 }
 
 extension Swift.Optional: OptionalProtocol {
+    @inlinable
     public var isNil: Bool {
         switch self {
         case .some(let value):
@@ -21,6 +22,7 @@ extension Swift.Optional: OptionalProtocol {
         }
     }
 
+    @inlinable
     public static var null: Self {
         return .none
     }
