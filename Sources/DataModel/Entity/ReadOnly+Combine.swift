@@ -8,6 +8,7 @@
 #if canImport(Combine)
 import Foundation
 import Combine
+import CoreData
 
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 extension ManagedObject {
@@ -51,6 +52,9 @@ extension ManagedObject {
             }
 
             public override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+                if let managedObject = object as? NSManagedObject, managedObject.isDeleted {
+                    return removeObservation()
+                }
                 if change?.keys.contains(.oldKey) == true,
                    let value = change?[.oldKey] as? T.FieldConvertor.ManagedObjectValue {
                     _ = subscriber?.receive(T.FieldConvertor.convert(value: value))
