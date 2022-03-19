@@ -127,36 +127,43 @@ internal /*abstract*/ class _UiContextNotifier: UiContextNotifier {
 }
 
 internal class ContextDidSaveNotifier: _UiContextNotifier {
+    private let notificationName: Notification.Name = .NSManagedObjectContextDidSave
+
     override func enable() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(contextDidSave(notification:)),
-            name: .NSManagedObjectContextDidSave,
+            name: notificationName,
             object: context.rootContext)
     }
 
     override func disable() {
         NotificationCenter.default.removeObserver(
             self,
-            name: .NSManagedObjectContextDidSave,
+            name: notificationName,
             object: context.rootContext)
     }
 
     @objc
     internal func contextDidSave(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let managedObjectContext = notification.object as? NSManagedObjectContext,
+            userInfo.contains(where: {
+                ($0.key == AnyHashable(NSInsertedObjectsKey) ||
+                $0.key == AnyHashable(NSUpdatedObjectsKey) ||
+                $0.key == AnyHashable(NSDeletedObjectsKey)) &&
+                ($0.value as? NSMutableSet)?.count ?? 0 > 0
+            }) else { return }
         context.uiContext.perform(
             #selector(context.uiContext.mergeChanges(fromContextDidSave:)),
             on: Thread.main,
             with: notification,
             waitUntilDone: Thread.isMainThread)
-        if let userInfo = notification.userInfo {
-            let merger = UserInfoMerger(userInfo: userInfo)
-            notifyOnMainThread(userInfo: [
-                AnyHashable(Swift.Optional<String>.none): merger.createUserInfo()
-            ])
-        } else {
-            notifyOnMainThread(userInfo: [:])
-        }
+        let merger = UserInfoMerger(userInfo: userInfo)
+        let name = managedObjectContext.name ?? "Unknown"
+        notifyOnMainThread(userInfo: [
+            AnyHashable(name): merger.createUserInfo()
+        ])
     }
 }
 
