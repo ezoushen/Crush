@@ -44,24 +44,24 @@ internal class UserInfoMerger {
     func merge(userInfo: [AnyHashable: Any]?) {
         guard let userInfo = userInfo else { return }
         
-        if let insertedObjectIDs = userInfo[NSInsertedObjectIDsKey] as? NSMutableSet {
+        if let insertedObjectIDs = userInfo[AnyHashable(NSInsertedObjectIDsKey)] as? NSMutableSet {
             insertedObjectIDIterators.append(AnyIterator(insertedObjectIDs.makeIterator()))
         }
-        if let insertedObjects = userInfo[NSInsertedObjectsKey] as? NSMutableSet {
+        if let insertedObjects = userInfo[AnyHashable(NSInsertedObjectsKey)] as? NSMutableSet {
             insertedObjectIDIterators.append(AnyIterator(
                 insertedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
         }
-        if let updatedObjectIDs = userInfo[NSUpdatedObjectIDsKey] as? NSMutableSet {
+        if let updatedObjectIDs = userInfo[AnyHashable(NSUpdatedObjectIDsKey)] as? NSMutableSet {
             updatedObjectIDIterators.append(AnyIterator(updatedObjectIDs.makeIterator()))
         }
-        if let updatedObjects = userInfo[NSUpdatedObjectsKey] as? NSMutableSet {
+        if let updatedObjects = userInfo[AnyHashable(NSUpdatedObjectsKey)] as? NSMutableSet {
             updatedObjectIDIterators.append(AnyIterator(
                 updatedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
         }
-        if let deletedObjectIDs = userInfo[NSDeletedObjectIDsKey] as? NSMutableSet {
+        if let deletedObjectIDs = userInfo[AnyHashable(NSDeletedObjectIDsKey)] as? NSMutableSet {
             deletedObjectIDIterators.append(AnyIterator(deletedObjectIDs.makeIterator()))
         }
-        if let deletdeObjects = userInfo[NSDeletedObjectsKey] as? NSMutableSet {
+        if let deletdeObjects = userInfo[AnyHashable(NSDeletedObjectsKey)] as? NSMutableSet {
             deletedObjectIDIterators.append(AnyIterator(
                 deletdeObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
         }
@@ -72,13 +72,13 @@ internal class UserInfoMerger {
         let updated = updatedObjectIDIterators
         let deleted = deletedObjectIDIterators
         return [
-            NSInsertedObjectIDsKey: AnySequence<NSManagedObjectID> {
+            AnyHashable(NSInsertedObjectIDsKey): AnySequence<NSManagedObjectID> {
                 NSManagedObjectIDIterator(inserted.makeIterator())
             },
-            NSUpdatedObjectIDsKey: AnySequence<NSManagedObjectID> {
+            AnyHashable(NSUpdatedObjectIDsKey): AnySequence<NSManagedObjectID> {
                 NSManagedObjectIDIterator(updated.makeIterator())
             },
-            NSDeletedObjectIDsKey: AnySequence<NSManagedObjectID> {
+            AnyHashable(NSDeletedObjectIDsKey): AnySequence<NSManagedObjectID> {
                 NSManagedObjectIDIterator(deleted.makeIterator())
             },
         ]
