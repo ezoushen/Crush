@@ -59,8 +59,11 @@ extension ObjectDriver {
     internal subscript<Property: ValuedProperty>(
         immutable keyPath: KeyPath<Entity, Property>
     ) -> Property.PropertyValue {
-        Property.FieldConvertor.convert(
-            value: managedObject.getValue(key: keyPath.propertyName))
+        guard let managedValue: Property.FieldConvertor.ManagedObjectValue =
+                managedObject.getValue(key: keyPath.propertyName) else {
+            return Property.FieldConvertor.defaultRuntimeValue
+        }
+        return Property.FieldConvertor.convert(value: managedValue)
     }
 
     public subscript<Value>(
@@ -72,12 +75,12 @@ extension ObjectDriver {
 
 extension NSManagedObject {
     @inlinable
-    internal func getValue<T>(key: String) -> T {
+    internal func getValue<T>(key: String) -> T? {
         willAccessValue(forKey: key)
         defer {
             didAccessValue(forKey: key)
         }
-        return primitiveValue(forKey: key) as! T
+        return primitiveValue(forKey: key) as? T
     }
 
     @inlinable

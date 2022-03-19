@@ -20,6 +20,22 @@ public protocol FieldConvertible: AnyFieldConvertible {
     
     static func convert(value: ManagedObjectValue) -> RuntimeObjectValue
     static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
+
+    static var defaultRuntimeValue: RuntimeObjectValue { get }
+}
+
+extension FieldConvertible where RuntimeObjectValue: OptionalProtocol {
+    @inlinable
+    public static var defaultRuntimeValue: RuntimeObjectValue {
+        return RuntimeObjectValue.null
+    }
+}
+
+extension FieldConvertible where RuntimeObjectValue: Collection & ExpressibleByArrayLiteral {
+    @inlinable
+    public static var defaultRuntimeValue: RuntimeObjectValue {
+        return []
+    }
 }
 
 extension FieldConvertible {
@@ -141,6 +157,11 @@ extension NSNull: FieldConvertible {
 
     @inlinable
     public static func convert(value: NSNull) -> NSNull { value }
+
+    @inlinable
+    public static var defaultRuntimeValue: NSNull {
+        NSNull()
+    }
 }
 
 extension UUID: PredicateEquatableAttribute, PredicateExpressibleByString {
