@@ -265,7 +265,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
 
             guard let changes = notification.userInfo else { continue }
 
-            let key = AnyHashable(transaction.author)
+            let key = AnyHashable(transaction.author ?? "Unknown")
             let merger: UserInfoMerger = mergers[key] ?? {
                 let merger = UserInfoMerger()
                 mergers[key] = merger
@@ -336,10 +336,10 @@ extension Entity {
         let inserted = userInfo[NSInsertedObjectIDsKey] as! AnySequence<NSManagedObjectID>
         let updated = userInfo[NSUpdatedObjectIDsKey] as! AnySequence<NSManagedObjectID>
         let deleted = userInfo[NSDeletedObjectIDsKey] as! AnySequence<NSManagedObjectID>
-        let entityNames = Set(entities.map { $0.name as String? })
+        let entityNames = Set(entities.map { $0.name })
         
-        return inserted.contains { entityNames.contains($0.entity.name) } ||
-            updated.contains { entityNames.contains($0.entity.name) } ||
-            deleted.contains { entityNames.contains($0.entity.name) }
+        return inserted.contains { entityNames.contains($0.entity.name ?? "") } ||
+            updated.contains { entityNames.contains($0.entity.name ?? "") } ||
+            deleted.contains { entityNames.contains($0.entity.name ?? "") }
     }
 }
