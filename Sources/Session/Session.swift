@@ -83,11 +83,12 @@ extension Session {
     }
 
     public func commit() throws {
-        try context.performSync {
-            let executionContext = context.executionContext
-            executionContext.transactionAuthor = executionContext.name
-            try context.commit()
-            executionContext.transactionAuthor = nil
+        let context = context
+        let executionContext = context.executionContext
+        try executionContext.performSync {
+            try executionContext.signed(authorName: executionContext.name) {
+                try context.commit()
+            }
         }
     }
 
@@ -101,7 +102,7 @@ extension Session {
     private func shouldWarnUnsavedChangesOnPrivateContext() -> Bool {
         guard enabledWarningForUnsavedChanges else { return false }
         let executionContext = context.executionContext
-        return context.performSync {
+        return executionContext.performSync {
             executionContext.hasChanges &&
                 executionContext.concurrencyType == .privateQueueConcurrencyType
         }
@@ -119,9 +120,7 @@ extension Session {
     {
         let context = context
         let executionContext = context.executionContext
-        context.performAsyncUndoable {
-            executionContext.transactionAuthor = name ?? executionContext.name
-            defer { executionContext.transactionAuthor = nil }
+        executionContext.performSignedUndoableAsync(authorName: name) {
             do {
                 try block(context)
             } catch {
@@ -141,11 +140,10 @@ extension Session {
     ) rethrows -> Property.Safe {
         let context = context
         let executionContext = context.executionContext
-        let result: Property = try context.performSyncUndoable {
-            executionContext.transactionAuthor = name ?? executionContext.name
-            defer { executionContext.transactionAuthor = nil }
-            return try block(context)
-        }
+        let result: Property = try executionContext
+            .performSignedUndoableSync(authorName: name) {
+                try block(context)
+            }
         warnUnsavedChangesIfNeeded()
         return result.wrapped(in: self)
     }
@@ -154,12 +152,12 @@ extension Session {
         name: String? = nil,
         block: (SessionContext) throws -> T
     ) rethrows -> T {
+        let context = context
         let executionContext = context.executionContext
-        let result: T = try context.performSyncUndoable {
-            executionContext.transactionAuthor = name ?? executionContext.name
-            defer { executionContext.transactionAuthor = nil }
-            return try block(context)
-        }
+        let result: T = try executionContext
+            .performSignedUndoableSync(authorName: name) {
+                try block(context)
+            }
         warning(
             result is UnsafeSessionPropertyProtocol,
             "Return an \(type(of: result)) is not recommended")
@@ -197,40 +195,40 @@ extension NSManagedObjectContext {
         return try execute(block, rethrowing: { throw $0 })
     }
 
-    private func undoable<T>(_ block: () throws -> T) rethrows -> T {
+    func undoable<T>(_ block: () throws -> T) rethrows -> T {
         undoManager?.beginUndoGrouping()
         defer {
             undoManager?.endUndoGrouping()
+            processPendingChanges()
         }
         return try block()
     }
-
-    func performAsyncUndoable(_ block: @escaping () -> Void) {
-        performAsync { self.undoable(block) }
+    
+    func signed<T>(authorName: String?, _ block: () throws -> T) rethrows -> T {
+        transactionAuthor = authorName ?? name
+        defer {
+            transactionAuthor = nil
+        }
+        return try block()
     }
-
-    func performSyncUndoable<T>(_ block: () throws -> T) rethrows -> T {
-        try performSync { try undoable(block) }
+    
+    func performSignedUndoableAsync(authorName: String?, _ block: @escaping () -> Void) {
+        performAsync {
+            self.signed(authorName: authorName) {
+                self.undoable(block)
+            }
+        }
     }
-}
-
-extension SessionContext where Self: RawContextProviderProtocol {
-    func performAsync(_ block: @escaping () -> Void) {
-        executionContext.performAsync(block)
-    }
-
-    func performSync<T>(_ block: () throws -> T) rethrows -> T {
-        try executionContext.performSync(block)
-    }
-
-    func performAsyncUndoable(_ block: @escaping () -> Void) {
-        executionContext.performAsyncUndoable(block)
-    }
-
-    func performSyncUndoable<T>(_ block: () throws -> T) rethrows -> T {
-        try executionContext.performSyncUndoable(block)
+    
+    func performSignedUndoableSync<T>(authorName: String?, _ block: () throws -> T) rethrows -> T {
+        try performSync {
+            try self.signed(authorName: authorName) {
+                try self.undoable(block)
+            }
+        }
     }
 }
+
 #if canImport(_Concurrency) && compiler(>=5.5.2)
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 extension Session {
@@ -241,11 +239,10 @@ extension Session {
     {
         let context = context
         let executionContext = context.executionContext
-        return await executionContext.performAsyncUndoable(schedule: schedule) { () -> T in
-            executionContext.transactionAuthor = name ?? executionContext.name
-            defer { executionContext.transactionAuthor = nil }
-            return block(context)
-        }
+        return await executionContext
+            .performSignedUndoableAsync(authorName: name, schedule: schedule) {
+                block(context)
+            }
     }
 
     public func async<T: UnsafeSessionProperty>(
@@ -255,11 +252,10 @@ extension Session {
     {
         let context = context
         let executionContext = context.executionContext
-        let result = await executionContext.performAsyncUndoable(schedule: schedule) { () -> T in
-            executionContext.transactionAuthor = name ?? executionContext.name
-            defer { executionContext.transactionAuthor = nil }
-            return block(context)
-        }
+        let result = await executionContext
+            .performSignedUndoableAsync(authorName: name, schedule: schedule) {
+                block(context)
+            }
         return result.wrapped(in: self)
     }
 
@@ -270,12 +266,10 @@ extension Session {
     {
         let context = context
         let executionContext = context.executionContext
-        return try await executionContext.performAsyncThrowingUndoable(schedule: schedule) {
-            () throws -> T in
-            executionContext.transactionAuthor = name ?? executionContext.name
-            defer { executionContext.transactionAuthor = nil }
-            return try block(context)
-        }
+        return try await executionContext
+            .performThrowingSignedUndoableAsync(authorName: name, schedule: schedule) {
+                try block(context)
+            }
     }
 
     public func asyncThrowing<T: UnsafeSessionProperty>(
@@ -285,12 +279,10 @@ extension Session {
     {
         let context = context
         let executionContext = context.executionContext
-        let result = try await executionContext.performAsyncThrowingUndoable(schedule: schedule) {
-            () throws -> T in
-            executionContext.transactionAuthor = name ?? executionContext.name
-            defer { executionContext.transactionAuthor = nil }
-            return try block(context)
-        }
+        let result = try await executionContext
+            .performThrowingSignedUndoableAsync(authorName: name, schedule: schedule) {
+                try block(context)
+            }
         return result.wrapped(in: self)
     }
 }
@@ -309,7 +301,8 @@ extension NSManagedObjectContext {
         }
     }
 
-    func performAsyncUndoable<T>(
+    func performSignedUndoableAsync<T>(
+        authorName: String?,
         schedule: ScheduledType,
         _ block: @escaping () -> T) async -> T
     {
@@ -321,7 +314,9 @@ extension NSManagedObjectContext {
         } else {
             return await withCheckedContinuation { (continuation: CheckedContinuation<T, Never>) in
                 let block = {
-                    let result = self.undoable(block)
+                    let result = self.signed(authorName: authorName) {
+                        self.undoable(block)
+                    }
                     continuation.resume(returning: result)
                 }
                 switch schedule {
@@ -334,7 +329,8 @@ extension NSManagedObjectContext {
         }
     }
 
-    func performAsyncThrowingUndoable<T>(
+    func performThrowingSignedUndoableAsync<T>(
+        authorName: String?,
         schedule: ScheduledType,
         _ block: @escaping () throws -> T) async throws -> T
     {
@@ -348,7 +344,9 @@ extension NSManagedObjectContext {
                 (continuation: CheckedContinuation<T, Error>) in
                 let block = {
                     do {
-                        let result = try self.undoable(block)
+                        let result = try self.signed(authorName: authorName) {
+                            try self.undoable(block)
+                        }
                         continuation.resume(returning: result)
                     } catch {
                         continuation.resume(throwing: error)

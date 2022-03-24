@@ -31,7 +31,11 @@ public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T>
     func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>]
 
+    /// Obtain objectID of objects to make them permanent. More specific, `isTemporary` will return false after retained
     func obtainPermanentIDs(for objects: [NSManagedObject]) throws
+    /// Update in memory object graphs
+    func processPendingChanges()
+    /// Save changes on the context
     func commit() throws
 }
 
@@ -97,6 +101,10 @@ extension SessionContext where Self: RawContextProviderProtocol {
     
     public func obtainPermanentIDs(for objects: [NSManagedObject]) throws {
         try executionContext.obtainPermanentIDs(for: objects)
+    }
+    
+    public func processPendingChanges() {
+        executionContext.processPendingChanges()
     }
 }
 
