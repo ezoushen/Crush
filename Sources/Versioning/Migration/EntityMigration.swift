@@ -103,6 +103,7 @@ public struct AddEntity: EntityMigration {
         entityMapping.mappingType = .addEntityMappingType
         entityMapping.destinationEntityName = name
         entityMapping.destinationEntityVersionHash = destinationEntity?.versionHash
+        entityMapping.entityMigrationPolicyClassName = NSStringFromClass(CrushEntityMigrationPolicy.self)
         entityMapping.name = "CEM_Add_\(name!)"
         return entityMapping
     }
@@ -131,6 +132,7 @@ public struct RemoveEntity: EntityMigration {
         let entityMapping = NSEntityMapping()
         entityMapping.sourceEntityName = sourceEntity?.name
         entityMapping.sourceEntityVersionHash = sourceEntity?.versionHash
+        entityMapping.entityMigrationPolicyClassName = NSStringFromClass(CrushEntityMigrationPolicy.self)
         entityMapping.mappingType = .removeEntityMappingType
         entityMapping.name = "CEM_Remove_\(originEntityName!)"
         return entityMapping
@@ -166,13 +168,13 @@ public struct CopyEntity: EntityMigration {
         return createEntityMapping(from: sourceEntity, to: destinationEntity)
     }
 
-    @inlinable
     func createEntityMapping(
         from sourceEntity: NSEntityDescription,
         to destinationEntity: NSEntityDescription) -> NSEntityMapping
     {
         let entityMapping = NSEntityMapping()
         entityMapping.name = "CEM_Copy_\(destinationEntity.name!)"
+        entityMapping.entityMigrationPolicyClassName = NSStringFromClass(CrushEntityMigrationPolicy.self)
         entityMapping.mappingType = .copyEntityMappingType
         entityMapping.sourceEntityName = destinationEntity.name
         entityMapping.destinationEntityName = destinationEntity.name
