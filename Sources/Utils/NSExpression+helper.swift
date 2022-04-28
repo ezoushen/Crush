@@ -9,8 +9,10 @@ import Foundation
 
 extension NSExpression {
     @inlinable
-    static func addAttribute(name: String) -> NSExpression {
-        NSExpression(format: "FUNCTION($entityPolicy , \"defaultValueForKey:propertyMapping:entityMapping:manager:\" , \"\(name)\" , $propertyMapping , $entityMapping , $manager)")
+    static func addAttribute(name: String, customValue: Bool) -> NSExpression {
+        customValue
+            ? NSExpression(format: "FUNCTION($entityPolicy , \"defaultValueForExistingObjectForKey:propertyMapping:source:\" , \"\(name)\" , $propertyMapping , $source)")
+            : NSExpression(format: "FUNCTION($entityPolicy , \"defaultValueForKey:propertyMapping:entityMapping:manager:\" , \"\(name)\" , $propertyMapping , $entityMapping , $manager)")
     }
 
     @inlinable

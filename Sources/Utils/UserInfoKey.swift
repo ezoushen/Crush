@@ -14,6 +14,7 @@ public enum UserInfoKey {
 
     // NSMappingModel
     static let attributeMappingFunc = "AttributeMappingFunc"
+    static let defaultValueFunc = "DefaultValueFunc"
 
     // NSEntityDescription
     static let entityClassName = "EntityClassName"

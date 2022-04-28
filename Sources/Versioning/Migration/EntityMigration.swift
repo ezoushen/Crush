@@ -411,4 +411,13 @@ class CrushEntityMigrationPolicy: NSEntityMigrationPolicy {
     func defaultValue(forKey: String, propertyMapping: NSPropertyMapping, entityMapping: NSEntityMapping, manager: NSMigrationManager) -> Any? {
         manager.destinationEntity(for: entityMapping)?.attributesByName[propertyMapping.name!]?.defaultValue
     }
+    
+    @objc(defaultValueForExistingObjectForKey:propertyMapping:source:)
+    func defaultValueForExistingObject(forKey: String, propertyMapping: NSPropertyMapping, source: NSManagedObject) -> Any? {
+        guard let mappingFuction = propertyMapping
+            .userInfo?[UserInfoKey.defaultValueFunc] as? (NSManagedObject) -> Any? else {
+            return nil
+        }
+        return mappingFuction(source)
+    }
 }

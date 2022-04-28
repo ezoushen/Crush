@@ -45,9 +45,21 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
     public let isTransient: Bool
     public let derivedExpression: NSExpression?
     public let attributeType: NSAttributeType
-
-    public var defaultValue: Any?
     public var hashModifier: String? = nil
+    
+    /// Static default value
+    public var defaultValue: Any?
+    /// Dynamic default value for existing objects
+    public var defaultValueBlock: ((NSManagedObject) -> Any?)?
+    
+    /// Compute default value for existing object regardless static default value
+    /// - parameter block: A closure returning computed default value for existing object
+    public func valueForExistingObject(_ block: @escaping (NSManagedObject) -> Any?) -> AddAttribute
+    {
+        var newAttribute = self
+        newAttribute.defaultValueBlock = { block($0) }
+        return newAttribute
+    }
 
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
     public init<T: FieldAttribute>(
@@ -133,7 +145,14 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
     {
         let propertyMapping = NSPropertyMapping()
         propertyMapping.name = name
-        propertyMapping.valueExpression = .addAttribute(name: name!)
+        if let defaultValueBlock = defaultValueBlock {
+            var userInfo = propertyMapping.userInfo ?? [:]
+            userInfo[UserInfoKey.defaultValueFunc] = defaultValueBlock
+            propertyMapping.userInfo = userInfo
+            propertyMapping.valueExpression = .addAttribute(name: name!, customValue: true)
+        } else {
+            propertyMapping.valueExpression = .addAttribute(name: name!, customValue: false)
+        }
         return propertyMapping
     }
 }
