@@ -59,7 +59,14 @@ class AddAttributeTests: XCTestCase {
 
     func test_createPropertyMapping_shouldReadDefaultValueFromModel() {
         let mapping = sut.createPropertyMapping(from: nil, to: nil, of: NSEntityDescription())
-        XCTAssertEqual(mapping?.valueExpression, .addAttribute(name: sut.name!))
+        XCTAssertEqual(mapping?.valueExpression, .addAttribute(name: sut.name!, customValue: false))
+    }
+
+    func test_createPropertyMapping_shouldReadInjectedDefaultValue() {
+        let mapping = sut
+            .valueForExistingObject { _ in nil }
+            .createPropertyMapping(from: nil, to: nil, of: NSEntityDescription())
+        XCTAssertEqual(mapping?.valueExpression, .addAttribute(name: sut.name!, customValue: true))
     }
 }
 
