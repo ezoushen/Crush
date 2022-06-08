@@ -52,7 +52,10 @@ extension PropertyModifier: ConcreteAttriuteProcotol where T: ConcreteAttriutePr
 
 @propertyWrapper
 public class Optional<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public init(wrappedValue: T) {
         super.init(wrappedValue: wrappedValue, true)
@@ -67,7 +70,10 @@ public class Optional<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
 
 @propertyWrapper
 public class Required<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public init(wrappedValue: T) {
         super.init(wrappedValue: wrappedValue, false)
@@ -82,7 +88,10 @@ public class Required<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
 
 @propertyWrapper
 public class Transient<T: WritableValuedProperty & TransientProperty>: PropertyModifier<T, Bool> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public init(wrappedValue: T) {
         super.init(wrappedValue: wrappedValue, true)
@@ -98,7 +107,10 @@ public class Transient<T: WritableValuedProperty & TransientProperty>: PropertyM
 /// This option will be ignored while the property is transient
 @propertyWrapper
 public class IndexedBySpotlight<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public init(wrappedValue: T) {
         super.init(wrappedValue: wrappedValue, true)
@@ -123,7 +135,10 @@ public protocol IndexProtocol {
 
 @propertyWrapper
 public class Indexed<T: WritableValuedProperty>: PropertyModifier<T, String?>, IndexProtocol {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
     @inlinable public var indexName: String? { modifier }
 
     public let collationType: NSFetchIndexElementType
@@ -178,7 +193,10 @@ public class Indexed<T: WritableValuedProperty>: PropertyModifier<T, String?>, I
 
 @propertyWrapper
 public class Unique<T: WritableValuedProperty>: PropertyModifier<T, String?> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public override init(wrappedValue: T, _ modifier: String? = nil) {
         super.init(wrappedValue: wrappedValue, modifier)
@@ -199,7 +217,10 @@ public class Unique<T: WritableValuedProperty>: PropertyModifier<T, String?> {
 public class Default<T: ConcreteAttriuteProcotol>:
     PropertyModifier<T, T.PropertyValue>
 {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public override func createDescription() -> Description {
         let description = super.createDescription()
@@ -210,7 +231,10 @@ public class Default<T: ConcreteAttriuteProcotol>:
 
 @propertyWrapper
 public class ExternalBinaryDataStorage<T: AttributeProtocol>: PropertyModifier<T, Bool> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public init(wrappedValue: T) {
         super.init(wrappedValue: wrappedValue, true)
@@ -225,7 +249,10 @@ public class ExternalBinaryDataStorage<T: AttributeProtocol>: PropertyModifier<T
 
 @propertyWrapper
 public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondition<T.FieldConvertor>> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
     public let warning: String
 
     public init(
@@ -249,7 +276,10 @@ public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondi
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 @propertyWrapper
 public class PreservesValueInHistoryOnDeletion<T: AttributeProtocol>: PropertyModifier<T, Bool> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public init(wrappedValue: T) {
         super.init(wrappedValue: wrappedValue, true)
@@ -268,7 +298,10 @@ public class PreservesValueInHistoryOnDeletion<T: AttributeProtocol>: PropertyMo
 public class Inverse<T: RelationshipProtocol, S: RelationshipProtocol>:
     PropertyModifier<T, KeyPath<T.Destination, S>>
 {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public override func createDescription() -> NSRelationshipDescription {
         let description = super.createDescription()
@@ -290,7 +323,10 @@ public class Inverse<T: RelationshipProtocol, S: RelationshipProtocol>:
 @propertyWrapper
 public final class MaxCount<T: RelationshipProtocol>: PropertyModifier<T, Int>
 where T.Mapping: ToManyRelationMappingProtocol {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public override func createDescription() -> Description {
         let description = super.createDescription()
@@ -302,7 +338,10 @@ where T.Mapping: ToManyRelationMappingProtocol {
 @propertyWrapper
 public class MinCount<T: RelationshipProtocol>: PropertyModifier<T, Int>
 where T.Mapping: ToManyRelationMappingProtocol {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public override func createDescription() -> Description {
         let description = super.createDescription()
@@ -313,7 +352,10 @@ where T.Mapping: ToManyRelationMappingProtocol {
 
 @propertyWrapper
 public class DeleteRule<T: RelationshipProtocol>: PropertyModifier<T, NSDeleteRule> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public override func createDescription() -> Description {
         let description = super.createDescription()
@@ -324,7 +366,10 @@ public class DeleteRule<T: RelationshipProtocol>: PropertyModifier<T, NSDeleteRu
 
 @propertyWrapper
 public class UnidirectionalInverse<T: RelationshipProtocol>: PropertyModifier<T, Bool> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public init(wrappedValue: T) {
         super.init(wrappedValue: wrappedValue, true)
@@ -334,7 +379,10 @@ public class UnidirectionalInverse<T: RelationshipProtocol>: PropertyModifier<T,
 
 @propertyWrapper
 public class VersionModifier<T: WritableValuedProperty>: PropertyModifier<T, String?> {
-    @inlinable public var wrappedValue: T { property }
+    @inlinable public var wrappedValue: T {
+        get { property }
+        set { /* dummy */ }
+    }
 
     public override func createDescription() -> Description {
         let description = super.createDescription()

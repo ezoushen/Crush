@@ -21,9 +21,23 @@ extension ObjectDriver {
     where
         Property.Mapping == ToMany<Property.Destination>
     {
-        let key = keyPath.propertyName
-        let mutableSet = managedObject.getMutableSet(key: key)
-        return Property.Mapping.convert(value: mutableSet)
+        self[toMany: keyPath]
+    }
+
+    public subscript<Property: RelationshipProtocol>(
+        dynamicMember keyPath: WritableKeyPath<Entity, Property>
+    ) -> MutableSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToMany<Property.Destination>
+    {
+        get {
+            self[toMany: keyPath]
+        }
+        set {
+            managedObject.setValue(
+                Property.FieldConvertor.convert(value: newValue),
+                key: keyPath.propertyName)
+        }
     }
 
     public subscript<Property: RelationshipProtocol>(
@@ -32,9 +46,23 @@ extension ObjectDriver {
     where
         Property.Mapping == ToOrdered<Property.Destination>
     {
-        let key = keyPath.propertyName
-        let mutableOrderedSet = managedObject.getMutableOrderedSet(key: key)
-        return Property.Mapping.convert(value: mutableOrderedSet)
+        self[toManyOrdered: keyPath]
+    }
+
+    public subscript<Property: RelationshipProtocol>(
+        dynamicMember keyPath: WritableKeyPath<Entity, Property>
+    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToOrdered<Property.Destination>
+    {
+        get {
+            self[toManyOrdered: keyPath]
+        }
+        set {
+            managedObject.setValue(
+                Property.FieldConvertor.convert(value: newValue),
+                key: keyPath.propertyName)
+        }
     }
 
     public subscript<Property: ValuedProperty>(
@@ -44,7 +72,7 @@ extension ObjectDriver {
     }
 
     public subscript<Property: WritableValuedProperty>(
-        dynamicMember keyPath: KeyPath<Entity, Property>
+        dynamicMember keyPath: WritableKeyPath<Entity, Property>
     ) -> Property.PropertyValue {
         get {
             self[immutable: keyPath]
@@ -64,6 +92,28 @@ extension ObjectDriver {
             return Property.FieldConvertor.defaultRuntimeValue
         }
         return Property.FieldConvertor.convert(value: managedValue)
+    }
+
+    internal subscript<Property: RelationshipProtocol>(
+        toMany keyPath: KeyPath<Entity, Property>
+    ) -> MutableSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToMany<Property.Destination>
+    {
+        let key = keyPath.propertyName
+        let mutableSet = managedObject.getMutableSet(key: key)
+        return Property.Mapping.convert(value: mutableSet)
+    }
+
+    internal subscript<Property: RelationshipProtocol>(
+        toManyOrdered keyPath: KeyPath<Entity, Property>
+    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToOrdered<Property.Destination>
+    {
+        let key = keyPath.propertyName
+        let mutableOrderedSet = managedObject.getMutableOrderedSet(key: key)
+        return Property.Mapping.convert(value: mutableOrderedSet)
     }
 
     public subscript<Value>(
