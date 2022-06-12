@@ -64,6 +64,10 @@ public protocol PredicateEquatable {
 
 public protocol PredicateComparable: PredicateEquatable { }
 
+public protocol PredicateRangeComparable: PredicateComparable, Strideable {
+    static var step: Stride { get }
+}
+
 public protocol FieldAttributeProtocol {
     static var nativeType: NSAttributeType { get }
 }
@@ -88,9 +92,10 @@ where
 public typealias PredicateComparableAttribute = PrimitiveAttribute & PredicateComparable
 public typealias PredicateEquatableAttribute = PrimitiveAttribute & PredicateEquatable
 
-public typealias IntegerAttribute = PredicateComparableAttribute & PredicateExpressibleByString & PredicateComputable
+public typealias IntegerAttribute = PredicateComparableAttribute & PredicateRangeComparable & PredicateExpressibleByString & PredicateComputable
 
 extension Int: IntegerAttribute {
+    public static var step: Int { 1 }
     public static var nativeType: NSAttributeType {
 #if (arch(x86_64) || arch(arm64))
         return .integer64AttributeType
@@ -102,16 +107,19 @@ extension Int: IntegerAttribute {
 }
 
 extension Int64: IntegerAttribute {
+    public static var step: Int { 1 }
     public static var nativeType: NSAttributeType { .integer64AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension Int32: IntegerAttribute {
+    public static var step: Int { 1 }
     public static var nativeType: NSAttributeType { .integer32AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension Int16: IntegerAttribute {
+    public static var step: Int { 1 }
     public static var nativeType: NSAttributeType { .integer16AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
@@ -126,7 +134,8 @@ extension Double: PredicateComparableAttribute, PredicateExpressibleByString, Pr
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Float: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
+extension Float: PredicateComparableAttribute, PredicateRangeComparable, PredicateExpressibleByString, PredicateComputable {
+    public static var step: Float { Float.leastNonzeroMagnitude }
     public static var nativeType: NSAttributeType { .floatAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
@@ -144,6 +153,11 @@ extension Bool: PredicateEquatableAttribute, PredicateExpressibleByString {
 extension Date: PredicateComparableAttribute, PredicateExpressibleByString {
     public static var nativeType: NSAttributeType { .dateAttributeType }
     public var predicateValue: NSObject { self as NSDate }
+}
+
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+extension Date: PredicateRangeComparable {
+    public static var step: TimeInterval { 0.001 }
 }
 
 extension Data: PrimitiveAttribute, PredicateEquatable {

@@ -7,14 +7,20 @@
 
 import CoreData
 
-public protocol RangeProtocol: RangeExpression {
-    var upperBound: Bound { get }
+public protocol RangeProtocol: RangeExpression where Bound: PredicateRangeComparable {
+    var closedUpperBound: Bound { get }
     var lowerBound: Bound { get }
 }
 
-extension Range: RangeProtocol { }
+extension Range: RangeProtocol where Bound: PredicateRangeComparable {
+    public var closedUpperBound: Bound {
+        upperBound.advanced(by: -Bound.step)
+    }
+}
 
-extension ClosedRange: RangeProtocol { }
+extension ClosedRange: RangeProtocol where Bound: PredicateRangeComparable {
+    public var closedUpperBound: Bound { upperBound }
+}
 
 extension NSPredicate {
     @inlinable public static var `true`: Self {
@@ -69,7 +75,7 @@ extension PropertyCondition where T: PredicateComparable & Comparable {
         self.init(
             format: "SELF BETWEEN {%@, %@}",
             rhs.lowerBound.predicateValue,
-            rhs.upperBound.predicateValue)
+            rhs.closedUpperBound.predicateValue)
     }
 
     public convenience init(largerThanOrEqualTo rhs: T) {
@@ -225,7 +231,7 @@ extension KeyPath where
         TypedPredicate<Root>(
             format: "\(lhs.propertyName) BETWEEN {%@, %@}",
             rhs.lowerBound.predicateValue,
-            rhs.upperBound.predicateValue)
+            rhs.closedUpperBound.predicateValue)
     }
     
     public static func > <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>

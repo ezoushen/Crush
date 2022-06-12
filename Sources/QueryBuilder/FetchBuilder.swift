@@ -127,6 +127,13 @@ where
         config.asFaults = true
         return self
     }
+
+    public func select(_ keyPaths: SelectPath<Target>...) -> Self {
+        let fetched = config.prefetched ?? []
+        config.prefetched = fetched + keyPaths
+        config.asFaults = true
+        return self
+    }
     
     public func asFaults(_ flag: Bool) -> Self {
         config.asFaults = flag

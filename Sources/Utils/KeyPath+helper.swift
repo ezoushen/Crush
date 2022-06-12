@@ -9,17 +9,6 @@
 import Foundation
 import CoreData
 
-public protocol Expressible {
-    func asExpression() -> Any
-    func getHashValue() -> Int
-}
-
-extension Expressible {
-    func equal(to: Expressible) -> Bool {
-        getHashValue() == to.getHashValue()
-    }
-}
-
 extension AnyKeyPath {
     fileprivate static var mutex: pthread_mutex_t = {
         var lock = pthread_mutex_t()
@@ -66,5 +55,16 @@ extension KeyPath: Expressible where Root: Entity, Value: PropertyProtocol {
 
     public func asExpression() -> Any {
         propertyName
+    }
+}
+
+extension KeyPath where Root: Entity, Value: RelationshipProtocol {
+    public func extend<Target, Property>(
+        _ keyPath: KeyPath<Target, Property>) -> String
+    where
+        Property: PropertyProtocol,
+        Value.Destination == Target
+    {
+        "\(propertyName).\(keyPath.propertyName)"
     }
 }
