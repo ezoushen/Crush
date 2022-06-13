@@ -28,6 +28,10 @@ public class Session {
         }
     }
 
+    public var name: String? {
+        context.executionContext.name
+    }
+
     internal init(context: SessionContext & RawContextProviderProtocol, mergePolicy: NSMergePolicy) {
         self.context = context
         self.mergePolicy = mergePolicy
