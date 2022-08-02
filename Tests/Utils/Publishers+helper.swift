@@ -14,7 +14,7 @@ import XCTest
 extension XCTestCase {
     func awaitPublisher<T: Publisher>(
         _ publisher: T,
-        timeout: TimeInterval = 10,
+        timeout: TimeInterval = 1,
         file: StaticString = #file,
         line: UInt = #line,
         completion: () throws -> Void = { }

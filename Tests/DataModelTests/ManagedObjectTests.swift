@@ -138,6 +138,7 @@ final class ManagedObjectTests: XCTestCase {
         container.startSession().sync {
             let context = $0 as! RawContextProviderProtocol
             let entity = $0.edit(object: sut)
+            entity.fireFault()
             context.executionContext.refresh(entity, mergeChanges: true)
         }
         XCTAssertTrue(called)
@@ -149,6 +150,7 @@ final class ManagedObjectTests: XCTestCase {
         container.startSession().sync {
             let context = $0 as! RawContextProviderProtocol
             let entity = $0.edit(object: sut)
+            entity.fireFault()
             context.executionContext.refresh(entity, mergeChanges: true)
         }
         XCTAssertTrue(called)
@@ -172,8 +174,10 @@ final class ManagedObjectTests: XCTestCase {
         var called: Bool = false
         TestEntity.awakeFromFetchEvent = { _ in called = true }
         container.startSession().sync {
-            _ = $0.fetch(for: TestEntity.self)
-                .asFaults(false).findOne()
+            $0.fetch(for: TestEntity.self)
+                .asFaults(true)
+                .findOne()?
+                .fireFault()
         }
         XCTAssertTrue(called)
     }

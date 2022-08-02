@@ -25,7 +25,7 @@ public class ManagedObjectBase: NSManagedObject {
     }
 }
 
-public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject, ObjectDriver, ManagedStatus {
+public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject, ObjectDriver, ObjectProxy, ManagedStatus {
     internal lazy var canTriggerEvent: Bool = {
         managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
     }()

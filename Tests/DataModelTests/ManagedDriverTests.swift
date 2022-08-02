@@ -20,7 +20,7 @@ class ManagedDriverTests: XCTestCase {
     }
 
     static var container: DataContainer! = try! DataContainer.load(
-        storages: .inMemory(),
+        storages: .sqliteInMemory(),
         dataModel: DataModel(
             name: "model",
             concrete: [TestEntity()]))

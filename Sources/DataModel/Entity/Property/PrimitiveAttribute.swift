@@ -183,7 +183,7 @@ extension UUID: PredicateEquatableAttribute, PredicateExpressibleByString {
     public var predicateValue: NSObject { self as NSUUID }
 }
 
-extension NSCoding where Self: PrimitiveAttribute {
+extension NSCoding where Self: FieldAttribute {
     public typealias RawType = Self
     public typealias PresentingType = Self
     public static var nativeType: NSAttributeType { .transformableAttributeType }
@@ -192,4 +192,18 @@ extension NSCoding where Self: PrimitiveAttribute {
 extension RawRepresentable where Self: FieldAttribute {
     public typealias ManagedObjectValue = RawValue?
     public typealias RuntimeObjectValue = Self?
+}
+
+public protocol EntityEquatable: PredicateEquatable { }
+
+extension ReadOnly: EntityEquatable {
+    public var predicateValue: NSObject { managedObject }
+}
+
+extension NSManagedObject: EntityEquatable {
+    public var predicateValue: NSObject { self }
+}
+
+extension NSManagedObjectID: EntityEquatable {
+    public var predicateValue: NSObject { self }
 }

@@ -36,15 +36,28 @@ public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFi
     public init<T: Entity>(
         _ name: String, from keyPath: KeyPath<T, Attribute<F>>)
     {
-        self.expressionBlock = { NSExpression(format: keyPath.propertyName) }
-        self.defaultValue = nil
         self.name = name
+        self.defaultValue = nil
+        self.expressionBlock = { NSExpression(forKeyPath: keyPath.propertyName) }
+    }
+
+    public init<T: Entity, S: Entity> (
+        _ name: String,
+        from keyPath: KeyPath<T, Relationship<ToOne<S>>>,
+        property extensionKeyPath: KeyPath<S, Attribute<F>>)
+    {
+        self.name = name
+        self.defaultValue = nil
+        self.expressionBlock = {
+            let keyPath = "\(keyPath.propertyName).\(extensionKeyPath.propertyName)"
+            return NSExpression(forKeyPath: keyPath)
+        }
     }
 
     internal init(name: String, derivation: @autoclosure @escaping () -> NSExpression) {
-        self.expressionBlock = derivation
-        self.defaultValue = nil
         self.name = name
+        self.defaultValue = nil
+        self.expressionBlock = derivation
     }
 
     public func createDescription() -> NSDerivedAttributeDescription {

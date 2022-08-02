@@ -59,8 +59,16 @@ public final class TypedPredicate<T: Entity>: NSPredicate { }
 public final class PropertyCondition<T>: NSPredicate { }
 
 extension PropertyCondition where T: PredicateEquatable {
+    public convenience init(notEqualTo value: T) {
+        self.init(format: "SELF != %@", value.predicateValue)
+    }
+
+    public convenience init(equalTo value: T) {
+        self.init(format: "SELF == %@", value.predicateValue)
+    }
+
     public convenience init(in rhs: Array<T>) {
-        self.init(format: "SELF IN %@", NSArray(array: rhs))
+        self.init(format: "SELF IN %@", NSArray(array: rhs.map(\.predicateValue)))
     }
 }
 
@@ -92,6 +100,28 @@ extension PropertyCondition where T: PredicateComparable & Comparable {
 
     public convenience init(smallerThan rhs: T) {
         self.init(format: "SELF < \(rhs)")
+    }
+}
+
+extension KeyPath
+where
+    Root: Entity,
+    Value == Root
+{
+    public static func == <T: EntityEquatable>(lhs: KeyPath, rhs: T) -> PropertyCondition<T> {
+        PropertyCondition(equalTo: rhs)
+    }
+
+    public static func != <T: EntityEquatable>(lhs: KeyPath, rhs: T) -> PropertyCondition<T> {
+        PropertyCondition(notEqualTo: rhs)
+    }
+
+    public static func <> <T: EntityEquatable>(lhs: KeyPath, rhs: [T]) -> PropertyCondition<T> {
+        PropertyCondition(in: rhs)
+    }
+
+    public static func <> <T: EntityEquatable & Hashable>(lhs: KeyPath, rhs: Set<T>) -> PropertyCondition<T> {
+        PropertyCondition(in: rhs)
     }
 }
 
@@ -173,6 +203,42 @@ where
 {
     public static func <> (lhs: KeyPath, rhs: Array<Value.PredicateValue>) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) IN %@", NSArray(array: rhs))
+    }
+}
+
+extension KeyPath where
+    Root: Entity,
+    Value: RelationshipProtocol,
+    Value.Mapping == ToOne<Value.Destination>
+{
+    public static func == <T: EntityEquatable>(
+        lhs: KeyPath, rhs: T) -> TypedPredicate<Root>
+    {
+        TypedPredicate<Root>(
+            format: "\(lhs.propertyName) == %@", rhs.predicateValue)
+    }
+
+    public static func != <T: EntityEquatable>(
+        lhs: KeyPath, rhs: T) -> TypedPredicate<Root>
+    {
+        TypedPredicate<Root>(
+            format: "\(lhs.propertyName) != %@", rhs.predicateValue)
+    }
+
+    public static func == (lhs: KeyPath, rhs: NSNull?) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) == NULL")
+    }
+
+    public static func != (lhs: KeyPath, rhs: NSNull?) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) != NULL")
+    }
+
+    public static func == (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) == \(rhs.propertyName)")
+    }
+
+    public static func != (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) != \(rhs.propertyName)")
     }
 }
 

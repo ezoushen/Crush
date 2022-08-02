@@ -16,14 +16,17 @@ extension ManagedObject {
         public typealias Output = T.PropertyValue
         public typealias Failure = Never
 
-        public let subject: ManagedObject<Entity>
+        public let subject: ManagedDriver<Entity>
         public let keyPath: KeyPath<Entity, T>
         public let options: NSKeyValueObservingOptions
 
         public func receive<S>(subscriber: S)
         where S : Subscriber, Never == S.Failure, T.PropertyValue == S.Input {
+            if subject.isFault {
+                subject.managedObject.fireFault()
+            }
             let subscription = Subscription(
-                subject: subject,
+                subject: subject.managedObject,
                 subscriber: subscriber,
                 keyPath: keyPath.propertyName,
                 options: options)
@@ -96,13 +99,15 @@ extension ManagedObject {
 
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 extension ReadOnly {
+    /// Please be aware that observing property changes requires the managed object not to be a fault. Thus, it'll fire the faulting object first if needed
     public func observe<T: ValuedProperty>(
         _ keyPath: KeyPath<Entity, T>, options: NSKeyValueObservingOptions
     ) -> ManagedObject<Entity>.KVOPublisher<T> {
         ManagedObject<Entity>.KVOPublisher<T>(
-            subject: managedObject, keyPath: keyPath, options: options)
+            subject: driver, keyPath: keyPath, options: options)
     }
 
+    /// Please be aware that observing property changes requires the managed object not to be a fault. Thus, it'll fire the faulting object first if needed
     public func observe<T: ValuedProperty>(
         _ keyPath: KeyPath<Entity, T>, options: NSKeyValueObservingOptions
     ) -> AnyPublisher<T.PropertyValue.Safe, Never>
@@ -110,7 +115,7 @@ extension ReadOnly {
         T.PropertyValue: UnsafeSessionProperty
     {
         return ManagedObject<Entity>.KVOPublisher<T>(
-            subject: managedObject, keyPath: keyPath, options: options
+            subject: driver, keyPath: keyPath, options: options
         )
             .map { $0.wrapped() }
             .eraseToAnyPublisher()

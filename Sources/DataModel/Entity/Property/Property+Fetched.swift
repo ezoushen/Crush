@@ -10,7 +10,7 @@ import CoreData
 public protocol FetchedPropertyProtocol: ValuedProperty, FieldConvertible
 where
     RuntimeObjectValue == [ReadOnly<Destination>],
-    ManagedObjectValue == [ManagedObject<Destination>],
+    ManagedObjectValue == [NSManagedObject],
     PredicateValue == FieldConvertor.ManagedObjectValue,
     Description == NSFetchedPropertyDescription
 {
@@ -19,18 +19,18 @@ where
 
 extension FetchedPropertyProtocol {
     public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        value.lazy.map { ReadOnly($0) }
+        value.map { ReadOnly(object: $0) }
     }
 
     public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        value.lazy.map { $0.managedObject }
+        value.map(\.managedObject)
     }
 }
 
 public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
     public typealias Destination = T
     public typealias RuntimeObjectValue = [T.ReadOnly]
-    public typealias ManagedObjectValue = [T.Managed]
+    public typealias ManagedObjectValue = [NSManagedObject]
     public typealias FieldConvertor = FetchedProperty<T>
     public typealias PredicateValue = FieldConvertor.ManagedObjectValue
     public typealias PropertyValue = FieldConvertor.RuntimeObjectValue

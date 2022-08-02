@@ -10,6 +10,26 @@ import XCTest
 @testable import Crush
 
 class PropertyConditionTests: XCTestCase {
+    func test_equalTo_shouldReturnTrue() {
+        let sut = PropertyCondition(equalTo: 2)
+        XCTAssertTrue(sut.evaluate(with: NSNumber(value: 2)))
+    }
+
+    func test_equalTo_shouldReturnFalse() {
+        let sut = PropertyCondition(equalTo: 3)
+        XCTAssertFalse(sut.evaluate(with: NSNumber(value: 2)))
+    }
+
+    func test_notEqualTo_shouldReturnTrue() {
+        let sut = PropertyCondition(notEqualTo: 3)
+        XCTAssertTrue(sut.evaluate(with: NSNumber(value: 2)))
+    }
+
+    func test_notEqualTo_shouldReturnFalse() {
+        let sut = PropertyCondition(notEqualTo: 2)
+        XCTAssertFalse(sut.evaluate(with: NSNumber(value: 2)))
+    }
+
     func test_inRange_shouldReturnTrue() {
         let sut = PropertyCondition(in: 1...3)
         XCTAssertTrue(sut.evaluate(with: NSNumber(value: 2)))
@@ -178,5 +198,62 @@ class PropertyConditionTests: XCTestCase {
     func test_containsStringValue_shouldReturnFalse() {
         let sut = PropertyCondition<Int16>(contains: "1")
         XCTAssertFalse(sut.evaluate(with: 333))
+    }
+}
+
+class PropertyCondiationOperatorsTests: XCTestCase {
+    class TestEntity: Entity {
+        @Optional
+        var integerValue = Value.Int("integerValue")
+    }
+
+    let storage = Storage.sqliteInMemory()
+    var container: DataContainer!
+
+    override func setUp() async throws {
+        container = try DataContainer.load(
+            storages: storage,
+            dataModel: DataModel(
+                name: "DATAMODEL",
+                concrete: [TestEntity()]))
+    }
+
+    override func tearDown() async throws {
+        try container.destroyStorages()
+    }
+
+    private func createObject() throws -> TestEntity.ReadOnly {
+        try container.startSession().sync {
+            context -> TestEntity.Managed in
+            let entity = context.create(entity: TestEntity.self)
+            try context.commit()
+            return entity
+        }
+    }
+
+    func test_equalToOperator_shouldReturnEqualToPropertyCondition() throws {
+        let object = try createObject()
+        let sut = \TestEntity.self == object
+        XCTAssertEqual(sut, PropertyCondition(equalTo: object))
+    }
+
+    func test_notEqualToOperator_shouldReturnNotEqualToPropertyCondition() throws {
+        let object = try createObject()
+        let sut = \TestEntity.self != object
+        XCTAssertEqual(sut, PropertyCondition(notEqualTo: object))
+    }
+
+    func test_inOperator_shouldReturnInArrayPropertyCondition() throws {
+        let object = try createObject()
+        let array: [TestEntity.ReadOnly] = [object]
+        let sut = \TestEntity.self <> array
+        XCTAssertEqual(sut, PropertyCondition(in: array))
+    }
+
+    func test_inOperator_shouldReturnInSetPropertyCondition() throws {
+        let object = try createObject()
+        let set: Set<TestEntity.ReadOnly> = [object]
+        let sut = \TestEntity.self <> `set`
+        XCTAssertEqual(sut, PropertyCondition(in: `set`))
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 extension NSExpression {
     @inlinable
@@ -28,6 +29,11 @@ extension NSExpression {
     @inlinable
     static func customAttributeMapping(from: String) -> NSExpression {
         NSExpression(format: "FUNCTION($entityPolicy, \"customAttributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:\", $propertyMapping , $entityMapping , $manager , $source.\(from))")
+    }
+    
+    @inlinable
+    static func customAttributeMapping(_ block: (NSManagedObject) -> Any?) -> NSExpression {
+        NSExpression(format: "FUNCTION($entityPolicy, \"customAttributeMappingOfPropertyMapping:entityMapping:manager:source:\", $propertyMapping , $entityMapping , $manager , $source)")
     }
 
     @inlinable

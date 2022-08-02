@@ -59,7 +59,7 @@ extension SessionContext where Self: RawContextProviderProtocol {
     private func canUseBatchRequest() -> Bool {
         rootContext
             .persistentStoreCoordinator?
-            .checkRequirement([.sqliteStore, .concreteFile]) ?? false
+            .checkRequirement([.sqliteStore]) ?? false
     }
 
     public func fetch<T: Entity>(for type: T.Type) -> ManagedFetchBuilder<T> {
@@ -167,12 +167,7 @@ internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
     }
     
     internal func context(for fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext {
-        if fetchRequest.includesPendingChanges {
-            return executionContext
-        } else {
-            fetchRequest.includesPendingChanges = true
-            return rootContext
-        }
+        executionContext
     }
 }
 
@@ -194,10 +189,8 @@ extension SessionContext where Self: RawContextProviderProtocol {
     func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) throws -> [T] {
         let context = context(for: request)
         return try context.performSync {
-            if request.includesPendingChanges == false, rootContext != executionContext {
-                request.includesPendingChanges = true
-            }
-            return try context.fetch(request) as! [T]
+            let result = try context.fetch(request) as! [T]
+            return result
         }
     }
     
@@ -238,14 +231,14 @@ extension SessionContext where Self: RawContextProviderProtocol {
 extension SessionContext where Self: RawContextProviderProtocol {
     public func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T> {
         executionContext.performSync {
-            executionContext.receive(runtimeObject: object.managedObject)
+            executionContext.receive(runtimeObject: object.managedObject as! T.Managed)
         }
     }
 
     public func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>] {
         objects.map { object in
             executionContext.performSync {
-                executionContext.receive(runtimeObject: object.managedObject)
+                executionContext.receive(runtimeObject: object.managedObject as! T.Managed)
             }
         }
     }

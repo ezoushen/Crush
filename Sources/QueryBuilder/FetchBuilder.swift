@@ -27,45 +27,38 @@ public enum FetchSorterOption {
 }
 
 public struct FetchConfig<Entity: Crush.Entity>: RequestConfig {
-    var predicate: NSPredicate? = nil
-    var sorters: [NSSortDescriptor]? = nil
-    var resultType: NSFetchRequestResultType = .managedObjectResultType
-    var groupBy: [Expressible]? = nil
-    var prefetched: [Expressible]? = nil
-    var limit: Int? = nil
-    var offset: Int? = nil
-    var batch: Int = 0
-    var asFaults: Bool = true
-    var includePendingChanges: Bool = false
+    typealias Modifier = (NSFetchRequest<NSFetchRequestResult>) -> Void
 
+    var predicate: NSPredicate? = nil
+    var includesPendingChanges: Bool = false
     var postPredicate: NSPredicate? = nil
 
+    var modifier: (Modifier)? = nil
+
     func createStoreRequest() -> NSPersistentStoreRequest {
+        createFetchRequest()
+    }
+
+    func createFetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
         let request = Entity.fetchRequest()
         configureRequest(request)
         return request
     }
 
     func configureRequest(_ request: NSFetchRequest<NSFetchRequestResult>) {
-        request.sortDescriptors = sorters
+        modifier?(request)
+        request.includesPendingChanges = includesPendingChanges
         request.predicate = predicate
-        request.propertiesToFetch = prefetched?.map{ $0.asExpression() }
-        request.propertiesToGroupBy = groupBy?.map{ $0.asExpression() }
-        request.resultType = resultType
-        request.fetchLimit = limit ?? 0
-        request.fetchOffset = offset ?? 0
-        request.returnsObjectsAsFaults = asFaults
-        request.includesPendingChanges = includePendingChanges
-        request.fetchBatchSize = batch
     }
 
-    mutating func group(by property: Expressible) {
-        groupBy = (groupBy?.filter { !$0.equal(to: property) } ?? []) + [property]
-        prefetch(property: property)
-    }
-
-    mutating func prefetch(property: Expressible) {
-        prefetched = (prefetched?.filter { !$0.equal(to: property) } ?? []) + [property]
+    mutating func modify(_ block: @escaping Modifier) {
+        let prevBlock = modifier
+        modifier = {
+            if let prevBlock = prevBlock {
+                prevBlock($0)
+            }
+            block($0)
+        }
     }
 }
 
@@ -85,22 +78,25 @@ where
     }
     
     public func limit(_ size: Int) -> Self {
-        config.limit = size
+        config.modify { $0.fetchLimit = size }
         return self
     }
 
     public func offset(_ step: Int) -> Self {
-        config.offset = step
+        config.modify { $0.fetchOffset = step }
         return self
     }
     
-    public func batch(_ size: Int) -> Self {
-        config.batch = size
+    public func includesPendingChanges(_ flag: Bool = true) -> Self {
+        config.includesPendingChanges = flag
         return self
     }
-    
-    public func includePendingChanges() -> Self {
-        config.includePendingChanges = true
+
+    public func prefetch<T: RelationshipProtocol>(relationship: KeyPath<Target, T>) -> Self {
+        config.modify {
+            $0.relationshipKeyPathsForPrefetching.initializeIfNeeded()
+            $0.relationshipKeyPathsForPrefetching?.append(relationship.propertyName)
+        }
         return self
     }
 
@@ -109,55 +105,25 @@ where
         ascending: Bool,
         option: FetchSorterOption = .default) -> Self
     {
-        let sorters = config.sorters ?? []
-        let descriptor = NSSortDescriptor(
-            key: keyPath.propertyName,
-            ascending: ascending,
-            selector: option.selector)
-        config.sorters = sorters + [descriptor]
-        return self
-    }
-
-    public func select(
-        _ keyPaths: PartialKeyPath<Target>...) -> Self
-    {
-        let fetched = config.prefetched ?? []
-        let expressibles = keyPaths.compactMap{ $0 as? Expressible }
-        config.prefetched = fetched + expressibles
-        config.asFaults = true
-        return self
-    }
-
-    public func select(_ keyPaths: SelectPath<Target>...) -> Self {
-        let fetched = config.prefetched ?? []
-        config.prefetched = fetched + keyPaths
-        config.asFaults = true
+        config.modify {
+            let descriptor = NSSortDescriptor(
+                key: keyPath.propertyName,
+                ascending: ascending,
+                selector: option.selector)
+            let sorters = ($0.sortDescriptors ?? []) + [descriptor]
+            $0.sortDescriptors = sorters
+        }
         return self
     }
     
-    public func asFaults(_ flag: Bool) -> Self {
-        config.asFaults = flag
+    public func asFaults(_ flag: Bool = true) -> Self {
+        config.modify { $0.returnsObjectsAsFaults = flag }
         return self
     }
-
-    public func count() -> Int {
-        config.resultType = .countResultType
-        return context.count(
-            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>)
-    }
-
-    public func exists() -> Bool {
-        config.resultType = .countResultType
-        return limit(1).count() > 0
-    }
-
-    fileprivate func received() -> [ManagedObject<Target>] {
-        let objects: [ManagedObject<Target>] = try! context.execute(
-            request: config.createStoreRequest() as! NSFetchRequest<NSFetchRequestResult>)
-        if let predicate = config.postPredicate {
-            return (objects as NSArray).filtered(using: predicate) as! [ManagedObject<Target>]
-        }
-        return objects
+    
+    internal func _includesSubentities(_ flag: Bool = true) -> Self {
+        config.modify { $0.includesSubentities = flag }
+        return self
     }
 }
 
@@ -170,13 +136,14 @@ extension FetchBuilder {
         return predicate(pred as NSPredicate)
     }
 
+    /// It simply evaluates returned array by given predicate. Please be aware of that it has no effects to `count`, `exists`, and `batch`.
     public func predicate(_ predicate: NSPredicate) -> Self {
         config.postPredicate = predicate
         return self
     }
 
     public func andPredicate(_ predicateString: String, _ args: CVarArg...) -> Self {
-        return andPredicate(TypedPredicate(format: predicateString))
+        return andPredicate(NSPredicate(format: predicateString, argumentArray: args))
     }
 
     public func andPredicate(_ predicate: TypedPredicate<Target>) -> Self {
@@ -193,7 +160,7 @@ extension FetchBuilder {
     }
 
     public func orPredicate(_ predicateString: String, _ args: CVarArg...) -> Self {
-        return orPredicate(TypedPredicate(format: predicateString))
+        return orPredicate(NSPredicate(format: predicateString, argumentArray: args))
     }
 
     public func orPredicate(_ predicate: TypedPredicate<Target>) -> Self {
@@ -210,65 +177,157 @@ extension FetchBuilder {
     }
 }
 
-extension FetchBuilder {
-    public func aggregate() -> AggregationBuilder<Target> {
-        AggregationBuilder(config: config, context: context)
-    }
-}
-
-public class ExecutableFetchBuilder<Target: Entity, ReveivedType>:
+public class ExecutableFetchBuilder<Target: Entity, Received: Collection>:
     FetchBuilder<Target>,
     NonThrowingRequestExecutor
 {
-    public typealias Received = ReveivedType
-
     @inlinable
-    public func findOne() -> Received? {
-        limit(1).exec().first
+    public func findOne() -> Received.Element? {
+        let results: Received = limit(1).exec()
+        return results.first
+    }
+    
+    public func count() -> Int {
+        config.modify { $0.resultType = .countResultType }
+        return context.count(request: config.createFetchRequest())
     }
 
-    public func exec() -> [Received] {
+    public func exists() -> Bool {
+        limit(1).count() > 0
+    }
+    
+    internal func wrap(object: NSManagedObject) -> Received.Element {
         fatalError("unimplemented")
     }
 
-    public func execAsync(completion: @escaping ([Received]) -> Void) {
-        let context = config.includePendingChanges
-            ? context.executionContext : context.rootContext
+    public func exec() -> Received {
+        fatalError("unimplemented")
+    }
+
+    public func execAsync(completion: @escaping (Received) -> Void) {
+        let context = context.executionContext
         context.performAsync {
-            let result = self.exec()
+            let result: Received = self.exec()
             completion(result)
         }
+    }
+    
+    /// Fetch only objectID of objects. `includesPropertyValues` is false by default.
+    public func objectIDs(includesPropertyValues flag: Bool = false) -> [NSManagedObjectID] {
+        config.modify {
+            $0.includesPropertyValues = flag
+            $0.resultType = .managedObjectIDResultType
+        }
+        return try! context.execute(request: config.createFetchRequest())
+    }
+    
+    fileprivate func received() -> [NSManagedObject] {
+        let request = config.createFetchRequest()
+        let objects: [NSManagedObject] = try! context.execute(request: request)
+        if let predicate = config.postPredicate {
+            let nsArray = objects as NSArray
+            return nsArray.filtered(using: predicate) as! [ManagedObject<Target>]
+        }
+        return objects
+    }
+}
+
+public class ArrayExecutableFetchBuilder<Target: Entity, Result>:
+    ExecutableFetchBuilder<Target, [Result]>
+{
+    public func lazy() -> LazyFetchBuilder<Target, Result> {
+        LazyFetchBuilder(builder: self)
+    }
+    
+    public func batch(_ size: Int) -> LazyFetchBuilder<Target, Received.Element> {
+        config.modify { $0.fetchBatchSize = size }
+        return LazyFetchBuilder(builder: self)
+    }
+    
+    public override func exec() -> [Result] {
+        received().map(wrap(object:))
     }
 }
 
 public final class ManagedFetchBuilder<Target: Entity>:
-    ExecutableFetchBuilder<Target, Target.Managed>
+    ArrayExecutableFetchBuilder<Target, Target.Managed>
 {
-    public override func exec() -> [Target.Managed] {
-        let result = received()
-        guard result.count > 0,
-              result.first?.managedObjectContext != context.executionContext
-        else { return result }
-        return result.map(context.receive(_:))
+    public func includesSubentities(_ flag: Bool = true) -> DriverFetchBuilder<Target> {
+        DriverFetchBuilder(config: config, context: context)
+            ._includesSubentities(flag)
+    }
+    
+    override func wrap(object: NSManagedObject) -> ManagedObject<Target> {
+        context.receive(object as! Target.Managed)
+    }
+}
+
+public class ObjectProxyFetchBuilder<Target: Entity, Received>:
+    ArrayExecutableFetchBuilder<Target, Received>
+{
+    public func includesSubentities(_ flag: Bool = true) -> Self {
+        _includesSubentities(flag)
+    }
+}
+
+public final class DriverFetchBuilder<Target: Entity>:
+    ObjectProxyFetchBuilder<Target, Target.Driver>
+{
+    override func wrap(object: NSManagedObject) -> ManagedDriver<Target> {
+        let object = context.receive(object)
+        return object.unsafeDriver(entity: Target.self)
     }
 }
 
 public final class ReadOnlyFetchBuilder<Target: Entity>:
-    ExecutableFetchBuilder<Target, Target.ReadOnly>
+    ObjectProxyFetchBuilder<Target, Target.ReadOnly>
 {
-    public override func exec() -> [Target.ReadOnly] {
-        received().lazy.map {
-            ReadOnly<Target>(context.present($0))
-        }
+    override func wrap(object: NSManagedObject) -> ReadOnly<Target> {
+        ReadOnly<Target>(object: context.present(object))
     }
 }
 
-extension NSExpressionDescription: Expressible {
-    public func getHashValue() -> Int {
-        hashValue
-    }
+public typealias LazyFetchResultCollection<T> = LazyMapSequence<[NSManagedObject], T>
 
-    public func asExpression() -> Any {
-        self
+extension LazyMapSequence where Base == [NSManagedObject] {
+    public static var empty: Self {
+        [].lazy.map { _ in fatalError("Unimplemented") }
+    }
+}
+
+public final class LazyFetchBuilder<Target: Entity, Result>:
+    ExecutableFetchBuilder<Target, LazyFetchResultCollection<Result>>
+{
+    private let builder: ExecutableFetchBuilder<Target, [Result]>
+    
+    public func batch(_ size: Int) -> Self {
+        config.modify { $0.fetchBatchSize = size }
+        return self
+    }
+    
+    public func includesSubentities(_ flag: Bool = true) -> LazyFetchBuilder<Target, Target.Driver> {
+        LazyFetchBuilder<Target, Target.Driver>(
+            builder: DriverFetchBuilder(config: config, context: context)
+        )
+            ._includesSubentities(flag)
+    }
+    
+    init(builder: ExecutableFetchBuilder<Target, [Result]>) {
+        self.builder = builder
+        super.init(config: builder.config, context: builder.context)
+    }
+    
+    internal required init(config: FetchConfig<Target>, context: FetchBuilder<Target>.Context) {
+        builder = ExecutableFetchBuilder(config: config, context: context)
+        super.init(config: config, context: context)
+    }
+    
+    override func received() -> [NSManagedObject] {
+        builder.config = config
+        return builder.received()
+    }
+    
+    public override func exec() -> LazyFetchResultCollection<Result> {
+        received().lazy.map { self.builder.wrap(object:$0) }
     }
 }

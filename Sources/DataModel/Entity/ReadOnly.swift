@@ -8,23 +8,33 @@
 import CoreData
 
 @dynamicMemberLookup
-public struct ReadOnly<Entity: Crush.Entity> {
+public struct ReadOnly<T: Crush.Entity>: ObjectProxy {
+    public typealias Entity = T
     
-    internal let managedObject: ManagedObject<Entity>
+    internal var managedObject: NSManagedObject { driver.managedObject }
+    internal let driver: ManagedDriver<Entity>
     internal let context: NSManagedObjectContext
     
     public init(_ value: ManagedObject<Entity>) {
-        guard let context = value.managedObjectContext else {
+        self.init(driver: value.driver())
+    }
+    
+    internal init(object: NSManagedObject) {
+        self.init(driver: object.unsafeDriver(entity: Entity.self))
+    }
+    
+    internal init(driver: ManagedDriver<Entity>) {
+        guard let context = driver.managedObject.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
-        self.managedObject = value
+        self.driver = driver
         self.context = context
     }
 
     public func access<T: ValuedProperty>(
         keyPath: KeyPath<Entity, T>) -> T.PropertyValue
     {
-        context.performSync { managedObject[immutable: keyPath] }
+        context.performSync { driver[immutable: keyPath] }
     }
 
     public subscript<T: ValuedProperty>(
@@ -39,7 +49,7 @@ public struct ReadOnly<Entity: Crush.Entity> {
     where
         T.PropertyValue: UnsafeSessionProperty
     {
-        context.performSync { managedObject[immutable: keyPath].wrapped() }
+        context.performSync { driver[immutable: keyPath].wrapped() }
     }
 }
 
@@ -52,8 +62,12 @@ extension ReadOnly: ManagedStatus {
         managedObject.managedObjectContext == nil
     }
 
-    public subscript<T>(dynamicMember keyPath: KeyPath<ManagedObject<Entity>, T>) -> T {
+    public subscript<T>(dynamicMember keyPath: KeyPath<NSManagedObject, T>) -> T {
         managedObject[keyPath: keyPath]
+    }
+    
+    public subscript<T>(dynamicMember keyPath: KeyPath<ManagedDriver<Entity>, T>) -> T {
+        driver[keyPath: keyPath]
     }
 
     public func hasFault<T: RelationshipProtocol>(

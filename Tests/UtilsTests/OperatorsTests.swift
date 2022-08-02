@@ -79,6 +79,36 @@ class OperatorsTests: XCTestCase {
     func test_staticFalsePredicate_shouldEqualToFalsePredicate() {
         XCTAssertEqual(NSPredicate.false, NSPredicate(value: false))
     }
+    
+    func test_notEqualToNil_shouldFilterOutNils() {
+        let sut = \Entity.object != nil
+        let object = Object(1)
+        let objects = NSArray(array: [
+            Object(object), Object(2), Object(3)
+        ])
+        
+        XCTAssertTrue(objects.filtered(using: sut).count == 1)
+    }
+    
+    func test_equalToNil_shouldContainAllNils() {
+        let sut = \Entity.object == nil
+        let object = Object(1)
+        let objects = NSArray(array: [
+            Object(object), Object(2), Object(3)
+        ])
+        
+        XCTAssertTrue(objects.filtered(using: sut).count == 2)
+    }
+
+    func test_equalToValue_shouldReturnTrue() {
+//        let object = Object(1)
+//        let sut = \Entity.object == object
+//        let objects = NSArray(array: [
+//            Object(object), Object(2), Object(3)
+//        ])
+//
+//        XCTAssertTrue(objects.filtered(using: sut).count == 2)
+    }
 
     func test_notOperator_shouldPrependNOT() {
         XCTAssertEqual(!NSPredicate.true, NSCompoundPredicate(notPredicateWithSubpredicate: .true))

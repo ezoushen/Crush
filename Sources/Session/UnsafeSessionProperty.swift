@@ -19,14 +19,15 @@ public protocol UnsafeSessionProperty: UnsafeSessionPropertyProtocol {
 extension UnsafeSessionProperty {
     public func wrapped() -> Safe { wrapped(in: nil) }
 
-    public func wrap<T: RuntimeObject>(object: T, in session: Session?) -> ReadOnly<Entity> {
-        let entity = object as! ManagedObject<Entity>
-        return session?.present(entity) ?? ReadOnly(entity)
+    public func wrap<T: ObjectDriver>(
+        object: T, in session: Session?) -> ReadOnly<Entity> where T.Entity == Entity
+    {
+        session?.present(object) ?? ReadOnly(driver: object.driver())
     }
 }
 
-extension MutableSet: UnsafeSessionPropertyProtocol where Element: RuntimeObject { }
-extension MutableSet: UnsafeSessionProperty where Element: RuntimeObject {
+extension MutableSet: UnsafeSessionPropertyProtocol where Element: ObjectDriver { }
+extension MutableSet: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Entity = Element.Entity
     public typealias Safe = Set<Entity.ReadOnly>
 
@@ -35,8 +36,8 @@ extension MutableSet: UnsafeSessionProperty where Element: RuntimeObject {
     }
 }
 
-extension MutableOrderedSet: UnsafeSessionPropertyProtocol where Element: RuntimeObject { }
-extension MutableOrderedSet: UnsafeSessionProperty where Element: RuntimeObject {
+extension MutableOrderedSet: UnsafeSessionPropertyProtocol where Element: ObjectDriver { }
+extension MutableOrderedSet: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Entity = Element.Entity
     public typealias Safe = OrderedSet<Entity.ReadOnly>
 
@@ -45,8 +46,8 @@ extension MutableOrderedSet: UnsafeSessionProperty where Element: RuntimeObject 
     }
 }
 
-extension Array: UnsafeSessionPropertyProtocol where Element: RuntimeObject { }
-extension Array: UnsafeSessionProperty where Element: RuntimeObject {
+extension Array: UnsafeSessionPropertyProtocol where Element: ObjectDriver { }
+extension Array: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Entity = Element.Entity
     public typealias Safe = Array<Entity.ReadOnly>
 
@@ -55,8 +56,8 @@ extension Array: UnsafeSessionProperty where Element: RuntimeObject {
     }
 }
 
-extension Set: UnsafeSessionPropertyProtocol where Element: RuntimeObject { }
-extension Set: UnsafeSessionProperty where Element: RuntimeObject {
+extension Set: UnsafeSessionPropertyProtocol where Element: ObjectDriver { }
+extension Set: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Entity = Element.Entity
     public typealias Safe = Set<Entity.ReadOnly>
 
@@ -76,11 +77,15 @@ extension Swift.Optional: UnsafeSessionProperty where Wrapped: UnsafeSessionProp
     }
 }
 
-extension ManagedObject: UnsafeSessionPropertyProtocol { }
-extension ManagedObject: UnsafeSessionProperty {
+extension ObjectDriver where Self: UnsafeSessionProperty {
     public typealias Safe = ReadOnly<Entity>
-
     public func wrapped(in session: Session?) -> ReadOnly<Entity> {
         wrap(object: self, in: session)
     }
 }
+
+extension ManagedObject: UnsafeSessionPropertyProtocol { }
+extension ManagedObject: UnsafeSessionProperty { }
+
+extension ManagedDriver: UnsafeSessionPropertyProtocol { }
+extension ManagedDriver: UnsafeSessionProperty { }

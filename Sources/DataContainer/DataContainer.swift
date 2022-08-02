@@ -346,7 +346,7 @@ extension DataContainer {
     public func load<T: Entity>(_ object: T.ReadOnly) -> T.ReadOnly {
         guard uiContext != object.managedObject.managedObjectContext else { return object }
         let newObject = uiContext.receive(runtimeObject: object.managedObject)
-        return T.ReadOnly(newObject)
+        return T.ReadOnly(object: newObject)
     }
 
     public func faultAllObjects() {

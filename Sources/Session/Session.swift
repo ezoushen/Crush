@@ -68,7 +68,7 @@ public class Session {
 
 extension Session {
     public func load<T: Entity>(_ entity: T.ReadOnly) -> T.ReadOnly {
-        present(entity.managedObject)
+        present(entity)
     }
 
     public func load<T: Entity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
@@ -96,8 +96,12 @@ extension Session {
         }
     }
 
-    func present<T: Entity>(_ entity: ManagedObject<T>) -> T.ReadOnly {
-        T.ReadOnly(context.present(entity))
+    func present<T: ObjectProxy>(_ entity: T) -> T.Entity.ReadOnly {
+        T.Entity.ReadOnly(object: context.present(entity.managedObject))
+    }
+    
+    func present<T: ObjectDriver>(_ entity: T) -> T.Entity.ReadOnly {
+        T.Entity.ReadOnly(driver: entity.driver())
     }
 }
 

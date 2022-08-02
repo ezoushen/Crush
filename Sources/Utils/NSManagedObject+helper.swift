@@ -10,25 +10,16 @@ import CoreData
 
 extension NSManagedObjectContext {
     func receive<T: NSManagedObject>(runtimeObject: T) -> T {
-        let result = object(with: runtimeObject.objectID) as! T
-        if runtimeObject.isFault == false {
-            result.fireFault()
-        }
-        return result
-    }
-    
-    func refresh(
-        _ object: NSManagedObject,
-        mergeChanges: Bool,
-        preserveFaultingState flag: Bool)
-    {
-        let isFault = object.isFault
-        defer { isFault && flag ? () : object.fireFault() }
-        refresh(object, mergeChanges: mergeChanges)
+        object(with: runtimeObject.objectID) as! T
     }
 }
 
 extension NSManagedObject {
+    func fireFaultIfNeeded() {
+        guard isFault else { return }
+        fireFault()
+    }
+
     func fireFault() {
         let description = Self.entity()
         let key = description.allAttributeKeys().first ??

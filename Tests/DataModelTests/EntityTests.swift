@@ -143,12 +143,15 @@ class EntityTests: XCTestCase {
         let result = createInheritedEntityDescription(.abstract)
         XCTAssertNotNil(result?.superentity)
     }
+    
+    class ParentEntity: Entity {
+        var parentValue = Value.Int64("parentValue")
+    }
+    
+    class TestEntity: ParentEntity { }
 
     private func createInheritedEntityDescription(_ type: EntityInheritance) -> NSEntityDescription? {
-        class ParentEntity: Entity {
-            var parentValue = Value.Int64("parentValue")
-        }
-        class TestEntity: ParentEntity { }
+        
         let sut = TestEntity()
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(ParentEntity.self): type,

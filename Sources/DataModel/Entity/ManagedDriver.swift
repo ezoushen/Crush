@@ -8,10 +8,16 @@
 import CoreData
 import Foundation
 
+protocol ObjectProxy: RuntimeObject {
+    var managedObject: NSManagedObject { get }
+}
+
 @dynamicMemberLookup
 public protocol ObjectDriver: AnyObject {
     associatedtype Entity: Crush.Entity
+    
     var managedObject: NSManagedObject { get }
+    func driver() -> Entity.Driver
 }
 
 extension ObjectDriver {
@@ -163,7 +169,7 @@ extension NSManagedObject {
     }
 }
 
-public class ManagedDriver<Entity: Crush.Entity>: ObjectDriver, ManagedStatus {
+public class ManagedDriver<Entity: Crush.Entity>: ObjectDriver, ObjectProxy, ManagedStatus {
 
     public let managedObject: NSManagedObject
 
@@ -175,6 +181,17 @@ public class ManagedDriver<Entity: Crush.Entity>: ObjectDriver, ManagedStatus {
 
     public init(unsafe managedObject: NSManagedObject) {
         self.managedObject = managedObject
+    }
+    
+    public func unwrap<T: Crush.Entity>(_ type: T.Type) -> T.Managed {
+        managedObject as! T.Managed
+    }
+}
+
+extension ManagedDriver {
+    @inlinable
+    public func driver() -> ManagedDriver<Entity> {
+        self
     }
 }
 
