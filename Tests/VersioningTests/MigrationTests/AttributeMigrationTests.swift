@@ -195,4 +195,20 @@ class UpdateAttributeTests: XCTestCase {
             && $0.value is (Any?) -> Any?
         }) == true)
     }
+    
+    func test_createPropertyObjectMapping_shouldUpdateUserInfo() throws {
+        let sut = UpdateAttribute("originName", type: String.self) { (_: NSManagedObject) in
+            return nil
+        }
+        let source = NSAttributeDescription()
+        source.name = "originName"
+        let destination = NSAttributeDescription()
+        destination.name = "originName"
+        let mapping = try sut.createPropertyMapping(from: source, to: destination, of: NSEntityDescription())
+        XCTAssertEqual(mapping?.valueExpression, .customAttributeMapping { _ in nil })
+        XCTAssertTrue(mapping?.userInfo?.contains(where: {
+            $0.key as? String == UserInfoKey.attributeMappingFromObjectFunc
+            && $0.value is (NSManagedObject) -> Any?
+        }) == true)
+    }
 }

@@ -401,6 +401,15 @@ class CrushEntityMigrationPolicy: NSEntityMigrationPolicy {
         let result: Any? = mappingFuction(sourceValue)
         return result ?? manager.destinationEntity(for: entityMapping)?.attributesByName[propertyMapping.name!]?.defaultValue
     }
+    
+    @objc(customAttributeMappingOfPropertyMapping:entityMapping:manager:source:)
+    func customAttributeMapping(of propertyMapping: NSPropertyMapping, entityMapping: NSEntityMapping, manager: NSMigrationManager, source: NSManagedObject) -> Any? {
+        guard let mappingFuction = propertyMapping.userInfo?[UserInfoKey.attributeMappingFromObjectFunc] as? (NSManagedObject) -> Any? else {
+            return nil
+        }
+        let result: Any? = mappingFuction(source)
+        return result ?? manager.destinationEntity(for: entityMapping)?.attributesByName[propertyMapping.name!]?.defaultValue
+    }
 
     @objc(attributeMappingOfPropertyMapping:entityMapping:manager:sourceValue:)
     func attributeMapping(of propertyMapping: NSPropertyMapping, entityMapping: NSEntityMapping, manager: NSMigrationManager, sourceValue: Any?) -> Any? {

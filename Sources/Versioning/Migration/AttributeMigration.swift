@@ -169,11 +169,29 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
     public let isTransient: Bool?
     public let attributeType: NSAttributeType?
     public let transform: ((Any?) -> Any?)?
+    public let objectTransform: ((NSManagedObject) -> Any?)?
     public let derivedExpression: NSExpression?
 
     public var defaultValue: Any?
     public var hashModifier: String? = nil
     public var hashModifierUpdated: Bool = false
+    
+    public init(
+        _ originName: String,
+        name: String? = nil,
+        isOptional: Bool? = nil,
+        derivedExpression: NSExpression
+    ) {
+        self.originPropertyName = String(originName.split(separator: ".")[0])
+        self.originKeyPath = originName
+        self.name = name
+        self.isOptional = isOptional
+        self.isTransient = false
+        self.attributeType = nil
+        self.transform = nil
+        self.objectTransform = nil
+        self.derivedExpression = derivedExpression
+    }
 
     public init<T: FieldAttribute>(
         _ originName: String,
@@ -191,6 +209,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.attributeType = attributeType.nativeType
         self.transform = { transform($0) }
         self.derivedExpression = derivedExpression
+        self.objectTransform = nil
     }
 
     public init(
@@ -209,22 +228,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.attributeType = attributeType
         self.transform = transform
         self.derivedExpression = derivedExpression
-    }
-
-    public init(
-        _ originName: String,
-        name: String? = nil,
-        isOptional: Bool? = nil,
-        derivedExpression: NSExpression
-    ) {
-        self.originPropertyName = String(originName.split(separator: ".")[0])
-        self.originKeyPath = originName
-        self.name = name
-        self.isOptional = isOptional
-        self.isTransient = false
-        self.attributeType = nil
-        self.transform = nil
-        self.derivedExpression = derivedExpression
+        self.objectTransform = nil
     }
 
     public init<T: FieldAttribute>(
@@ -242,6 +246,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.isTransient = isTransient
         self.attributeType = attributeType.nativeType
         self.transform = { transform($0) }
+        self.objectTransform = nil
         self.derivedExpression = nil
     }
 
@@ -260,6 +265,83 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.isTransient = isTransient
         self.attributeType = attributeType
         self.transform = transform
+        self.objectTransform = nil
+        self.derivedExpression = nil
+    }
+    
+    public init<T: FieldAttribute>(
+        _ originName: String,
+        name: String? = nil,
+        type attributeType: T.Type,
+        isOptional: Bool? = nil,
+        derivedExpression: NSExpression,
+        objectTransform: @escaping (NSManagedObject) -> T.ManagedObjectValue = { _ in .null }
+    ) {
+        self.originPropertyName = String(originName.split(separator: ".")[0])
+        self.originKeyPath = originName
+        self.name = name
+        self.isOptional = isOptional
+        self.isTransient = false
+        self.attributeType = attributeType.nativeType
+        self.transform = nil
+        self.derivedExpression = derivedExpression
+        self.objectTransform = { objectTransform($0) }
+    }
+
+    public init(
+        _ originName: String,
+        name: String? = nil,
+        type attributeType: NSAttributeType,
+        isOptional: Bool? = nil,
+        derivedExpression: NSExpression,
+        objectTransform: @escaping (NSManagedObject) -> Any? = { _ in nil }
+    ) {
+        self.originPropertyName = String(originName.split(separator: ".")[0])
+        self.originKeyPath = originName
+        self.name = name
+        self.isOptional = isOptional
+        self.isTransient = false
+        self.attributeType = attributeType
+        self.transform = nil
+        self.derivedExpression = derivedExpression
+        self.objectTransform = objectTransform
+    }
+
+    public init<T: FieldAttribute>(
+        _ originName: String,
+        name: String? = nil,
+        type attributeType: T.Type,
+        isOptional: Bool? = nil,
+        isTransient: Bool? = nil,
+        objectTransform: @escaping (NSManagedObject) -> T.ManagedObjectValue = { _ in .null }
+    ) {
+        self.originPropertyName = String(originName.split(separator: ".")[0])
+        self.originKeyPath = originName
+        self.name = name
+        self.isOptional = isOptional
+        self.isTransient = isTransient
+        self.attributeType = attributeType.nativeType
+        self.objectTransform = { objectTransform($0) }
+        self.transform = nil
+        self.derivedExpression = nil
+    }
+
+    public init(
+        _ originName: String,
+        name: String? = nil,
+        type attributeType: NSAttributeType,
+        isOptional: Bool? = nil,
+        isTransient: Bool? = nil,
+        objectTransform: @escaping (NSManagedObject) -> Any? = { _ in nil }
+    ) {
+        self.originPropertyName = String(originName.split(separator: ".")[0])
+        self.originKeyPath = originName
+        self.name = name
+        self.isOptional = isOptional
+        self.isTransient = isTransient
+        self.attributeType = attributeType
+        self.transform = nil
+        self.objectTransform = objectTransform
         self.derivedExpression = nil
     }
 
@@ -276,6 +358,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.isTransient = isTransient
         self.attributeType = nil
         self.transform = nil
+        self.objectTransform = nil
         self.derivedExpression = nil
     }
 
@@ -352,7 +435,12 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         let propertyMapping = NSPropertyMapping()
         propertyMapping.name = destinationProperty.name
         
-        if let transform = transform {
+        if let objectTransform = objectTransform {
+            var userInfo = propertyMapping.userInfo ?? [:]
+            userInfo[UserInfoKey.attributeMappingFromObjectFunc] = objectTransform
+            propertyMapping.userInfo = userInfo
+            propertyMapping.valueExpression = .customAttributeMapping(objectTransform)
+        } else if let transform = transform {
             var userInfo = propertyMapping.userInfo ?? [:]
             userInfo[UserInfoKey.attributeMappingFunc] = transform
             propertyMapping.userInfo = userInfo
