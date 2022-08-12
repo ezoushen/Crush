@@ -35,23 +35,23 @@ extension NSPredicate {
 public final class TypedPredicate<T: Entity>: NSPredicate { }
 
 @inlinable func BEGINSWITH(_ string: SearchString) -> String {
-    "BEGINSWITH\(string.type.modifier) \"\(string.string)\""
+    "BEGINSWITH\(string.type.modifier)"
 }
 
 @inlinable func ENDSWITH(_ string: SearchString) -> String {
-    "ENDSWITH\(string.type.modifier) \"\(string.string)\""
+    "ENDSWITH\(string.type.modifier)"
 }
 
 @inlinable func CONTAINS(_ string: SearchString) -> String {
-    "CONTAINS\(string.type.modifier) \"\(string.string)\""
+    "CONTAINS\(string.type.modifier)"
 }
 
 @inlinable func LIKE(_ string: SearchString) -> String {
-    "LIKE\(string.type.modifier) \"\(string.string)\""
+    "LIKE\(string.type.modifier)"
 }
 
 @inlinable func MATCHES(_ string: SearchString) -> String {
-    "MATCHES\(string.type.modifier) \"\(string.string)\""
+    "MATCHES\(string.type.modifier)"
 }
 
 // MARK: - Property Condition
@@ -127,45 +127,45 @@ where
 
 extension PropertyCondition where T == String {
     public convenience init(endsWith rhs: SearchString) {
-        self.init(format: "SELF \(ENDSWITH(rhs))")
+        self.init(format: "SELF \(ENDSWITH(rhs)) %@", rhs.string)
     }
 
     public convenience init(beginsWith rhs: SearchString) {
-        self.init(format: "SELF \(BEGINSWITH(rhs))")
+        self.init(format: "SELF \(BEGINSWITH(rhs)) %@", rhs.string)
     }
 
     public convenience init(like rhs: SearchString) {
-        self.init(format: "SELF \(LIKE(rhs))")
+        self.init(format: "SELF \(LIKE(rhs)) %@", rhs.string)
     }
 
     public convenience init(matches rhs: SearchString) {
-        self.init(format: "SELF \(MATCHES(rhs))")
+        self.init(format: "SELF \(MATCHES(rhs)) %@", rhs.string)
     }
 
     public convenience init(contains rhs: SearchString) {
-        self.init(format: "SELF \(CONTAINS(rhs))")
+        self.init(format: "SELF \(CONTAINS(rhs)) %@", rhs.string)
     }
 }
 
 extension PropertyCondition where T: PredicateExpressibleByString {
     public convenience init(endsWith rhs: SearchString) {
-        self.init(format: "SELF.stringValue \(ENDSWITH(rhs))")
+        self.init(format: "SELF.stringValue \(ENDSWITH(rhs)) %@", rhs.string)
     }
 
     public convenience init(beginsWith rhs: SearchString) {
-        self.init(format: "SELF.stringValue \(BEGINSWITH(rhs))")
+        self.init(format: "SELF.stringValue \(BEGINSWITH(rhs)) %@", rhs.string)
     }
 
     public convenience init(like rhs: SearchString) {
-        self.init(format: "SELF.stringValue \(LIKE(rhs))")
+        self.init(format: "SELF.stringValue \(LIKE(rhs)) %@", rhs.string)
     }
 
     public convenience init(matches rhs: SearchString) {
-        self.init(format: "SELF.stringValue \(MATCHES(rhs))")
+        self.init(format: "SELF.stringValue \(MATCHES(rhs)) %@", rhs.string)
     }
 
     public convenience init(contains rhs: SearchString) {
-        self.init(format: "SELF.stringValue \(CONTAINS(rhs))")
+        self.init(format: "SELF.stringValue \(CONTAINS(rhs)) %@", rhs.string)
     }
 }
 
@@ -339,23 +339,23 @@ extension KeyPath where
     Value.PredicateValue == String
 {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(BEGINSWITH(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(BEGINSWITH(rhs)) %@", rhs.string)
     }
 
     public static func ~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(ENDSWITH(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(ENDSWITH(rhs)) %@", rhs.string)
     }
 
     public static func <> (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(CONTAINS(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(CONTAINS(rhs)) %@", rhs.string)
     }
 
     public static func |~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(LIKE(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(LIKE(rhs)) %@", rhs.string)
     }
 
     public static func |*| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(MATCHES(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(MATCHES(rhs)) %@", rhs.string)
     }
 }
 
@@ -365,23 +365,23 @@ extension KeyPath where
     Value.PredicateValue: PredicateExpressibleByString
 {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(BEGINSWITH(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(BEGINSWITH(rhs)) %@", rhs.string)
     }
 
     public static func ~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(ENDSWITH(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(ENDSWITH(rhs)) %@", rhs.string)
     }
 
     public static func <> (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(CONTAINS(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(CONTAINS(rhs)) %@", rhs.string)
     }
 
     public static func |~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(LIKE(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(LIKE(rhs)) %@", rhs.string)
     }
 
     public static func |*| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(MATCHES(rhs))")
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(MATCHES(rhs)) %@", rhs.string)
     }
 }
 
@@ -439,7 +439,8 @@ extension TypedPredicate {
         collectionQuery: CollectionQuery<Property.Destination>
     ) -> Self
     where
-        Property.Mapping == ToMany<Property.Destination>
+        Property.Mapping: ToManyRelationMappingProtocol,
+        Property.Mapping.EntityType == Property.Destination
     {
         updatePredicate(predicate) { predicate in
             let expression = NSExpression(
