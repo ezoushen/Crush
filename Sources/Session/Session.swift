@@ -97,11 +97,16 @@ extension Session {
     }
 
     func present<T: ObjectProxy>(_ entity: T) -> T.Entity.ReadOnly {
-        T.Entity.ReadOnly(object: context.present(entity.managedObject))
+        present(object: entity.managedObject)
     }
     
     func present<T: ObjectDriver>(_ entity: T) -> T.Entity.ReadOnly {
-        T.Entity.ReadOnly(driver: entity.driver())
+        present(object: entity.managedObject)
+    }
+
+    @inline(__always)
+    func present<T: Entity>(object: NSManagedObject) -> T.ReadOnly {
+        T.ReadOnly(object: context.present(object))
     }
 }
 
