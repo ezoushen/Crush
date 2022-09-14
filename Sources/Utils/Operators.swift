@@ -7,21 +7,6 @@
 
 import CoreData
 
-public protocol RangeProtocol: RangeExpression where Bound: PredicateRangeComparable {
-    var closedUpperBound: Bound { get }
-    var lowerBound: Bound { get }
-}
-
-extension Range: RangeProtocol where Bound: PredicateRangeComparable {
-    public var closedUpperBound: Bound {
-        upperBound.advanced(by: -Bound.step)
-    }
-}
-
-extension ClosedRange: RangeProtocol where Bound: PredicateRangeComparable {
-    public var closedUpperBound: Bound { upperBound }
-}
-
 extension NSPredicate {
     @inlinable public static var `true`: Self {
         Self.init(value: true)
@@ -79,11 +64,18 @@ extension PropertyCondition where T: PredicateEquatable & Hashable {
 }
 
 extension PropertyCondition where T: PredicateComparable & Comparable {
-    public convenience init<R: RangeProtocol>(in rhs: R) where R.Bound == T {
+    public convenience init(in rhs: ClosedRange<T>) {
         self.init(
             format: "SELF BETWEEN {%@, %@}",
             rhs.lowerBound.predicateValue,
-            rhs.closedUpperBound.predicateValue)
+            rhs.upperBound.predicateValue)
+    }
+    
+    public convenience init(in rhs: Range<T>) {
+        self.init(
+            format: "SELF >= %@ AND SELF < %@",
+            rhs.lowerBound.predicateValue,
+            rhs.upperBound.predicateValue)
     }
 
     public convenience init(largerThanOrEqualTo rhs: T) {
@@ -291,13 +283,22 @@ extension KeyPath where
         TypedPredicate<Root>(format: "\(lhs.propertyName) <= %@", rhs.predicateValue)
     }
 
-    public static func <> <R: RangeProtocol>(
-        lhs: KeyPath, rhs: R) -> TypedPredicate<Root> where R.Bound == Value.PredicateValue
+    public static func <> (
+        lhs: KeyPath, rhs: ClosedRange<Value.PredicateValue>) -> TypedPredicate<Root>
     {
         TypedPredicate<Root>(
             format: "\(lhs.propertyName) BETWEEN {%@, %@}",
             rhs.lowerBound.predicateValue,
-            rhs.closedUpperBound.predicateValue)
+            rhs.upperBound.predicateValue)
+    }
+    
+    public static func <> (
+        lhs: KeyPath, rhs: Range<Value.PredicateValue>) -> TypedPredicate<Root>
+    {
+        TypedPredicate<Root>(
+            format: "\(lhs.propertyName) >= %@ AND \(lhs.propertyName) < %@}",
+            rhs.lowerBound.predicateValue,
+            rhs.upperBound.predicateValue)
     }
     
     public static func > <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
