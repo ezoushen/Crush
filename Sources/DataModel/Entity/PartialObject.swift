@@ -30,7 +30,7 @@ extension PartialObject where T: Entity {
         get {
             let value = store[keyPath.propertyName]
             guard let result = value as? S.FieldConvertor.ManagedObjectValue
-            else { return nil }
+            else { return .null }
             return S.FieldConvertor.convert(value: result)
         }
         set {

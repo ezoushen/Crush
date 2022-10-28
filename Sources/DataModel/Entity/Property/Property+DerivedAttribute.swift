@@ -37,7 +37,7 @@ public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFi
         _ name: String, from keyPath: KeyPath<T, Attribute<F>>)
     {
         self.name = name
-        self.defaultValue = nil
+        self.defaultValue = .null
         self.expressionBlock = { NSExpression(forKeyPath: keyPath.propertyName) }
     }
 
@@ -47,7 +47,7 @@ public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFi
         property extensionKeyPath: KeyPath<S, Attribute<F>>)
     {
         self.name = name
-        self.defaultValue = nil
+        self.defaultValue = .null
         self.expressionBlock = {
             let keyPath = "\(keyPath.propertyName).\(extensionKeyPath.propertyName)"
             return NSExpression(forKeyPath: keyPath)
@@ -56,7 +56,7 @@ public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFi
 
     internal init(name: String, derivation: @autoclosure @escaping () -> NSExpression) {
         self.name = name
-        self.defaultValue = nil
+        self.defaultValue = .null
         self.expressionBlock = derivation
     }
 

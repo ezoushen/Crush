@@ -30,17 +30,17 @@ extension NSManagedObject {
 }
 
 extension NSEntityDescription {
-    open func allAttributeKeys() -> [String] {
+    public func allAttributeKeys() -> [String] {
         Array(attributesByName.keys)
     }
 
-    open func allToOneRelationshipKeys() -> [String] {
+    public func allToOneRelationshipKeys() -> [String] {
         relationshipsByName
             .filter { !$0.value.isToMany }
             .map { $0.key }
     }
 
-    open func allToManyRelationshipKeys() -> [String] {
+    public func allToManyRelationshipKeys() -> [String] {
         relationshipsByName
             .filter { $0.value.isToMany }
             .map { $0.key }

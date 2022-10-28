@@ -7,6 +7,7 @@
 
 import Foundation
 import XCTest
+import CoreData
 
 @testable import Crush
 

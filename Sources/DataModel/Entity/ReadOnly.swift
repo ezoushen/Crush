@@ -18,6 +18,10 @@ public struct ReadOnly<T: Crush.Entity>: ObjectProxy {
     public init(_ value: ManagedObject<Entity>) {
         self.init(driver: value.driver())
     }
+
+    public func asDriver() -> ManagedDriver<Entity> {
+        driver
+    }
     
     internal init(object: NSManagedObject) {
         self.init(driver: object.unsafeDriver(entity: Entity.self))
