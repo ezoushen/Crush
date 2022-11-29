@@ -71,19 +71,20 @@ extension Session {
         present(entity)
     }
 
-    public func load<T: Entity>(objectID: NSManagedObjectID) -> T.ReadOnly? {
-        guard let object = context.uiContext.object(with: objectID) as? ManagedObject<T> else { return nil }
+    public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> T.ReadOnly? {
+        guard let object = context.uiContext
+            .load(objectID: objectID, isFault: isFault) as? ManagedObject<T> else { return nil }
         return T.ReadOnly(object)
     }
 
-    public func load<T: Entity>(objectIDs: [NSManagedObjectID]) -> [T.ReadOnly?] {
-        objectIDs.lazy.map(load(objectID:))
+    public func load<T: Entity>(objectIDs: [NSManagedObjectID], isFault: Bool = true) -> [T.ReadOnly?] {
+        objectIDs.lazy.map { load(objectID: $0, isFault: isFault) }
     }
 
-    public func load<T: Entity>(forURIRepresentation uri: URL) -> T.ReadOnly? {
+    public func load<T: Entity>(forURIRepresentation uri: URL, isFault: Bool = true) -> T.ReadOnly? {
         guard let managedObjectID = context.rootContext.persistentStoreCoordinator!
                 .managedObjectID(forURIRepresentation: uri) else { return nil }
-        return load(objectID: managedObjectID)
+        return load(objectID: managedObjectID, isFault: isFault)
     }
 
     public func commit() throws {

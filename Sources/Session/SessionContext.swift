@@ -27,7 +27,7 @@ extension RawContextProviderProtocol {
 public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func create<T: Entity>(entity: T.Type) -> ManagedObject<T>
     func delete<T: Entity>(_ object: ManagedObject<T>)
-    func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>?
+    func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool) -> ManagedObject<T>?
     func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T>
     func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>]
 
@@ -80,14 +80,14 @@ extension SessionContext where Self: RawContextProviderProtocol {
         .init(config: .init(batch: canUseBatchRequest()), context: self)
     }
 
-    public func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>? {
-        executionContext.object(with: objectID) as? ManagedObject<T>
+    public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> ManagedObject<T>? {
+        executionContext.load(objectID: objectID, isFault: isFault) as? ManagedObject<T>
     }
 
-    public func load<T: Entity>(forURIRepresentation uri: String) -> ManagedObject<T>? {
+    public func load<T: Entity>(forURIRepresentation uri: String, isFault: Bool = true) -> ManagedObject<T>? {
         guard let managedObjectID = rootContext.persistentStoreCoordinator!
                 .managedObjectID(forURIRepresentation: URL(string: uri)!) else { return nil }
-        return load(objectID: managedObjectID)
+        return load(objectID: managedObjectID, isFault: isFault)
     }
 
     public func assign(object: NSManagedObject, to storage: Storage) {

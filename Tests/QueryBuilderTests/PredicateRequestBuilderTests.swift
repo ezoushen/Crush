@@ -11,6 +11,7 @@ import CoreData
 
 @testable import Crush
 
+@available(iOS 13.0.0, *)
 class PredicateRequestBuilderTests: XCTestCase {
     struct DummyConfig: RequestConfig {
         var predicate: NSPredicate?
