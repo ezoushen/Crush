@@ -249,7 +249,7 @@ extension Session {
     public func async<T>(
         name: String? = nil,
         schedule: NSManagedObjectContext.ScheduledType = .immediate,
-        block: @escaping (SessionContext) -> T) async -> T
+        _ block: @escaping (SessionContext) -> T) async -> T
     {
         let context = context
         let executionContext = context.executionContext
@@ -262,7 +262,7 @@ extension Session {
     public func async<T: UnsafeSessionProperty>(
         name: String? = nil,
         schedule: NSManagedObjectContext.ScheduledType = .immediate,
-        block: @escaping (SessionContext) -> T) async -> T.Safe
+        _ block: @escaping (SessionContext) -> T) async -> T.Safe
     {
         let context = context
         let executionContext = context.executionContext
@@ -276,7 +276,7 @@ extension Session {
     public func asyncThrowing<T>(
         name: String? = nil,
         schedule: NSManagedObjectContext.ScheduledType = .immediate,
-        block: @escaping (SessionContext) throws -> T) async throws -> T
+        _ block: @escaping (SessionContext) throws -> T) async throws -> T
     {
         let context = context
         let executionContext = context.executionContext
@@ -289,7 +289,7 @@ extension Session {
     public func asyncThrowing<T: UnsafeSessionProperty>(
         name: String? = nil,
         schedule: NSManagedObjectContext.ScheduledType = .immediate,
-        block: @escaping (SessionContext) throws -> T) async throws -> T.Safe
+        _ block: @escaping (SessionContext) throws -> T) async throws -> T.Safe
     {
         let context = context
         let executionContext = context.executionContext
