@@ -76,22 +76,26 @@ where
         self.context = context
         super.init(config: config)
     }
-    
+
+    /// Equivalent to `fetchLimit` to `NSFetchRequest.fetchLimit`
     public func limit(_ size: Int) -> Self {
         config.modify { $0.fetchLimit = size }
         return self
     }
 
+    /// Equivalent to `fetchOffset` to `NSFetchRequest.fetchOffset`
     public func offset(_ step: Int) -> Self {
         config.modify { $0.fetchOffset = step }
         return self
     }
-    
+
+    /// Equivalent to `includesPendingChanges` to `NSFetchRequest.includesPendingChanges`
     public func includesPendingChanges(_ flag: Bool = true) -> Self {
         config.includesPendingChanges = flag
         return self
     }
 
+    /// Prefetch related entities according to specified relationship
     public func prefetch<T: RelationshipProtocol>(relationship: KeyPath<Target, T>) -> Self {
         config.modify {
             $0.relationshipKeyPathsForPrefetching.initializeIfNeeded()
@@ -115,7 +119,8 @@ where
         }
         return self
     }
-    
+
+    /// Equivalent to `returnsObjectsAsFaults` to `NSFetchRequest.returnsObjectsAsFaults`
     public func asFaults(_ flag: Bool = true) -> Self {
         config.modify { $0.returnsObjectsAsFaults = flag }
         return self
