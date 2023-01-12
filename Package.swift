@@ -15,6 +15,11 @@ let package = Package(
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "Crush",
+            type: .`static`,
+            targets: ["Crush"]),
+        .library(
+            name: "Crush",
+            type: .dynamic,
             targets: ["Crush"]),
     ],
     dependencies: [
