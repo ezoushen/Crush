@@ -18,7 +18,7 @@ let package = Package(
             type: .`static`,
             targets: ["Crush"]),
         .library(
-            name: "Crush",
+            name: "Crush-dynamic",
             type: .dynamic,
             targets: ["Crush"]),
     ],
@@ -37,5 +37,4 @@ let package = Package(
             name: "CrushTests",
             dependencies: ["Crush"],
             path: "./Tests"),
-    ]
-)
+    ])
