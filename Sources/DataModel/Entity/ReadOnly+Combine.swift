@@ -90,6 +90,7 @@ extension ManagedObject {
 
             private func removeObservation() {
                 subject?.removeObserver(self, forKeyPath: keyPath)
+                subscriber?.receive(completion: .finished)
                 subject = nil
                 subscriber = nil
             }
