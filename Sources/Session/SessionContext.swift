@@ -39,6 +39,13 @@ public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
     func commit() throws
 }
 
+extension SessionContext {
+    @inlinable
+    public func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>? {
+        load(objectID: objectID, isFault: true)
+    }
+}
+
 extension SessionContext where Self: RawContextProviderProtocol {
     func receive<T: NSManagedObject>(_ object: T) -> T {
         guard executionContext !== object.managedObjectContext else { return object }
