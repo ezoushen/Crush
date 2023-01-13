@@ -43,7 +43,9 @@ extension ManagedObject {
             private var subject: NSObject?
 
             private var waitingForCancellation: Bool = false
-            private var lock = os_unfair_lock()
+            private var lock = UnfairLock()
+
+            private var demand: Subscribers.Demand = .none
 
             init(subject: NSObject, subscriber: S, keyPath: String, options: NSKeyValueObservingOptions) {
                 self.subscriber = subscriber
@@ -56,33 +58,46 @@ extension ManagedObject {
 
             public override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
                 if let managedObject = object as? NSManagedObject, managedObject.isDeleted {
+                    lock.lock()
+                    defer { lock.unlock() }
                     return removeObservation()
                 }
-                if change?.keys.contains(.oldKey) == true,
-                   let value = change?[.oldKey] as? T.FieldConvertor.ManagedObjectValue {
-                    _ = subscriber?.receive(T.FieldConvertor.convert(value: value))
-                }
-                if change?.keys.contains(.newKey) == true,
-                   let value = change?[.newKey] as? T.FieldConvertor.ManagedObjectValue {
-                    _ = subscriber?.receive(T.FieldConvertor.convert(value: value))
-                }
+                sendValue(change: change, key: .oldKey)
+                sendValue(change: change, key: .newKey)
+            }
+
+            private func sendValue(change: [NSKeyValueChangeKey : Any]?, key: NSKeyValueChangeKey) {
+                guard change?.keys.contains(key) == true,
+                      let value = change?[key] as? T.FieldConvertor.ManagedObjectValue
+                else { return }
+                let input = T.FieldConvertor.convert(value: value)
+                send(value: input)
+            }
+
+            private func send(value: S.Input) {
+                guard demand > 0 else { return }
+                demand -= 1
+                demand += subscriber?.receive(value) ?? .none
             }
 
             func subscribe() {
-                os_unfair_lock_lock(&lock)
+                lock.lock()
                 subject?.addObserver(
                     self, forKeyPath: keyPath, options: options, context: nil)
                 if waitingForCancellation {
                     removeObservation()
                 }
-                os_unfair_lock_unlock(&lock)
+                lock.unlock()
             }
 
-            public func request(_ demand: Subscribers.Demand) { }
+            public func request(_ demand: Subscribers.Demand) {
+                self.demand += demand
+            }
 
             public func cancel() {
-                if os_unfair_lock_trylock(&lock) {
+                if lock.tryLock() {
                     removeObservation()
+                    lock.unlock()
                 } else {
                     waitingForCancellation = true
                 }

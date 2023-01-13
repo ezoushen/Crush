@@ -246,7 +246,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
     internal func persistentStoreHistoryChanged(_ notification: Notification) {
         guard let storeURL = notification.userInfo?["storeURL"] as? URL else { return }
 
-        os_unfair_lock_lock(&lock)
+        lock.lock()
 
         let uiContext = context.uiContext
         let rootContext = context.rootContext
@@ -278,7 +278,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
                 fromRemoteContextSave: changes, into: [rootContext, uiContext])
         }
 
-        os_unfair_lock_unlock(&lock)
+        lock.unlock()
 
         if transactions.isEmpty == false {
             let userInfo = mergers.mapValues { $0.createUserInfo() }
