@@ -109,6 +109,7 @@ public class DataContainer {
 #endif
     private func setup() {
         initializeAllContext()
+        notifier.initialize()
         notifier.enable()
     }
     
@@ -241,7 +242,8 @@ extension DataContainer {
             executionContext: context,
             rootContext: writerContext,
             uiContext: uiContext,
-            logger: logger)
+            logger: logger,
+            handler: notifier.sessionContextExecutionResultHandler)
     }
     
     internal func backgroundSessionContext(name: String? = nil) -> _SessionContext {
@@ -251,7 +253,8 @@ extension DataContainer {
             executionContext: context,
             rootContext: writerContext,
             uiContext: uiContext,
-            logger: logger)
+            logger: logger,
+            handler: notifier.sessionContextExecutionResultHandler)
     }
     
     internal func uiSessionContext(name: String? = nil) -> _SessionContext {
@@ -261,7 +264,8 @@ extension DataContainer {
             executionContext: context,
             rootContext: writerContext,
             uiContext: context,
-            logger: logger)
+            logger: logger,
+            handler: notifier.sessionContextExecutionResultHandler)
     }
     
     internal func querySessionContext(name: String? = nil) -> _SessionContext {
@@ -269,7 +273,8 @@ extension DataContainer {
             executionContext: uiContext,
             rootContext: writerContext,
             uiContext: uiContext,
-            logger: logger)
+            logger: logger,
+            handler: notifier.sessionContextExecutionResultHandler)
     }
 }
 

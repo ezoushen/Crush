@@ -90,7 +90,9 @@ internal class UserInfoMerger {
 internal protocol UiContextNotifier {
     var container: DataContainer { get }
     var context: _SessionContext { get }
+    var sessionContextExecutionResultHandler: _SessionContext.ExecutionResultHandler? { get }
 
+    func initialize()
     func enable()
     func disable()
 }
@@ -106,13 +108,21 @@ extension UiContextNotifier {
 }
 
 internal /*abstract*/ class _UiContextNotifier: UiContextNotifier {
-    internal var context: _SessionContext
+    internal lazy var context: _SessionContext = container.backgroundSessionContext()
+
+    internal var sessionContextExecutionResultHandler: _SessionContext.ExecutionResultHandler? {
+        assertionFailure("Not implemented")
+        return nil
+    }
 
     internal unowned let container: DataContainer
 
     internal init(container: DataContainer) {
-        self.context = container.backgroundSessionContext()
         self.container = container
+    }
+
+    func initialize() {
+        assertionFailure("Not implemented")
     }
 
     func enable() {
@@ -128,6 +138,23 @@ internal /*abstract*/ class _UiContextNotifier: UiContextNotifier {
 
 internal class ContextDidSaveNotifier: _UiContextNotifier {
     private let notificationName: Notification.Name = .NSManagedObjectContextDidSave
+
+    override var sessionContextExecutionResultHandler: _SessionContext.ExecutionResultHandler {
+        { [unowned self] result, contexts in
+            let uiContext = context.uiContext
+            let contexts = contexts.filter { $0 !== uiContext }
+            guard contexts.isEmpty == false else { return }
+            NSManagedObjectContext.mergeChanges(
+                fromRemoteContextSave: [
+                    NSInsertedObjectIDsKey: result.inserted,
+                    NSUpdatedObjectIDsKey: result.updated,
+                    NSDeletedObjectIDsKey: result.deleted,
+                ],
+                into: contexts)
+        }
+    }
+
+    override func initialize() { }
 
     override func enable() {
         NotificationCenter.default.addObserver(
@@ -152,13 +179,20 @@ internal class ContextDidSaveNotifier: _UiContextNotifier {
                 ($0.key == AnyHashable(NSInsertedObjectsKey) ||
                 $0.key == AnyHashable(NSUpdatedObjectsKey) ||
                 $0.key == AnyHashable(NSDeletedObjectsKey)) &&
-                ($0.value as? NSMutableSet)?.count ?? 0 > 0
+                ($0.value as? NSSet)?.count ?? 0 > 0
             }) else { return }
-        context.uiContext.perform(
-            #selector(context.uiContext.mergeChanges(fromContextDidSave:)),
-            on: Thread.main,
-            with: notification,
-            waitUntilDone: Thread.isMainThread)
+        let uiContext = context.uiContext
+        let deletedObjectIDs = (userInfo[NSDeletedObjectsKey] as? NSSet)?
+            .compactMap { ($0 as? NSManagedObject)?.objectID }
+        DispatchQueue.performMainThreadTask {
+            uiContext.mergeChanges(fromContextDidSave: notification)
+            // Refresh for forcing KVO on deleted objects
+            if let deletedObjectIDs {
+                for object in deletedObjectIDs.compactMap(uiContext.registeredObject(for:)) {
+                    uiContext.refresh(object, mergeChanges: true)
+                }
+            }
+        }
         let merger = UserInfoMerger(userInfo: userInfo)
         let name = managedObjectContext.name ?? "Unknown"
         notifyOnMainThread(userInfo: [
@@ -174,17 +208,28 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
     internal var lastHistoryTokens: [URL: NSPersistentHistoryToken] = [:]
     internal var transactionLifetime: TimeInterval = 604_800
 
-    private var lock = os_unfair_lock()
+    internal override var sessionContextExecutionResultHandler: _SessionContext.ExecutionResultHandler {
+        { result, contexts in
+            NSManagedObjectContext.mergeChanges(
+                fromRemoteContextSave: [
+                    NSInsertedObjectsKey: result.inserted,
+                    NSUpdatedObjectsKey: result.updated,
+                    NSDeletedObjectsKey: result.deleted,
+                ],
+                into: contexts)
+        }
+    }
+
+    private var lock = UnfairLock()
 
     private let logger = LogHandler.default
 
     internal override init(container: DataContainer) {
         coordinator = container.coreDataStack.coordinator
         super.init(container: container)
-        setup()
     }
 
-    internal func setup() {
+    internal override func initialize() {
         purgeHistory()
 
         for store in coordinator.persistentStores where store.url != nil

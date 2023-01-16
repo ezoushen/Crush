@@ -130,17 +130,11 @@ internal struct _DetachedSessionContext: SessionContext, RawContextProviderProto
     internal let rootContext: NSManagedObjectContext
     internal let uiContext: NSManagedObjectContext
     internal let logger: DataContainer.LogHandler
-    
-    internal init(executionContext: NSManagedObjectContext, rootContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, logger: DataContainer.LogHandler) {
-        self.executionContext = executionContext
-        self.rootContext = rootContext
-        self.uiContext = uiContext
-        self.logger = logger
-    }
+    internal let handler: SessionContext.ExecutionResultHandler?
     
     internal func commit() throws {
         let result = try saveExecutionContext(executionContext)
-        refreshObjects(result, contexts: rootContext, uiContext)
+        handler?(result, [rootContext, uiContext])
     }
     
     internal func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext {
@@ -157,6 +151,7 @@ internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
     internal let rootContext: NSManagedObjectContext
     internal let uiContext: NSManagedObjectContext
     internal let logger: DataContainer.LogHandler
+    internal let handler: SessionContext.ExecutionResultHandler?
     
     internal func commit() throws {
         let author = executionContext.transactionAuthor
@@ -166,7 +161,7 @@ internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
             try saveRootContext(rootContext)
             rootContext.transactionAuthor = nil
         }
-        refreshObjects(result, contexts: uiContext)
+        handler?(result, [uiContext])
     }
     
     internal func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext {
@@ -176,6 +171,12 @@ internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
     internal func context(for fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext {
         executionContext
     }
+}
+
+extension SessionContext {
+    typealias ExecutionResult = (
+        inserted: [NSManagedObjectID], updated: [NSManagedObjectID], deleted: [NSManagedObjectID])
+    typealias ExecutionResultHandler = (ExecutionResult, [NSManagedObjectContext]) -> Void
 }
 
 extension SessionContext where Self: RawContextProviderProtocol {
@@ -261,9 +262,6 @@ extension SessionContext where Self: RawContextProviderProtocol {
             executionContext.delete(object)
         }
     }
-    
-    typealias ExecutionResult = (
-        inserted: [NSManagedObjectID], updated: [NSManagedObjectID], deleted: [NSManagedObjectID])
     
     internal func saveExecutionContext(
         _ executionContext: NSManagedObjectContext) throws -> ExecutionResult

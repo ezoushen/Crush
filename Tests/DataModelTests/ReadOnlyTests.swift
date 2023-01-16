@@ -170,4 +170,30 @@ class ReadOnlyTests: XCTestCase {
             }
         XCTAssertEqual(value, [10, 11])
     }
+
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func test_combineKVOPublisher_shouldReceiveCompletionOnceTheObjectDeleted() throws {
+        let entity = createDefaultEntity(integerValue: 10)
+        let expectation = expectation(description: "")
+        var finished: Bool = false
+        let cancellable = entity
+            .observe(\.integerValue, options: [ .new, .initial ])
+            .sink {
+                guard case .finished = $0 else { return }
+                finished = true
+                expectation.fulfill()
+            } receiveValue: { _ in }
+
+        try container.startSession().sync { context in
+            let entity = context.edit(object: entity)
+            context.delete(entity)
+            try context.commit()
+        }
+
+        defer { cancellable.cancel() }
+
+        wait(for: [expectation], timeout: 3.0)
+
+        XCTAssertTrue(finished)
+    }
 }
