@@ -10,17 +10,17 @@ import Crush
 
 class SearchStringTests: XCTestCase {
     func test_caseInsensitive_shouldReturnTrue() {
-        let sut = PropertyCondition(beginsWith: .caseInsensitive("a"))
+        let sut = PropertyCondition.string(beginsWith: .caseInsensitive("a"))
         XCTAssertTrue(sut.evaluate(with: "ABC"))
     }
 
     func test_diacriticInsensitive_shouldReturnTrue() {
-        let sut = PropertyCondition(beginsWith: .diacriticInsensitive("a"))
+        let sut = PropertyCondition.string(beginsWith: .diacriticInsensitive("a"))
         XCTAssertTrue(sut.evaluate(with: "à"))
     }
 
     func test_caseDiacriticInsensitive_shouldReturnTrue() {
-        let sut = PropertyCondition(beginsWith: .caseDiacriticInsensitive("A"))
+        let sut = PropertyCondition.string(beginsWith: .caseDiacriticInsensitive("A"))
         XCTAssertTrue(sut.evaluate(with: "à"))
     }
 
