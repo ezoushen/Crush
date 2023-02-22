@@ -65,11 +65,11 @@ extension Entity {
     }
 
     @inlinable public static var fetchKey: String {
-        String(describing: Self.self)
+        name
     }
     
     @inlinable public static var name: String {
-        fetchKey
+        String(describing: Self.self)
     }
 
     static var entityCacheKey: String {
