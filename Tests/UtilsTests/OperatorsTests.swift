@@ -236,7 +236,7 @@ class OperatorsTests: XCTestCase {
         XCTAssertEqual(result, [Object(2, 2), Object(3, 2)])
     }
 
-    func test_smallerOperator_shouldReturnObjectsWithPropertySmallerThan3() {
+    func test_smallerOperator_shouldReturnObjectsWithPropertyLessThan3() {
         let sut = \Entity.property < 3
         let target = NSArray(array: [
             Object(1), Object(2), Object(3)
@@ -245,7 +245,7 @@ class OperatorsTests: XCTestCase {
         XCTAssertEqual(result, [Object(1), Object(2)])
     }
 
-    func test_smallerOperator_shouldReturnObjectsWhichPropertySmallerThanProperty2() {
+    func test_smallerOperator_shouldReturnObjectsWhichPropertyLessThanProperty2() {
         let sut = \Entity.property < \Entity.property2
         let target = NSArray(array: [
             Object(1, 2), Object(2, 3), Object(3, 2)
@@ -254,7 +254,7 @@ class OperatorsTests: XCTestCase {
         XCTAssertEqual(result, [Object(1, 2), Object(2, 3)])
     }
 
-    func test_smallerThanOrEqualToOperator_shouldReturnObjectsWithPropertySmallerThanOrEqualTo2() {
+    func test_LessThanOrEqualToOperator_shouldReturnObjectsWithPropertyLessThanOrEqualTo2() {
         let sut = \Entity.property <= 2
         let target = NSArray(array: [
             Object(1), Object(2), Object(3)
@@ -263,7 +263,7 @@ class OperatorsTests: XCTestCase {
         XCTAssertEqual(result, [Object(1), Object(2)])
     }
 
-    func test_smallerThanOrEqualToOperator_shouldReturnObjectsWhichPropertySmallerThanOrEqualToProperty2() {
+    func test_LessThanOrEqualToOperator_shouldReturnObjectsWhichPropertyLessThanOrEqualToProperty2() {
         let sut = \Entity.property <= \Entity.property2
         let target = NSArray(array: [
             Object(1, 2), Object(2, 2), Object(3, 1)

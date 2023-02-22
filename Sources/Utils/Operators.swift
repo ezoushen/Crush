@@ -55,11 +55,27 @@ extension PropertyCondition where T: PredicateEquatable {
     public convenience init(in rhs: Array<T>) {
         self.init(format: "SELF IN %@", NSArray(array: rhs.map(\.predicateValue)))
     }
+
+    @inlinable public static func notEqual(to value: T) -> Self {
+        self.init(notEqualTo: value)
+    }
+
+    @inlinable public static func equal(to value: T) -> Self {
+        self.init(equalTo: value)
+    }
+
+    @inlinable public static func with(in rhs: Array<T>) -> Self {
+        self.init(in: rhs)
+    }
 }
 
 extension PropertyCondition where T: PredicateEquatable & Hashable {
     public convenience init(in rhs: Set<T>) {
         self.init(format: "SELF IN %@", NSSet(set: rhs))
+    }
+
+    @inlinable public static func with(in rhs: Set<T>) -> Self {
+        self.init(in: rhs)
     }
 }
 
@@ -82,7 +98,7 @@ extension PropertyCondition where T: PredicateComparable & Comparable {
         self.init(format: "SELF >= \(rhs)")
     }
 
-    public convenience init(smallerThanOrEqualTo rhs: T) {
+    public convenience init(lessThanOrEqualTo rhs: T) {
         self.init(format: "SELF <= \(rhs)")
     }
     
@@ -90,8 +106,32 @@ extension PropertyCondition where T: PredicateComparable & Comparable {
         self.init(format: "SELF > \(rhs)")
     }
 
-    public convenience init(smallerThan rhs: T) {
+    public convenience init(lessThan rhs: T) {
         self.init(format: "SELF < \(rhs)")
+    }
+
+    @inlinable public static func with(in rhs: ClosedRange<T>) -> Self {
+        self.init(in: rhs)
+    }
+
+    @inlinable public static func with(in rhs: Range<T>) -> Self {
+        self.init(in: rhs)
+    }
+
+    @inlinable public static func compare(largerThanOrEqualTo rhs: T) -> Self {
+        self.init(largerThanOrEqualTo: rhs)
+    }
+
+    @inlinable public static func compare(lessThanOrEqualTo rhs: T) -> Self {
+        self.init(lessThanOrEqualTo: rhs)
+    }
+
+    @inlinable public static func compare(largerThan rhs: T) -> Self {
+        self.init(largerThan: rhs)
+    }
+
+    @inlinable public static func compare(lessThan rhs: T) -> Self {
+        self.init(lessThan: rhs)
     }
 }
 
@@ -137,6 +177,26 @@ extension PropertyCondition where T == String {
     public convenience init(contains rhs: SearchString) {
         self.init(format: "SELF \(CONTAINS(rhs)) %@", rhs.string)
     }
+
+    @inlinable public static func string(endsWith rhs: SearchString) -> Self {
+        self.init(endsWith: rhs)
+    }
+
+    @inlinable public static func string(beginsWith rhs: SearchString) -> Self {
+        self.init(beginsWith: rhs)
+    }
+
+    @inlinable public static func string(like rhs: SearchString) -> Self {
+        self.init(like: rhs)
+    }
+
+    @inlinable public static func string(matches rhs: SearchString) -> Self {
+        self.init(matches: rhs)
+    }
+
+    @inlinable public static func string(contains rhs: SearchString) -> Self {
+        self.init(contains: rhs)
+    }
 }
 
 extension PropertyCondition where T: PredicateExpressibleByString {
@@ -158,6 +218,142 @@ extension PropertyCondition where T: PredicateExpressibleByString {
 
     public convenience init(contains rhs: SearchString) {
         self.init(format: "SELF.stringValue \(CONTAINS(rhs)) %@", rhs.string)
+    }
+
+    @inlinable public static func string(endsWith rhs: SearchString) -> Self {
+        self.init(endsWith: rhs)
+    }
+
+    @inlinable public static func string(beginsWith rhs: SearchString) -> Self {
+        self.init(beginsWith: rhs)
+    }
+
+    @inlinable public static func string(like rhs: SearchString) -> Self {
+        self.init(like: rhs)
+    }
+
+    @inlinable public static func string(matches rhs: SearchString) -> Self {
+        self.init(matches: rhs)
+    }
+
+    @inlinable public static func string(contains rhs: SearchString) -> Self {
+        self.init(contains: rhs)
+    }
+}
+
+extension PropertyCondition where T == String {
+    public convenience init(lengthEqualTo length: Int) {
+        self.init(format: "length == \(length)")
+    }
+
+    public convenience init(lengthLargerThanOrEqualTo length: Int) {
+        self.init(format: "length >= \(length)")
+    }
+
+    public convenience init(lengthLessThanOrEqualTo length: Int) {
+        self.init(format: "length <= \(length)")
+    }
+
+    public convenience init(lengthLargerThan length: Int) {
+        self.init(format: "length > \(length)")
+    }
+
+    public convenience init(lengthLessThan length: Int) {
+        self.init(format: "length < \(length)")
+    }
+
+    public convenience init(lengthBetween range: ClosedRange<Int>) {
+        self.init(format: "length BETWEEN {\(range.lowerBound), \(range.upperBound)}")
+    }
+
+    public convenience init(lengthBetween range: Range<Int>) {
+        self.init(format: "length >= \(range.lowerBound) AND length < \(range.upperBound)")
+    }
+
+    @inlinable public static func length(equalTo length: Int) -> Self {
+        self.init(lengthEqualTo: length)
+    }
+
+    @inlinable public static func length(largerThanOrEqualTo length: Int) -> Self {
+        self.init(lengthLargerThanOrEqualTo: length)
+    }
+
+    @inlinable public static func length(lessThanOrEqualTo length: Int) -> Self {
+        self.init(lengthLessThanOrEqualTo: length)
+    }
+
+    @inlinable public static func length(largerThan length: Int) -> Self {
+        self.init(lengthLargerThan: length)
+    }
+
+    @inlinable public static func length(lessThan length: Int) -> Self {
+        self.init(lengthLessThan: length)
+    }
+
+    @inlinable public static func length(between range: ClosedRange<Int>) -> Self {
+        self.init(lengthBetween: range)
+    }
+
+    @inlinable public static func length(between range: Range<Int>) -> Self {
+        self.init(lengthBetween: range)
+    }
+}
+
+extension PropertyCondition where T: PredicateExpressibleByString {
+    public convenience init(lengthEqualTo length: Int) {
+        self.init(format: "SELF.stringValue.length == \(length)")
+    }
+
+    public convenience init(lengthLargerThanOrEqualTo length: Int) {
+        self.init(format: "SELF.stringValue.length >= \(length)")
+    }
+
+    public convenience init(lengthLessThanOrEqualTo length: Int) {
+        self.init(format: "SELF.stringValue.length <= \(length)")
+    }
+
+    public convenience init(lengthLargerThan length: Int) {
+        self.init(format: "SELF.stringValue.length > \(length)")
+    }
+
+    public convenience init(lengthLessThan length: Int) {
+        self.init(format: "SELF.stringValue.length < \(length)")
+    }
+
+    public convenience init(lengthBetween range: ClosedRange<Int>) {
+        self.init(format: "SELF.stringValue.length BETWEEN {\(range.lowerBound), \(range.upperBound)}")
+    }
+
+    public convenience init(lengthBetween range: Range<Int>) {
+        self.init(format: "SELF.stringValue.length >= \(range.lowerBound) AND SELF.stringValue.length < \(range.upperBound)")
+    }
+
+    @inlinable public static func length(equalTo length: Int) -> Self {
+        self.init(lengthEqualTo: length)
+    }
+
+    @inlinable public static func length(largerThanOrEqualTo length: Int) -> Self {
+        self.init(lengthLargerThanOrEqualTo: length)
+    }
+
+    @inlinable public static func length(lessThanOrEqualTo length: Int) -> Self {
+        self.init(lengthLessThanOrEqualTo: length)
+    }
+
+    @inlinable public static func length(largerThan length: Int) -> Self {
+        self.init(lengthLargerThan: length)
+    }
+
+    @inlinable public static func length(lessThan length: Int) -> Self {
+        self.init(lengthLessThan: length)
+    }
+
+    @inlinable public static func length(between range: ClosedRange<Int>) -> Self {
+        self.init(lengthBetween: range)
+    }
+
+    @inlinable public static func length(between range: Range<Int>) -> Self {
+        self.init(lengthBetween: range)
     }
 }
 

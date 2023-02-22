@@ -70,13 +70,13 @@ class PropertyConditionTests: XCTestCase {
         XCTAssertFalse(sut.evaluate(with: NSNumber(value: 0)))
     }
 
-    func test_smallerThanOrEqualTo_shouldReturnTrue() {
-        let sut = PropertyCondition<Int16>(smallerThanOrEqualTo: 1)
+    func test_LessThanOrEqualTo_shouldReturnTrue() {
+        let sut = PropertyCondition<Int16>(lessThanOrEqualTo: 1)
         XCTAssertTrue(sut.evaluate(with: NSNumber(value: 1)))
     }
 
-    func test_smallerThanOrEqualTo_shouldReturnFalse() {
-        let sut = PropertyCondition<Int16>(smallerThanOrEqualTo: 1)
+    func test_LessThanOrEqualTo_shouldReturnFalse() {
+        let sut = PropertyCondition<Int16>(lessThanOrEqualTo: 1)
         XCTAssertFalse(sut.evaluate(with: NSNumber(value: 2)))
     }
 
@@ -90,13 +90,13 @@ class PropertyConditionTests: XCTestCase {
         XCTAssertFalse(sut.evaluate(with: NSNumber(value: 0)))
     }
 
-    func test_smallerThan_shouldReturnTrue() {
-        let sut = PropertyCondition<Int16>(smallerThan: 1)
+    func test_LessThan_shouldReturnTrue() {
+        let sut = PropertyCondition<Int16>(lessThan: 1)
         XCTAssertTrue(sut.evaluate(with: NSNumber(value: 0)))
     }
 
-    func test_smallerThan_shouldReturnFalse() {
-        let sut = PropertyCondition<Int16>(smallerThan: 1)
+    func test_LessThan_shouldReturnFalse() {
+        let sut = PropertyCondition<Int16>(lessThan: 1)
         XCTAssertFalse(sut.evaluate(with: NSNumber(value: 2)))
     }
 
@@ -198,6 +198,126 @@ class PropertyConditionTests: XCTestCase {
     func test_containsStringValue_shouldReturnFalse() {
         let sut = PropertyCondition<Int16>(contains: "1")
         XCTAssertFalse(sut.evaluate(with: 333))
+    }
+
+    func test_lengthEqualTo_shouldReturnTrue() {
+        let sut = PropertyCondition<String>(lengthEqualTo: 5)
+        XCTAssertTrue(sut.evaluate(with: "12345"))
+    }
+
+    func test_lengthEqualTo_shouldReturnFalse() {
+        let sut = PropertyCondition<String>(lengthEqualTo: 5)
+        XCTAssertFalse(sut.evaluate(with: "123"))
+    }
+
+    func test_lengthLargerThan_shouldReturnTrue() {
+        let sut = PropertyCondition<String>(lengthLargerThan: 5)
+        XCTAssertTrue(sut.evaluate(with: "123456"))
+    }
+
+    func test_lengthLargerThan_shouldReturnFalse() {
+        let sut = PropertyCondition<String>(lengthLargerThan: 5)
+        XCTAssertFalse(sut.evaluate(with: "1234"))
+    }
+
+    func test_lengthLargerThanOrEqualTo_shouldReturnTrue() {
+        let sut = PropertyCondition<String>(lengthLargerThanOrEqualTo: 5)
+        XCTAssertTrue(sut.evaluate(with: "123456"))
+    }
+
+    func test_lengthLargerThanOrEqualTo_shouldReturnFalse() {
+        let sut = PropertyCondition<String>(lengthLargerThanOrEqualTo: 5)
+        XCTAssertFalse(sut.evaluate(with: "1234"))
+    }
+
+    func test_lengthLessThan_shouldReturnTrue() {
+        let sut = PropertyCondition<String>(lengthLessThan: 5)
+        XCTAssertTrue(sut.evaluate(with: "1234"))
+    }
+
+    func test_lengthLessThan_shouldReturnFalse() {
+        let sut = PropertyCondition<String>(lengthLessThan: 5)
+        XCTAssertFalse(sut.evaluate(with: "123456"))
+    }
+
+    func test_lengthLessThanOrEqualTo_shouldReturnTrue() {
+        let sut = PropertyCondition<String>(lengthLessThanOrEqualTo: 5)
+        XCTAssertTrue(sut.evaluate(with: "12345"))
+    }
+
+    func test_lengthLessThanOrEqualTo_shouldReturnFalse() {
+        let sut = PropertyCondition<String>(lengthLessThanOrEqualTo: 5)
+        XCTAssertFalse(sut.evaluate(with: "123456"))
+    }
+
+    func test_lengthBetweenRange_shouldReturnTrue() {
+        let sut = PropertyCondition<String>(lengthBetween: 3..<5)
+        XCTAssertTrue(sut.evaluate(with: "1234"))
+    }
+
+    func test_lengthBetweenRange_shouldReturnFalse() {
+        let sut = PropertyCondition<String>(lengthBetween: 3..<5)
+        XCTAssertFalse(sut.evaluate(with: "12345"))
+    }
+
+    func test_lengthEqualTo_stringExpressible_shouldReturnTrue() {
+        let sut = PropertyCondition<Int16>(lengthEqualTo: 5)
+        XCTAssertTrue(sut.evaluate(with: 12345))
+    }
+
+    func test_lengthEqualTo_stringExpressible_shouldReturnFalse() {
+        let sut = PropertyCondition<Int16>(lengthEqualTo: 5)
+        XCTAssertFalse(sut.evaluate(with: 123))
+    }
+
+    func test_lengthLargerThan_stringExpressible_shouldReturnTrue() {
+        let sut = PropertyCondition<Int16>(lengthLargerThan: 5)
+        XCTAssertTrue(sut.evaluate(with: 123456))
+    }
+
+    func test_lengthLargerThan_stringExpressible_shouldReturnFalse() {
+        let sut = PropertyCondition<Int16>(lengthLargerThan: 5)
+        XCTAssertFalse(sut.evaluate(with: 1234))
+    }
+
+    func test_lengthLargerThanOrEqualTo_stringExpressible_shouldReturnTrue() {
+        let sut = PropertyCondition<Int16>(lengthLargerThanOrEqualTo: 5)
+        XCTAssertTrue(sut.evaluate(with: 123456))
+    }
+
+    func test_lengthLargerThanOrEqualTo_stringExpressible_shouldReturnFalse() {
+        let sut = PropertyCondition<Int16>(lengthLargerThanOrEqualTo: 5)
+        XCTAssertFalse(sut.evaluate(with: 1234))
+    }
+
+    func test_lengthLessThan_stringExpressible_shouldReturnTrue() {
+        let sut = PropertyCondition<Int16>(lengthLessThan: 5)
+        XCTAssertTrue(sut.evaluate(with: 1234))
+    }
+
+    func test_lengthLessThan_stringExpressible_shouldReturnFalse() {
+        let sut = PropertyCondition<Int16>(lengthLessThan: 5)
+        XCTAssertFalse(sut.evaluate(with: 123456))
+    }
+
+    func test_lengthLessThanOrEqualTo_stringExpressible_shouldReturnTrue() {
+        let sut = PropertyCondition<Int16>(lengthLessThanOrEqualTo: 5)
+        XCTAssertTrue(sut.evaluate(with: 12345))
+    }
+
+    func test_lengthLessThanOrEqualTo_stringExpressible_shouldReturnFalse() {
+        let sut = PropertyCondition<Int16>(lengthLessThanOrEqualTo: 5)
+        XCTAssertFalse(sut.evaluate(with: 123456))
+    }
+
+    func test_lengthBetweenRange_stringExpressible_shouldReturnTrue() {
+        let sut = PropertyCondition<Int16>(lengthBetween: 3..<5)
+        XCTAssertTrue(sut.evaluate(with: 1234))
+    }
+
+    func test_lengthBetweenRange_stringExpressible_shouldReturnFalse() {
+        let sut = PropertyCondition<Int16>(lengthBetween: 3..<5)
+        XCTAssertFalse(sut.evaluate(with: 12345))
     }
 }
 
