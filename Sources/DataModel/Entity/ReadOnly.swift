@@ -7,20 +7,63 @@
 
 import CoreData
 
+protocol ReadOnlyObjectProxy: ObjectProxy {
+    associatedtype Driver: DriverBase<Entity>
+    var driver: Driver { get }
+}
+
+extension ReadOnlyObjectProxy {
+
+}
+
 @dynamicMemberLookup
-public struct ReadOnly<T: Crush.Entity>: ObjectProxy {
+public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
+    @dynamicMemberLookup
+    public struct Raw: ReadOnlyObjectProxy {
+        public typealias Driver = ManagedRawDriver<T>
+        public typealias Entity = T
+
+        internal var managedObject: NSManagedObject { driver.managedObject }
+        internal let driver: Driver
+        internal let context: NSManagedObjectContext
+
+        internal init(driver: Driver) {
+            guard let context = driver.managedObject.managedObjectContext else {
+                fatalError("Accessing stale object is dangerous")
+            }
+            self.driver = driver
+            self.context = context
+        }
+
+        public subscript<T: AttributeProtocol>(
+            dynamicMember keyPath: KeyPath<Entity, T>) -> T.RawValue
+        {
+            context.performSync { driver[rawValue: keyPath] }
+        }
+
+        public subscript<T: RelationshipProtocol>(
+            dynamicMember keyPath: KeyPath<Entity, T>
+        ) -> T.Value.Safe
+        where
+            T.Value: UnsafeSessionProperty
+        {
+            context.performSync { driver[value: keyPath].wrapped() }
+        }
+    }
+
     public typealias Entity = T
+    public typealias Driver = ManagedDriver<T>
     
     internal var managedObject: NSManagedObject { driver.managedObject }
     internal let driver: ManagedDriver<Entity>
     internal let context: NSManagedObjectContext
+
+    public var raw: ReadOnly<T>.Raw {
+        Raw(driver: driver.rawDriver())
+    }
     
     public init(_ value: ManagedObject<Entity>) {
         self.init(driver: value.driver())
-    }
-
-    public func asDriver() -> ManagedDriver<Entity> {
-        driver
     }
     
     internal init(object: NSManagedObject) {
@@ -36,24 +79,24 @@ public struct ReadOnly<T: Crush.Entity>: ObjectProxy {
     }
 
     public func access<T: ValuedProperty>(
-        keyPath: KeyPath<Entity, T>) -> T.PropertyValue
+        keyPath: KeyPath<Entity, T>) -> T.Value
     {
-        context.performSync { driver[immutable: keyPath] }
+        context.performSync { driver[value: keyPath] }
     }
 
     public subscript<T: ValuedProperty>(
-        dynamicMember keyPath: KeyPath<Entity, T>) -> T.PropertyValue
+        dynamicMember keyPath: KeyPath<Entity, T>) -> T.Value
     {
         access(keyPath: keyPath)
     }
 
     public subscript<T: ValuedProperty>(
         dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> T.PropertyValue.Safe
+    ) -> T.Value.Safe
     where
-        T.PropertyValue: UnsafeSessionProperty
+        T.Value: UnsafeSessionProperty
     {
-        context.performSync { driver[immutable: keyPath].wrapped() }
+        context.performSync { driver[value: keyPath].wrapped() }
     }
 }
 
@@ -131,16 +174,16 @@ public final class ObservableReadOnly<Entity: Crush.Entity>: ObservableObject {
     }
 
     public subscript<T: ValuedProperty>(
-        dynamicMember keyPath: KeyPath<Entity, T>) -> T.PropertyValue
+        dynamicMember keyPath: KeyPath<Entity, T>) -> T.Value
     {
         readOnly.access(keyPath: keyPath)
     }
 
     public subscript<T: ValuedProperty>(
         dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> T.PropertyValue.Safe
+    ) -> T.Value.Safe
     where
-        T.PropertyValue: UnsafeSessionProperty
+        T.Value: UnsafeSessionProperty
     {
         readOnly[dynamicMember: keyPath]
     }

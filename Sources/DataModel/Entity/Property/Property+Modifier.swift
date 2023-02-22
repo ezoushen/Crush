@@ -10,7 +10,7 @@ import Foundation
 
 open class PropertyModifier<T: WritableValuedProperty, S>: WritableValuedProperty {
     public typealias Description = T.Description
-    public typealias PropertyValue = T.PropertyValue
+    public typealias PropertyValue = T.Value
     public typealias PredicateValue = T.PredicateValue
     public typealias FieldConvertor = T.FieldConvertor
 
@@ -215,7 +215,7 @@ public class Unique<T: WritableValuedProperty>: PropertyModifier<T, String?> {
 
 @propertyWrapper
 public class Default<T: ConcreteAttriuteProcotol>:
-    PropertyModifier<T, T.PropertyValue>
+    PropertyModifier<T, T.Value>
 {
     @inlinable public var wrappedValue: T {
         get { property }

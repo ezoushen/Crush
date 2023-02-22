@@ -13,7 +13,7 @@ import CoreData
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 extension ManagedObject {
     public struct KVOPublisher<T: ValuedProperty>: Combine.Publisher {
-        public typealias Output = T.PropertyValue
+        public typealias Output = T.Value
         public typealias Failure = Never
 
         public let subject: ManagedDriver<Entity>
@@ -21,7 +21,7 @@ extension ManagedObject {
         public let options: NSKeyValueObservingOptions
 
         public func receive<S>(subscriber: S)
-        where S : Subscriber, Never == S.Failure, T.PropertyValue == S.Input {
+        where S : Subscriber, Never == S.Failure, T.Value == S.Input {
             if subject.isFault {
                 subject.managedObject.fireFault()
             }
@@ -126,9 +126,9 @@ extension ReadOnly {
     /// Please be aware that observing property changes requires the managed object not to be a fault. Thus, it'll fire the faulting object first if needed
     public func observe<T: ValuedProperty>(
         _ keyPath: KeyPath<Entity, T>, options: NSKeyValueObservingOptions
-    ) -> AnyPublisher<T.PropertyValue.Safe, Never>
+    ) -> AnyPublisher<T.Value.Safe, Never>
     where
-        T.PropertyValue: UnsafeSessionProperty
+        T.Value: UnsafeSessionProperty
     {
         return ManagedObject<Entity>.KVOPublisher<T>(
             subject: driver, keyPath: keyPath, options: options

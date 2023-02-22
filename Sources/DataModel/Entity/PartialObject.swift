@@ -25,7 +25,7 @@ extension PartialObject where T: Entity {
     }
 
     public subscript<S: AttributeProtocol>(
-        dynamicMember keyPath: KeyPath<T, S>) -> S.PropertyValue
+        dynamicMember keyPath: KeyPath<T, S>) -> S.Value
     {
         get {
             let value = store[keyPath.propertyName]

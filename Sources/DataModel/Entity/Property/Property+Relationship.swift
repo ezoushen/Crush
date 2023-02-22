@@ -16,7 +16,7 @@ where
     Mapping == FieldConvertor
 {
     associatedtype Destination: Entity
-    associatedtype Mapping: RelationMapping where Mapping.RuntimeObjectValue == PropertyValue
+    associatedtype Mapping: RelationMapping where Mapping.RuntimeObjectValue == Value
     
     var isUniDirectional: Bool { get set }
 }

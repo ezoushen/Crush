@@ -58,7 +58,7 @@ public final class UpdateBuilder<Target: Entity>:
 extension UpdateBuilder where Target: Entity {
     public func update<Value: AttributeProtocol>(
         _ keyPath: KeyPath<Target, Value>,
-        value: Value.PropertyValue) -> Self
+        value: Value.Value) -> Self
     {
         config.propertiesToUpdate[keyPath.propertyName] =
             Value.FieldConvertor.convert(value: value)

@@ -25,7 +25,7 @@ public class ManagedObjectBase: NSManagedObject {
     }
 }
 
-public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject, ObjectDriver, ObjectProxy, ManagedStatus {
+public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject, ObjectRuntimeDriver, ObjectProxy, ManagedStatus {
     internal lazy var canTriggerEvent: Bool = {
         managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
     }()
@@ -114,7 +114,15 @@ public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject
 }
 
 extension ManagedObject {
-    public func driver() -> ManagedDriver<Entity> {
+    @inlinable public func driver() -> ManagedDriver<Entity> {
         ManagedDriver(unsafe: self)
+    }
+
+    @inlinable public func rawDriver() -> Entity.RawDriver {
+        ManagedRawDriver(unsafe: self)
+    }
+
+    @inlinable public var raw: Entity.RawDriver {
+        rawDriver()
     }
 }

@@ -22,6 +22,7 @@ public protocol FieldConvertible: AnyFieldConvertible {
     static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
 
     static var defaultRuntimeValue: RuntimeObjectValue { get }
+    static var defaultManagedValue: ManagedObjectValue { get }
 }
 
 extension FieldConvertible where RuntimeObjectValue: OptionalProtocol {
@@ -31,10 +32,36 @@ extension FieldConvertible where RuntimeObjectValue: OptionalProtocol {
     }
 }
 
+extension FieldConvertible where ManagedObjectValue: OptionalProtocol {
+    @inlinable
+    public static var defaultManagedValue: ManagedObjectValue {
+        return ManagedObjectValue.null
+    }
+}
+
 extension FieldConvertible where RuntimeObjectValue: Collection & ExpressibleByArrayLiteral {
     @inlinable
     public static var defaultRuntimeValue: RuntimeObjectValue {
         return []
+    }
+}
+
+extension FieldConvertible where ManagedObjectValue: Collection & ExpressibleByArrayLiteral {
+    @inlinable
+    public static var defaultManagedValue: ManagedObjectValue {
+        return []
+    }
+}
+
+extension FieldConvertible where ManagedObjectValue == NSMutableSet {
+    public static var defaultManagedValue: NSMutableSet {
+        NSMutableSet()
+    }
+}
+
+extension FieldConvertible where ManagedObjectValue == NSMutableOrderedSet {
+    public static var defaultManagedValue: NSMutableOrderedSet {
+        NSMutableOrderedSet()
     }
 }
 
@@ -164,6 +191,11 @@ extension NSNull: FieldConvertible {
 
     @inlinable
     public static var defaultRuntimeValue: NSNull {
+        NSNull()
+    }
+
+    @inlinable
+    public static var defaultManagedValue: NSNull {
         NSNull()
     }
 }

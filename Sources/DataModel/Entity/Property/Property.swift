@@ -16,8 +16,10 @@ public protocol PropertyProtocol: AnyObject {
 }
 
 public protocol ValuedProperty: PropertyProtocol
-where FieldConvertor.RuntimeObjectValue == PropertyValue {
-    associatedtype PropertyValue
+where FieldConvertor.RuntimeObjectValue == Value {
+    typealias Value = FieldConvertor.RuntimeObjectValue
+    typealias RawValue = FieldConvertor.ManagedObjectValue
+
     associatedtype PredicateValue
     associatedtype Description: NSPropertyDescription
     associatedtype FieldConvertor: FieldConvertible

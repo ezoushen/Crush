@@ -223,4 +223,5 @@ extension Entity: ManagableObject { }
 extension ManagableObject where Self: Entity {
     public typealias Managed = ManagedObject<Self>
     public typealias Driver = ManagedDriver<Self>
+    public typealias RawDriver = ManagedRawDriver<Self>
 }
