@@ -157,14 +157,6 @@ extension Int16: IntegerAttributeType {
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension NSDecimalNumber: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
-    public typealias RuntimeValue = NSDecimalNumber?
-    public typealias ManagedValue = NSDecimalNumber?
-
-    public static var nativeType: NSAttributeType { .decimalAttributeType }
-    public var predicateValue: NSObject { self }
-}
-
 extension Double: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .doubleAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
@@ -185,14 +177,19 @@ extension Bool: PredicateEquatableAttributeType, PredicateExpressibleByString {
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
+extension Data: PrimitiveAttributeType, PredicateEquatable {
+    public static var nativeType: NSAttributeType { .binaryDataAttributeType }
+    public var predicateValue: NSObject { self as NSData }
+}
+
 extension Date: PredicateComparableAttributeType, PredicateExpressibleByString {
     public static var nativeType: NSAttributeType { .dateAttributeType }
     public var predicateValue: NSObject { self as NSDate }
 }
 
-extension Data: PrimitiveAttributeType, PredicateEquatable {
-    public static var nativeType: NSAttributeType { .binaryDataAttributeType }
-    public var predicateValue: NSObject { self as NSData }
+extension Decimal: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
+    public static var nativeType: NSAttributeType { .decimalAttributeType }
+    public var predicateValue: NSObject { self as NSDecimalNumber }
 }
 
 extension NSNull: PropertyType {

@@ -23,13 +23,13 @@ public enum Value {
     public typealias Int16 = Attribute<Swift.Int16>
     public typealias Int32 = Attribute<Swift.Int32>
     public typealias Int64 = Attribute<Swift.Int64>
-    public typealias DecimalNumber = Attribute<NSDecimalNumber>
     public typealias Double = Attribute<Swift.Double>
     public typealias Float = Attribute<Swift.Float>
     public typealias String = Attribute<Swift.String>
     public typealias Bool = Attribute<Swift.Bool>
-    public typealias Date = Attribute<Foundation.Date>
     public typealias Data = Attribute<Foundation.Data>
+    public typealias Date = Attribute<Foundation.Date>
+    public typealias Decimal = Attribute<Foundation.Decimal>
     public typealias UUID = Attribute<Foundation.UUID>
     public typealias Enum<E: EnumerableAttributeType> = Attribute<E>
 }
@@ -42,13 +42,13 @@ public enum Derived {
     public typealias Int16 = DerivedAttribute<Swift.Int16>
     public typealias Int32 = DerivedAttribute<Swift.Int32>
     public typealias Int64 = DerivedAttribute<Swift.Int64>
-    public typealias DecimalNumber = DerivedAttribute<NSDecimalNumber>
     public typealias Double = DerivedAttribute<Swift.Double>
     public typealias Float = DerivedAttribute<Swift.Float>
     public typealias String = DerivedAttribute<Swift.String>
     public typealias Bool = DerivedAttribute<Swift.Bool>
-    public typealias Date = DerivedAttribute<Foundation.Date>
     public typealias Data = DerivedAttribute<Foundation.Data>
+    public typealias Date = DerivedAttribute<Foundation.Date>
+    public typealias Decimal = DerivedAttribute<Foundation.Decimal>
     public typealias UUID = DerivedAttribute<Foundation.UUID>
     public typealias Enum<E: EnumerableAttributeType> = DerivedAttribute<E>
 }

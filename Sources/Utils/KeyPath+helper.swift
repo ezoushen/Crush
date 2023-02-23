@@ -10,15 +10,10 @@ import Foundation
 import CoreData
 
 extension AnyKeyPath {
-    fileprivate static var mutex: pthread_mutex_t = {
-        var lock = pthread_mutex_t()
-        pthread_mutex_init(&lock, nil)
-        return lock
-    }()
-    
-    fileprivate static var propertyNameCache: [AnyKeyPath: String] = [:]
+    fileprivate static var lock: os_unfair_lock = .init()
+    fileprivate static var propertyNameCache: [ObjectIdentifier: String] = [:]
 
-    fileprivate var propertyNameCache: [AnyKeyPath: String] {
+    fileprivate var propertyNameCache: [ObjectIdentifier: String] {
         get { Self.propertyNameCache }
         set { Self.propertyNameCache = newValue }
     }
@@ -26,11 +21,11 @@ extension AnyKeyPath {
 
 extension PartialKeyPath where Root: Entity {
     var optionalPropertyName: String? {
-        pthread_mutex_lock(&Self.mutex)
-        defer { pthread_mutex_unlock(&Self.mutex) }
-        return propertyNameCache[self] ?? {
+        os_unfair_lock_lock(&Self.lock)
+        defer { os_unfair_lock_unlock(&Self.lock) }
+        return propertyNameCache[ObjectIdentifier(self)] ?? {
             let name = (Root()[keyPath: self] as? (any Property))?.name
-            defer { if let name = name { propertyNameCache[self] = name } }
+            defer { if let name = name { propertyNameCache[ObjectIdentifier(self)] = name } }
             return name
         }()
     }
@@ -38,11 +33,11 @@ extension PartialKeyPath where Root: Entity {
 
 extension KeyPath where Root: Entity, Value: Property {
     var propertyName: String {
-        pthread_mutex_lock(&Self.mutex)
-        defer { pthread_mutex_unlock(&Self.mutex) }
-        return propertyNameCache[self] ?? {
+        os_unfair_lock_lock(&Self.lock)
+        defer { os_unfair_lock_unlock(&Self.lock) }
+        return propertyNameCache[ObjectIdentifier(self)] ?? {
             let name = Root()[keyPath: self].name
-            defer { propertyNameCache[self] = name }
+            defer { propertyNameCache[ObjectIdentifier(self)] = name }
             return name
         }()
     }

@@ -72,15 +72,15 @@ class AttributeTests: XCTestCase {
     }
 
     func test_attributeDecimal_typeShouldBeDecimal() {
-        let attribute = Value.DecimalNumber("attribute")
+        let attribute = Value.Decimal("attribute")
         let description = attribute.createPropertyDescription()
         XCTAssertEqual(description.attributeType, .decimalAttributeType)
     }
     
     func test_attributeDecimalWithDefaultValue_defaultValueShouldBe10() {
-        let attribute = Default(wrappedValue: Value.DecimalNumber("attribute"), 10)
+        let attribute = Default(wrappedValue: Value.Decimal("attribute"), 10)
         let description = attribute.createPropertyDescription()
-        XCTAssertEqual(description.defaultValue as? NSDecimalNumber, 10)
+        XCTAssertEqual(description.defaultValue as? Decimal, 10)
     }
 
     func test_attributeData_typeShouldBeData() {
