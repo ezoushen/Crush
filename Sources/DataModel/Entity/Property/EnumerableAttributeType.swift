@@ -18,8 +18,8 @@ where
     RawValue: AttributeType & PredicateEquatable & PredicateComparable & Hashable { }
 
 extension RawRepresentable where Self: AttributeType {
-    public typealias ManagedObjectValue = RawValue?
-    public typealias RuntimeObjectValue = Self?
+    public typealias ManagedValue = RawValue?
+    public typealias RuntimeValue = Self?
 }
 
 extension EnumerableAttributeType {
@@ -27,13 +27,13 @@ extension EnumerableAttributeType {
         hasher.combine(rawValue)
     }
 
-    public static func convert(value: RawValue?) -> Self? {
-        guard let value = value else { return nil }
+    public static func convert(managedValue: RawValue?) -> Self? {
+        guard let value = managedValue else { return nil }
         return Self.init(rawValue: value)
     }
 
-    public static func convert(value: Self?) -> RawValue? {
-        value?.rawValue
+    public static func convert(runtimeValue: Self?) -> RawValue? {
+        runtimeValue?.rawValue
     }
 
     public static var nativeType: NSAttributeType { RawValue.nativeType }

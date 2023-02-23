@@ -10,10 +10,10 @@ import CoreData
 
 // MARK: - EntityAttribute
 
-public protocol AttributeProtocol: WritableValuedProperty
+public protocol AttributeProtocol: WritableProperty
 where
-    FieldConvertor: AttributeType,
-    FieldConvertor == PredicateValue,
+    PropertyType: AttributeType,
+    PredicateValue == PropertyType,
     Description: NSAttributeDescription
 { }
 
@@ -21,23 +21,22 @@ extension AttributeProtocol {
     public var isAttribute: Bool { true }
     
     public var attributeType: NSAttributeType {
-        FieldConvertor.nativeType
+        PropertyType.nativeType
     }
 }
 
 public protocol ConcreteAttriuteProcotol: AttributeProtocol { }
-public protocol TransformAttributeProtocol: ConcreteAttriuteProcotol {
-    init(_ name: String)
-}
+
 
 // MARK: - EntityAttributeType
-public class Attribute<F: AttributeType>:
-    TransformAttributeProtocol,
+public class Attribute<PropertyType: AttributeType>:
+    ConcreteAttriuteProcotol,
+    TransformableAttributeInitProtocol,
     TransientProperty,
-    AnyPropertyAdaptor
+    AnyPropertyType
 {
-    public typealias PropertyValue = F.RuntimeObjectValue
-    public typealias FieldConvertor = F
+    public typealias PredicateValue = PropertyType
+    public typealias PropertyValue = PropertyType.RuntimeValue
     
     public let name: String
     
@@ -45,7 +44,7 @@ public class Attribute<F: AttributeType>:
         self.name = name
     }
     
-    public func createDescription() -> NSAttributeDescription {
+    public func createPropertyDescription() -> NSAttributeDescription {
         let description = NSAttributeDescription()
         description.name = name
         description.attributeType = attributeType

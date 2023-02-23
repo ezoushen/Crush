@@ -82,11 +82,11 @@ extension ObjectDriver {
         get {
             let key = keyPath.propertyName
             let mutableSet = managedObject.getMutableSet(key: key)
-            return Property.Mapping.convert(value: mutableSet)
+            return Property.Mapping.convert(managedValue: mutableSet)
         }
         set {
             managedObject.setValue(
-                Property.FieldConvertor.convert(value: newValue),
+                Property.PropertyType.convert(runtimeValue: newValue),
                 key: keyPath.propertyName)
         }
     }
@@ -100,23 +100,23 @@ extension ObjectDriver {
         get {
             let key = keyPath.propertyName
             let mutableOrderedSet = managedObject.getMutableOrderedSet(key: key)
-            return Property.Mapping.convert(value: mutableOrderedSet)
+            return Property.Mapping.convert(managedValue: mutableOrderedSet)
         }
         set {
             managedObject.setValue(
-                Property.FieldConvertor.convert(value: newValue),
+                Property.PropertyType.convert(runtimeValue: newValue),
                 key: keyPath.propertyName)
         }
     }
 
-    internal subscript<Property: ValuedProperty>(
+    internal subscript<Property: Crush.Property>(
         value keyPath: KeyPath<Entity, Property>
-    ) -> Property.Value {
-        guard let managedValue: Property.FieldConvertor.ManagedObjectValue =
+    ) -> Property.RuntimeValue {
+        guard let managedValue: Property.PropertyType.ManagedValue =
                 managedObject.getValue(key: keyPath.propertyName) else {
-            return Property.FieldConvertor.defaultRuntimeValue
+            return Property.PropertyType.defaultRuntimeValue
         }
-        return Property.FieldConvertor.convert(value: managedValue)
+        return Property.PropertyType.convert(managedValue: managedValue)
     }
 }
 
@@ -124,21 +124,21 @@ extension ObjectDriver {
 public protocol ObjectRuntimeDriver: ObjectDriver { }
 
 extension ObjectRuntimeDriver {
-    public subscript<Property: ValuedProperty>(
+    public subscript<Property: Crush.Property>(
         dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> Property.Value {
+    ) -> Property.RuntimeValue {
         self[value: keyPath]
     }
 
-    public subscript<Property: WritableValuedProperty>(
+    public subscript<Property: WritableProperty>(
         dynamicMember keyPath: WritableKeyPath<Entity, Property>
-    ) -> Property.Value {
+    ) -> Property.RuntimeValue {
         get {
             self[value: keyPath]
         }
         set {
             managedObject.setValue(
-                Property.FieldConvertor.convert(value: newValue),
+                Property.PropertyType.convert(runtimeValue: newValue),
                 key: keyPath.propertyName)
         }
     }
@@ -150,13 +150,13 @@ public protocol ObjectRawDriver: ObjectDriver { }
 extension ObjectRawDriver {
     public subscript<Property: AttributeProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> Property.RawValue {
+    ) -> Property.ManagedValue {
         self[rawValue: keyPath]
     }
 
     public subscript<Property: AttributeProtocol>(
         dynamicMember keyPath: WritableKeyPath<Entity, Property>
-    ) -> Property.RawValue {
+    ) -> Property.ManagedValue {
         get {
             self[rawValue: keyPath]
         }
@@ -167,29 +167,29 @@ extension ObjectRawDriver {
 
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> Property.Value {
+    ) -> Property.RuntimeValue {
         self[value: keyPath]
     }
 
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: WritableKeyPath<Entity, Property>
-    ) -> Property.Value {
+    ) -> Property.RuntimeValue {
         get {
             self[value: keyPath]
         }
         set {
             managedObject.setValue(
-                Property.FieldConvertor.convert(value: newValue),
+                Property.PropertyType.convert(runtimeValue: newValue),
                 key: keyPath.propertyName)
         }
     }
 
-    internal subscript<Property: ValuedProperty>(
+    internal subscript<Property: Crush.Property>(
         rawValue keyPath: KeyPath<Entity, Property>
-    ) -> Property.RawValue {
-        guard let managedValue: Property.FieldConvertor.ManagedObjectValue =
+    ) -> Property.ManagedValue {
+        guard let managedValue: Property.PropertyType.ManagedValue =
                 managedObject.getValue(key: keyPath.propertyName) else {
-            return Property.FieldConvertor.defaultManagedValue
+            return Property.PropertyType.defaultManagedValue
         }
         return managedValue
     }

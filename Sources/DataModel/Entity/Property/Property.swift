@@ -10,45 +10,34 @@ import CoreData
 
 // MARK: - Entity Property
 
-public protocol PropertyProtocol: AnyObject {
-    var name: String { get }
-    func createPropertyDescription() -> NSPropertyDescription
-}
-
-public protocol ValuedProperty: PropertyProtocol
-where FieldConvertor.RuntimeObjectValue == Value {
-    typealias Value = FieldConvertor.RuntimeObjectValue
-    typealias RawValue = FieldConvertor.ManagedObjectValue
+public protocol Property: AnyObject {
+    typealias RuntimeValue = PropertyType.RuntimeValue
+    typealias ManagedValue = PropertyType.ManagedValue
 
     associatedtype PredicateValue
     associatedtype Description: NSPropertyDescription
-    associatedtype FieldConvertor: PropertyAdaptor
+    associatedtype PropertyType: Crush.PropertyType
 
+    var name: String { get }
     var isAttribute: Bool { get }
 
-    func createDescription() -> Description
+    func createPropertyDescription() -> Description
 }
 
-extension ValuedProperty {
-    @inlinable public func createPropertyDescription() -> NSPropertyDescription {
-        createDescription()
-    }
-}
+public protocol WritableProperty: Property { }
 
-public protocol WritableValuedProperty: ValuedProperty { }
-
-extension AnyPropertyAdaptor where Self: ValuedProperty {
+extension AnyPropertyType where Self: Property {
     public func managedToRuntime(_ managedValue: Any?) -> Any? {
-        guard let managedValue = managedValue as? FieldConvertor.ManagedObjectValue else {
+        guard let managedValue = managedValue as? PropertyType.ManagedValue else {
             return nil
         }
-        return FieldConvertor.convert(value: managedValue)
+        return PropertyType.convert(managedValue: managedValue)
     }
 
     public func runtimeToManaged(_ runtimeValue: Any?) -> Any? {
-        guard let runtimeValue = runtimeValue as? FieldConvertor.RuntimeObjectValue else {
+        guard let runtimeValue = runtimeValue as? PropertyType.RuntimeValue else {
             return nil
         }
-        return FieldConvertor.convert(value: runtimeValue)
+        return PropertyType.convert(runtimeValue: runtimeValue)
     }
 }

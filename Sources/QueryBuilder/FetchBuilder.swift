@@ -104,7 +104,7 @@ where
         return self
     }
 
-    public func sort<V: WritableValuedProperty>(
+    public func sort<V: WritableProperty>(
         _ keyPath: KeyPath<Target, V>,
         ascending: Bool,
         option: FetchSorterOption = .default) -> Self

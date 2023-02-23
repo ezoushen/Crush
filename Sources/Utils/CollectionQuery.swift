@@ -46,46 +46,46 @@ public final class CollectionQuery<T: Entity> {
     // MARK: @sum
 
     /// `sum` only work with in-memory storage / array
-    public static func sum<S: ValuedProperty>(
+    public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
     /// `sum` only work with in-memory storage / array
-    public static func sum<S: ValuedProperty>(
+    public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
     /// `sum` only work with in-memory storage / array
-    public static func sum<S: ValuedProperty>(
+    public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
     /// `sum` only work with in-memory storage / array
-    public static func sum<S: ValuedProperty>(
+    public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
     /// `sum` only work with in-memory storage / array
-    public static func sum<S: ValuedProperty>(
+    public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
@@ -93,46 +93,46 @@ public final class CollectionQuery<T: Entity> {
     // MARK: @avg
 
     /// `avg` only work with in-memory storage / array
-    public static func avg<S: ValuedProperty>(
+    public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
     /// `avg` only work with in-memory storage / array
-    public static func avg<S: ValuedProperty>(
+    public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
     /// `avg` only work with in-memory storage / array
-    public static func avg<S: ValuedProperty>(
+    public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
     /// `avg` only work with in-memory storage / array
-    public static func avg<S: ValuedProperty>(
+    public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
     /// `avg` only work with in-memory storage / array
-    public static func avg<S: ValuedProperty>(
+    public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
@@ -140,46 +140,46 @@ public final class CollectionQuery<T: Entity> {
     // MARK: @min
 
     /// `min` only work with in-memory storage / array
-    public static func min<S: ValuedProperty>(
+    public static func min<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
     /// `min` only work with in-memory storage / array
-    public static func min<S: ValuedProperty>(
+    public static func min<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
     /// `min` only work with in-memory storage / array
-    public static func min<S: ValuedProperty>(
+    public static func min<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
     /// `min` only work with in-memory storage / array
-    public static func min<S: ValuedProperty>(
+    public static func min<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
     /// `min` only work with in-memory storage / array
-    public static func min<S: ValuedProperty>(
+    public static func min<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
@@ -187,46 +187,46 @@ public final class CollectionQuery<T: Entity> {
     // MARK: @max
 
     /// `max` only work with in-memory storage / array
-    public static func max<S: ValuedProperty>(
+    public static func max<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
     /// `max` only work with in-memory storage / array
-    public static func max<S: ValuedProperty>(
+    public static func max<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
     /// `max` only work with in-memory storage / array
-    public static func max<S: ValuedProperty>(
+    public static func max<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
     /// `max` only work with in-memory storage / array
-    public static func max<S: ValuedProperty>(
+    public static func max<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
     /// `max` only work with in-memory storage / array
-    public static func max<S: ValuedProperty>(
+    public static func max<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.FieldConvertor: PredicateComputable
+        S.PropertyType: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }

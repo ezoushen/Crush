@@ -28,7 +28,7 @@ class FetchedPropertyTests: XCTestCase {
 
     func test_descriptionName_shouldBeName() {
         let sut = entity.feteched
-        let description = sut.createDescription()
+        let description = sut.createPropertyDescription()
         XCTAssertEqual(description.name, sut.name)
     }
 

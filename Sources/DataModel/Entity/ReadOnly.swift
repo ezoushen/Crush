@@ -36,16 +36,16 @@ public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
         }
 
         public subscript<T: AttributeProtocol>(
-            dynamicMember keyPath: KeyPath<Entity, T>) -> T.RawValue
+            dynamicMember keyPath: KeyPath<Entity, T>) -> T.ManagedValue
         {
             context.performSync { driver[rawValue: keyPath] }
         }
 
         public subscript<T: RelationshipProtocol>(
             dynamicMember keyPath: KeyPath<Entity, T>
-        ) -> T.Value.Safe
+        ) -> T.RuntimeValue.Safe
         where
-            T.Value: UnsafeSessionProperty
+            T.RuntimeValue: UnsafeSessionProperty
         {
             context.performSync { driver[value: keyPath].wrapped() }
         }
@@ -78,23 +78,23 @@ public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
         self.context = context
     }
 
-    public func access<T: ValuedProperty>(
-        keyPath: KeyPath<Entity, T>) -> T.Value
+    public func access<T: Property>(
+        keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
     {
         context.performSync { driver[value: keyPath] }
     }
 
-    public subscript<T: ValuedProperty>(
-        dynamicMember keyPath: KeyPath<Entity, T>) -> T.Value
+    public subscript<T: Property>(
+        dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
     {
         access(keyPath: keyPath)
     }
 
-    public subscript<T: ValuedProperty>(
+    public subscript<T: Property>(
         dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> T.Value.Safe
+    ) -> T.RuntimeValue.Safe
     where
-        T.Value: UnsafeSessionProperty
+        T.RuntimeValue: UnsafeSessionProperty
     {
         context.performSync { driver[value: keyPath].wrapped() }
     }
@@ -173,17 +173,17 @@ public final class ObservableReadOnly<Entity: Crush.Entity>: ObservableObject {
             .sink { [unowned self] in objectWillChange.send() }
     }
 
-    public subscript<T: ValuedProperty>(
-        dynamicMember keyPath: KeyPath<Entity, T>) -> T.Value
+    public subscript<T: Property>(
+        dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
     {
         readOnly.access(keyPath: keyPath)
     }
 
-    public subscript<T: ValuedProperty>(
+    public subscript<T: Property>(
         dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> T.Value.Safe
+    ) -> T.RuntimeValue.Safe
     where
-        T.Value: UnsafeSessionProperty
+        T.RuntimeValue: UnsafeSessionProperty
     {
         readOnly[dynamicMember: keyPath]
     }

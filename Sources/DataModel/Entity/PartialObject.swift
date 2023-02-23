@@ -25,17 +25,17 @@ extension PartialObject where T: Entity {
     }
 
     public subscript<S: AttributeProtocol>(
-        dynamicMember keyPath: KeyPath<T, S>) -> S.Value
+        dynamicMember keyPath: KeyPath<T, S>) -> S.RuntimeValue
     {
         get {
             let value = store[keyPath.propertyName]
-            guard let result = value as? S.FieldConvertor.ManagedObjectValue
+            guard let result = value as? S.PropertyType.ManagedValue
             else { return .null }
-            return S.FieldConvertor.convert(value: result)
+            return S.PropertyType.convert(managedValue: result)
         }
         set {
-            let value: S.FieldConvertor.ManagedObjectValue =
-                    S.FieldConvertor.convert(value: newValue)
+            let value: S.PropertyType.ManagedValue =
+                    S.PropertyType.convert(runtimeValue: newValue)
             store[keyPath.propertyName] = value
         }
     }
@@ -47,9 +47,9 @@ public struct EntityKeyValuePair<T: Entity> {
 
     public init<S: AttributeProtocol>(
         _ keyPath: KeyPath<T, S>,
-        _ value: S.FieldConvertor.RuntimeObjectValue)
+        _ value: S.PropertyType.RuntimeValue)
     {
         self.key = keyPath.propertyName
-        self.value = S.FieldConvertor.convert(value: value)
+        self.value = S.PropertyType.convert(runtimeValue: value)
     }
 }

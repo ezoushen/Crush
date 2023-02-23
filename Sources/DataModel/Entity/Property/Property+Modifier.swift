@@ -8,11 +8,11 @@
 import CoreData
 import Foundation
 
-open class PropertyModifier<T: WritableValuedProperty, S>: WritableValuedProperty {
+open class PropertyModifier<T: WritableProperty, S>: WritableProperty {
     public typealias Description = T.Description
-    public typealias PropertyValue = T.Value
+    public typealias PropertyValue = T.RuntimeValue
     public typealias PredicateValue = T.PredicateValue
-    public typealias FieldConvertor = T.FieldConvertor
+    public typealias PropertyType = T.PropertyType
 
     public var name: String { property.name }
     public var isAttribute: Bool { property.isAttribute }
@@ -25,8 +25,8 @@ open class PropertyModifier<T: WritableValuedProperty, S>: WritableValuedPropert
         self.modifier = modifier
     }
 
-    open func createDescription() -> Description {
-        property.createDescription()
+    open func createPropertyDescription() -> Description {
+        property.createPropertyDescription()
     }
 }
 
@@ -42,7 +42,7 @@ extension PropertyModifier: RelationshipProtocol where T: RelationshipProtocol {
 
 extension PropertyModifier: AttributeProtocol where T: AttributeProtocol { }
 
-public protocol TransientProperty: ValuedProperty { }
+public protocol TransientProperty: Property { }
 
 extension PropertyModifier: TransientProperty where T: TransientProperty { }
 
@@ -51,7 +51,7 @@ extension PropertyModifier: ConcreteAttriuteProcotol where T: ConcreteAttriutePr
 // MARK: Property modifier
 
 @propertyWrapper
-public class Optional<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
+public class Optional<T: WritableProperty>: PropertyModifier<T, Bool> {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
@@ -61,15 +61,15 @@ public class Optional<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
         super.init(wrappedValue: wrappedValue, true)
     }
 
-    public override func createDescription() -> PropertyModifier<T, Bool>.Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> PropertyModifier<T, Bool>.Description {
+        let description = super.createPropertyDescription()
         description.isOptional = modifier
         return description
     }
 }
 
 @propertyWrapper
-public class Required<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
+public class Required<T: WritableProperty>: PropertyModifier<T, Bool> {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
@@ -79,15 +79,15 @@ public class Required<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
         super.init(wrappedValue: wrappedValue, false)
     }
 
-    public override func createDescription() -> PropertyModifier<T, Bool>.Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> PropertyModifier<T, Bool>.Description {
+        let description = super.createPropertyDescription()
         description.isOptional = modifier
         return description
     }
 }
 
 @propertyWrapper
-public class Transient<T: WritableValuedProperty & TransientProperty>: PropertyModifier<T, Bool> {
+public class Transient<T: WritableProperty & TransientProperty>: PropertyModifier<T, Bool> {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
@@ -97,8 +97,8 @@ public class Transient<T: WritableValuedProperty & TransientProperty>: PropertyM
         super.init(wrappedValue: wrappedValue, true)
     }
 
-    public override func createDescription() -> PropertyModifier<T, Bool>.Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> PropertyModifier<T, Bool>.Description {
+        let description = super.createPropertyDescription()
         description.isTransient = modifier
         return description
     }
@@ -106,7 +106,7 @@ public class Transient<T: WritableValuedProperty & TransientProperty>: PropertyM
 
 /// This option will be ignored while the property is transient
 @propertyWrapper
-public class IndexedBySpotlight<T: WritableValuedProperty>: PropertyModifier<T, Bool> {
+public class IndexedBySpotlight<T: WritableProperty>: PropertyModifier<T, Bool> {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
@@ -116,8 +116,8 @@ public class IndexedBySpotlight<T: WritableValuedProperty>: PropertyModifier<T, 
         super.init(wrappedValue: wrappedValue, true)
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         description.isIndexedBySpotlight = modifier
         return description
     }
@@ -134,7 +134,7 @@ public protocol IndexProtocol {
 }
 
 @propertyWrapper
-public class Indexed<T: WritableValuedProperty>: PropertyModifier<T, String?>, IndexProtocol {
+public class Indexed<T: WritableProperty>: PropertyModifier<T, String?>, IndexProtocol {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
@@ -173,8 +173,8 @@ public class Indexed<T: WritableValuedProperty>: PropertyModifier<T, String?>, I
             predicate: NSPredicate(format: predicate))
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         var userInfo = description.userInfo ?? [:]
         var indexes = userInfo[UserInfoKey.indexes] as? [IndexProtocol] ?? []
         indexes.append(self)
@@ -192,7 +192,7 @@ public class Indexed<T: WritableValuedProperty>: PropertyModifier<T, String?>, I
 }
 
 @propertyWrapper
-public class Unique<T: WritableValuedProperty>: PropertyModifier<T, String?> {
+public class Unique<T: WritableProperty>: PropertyModifier<T, String?> {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
@@ -202,8 +202,8 @@ public class Unique<T: WritableValuedProperty>: PropertyModifier<T, String?> {
         super.init(wrappedValue: wrappedValue, modifier)
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         var userInfo = description.userInfo ?? [:]
         userInfo[UserInfoKey.uniquenessConstraintName] = modifier ?? description.name
         description.userInfo = userInfo
@@ -215,16 +215,16 @@ public class Unique<T: WritableValuedProperty>: PropertyModifier<T, String?> {
 
 @propertyWrapper
 public class Default<T: ConcreteAttriuteProcotol>:
-    PropertyModifier<T, T.Value>
+    PropertyModifier<T, T.RuntimeValue>
 {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
-        description.defaultValue = T.FieldConvertor.convert(value: modifier)
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
+        description.defaultValue = T.PropertyType.convert(runtimeValue: modifier)
         return description
     }
 }
@@ -240,15 +240,15 @@ public class ExternalBinaryDataStorage<T: AttributeProtocol>: PropertyModifier<T
         super.init(wrappedValue: wrappedValue, true)
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         description.allowsExternalBinaryDataStorage = modifier
         return description
     }
 }
 
 @propertyWrapper
-public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondition<T.FieldConvertor>> {
+public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondition<T.PropertyType>> {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
@@ -256,14 +256,14 @@ public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondi
     public let warning: String
 
     public init(
-        wrappedValue: T, _ modifier: PropertyCondition<T.FieldConvertor>, warning: String = "")
+        wrappedValue: T, _ modifier: PropertyCondition<T.PropertyType>, warning: String = "")
     {
         self.warning = warning
         super.init(wrappedValue: wrappedValue, modifier)
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         var warnings = description.validationWarnings as? [String] ?? []
         var predicates = description.validationPredicates
         warnings.append(warning)
@@ -285,8 +285,8 @@ public class PreservesValueInHistoryOnDeletion<T: AttributeProtocol>: PropertyMo
         super.init(wrappedValue: wrappedValue, true)
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         description.preservesValueInHistoryOnDeletion = modifier
         return description
     }
@@ -303,8 +303,8 @@ public class Inverse<T: RelationshipProtocol, S: RelationshipProtocol>:
         set { /* dummy */ }
     }
 
-    public override func createDescription() -> NSRelationshipDescription {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> NSRelationshipDescription {
+        let description = super.createPropertyDescription()
         let inverseName = self.modifier.propertyName
 
         Caches.entity.getAndWait(Destination.entityCacheKey) {
@@ -328,8 +328,8 @@ where T.Mapping: ToManyRelationMappingProtocol {
         set { /* dummy */ }
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         description.maxCount = modifier
         return description
     }
@@ -343,8 +343,8 @@ where T.Mapping: ToManyRelationMappingProtocol {
         set { /* dummy */ }
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         description.minCount = modifier
         return description
     }
@@ -357,8 +357,8 @@ public class DeleteRule<T: RelationshipProtocol>: PropertyModifier<T, NSDeleteRu
         set { /* dummy */ }
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         description.deleteRule = modifier
         return description
     }
@@ -378,14 +378,14 @@ public class UnidirectionalInverse<T: RelationshipProtocol>: PropertyModifier<T,
 }
 
 @propertyWrapper
-public class VersionModifier<T: WritableValuedProperty>: PropertyModifier<T, String?> {
+public class VersionModifier<T: WritableProperty>: PropertyModifier<T, String?> {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
     }
 
-    public override func createDescription() -> Description {
-        let description = super.createDescription()
+    public override func createPropertyDescription() -> Description {
+        let description = super.createPropertyDescription()
         description.versionHashModifier = modifier
         return description
     }

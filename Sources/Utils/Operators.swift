@@ -239,7 +239,7 @@ infix operator |*|
 extension KeyPath
 where
     Root: Entity,
-    Value: WritableValuedProperty,
+    Value: WritableProperty,
     Value.PredicateValue: PredicateEquatable & Equatable & Hashable
 {
     public static func <> (lhs: KeyPath, rhs: Set<Value.PredicateValue>) -> TypedPredicate<Root> {
@@ -250,7 +250,7 @@ where
 extension KeyPath
 where
     Root: Entity,
-	Value: WritableValuedProperty,
+	Value: WritableProperty,
     Value.PredicateValue: PredicateEquatable & Equatable
 {
     public static func <> (lhs: KeyPath, rhs: Array<Value.PredicateValue>) -> TypedPredicate<Root> {
@@ -296,7 +296,7 @@ extension KeyPath where
 
 extension KeyPath where
     Root: Entity,
-    Value: WritableValuedProperty,
+    Value: WritableProperty,
     Value.PredicateValue: PredicateEquatable & Equatable
 {
     public static func == (lhs: KeyPath, rhs: Value.PredicateValue?) -> TypedPredicate<Root> {
@@ -324,7 +324,7 @@ extension KeyPath where
 
 extension KeyPath where
     Root: Entity,
-    Value: WritableValuedProperty,
+    Value: WritableProperty,
     Value.PredicateValue: PredicateComparable & Comparable
 {
     public static func > (lhs: KeyPath, rhs: Value.PredicateValue) -> TypedPredicate<Root> {
@@ -363,7 +363,7 @@ extension KeyPath where
     
     public static func > <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
     where
-        T: WritableValuedProperty,
+        T: WritableProperty,
         T.PredicateValue == Value.PredicateValue
     {
         TypedPredicate<Root>(format: "\(lhs.propertyName) > \(rhs.propertyName)")
@@ -371,7 +371,7 @@ extension KeyPath where
 
     public static func < <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
     where
-        T: WritableValuedProperty,
+        T: WritableProperty,
         T.PredicateValue == Value.PredicateValue
     {
         TypedPredicate<Root>(format: "\(lhs.propertyName) < \(rhs.propertyName)")
@@ -379,7 +379,7 @@ extension KeyPath where
 
     public static func >= <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
     where
-        T: WritableValuedProperty,
+        T: WritableProperty,
         T.PredicateValue == Value.PredicateValue
     {
         TypedPredicate<Root>(format: "\(lhs.propertyName) >= \(rhs.propertyName)")
@@ -387,7 +387,7 @@ extension KeyPath where
 
     public static func <= <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
     where
-        T: WritableValuedProperty,
+        T: WritableProperty,
         T.PredicateValue == Value.PredicateValue
     {
         TypedPredicate<Root>(format: "\(lhs.propertyName) <= \(rhs.propertyName)")
@@ -396,7 +396,7 @@ extension KeyPath where
 
 extension KeyPath where
     Root: Entity,
-    Value: WritableValuedProperty,
+    Value: WritableProperty,
     Value.PredicateValue == String
 {
     public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {

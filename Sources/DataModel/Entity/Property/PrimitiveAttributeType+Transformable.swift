@@ -19,8 +19,8 @@ extension UIColor: PrimitiveAttributeType, PredicateEquatable {
 #endif
 
 extension NSCoding where Self: AttributeType {
-    public typealias ManagedObjectValue = Self?
-    public typealias RuntimeObjectValue = Self?
+    public typealias ManagedValue = Self?
+    public typealias RuntimeValue = Self?
     public static var nativeType: NSAttributeType { .transformableAttributeType }
 }
 

@@ -9,7 +9,7 @@ import CoreData
 import Foundation
 
 public protocol CodableAttributeType: AttributeType, PredicateEquatable, Codable, Hashable {
-    associatedtype ManagedObjectValue = Data?
+    associatedtype ManagedValue = Data?
 
     var data: Data { get set }
 
@@ -19,14 +19,14 @@ public protocol CodableAttributeType: AttributeType, PredicateEquatable, Codable
 
 extension CodableAttributeType {
     @inlinable
-    public static func convert(value: Data?) -> Self? {
-        guard let value = value else { return nil }
+    public static func convert(managedValue: Data?) -> Self? {
+        guard let value = managedValue else { return nil }
         return try! Self.decoder.decode(Self.self, from: value)
     }
 
     @inlinable
-    public static func convert(value: Self?) -> Data? {
-        guard let value = value else { return nil }
+    public static func convert(runtimeValue: Self?) -> Data? {
+        guard let value = runtimeValue else { return nil }
         return try! Self.encoder.encode(value)
     }
 

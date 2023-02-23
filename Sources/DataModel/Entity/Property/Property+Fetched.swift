@@ -7,33 +7,33 @@
 
 import CoreData
 
-public protocol FetchedPropertyProtocol: ValuedProperty, PropertyAdaptor
+public protocol FetchedPropertyProtocol: Property, PropertyType
 where
-    RuntimeObjectValue == [ReadOnly<Destination>],
-    ManagedObjectValue == [NSManagedObject],
-    PredicateValue == FieldConvertor.ManagedObjectValue,
+    RuntimeValue == [ReadOnly<Destination>],
+    ManagedValue == [NSManagedObject],
+    PredicateValue == PropertyType.ManagedValue,
     Description == NSFetchedPropertyDescription
 {
     associatedtype Destination: Entity
 }
 
 extension FetchedPropertyProtocol {
-    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        value.map { ReadOnly(object: $0) }
+    public static func convert(managedValue: ManagedValue) -> RuntimeValue {
+        managedValue.map { ReadOnly(object: $0) }
     }
 
-    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        value.map(\.managedObject)
+    public static func convert(runtimeValue: RuntimeValue) -> ManagedValue {
+        runtimeValue.map(\.managedObject)
     }
 }
 
 public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
     public typealias Destination = T
-    public typealias RuntimeObjectValue = [T.ReadOnly]
-    public typealias ManagedObjectValue = [NSManagedObject]
-    public typealias FieldConvertor = FetchedProperty<T>
-    public typealias PredicateValue = FieldConvertor.ManagedObjectValue
-    public typealias PropertyValue = FieldConvertor.RuntimeObjectValue
+    public typealias RuntimeValue = [T.ReadOnly]
+    public typealias ManagedValue = [NSManagedObject]
+    public typealias PropertyType = FetchedProperty<T>
+    public typealias PredicateValue = PropertyType.ManagedValue
+    public typealias PropertyValue = PropertyType.RuntimeValue
     public typealias Configuration = (FetchBuilder<T>) -> FetchBuilder<T>
 
     internal let configuration: Configuration
@@ -46,7 +46,7 @@ public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
         self.configuration = block
     }
 
-    public func createDescription() -> NSFetchedPropertyDescription {
+    public func createPropertyDescription() -> NSFetchedPropertyDescription {
         let builder = configuration(
             FetchBuilder(
                 config: .init(), context: DummyContext())

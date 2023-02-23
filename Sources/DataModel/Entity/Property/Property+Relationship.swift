@@ -10,13 +10,13 @@ import CoreData
 
 // MARK: - EntityRelationship
 
-public protocol RelationshipProtocol: WritableValuedProperty
+public protocol RelationshipProtocol: WritableProperty
 where
     Description == NSRelationshipDescription,
-    Mapping == FieldConvertor
+    Mapping == PropertyType
 {
     associatedtype Destination: Entity
-    associatedtype Mapping: RelationMapping where Mapping.RuntimeObjectValue == Value
+    associatedtype Mapping: RelationMapping where Mapping.RuntimeValue == RuntimeValue
     
     var isUniDirectional: Bool { get set }
 }
@@ -26,7 +26,7 @@ extension RelationshipProtocol {
 }
 
 // MARK: - EntityRelationShipType
-public protocol RelationMapping: PropertyAdaptor {
+public protocol RelationMapping: PropertyType {
     associatedtype EntityType: Entity
 
     static var isOrdered: Bool { get }
@@ -37,66 +37,60 @@ public protocol RelationMapping: PropertyAdaptor {
 public protocol ToOneRelationMappingProtocol: RelationMapping { }
 public protocol ToManyRelationMappingProtocol: RelationMapping { }
 
-public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, PropertyAdaptor {
-    public typealias RuntimeObjectValue = ManagedObject<EntityType>?
-    public typealias ManagedObjectValue = ManagedObject<EntityType>?
+public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, PropertyType {
+    public typealias RuntimeValue = ManagedObject<EntityType>?
+    public typealias ManagedValue = ManagedObject<EntityType>?
 
     public static var isOrdered: Bool { false }
     public static var maxCount: Int { 1 }
     public static var minCount: Int { 1 }
-    
-    @inlinable
-    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        guard let value = value else { return nil }
-        return value
-    }
 }
 
-public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyAdaptor {
-    public typealias RuntimeObjectValue = MutableSet<ManagedObject<EntityType>>
-    public typealias ManagedObjectValue = NSMutableSet
+public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyType {
+    public typealias RuntimeValue = MutableSet<ManagedObject<EntityType>>
+    public typealias ManagedValue = NSMutableSet
     
     public static var isOrdered: Bool { false }
     public static var maxCount: Int { 0 }
     public static var minCount: Int { 0 }
     
     @inlinable
-    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return MutableSet(value)
+    public static func convert(managedValue: ManagedValue) -> RuntimeValue {
+        return MutableSet(managedValue)
     }
     
-    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        return value.mutableSet
+    public static func convert(runtimeValue: RuntimeValue) -> ManagedValue {
+        return runtimeValue.mutableSet
     }
 }
 
-public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyAdaptor {
-    public typealias RuntimeObjectValue = MutableOrderedSet<ManagedObject<EntityType>>
-    public typealias ManagedObjectValue = NSMutableOrderedSet
+public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyType {
+    public typealias RuntimeValue = MutableOrderedSet<ManagedObject<EntityType>>
+    public typealias ManagedValue = NSMutableOrderedSet
 
     public static var isOrdered: Bool { true }
     public static var maxCount: Int { 0 }
     public static var minCount: Int { 0 }
     
     @inlinable
-    public static func convert(value: ManagedObjectValue) -> RuntimeObjectValue {
-        return MutableOrderedSet(value)
+    public static func convert(managedValue: ManagedValue) -> RuntimeValue {
+        return MutableOrderedSet(managedValue)
     }
     
-    public static func convert(value: RuntimeObjectValue) -> ManagedObjectValue {
-        return value.orderedSet
+    public static func convert(runtimeValue: RuntimeValue) -> ManagedValue {
+        return runtimeValue.orderedSet
     }
 }
 
-public final class Relationship<R: RelationMapping>:
+public final class Relationship<Mapping: RelationMapping>:
     RelationshipProtocol,
     TransientProperty,
-    AnyPropertyAdaptor
+    AnyPropertyType
 {
-    public typealias FieldConvertor = R
-    public typealias PredicateValue = R.ManagedObjectValue
-    public typealias PropertyValue = R.RuntimeObjectValue
-    public typealias Destination = R.EntityType
+    public typealias PropertyType = Mapping
+    public typealias PredicateValue = Mapping.ManagedValue
+    public typealias PropertyValue = Mapping.RuntimeValue
+    public typealias Destination = Mapping.EntityType
     public typealias Description = NSRelationshipDescription
 
     public let name: String
@@ -106,7 +100,7 @@ public final class Relationship<R: RelationMapping>:
         self.name = name
     }
 
-    public func createDescription() -> NSRelationshipDescription {
+    public func createPropertyDescription() -> NSRelationshipDescription {
         let description = NSRelationshipDescription()
         description.name = name
         description.maxCount = Mapping.maxCount

@@ -199,7 +199,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         type attributeType: T.Type,
         isOptional: Bool? = nil,
         derivedExpression: NSExpression,
-        transform: @escaping (Any?) -> T.ManagedObjectValue = { _ in .null }
+        transform: @escaping (Any?) -> T.ManagedValue = { _ in .null }
     ) {
         self.originPropertyName = String(originName.split(separator: ".")[0])
         self.originKeyPath = originName
@@ -237,7 +237,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         type attributeType: T.Type,
         isOptional: Bool? = nil,
         isTransient: Bool? = nil,
-        transform: @escaping (Any?) -> T.ManagedObjectValue = { _ in .null }
+        transform: @escaping (Any?) -> T.ManagedValue = { _ in .null }
     ) {
         self.originPropertyName = String(originName.split(separator: ".")[0])
         self.originKeyPath = originName
@@ -275,7 +275,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         type attributeType: T.Type,
         isOptional: Bool? = nil,
         derivedExpression: NSExpression,
-        objectTransform: @escaping (NSManagedObject) -> T.ManagedObjectValue = { _ in .null }
+        objectTransform: @escaping (NSManagedObject) -> T.ManagedValue = { _ in .null }
     ) {
         self.originPropertyName = String(originName.split(separator: ".")[0])
         self.originKeyPath = originName
@@ -313,7 +313,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         type attributeType: T.Type,
         isOptional: Bool? = nil,
         isTransient: Bool? = nil,
-        objectTransform: @escaping (NSManagedObject) -> T.ManagedObjectValue = { _ in .null }
+        objectTransform: @escaping (NSManagedObject) -> T.ManagedValue = { _ in .null }
     ) {
         self.originPropertyName = String(originName.split(separator: ".")[0])
         self.originKeyPath = originName

@@ -17,7 +17,7 @@ public enum Relation {
 }
 
 public enum Value {
-    public typealias Transform<T: TransformableAttributeType> = TransformAttribute<Attribute<T>>
+    public typealias Transformable<T: TransformableAttributeType> = TransformableAttribute<Attribute<T>>
     public typealias Codable<T: CodableAttributeType> = Attribute<T>
     public typealias Int = Attribute<Swift.Int>
     public typealias Int16 = Attribute<Swift.Int16>
@@ -36,7 +36,7 @@ public enum Value {
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 public enum Derived {
-    public typealias Transform<T: TransformableAttributeType> = TransformAttribute<DerivedAttribute<T>>
+    public typealias Transformable<T: TransformableAttributeType> = TransformableAttribute<DerivedAttribute<T>>
     public typealias Codable<T: CodableAttributeType> = DerivedAttribute<T>
     public typealias Int = DerivedAttribute<Swift.Int>
     public typealias Int16 = DerivedAttribute<Swift.Int16>

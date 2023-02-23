@@ -14,7 +14,7 @@ public class DictionaryBuilderBase<Target: Crush.Entity>:
     let context: Context
     var config: FetchConfig<Target>
 
-    private var fieldConvertors: [String: any AnyPropertyAdaptor] = [:]
+    private var fieldConvertors: [String: any AnyPropertyType] = [:]
 
     init(config: FetchConfig<Target>, context: Context) {
         self.config = config
@@ -22,7 +22,7 @@ public class DictionaryBuilderBase<Target: Crush.Entity>:
     }
 
     func saveConvertor(keyPath: PartialKeyPath<Target>) {
-        if let convertor = Target()[keyPath: keyPath] as? AnyPropertyAdaptor,
+        if let convertor = Target()[keyPath: keyPath] as? AnyPropertyType,
            let name = keyPath.optionalPropertyName {
             fieldConvertors[name] = convertor
         }
@@ -66,7 +66,7 @@ extension FetchBuilder {
 }
 
 public final class AggregationBuilder<Target: Crush.Entity>: DictionaryBuilderBase<Target> {
-    public func group<T: ValuedProperty>(by property: KeyPath<Target, T>) -> Self
+    public func group<T: Property>(by property: KeyPath<Target, T>) -> Self
     {
         config.modify {
             $0.group(by: property)
@@ -142,7 +142,7 @@ extension AggregationBuilder {
 }
 
 extension DictionaryBuilder {
-    public func group<T: ValuedProperty>(by property: KeyPath<Target, T>) -> AggregationBuilder<Target> {
+    public func group<T: Property>(by property: KeyPath<Target, T>) -> AggregationBuilder<Target> {
         AggregationBuilder(config: config, context: context).group(by: property)
     }
 }
@@ -157,7 +157,7 @@ public final class AggregateExpression<T: Entity> {
         self.keyPath = keyPath
     }
 
-    public static func count<S: ValuedProperty>(_ keyPath: KeyPath<T, S>) -> AggregateExpression {
+    public static func count<S: Property>(_ keyPath: KeyPath<T, S>) -> AggregateExpression {
         return AggregateExpression(keyPath: keyPath) { description in
             let exp = NSExpression(forKeyPath: keyPath.propertyName)
             description.expressionResultType = .integer16AttributeType
@@ -166,34 +166,34 @@ public final class AggregateExpression<T: Entity> {
     }
 
     public static func max<S: AttributeProtocol>(_ keyPath: KeyPath<T, S>) -> AggregateExpression
-    where S.FieldConvertor: PredicateComparable {
+    where S.PropertyType: PredicateComparable {
         return AggregateExpression(keyPath: keyPath) { description in
             let exp = NSExpression(forKeyPath: keyPath.propertyName)
-            description.expressionResultType = S.FieldConvertor.nativeType
+            description.expressionResultType = S.PropertyType.nativeType
             description.expression = NSExpression(forFunction: "max:", arguments: [exp])
         }
     }
 
     public static func min<S: AttributeProtocol>(_ keyPath: KeyPath<T, S>) -> AggregateExpression
-    where S.FieldConvertor: PredicateComparable {
+    where S.PropertyType: PredicateComparable {
         return AggregateExpression(keyPath: keyPath) { description in
             let exp = NSExpression(forKeyPath: keyPath.propertyName)
-            description.expressionResultType = S.FieldConvertor.nativeType
+            description.expressionResultType = S.PropertyType.nativeType
             description.expression = NSExpression(forFunction: "min:", arguments: [exp])
         }
     }
 
     public static func sum<S: AttributeProtocol>(_ keyPath: KeyPath<T, S>) -> AggregateExpression
-    where S.FieldConvertor: PredicateComputable {
+    where S.PropertyType: PredicateComputable {
         return AggregateExpression(keyPath: keyPath) { description in
             let exp = NSExpression(forKeyPath: keyPath.propertyName)
-            description.expressionResultType = S.FieldConvertor.nativeType
+            description.expressionResultType = S.PropertyType.nativeType
             description.expression = NSExpression(forFunction: "sum:", arguments: [exp])
         }
     }
 
     public static func average<S: AttributeProtocol>(_ keyPath: KeyPath<T, S>) -> AggregateExpression
-    where S.FieldConvertor: PredicateComputable {
+    where S.PropertyType: PredicateComputable {
         return AggregateExpression(keyPath: keyPath) { description in
             let exp = NSExpression(forKeyPath: keyPath.propertyName)
             description.expressionResultType = .doubleAttributeType

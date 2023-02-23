@@ -133,7 +133,7 @@ extension Entity {
 
     private func propertyNames(mirror: Mirror) -> [String] {
         let names = mirror.children
-            .compactMap { $0.value as? PropertyProtocol }
+            .compactMap { $0.value as? (any Property) }
             .map(\.name)
         if let superMirror = mirror.superclassMirror {
             return names + propertyNames(mirror: superMirror)
@@ -146,7 +146,7 @@ extension Entity {
         inhertanceData: [ObjectIdentifier: EntityInheritance]
     ) -> [NSPropertyDescription] {
         let ownedProperties = mirror.children
-            .compactMap { $0.value as? PropertyProtocol }
+            .compactMap { $0.value as? (any Property) }
             .map { $0.createPropertyDescription() }
         
         if let superMirror = mirror.superclassMirror,

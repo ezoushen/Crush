@@ -9,75 +9,75 @@
 import CoreData
 import Foundation
 
-public protocol AnyPropertyAdaptor {
+public protocol AnyPropertyType {
     func managedToRuntime(_ managedValue: Any?) -> Any?
     func runtimeToManaged(_ runtimeValue: Any?) -> Any?
 }
 
-public protocol PropertyAdaptor: AnyPropertyAdaptor {
-    associatedtype RuntimeObjectValue
-    associatedtype ManagedObjectValue
+public protocol PropertyType: AnyPropertyType {
+    associatedtype RuntimeValue
+    associatedtype ManagedValue
     
-    static func convert(value: ManagedObjectValue) -> RuntimeObjectValue
-    static func convert(value: RuntimeObjectValue) -> ManagedObjectValue
+    static func convert(managedValue: ManagedValue) -> RuntimeValue
+    static func convert(runtimeValue: RuntimeValue) -> ManagedValue
 
-    static var defaultRuntimeValue: RuntimeObjectValue { get }
-    static var defaultManagedValue: ManagedObjectValue { get }
+    static var defaultRuntimeValue: RuntimeValue { get }
+    static var defaultManagedValue: ManagedValue { get }
 }
 
-extension PropertyAdaptor where RuntimeObjectValue: OptionalProtocol {
+extension PropertyType where RuntimeValue: OptionalProtocol {
     @inlinable
-    public static var defaultRuntimeValue: RuntimeObjectValue {
-        return RuntimeObjectValue.null
+    public static var defaultRuntimeValue: RuntimeValue {
+        return RuntimeValue.null
     }
 }
 
-extension PropertyAdaptor where ManagedObjectValue: OptionalProtocol {
+extension PropertyType where ManagedValue: OptionalProtocol {
     @inlinable
-    public static var defaultManagedValue: ManagedObjectValue {
-        return ManagedObjectValue.null
+    public static var defaultManagedValue: ManagedValue {
+        return ManagedValue.null
     }
 }
 
-extension PropertyAdaptor where RuntimeObjectValue: Collection & ExpressibleByArrayLiteral {
+extension PropertyType where RuntimeValue: Collection & ExpressibleByArrayLiteral {
     @inlinable
-    public static var defaultRuntimeValue: RuntimeObjectValue {
+    public static var defaultRuntimeValue: RuntimeValue {
         return []
     }
 }
 
-extension PropertyAdaptor where ManagedObjectValue: Collection & ExpressibleByArrayLiteral {
+extension PropertyType where ManagedValue: Collection & ExpressibleByArrayLiteral {
     @inlinable
-    public static var defaultManagedValue: ManagedObjectValue {
+    public static var defaultManagedValue: ManagedValue {
         return []
     }
 }
 
-extension PropertyAdaptor where ManagedObjectValue == NSMutableSet {
+extension PropertyType where ManagedValue == NSMutableSet {
     public static var defaultManagedValue: NSMutableSet {
         NSMutableSet()
     }
 }
 
-extension PropertyAdaptor where ManagedObjectValue == NSMutableOrderedSet {
+extension PropertyType where ManagedValue == NSMutableOrderedSet {
     public static var defaultManagedValue: NSMutableOrderedSet {
         NSMutableOrderedSet()
     }
 }
 
-extension PropertyAdaptor {
+extension PropertyType {
     public func managedToRuntime(_ managedValue: Any?) -> Any? {
-        guard let managedValue = managedValue as? ManagedObjectValue else {
+        guard let managedValue = managedValue as? ManagedValue else {
             return nil
         }
-        return Self.convert(value: managedValue)
+        return Self.convert(managedValue: managedValue)
     }
 
     public func runtimeToManaged(_ runtimeValue: Any?) -> Any? {
-        guard let runtimeValue = runtimeValue as? RuntimeObjectValue else {
+        guard let runtimeValue = runtimeValue as? RuntimeValue else {
             return nil
         }
-        return Self.convert(value: runtimeValue)
+        return Self.convert(runtimeValue: runtimeValue)
     }
 }
 
@@ -91,18 +91,18 @@ public protocol PredicateEquatable {
 
 public protocol PredicateComparable: PredicateEquatable { }
 
-public protocol AttributeType: PropertyAdaptor
-where ManagedObjectValue: OptionalProtocol {
-    associatedtype RuntimeObjectValue: OptionalProtocol = Self?
+public protocol AttributeType: PropertyType
+where ManagedValue: OptionalProtocol {
+    associatedtype RuntimeValue: OptionalProtocol = Self?
     static var nativeType: NSAttributeType { get }
 }
 
 public protocol PrimitiveAttributeType: AttributeType {
-    associatedtype ManagedObjectValue: OptionalProtocol = Self?
+    associatedtype ManagedValue: OptionalProtocol = Self?
 }
 
 public protocol TransformableAttributeType: NSObject, NSCoding, AttributeType
-where RuntimeObjectValue == ManagedObjectValue {
+where RuntimeValue == ManagedValue {
     static var attributeValueClassName: String? { get }
     static var valueTransformerName: String? { get }
 }
@@ -121,13 +121,9 @@ extension TransformableAttributeType {
     }
 }
 
-extension AttributeType
-where
-    RuntimeObjectValue == Self?,
-    RuntimeObjectValue == ManagedObjectValue
-{
-    @inlinable
-    public static func convert(value: Self?) -> Self? { value }
+extension PropertyType where RuntimeValue == ManagedValue {
+    @inlinable public static func convert(runtimeValue: RuntimeValue) -> ManagedValue { runtimeValue }
+    @inlinable public static func convert(managedValue: ManagedValue) -> RuntimeValue { managedValue }
 }
 
 public typealias PredicateComparableAttributeType = PrimitiveAttributeType & PredicateComparable
@@ -162,8 +158,8 @@ extension Int16: IntegerAttributeType {
 }
 
 extension NSDecimalNumber: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
-    public typealias RuntimeObjectValue = NSDecimalNumber?
-    public typealias ManagedObjectValue = NSDecimalNumber?
+    public typealias RuntimeValue = NSDecimalNumber?
+    public typealias ManagedValue = NSDecimalNumber?
 
     public static var nativeType: NSAttributeType { .decimalAttributeType }
     public var predicateValue: NSObject { self }
@@ -199,22 +195,12 @@ extension Data: PrimitiveAttributeType, PredicateEquatable {
     public var predicateValue: NSObject { self as NSData }
 }
 
-extension NSNull: PropertyAdaptor {
-    public typealias RuntimeObjectValue = NSNull
-    public typealias ManagedObjectValue = NSNull
+extension NSNull: PropertyType {
+    public typealias RuntimeValue = NSNull
+    public typealias ManagedValue = NSNull
 
-    @inlinable
-    public static func convert(value: NSNull) -> NSNull { value }
-
-    @inlinable
-    public static var defaultRuntimeValue: NSNull {
-        NSNull()
-    }
-
-    @inlinable
-    public static var defaultManagedValue: NSNull {
-        NSNull()
-    }
+    @inlinable public static var defaultRuntimeValue: NSNull { NSNull() }
+    @inlinable public static var defaultManagedValue: NSNull { NSNull() }
 }
 
 extension UUID: PredicateEquatableAttributeType, PredicateExpressibleByString {

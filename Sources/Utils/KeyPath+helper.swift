@@ -29,14 +29,14 @@ extension PartialKeyPath where Root: Entity {
         pthread_mutex_lock(&Self.mutex)
         defer { pthread_mutex_unlock(&Self.mutex) }
         return propertyNameCache[self] ?? {
-            let name = (Root()[keyPath: self] as? PropertyProtocol)?.name
+            let name = (Root()[keyPath: self] as? (any Property))?.name
             defer { if let name = name { propertyNameCache[self] = name } }
             return name
         }()
     }
 }
 
-extension KeyPath where Root: Entity, Value: PropertyProtocol {
+extension KeyPath where Root: Entity, Value: Property {
     var propertyName: String {
         pthread_mutex_lock(&Self.mutex)
         defer { pthread_mutex_unlock(&Self.mutex) }
@@ -48,7 +48,7 @@ extension KeyPath where Root: Entity, Value: PropertyProtocol {
     }
 }
 
-extension KeyPath: Expressible where Root: Entity, Value: PropertyProtocol {
+extension KeyPath: Expressible where Root: Entity, Value: Property {
     public func getHashValue() -> Int {
         propertyName.hashValue
     }
@@ -62,7 +62,7 @@ extension KeyPath where Root: Entity, Value: RelationshipProtocol {
     public func extend<Target, Property>(
         _ keyPath: KeyPath<Target, Property>) -> String
     where
-        Property: PropertyProtocol,
+        Property: Crush.Property,
         Value.Destination == Target
     {
         "\(propertyName).\(keyPath.propertyName)"
