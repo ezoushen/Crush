@@ -22,8 +22,16 @@ public enum DerivedAggregation: String {
     case sum
 }
 
+public protocol DerivedAttributeProtocol: AttributeProtocol, AnyPropertyAdaptor {
+    init<T: Entity>(_ name: String, from keyPath: KeyPath<T, Attribute<FieldConvertor>>)
+    init<T: Entity, S: Entity> (
+        _ name: String,
+        from keyPath: KeyPath<T, Relationship<ToOne<S>>>,
+        property extensionKeyPath: KeyPath<S, Attribute<FieldConvertor>>)
+}
+
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
-public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFieldConvertible {
+public final class DerivedAttribute<F: AttributeType>: DerivedAttributeProtocol {
     public typealias Description = NSDerivedAttributeDescription
     public typealias PropertyValue = F.RuntimeObjectValue
     public typealias FieldConvertor = F
@@ -33,7 +41,7 @@ public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFi
     private let expressionBlock: () -> NSExpression
     public private(set) lazy var expression: NSExpression? = expressionBlock()
 
-    public init<T: Entity>(
+    public required init<T: Entity>(
         _ name: String, from keyPath: KeyPath<T, Attribute<F>>)
     {
         self.name = name
@@ -41,7 +49,7 @@ public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFi
         self.expressionBlock = { NSExpression(forKeyPath: keyPath.propertyName) }
     }
 
-    public init<T: Entity, S: Entity> (
+    public required init<T: Entity, S: Entity> (
         _ name: String,
         from keyPath: KeyPath<T, Relationship<ToOne<S>>>,
         property extensionKeyPath: KeyPath<S, Attribute<F>>)
@@ -62,15 +70,9 @@ public final class DerivedAttribute<F: FieldAttribute>: AttributeProtocol, AnyFi
 
     public func createDescription() -> NSDerivedAttributeDescription {
         let description = NSDerivedAttributeDescription()
-        description.valueTransformerName = valueTransformerName
         description.name = name
         description.attributeType = attributeType
         description.derivationExpression = expression
-
-        if let className = attributeValueClassName {
-            description.attributeValueClassName = className
-        }
-
         return description
     }
 }

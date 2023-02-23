@@ -1,5 +1,5 @@
 //
-//  PrimitiveAttribute+CodaleProperty.swift
+//  CodableAttributeType.swift
 //  
 //
 //  Created by ezou on 2021/10/18.
@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Hashable {
+public protocol CodableAttributeType: AttributeType, PredicateEquatable, Codable, Hashable {
     associatedtype ManagedObjectValue = Data?
 
     var data: Data { get set }
@@ -17,7 +17,7 @@ public protocol CodableProperty: FieldAttribute, PredicateEquatable, Codable, Ha
     static var decoder: JSONDecoder { get }
 }
 
-extension CodableProperty {
+extension CodableAttributeType {
     @inlinable
     public static func convert(value: Data?) -> Self? {
         guard let value = value else { return nil }

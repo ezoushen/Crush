@@ -147,14 +147,14 @@ class AttributeTests: XCTestCase {
     }
 
     func test_attributeCodable_typeShouldBeCodableData() {
-        struct Model: CodableProperty { }
+        struct Model: CodableAttributeType { }
         let attribute = Value.Codable<Model>("attribute")
         let description = attribute.createPropertyDescription() as! NSAttributeDescription
         XCTAssertEqual(description.attributeType, .binaryDataAttributeType)
     }
     
     func test_attributeCodableWithDefaultValue_defaultValueShouldBeCodable() {
-        struct Model: CodableProperty {
+        struct Model: CodableAttributeType {
             let value: Int
         }
         let model = Model(value: 100)
@@ -164,7 +164,7 @@ class AttributeTests: XCTestCase {
     }
 
     func test_attributeEnum_typeShouldBeEnumString() {
-        enum Model: String, Enumerator {
+        enum Model: String, EnumerableAttributeType {
             typealias RawValue = String
             case dummy
         }
@@ -174,7 +174,7 @@ class AttributeTests: XCTestCase {
     }
     
     func test_attributeEnumWithDefaultValue_defaultValueShouldBeStringDummy() {
-        enum Model: String, Enumerator {
+        enum Model: String, EnumerableAttributeType {
             typealias RawValue = String
             case dummy
         }

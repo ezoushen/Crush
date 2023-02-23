@@ -12,12 +12,10 @@ import CoreData
 
 public protocol AttributeProtocol: WritableValuedProperty
 where
-    FieldConvertor: FieldAttribute,
+    FieldConvertor: AttributeType,
     FieldConvertor == PredicateValue,
     Description: NSAttributeDescription
-{
-    var attributeValueClassName: String? { get }
-}
+{ }
 
 extension AttributeProtocol {
     public var isAttribute: Bool { true }
@@ -25,47 +23,32 @@ extension AttributeProtocol {
     public var attributeType: NSAttributeType {
         FieldConvertor.nativeType
     }
-    
-    public var attributeValueClassName: String? {
-        PredicateValue.self is NSCoding.Type
-            ? String(describing: Self.self)
-            : nil
-    }
-    
-    public var valueTransformerName: String? {
-        PredicateValue.self is NSCoding.Type
-            ? String(describing: DefaultTransformer.self)
-            : nil
-    }
 }
 
 public protocol ConcreteAttriuteProcotol: AttributeProtocol { }
+public protocol TransformAttributeProtocol: ConcreteAttriuteProcotol {
+    init(_ name: String)
+}
 
 // MARK: - EntityAttributeType
-public class Attribute<F: FieldAttribute>:
-    ConcreteAttriuteProcotol,
+public class Attribute<F: AttributeType>:
+    TransformAttributeProtocol,
     TransientProperty,
-    AnyFieldConvertible
+    AnyPropertyAdaptor
 {
     public typealias PropertyValue = F.RuntimeObjectValue
     public typealias FieldConvertor = F
     
     public let name: String
     
-    public init(_ name: String) {
+    public required init(_ name: String) {
         self.name = name
     }
     
     public func createDescription() -> NSAttributeDescription {
         let description = NSAttributeDescription()
-        description.valueTransformerName = valueTransformerName
         description.name = name
         description.attributeType = attributeType
-        
-        if let className = attributeValueClassName {
-            description.attributeValueClassName = className
-        }
-        
         return description
     }
 }

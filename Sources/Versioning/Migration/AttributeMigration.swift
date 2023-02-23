@@ -62,7 +62,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
     }
 
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
-    public init<T: FieldAttribute>(
+    public init<T: AttributeType>(
         _ name: String,
         type attributeType: T.Type,
         isOptional: Bool = true,
@@ -89,7 +89,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
         self.attributeType = attributeType
     }
     
-    public init<T: FieldAttribute>(
+    public init<T: AttributeType>(
         _ name: String,
         type attributeType: T.Type,
         isOptional: Bool = true,
@@ -193,7 +193,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.derivedExpression = derivedExpression
     }
 
-    public init<T: FieldAttribute>(
+    public init<T: AttributeType>(
         _ originName: String,
         name: String? = nil,
         type attributeType: T.Type,
@@ -231,7 +231,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.objectTransform = nil
     }
 
-    public init<T: FieldAttribute>(
+    public init<T: AttributeType>(
         _ originName: String,
         name: String? = nil,
         type attributeType: T.Type,
@@ -269,7 +269,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.derivedExpression = nil
     }
     
-    public init<T: FieldAttribute>(
+    public init<T: AttributeType>(
         _ originName: String,
         name: String? = nil,
         type attributeType: T.Type,
@@ -307,7 +307,7 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
         self.objectTransform = objectTransform
     }
 
-    public init<T: FieldAttribute>(
+    public init<T: AttributeType>(
         _ originName: String,
         name: String? = nil,
         type attributeType: T.Type,

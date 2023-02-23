@@ -1,6 +1,6 @@
 //
-//  PrimitiveAttribute+Enumerator.swift
-//  
+//  EnumerableAttributeType.swift
+//
 //
 //  Created by ezou on 2021/10/18.
 //
@@ -8,15 +8,21 @@
 import CoreData
 import Foundation
 
-public protocol Enumerator:
+public protocol EnumerableAttributeType:
     RawRepresentable,
-    FieldAttribute,
+    AttributeType,
     PredicateEquatable,
+    PredicateComparable,
     Hashable
 where
-    RawValue: FieldAttribute & PredicateEquatable & Hashable { }
+    RawValue: AttributeType & PredicateEquatable & PredicateComparable & Hashable { }
 
-extension Enumerator {
+extension RawRepresentable where Self: AttributeType {
+    public typealias ManagedObjectValue = RawValue?
+    public typealias RuntimeObjectValue = Self?
+}
+
+extension EnumerableAttributeType {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(rawValue)
     }

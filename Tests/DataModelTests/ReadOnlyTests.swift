@@ -12,8 +12,13 @@ import XCTest
 @testable import Crush
 
 class ReadOnlyTests: XCTestCase {
+    enum EnumValue: Int16, Crush.EnumerableAttributeType {
+        case value
+    }
+    
     class TestEntity: Entity {
         var integerValue = Value.Int16("integerValue")
+        var enumValue = Value.Enum<EnumValue>("enumValue")
         var ordered = Relation.ToOrdered<TestEntity>("ordered")
         var many = Relation.ToMany<TestEntity>("many")
         var one = Relation.ToOne<TestEntity>("one")
@@ -108,6 +113,17 @@ class ReadOnlyTests: XCTestCase {
             return entity
         }
         XCTAssertEqual(entity.fetched.count, 1)
+    }
+    
+    func test_readFetchProperty_shouldReturnRawValue() {
+        let entity: TestEntity.ReadOnly = container.startSession().sync {
+            context -> TestEntity.Managed in
+            let entity = context.create(entity: TestEntity.self)
+            entity.enumValue = .value
+            try! context.commit()
+            return entity
+        }
+        XCTAssertEqual(entity.raw.enumValue, 0)
     }
 
     func createDefaultEntity(integerValue: Int16) -> TestEntity.ReadOnly {

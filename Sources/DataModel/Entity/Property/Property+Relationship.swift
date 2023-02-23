@@ -26,7 +26,7 @@ extension RelationshipProtocol {
 }
 
 // MARK: - EntityRelationShipType
-public protocol RelationMapping: FieldConvertible {
+public protocol RelationMapping: PropertyAdaptor {
     associatedtype EntityType: Entity
 
     static var isOrdered: Bool { get }
@@ -37,7 +37,7 @@ public protocol RelationMapping: FieldConvertible {
 public protocol ToOneRelationMappingProtocol: RelationMapping { }
 public protocol ToManyRelationMappingProtocol: RelationMapping { }
 
-public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, FieldConvertible {
+public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, PropertyAdaptor {
     public typealias RuntimeObjectValue = ManagedObject<EntityType>?
     public typealias ManagedObjectValue = ManagedObject<EntityType>?
 
@@ -52,7 +52,7 @@ public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, FieldConv
     }
 }
 
-public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, FieldConvertible {
+public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyAdaptor {
     public typealias RuntimeObjectValue = MutableSet<ManagedObject<EntityType>>
     public typealias ManagedObjectValue = NSMutableSet
     
@@ -70,7 +70,7 @@ public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, FieldCo
     }
 }
 
-public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, FieldConvertible {
+public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyAdaptor {
     public typealias RuntimeObjectValue = MutableOrderedSet<ManagedObject<EntityType>>
     public typealias ManagedObjectValue = NSMutableOrderedSet
 
@@ -91,7 +91,7 @@ public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, Fiel
 public final class Relationship<R: RelationMapping>:
     RelationshipProtocol,
     TransientProperty,
-    AnyFieldConvertible
+    AnyPropertyAdaptor
 {
     public typealias FieldConvertor = R
     public typealias PredicateValue = R.ManagedObjectValue

@@ -22,7 +22,7 @@ where FieldConvertor.RuntimeObjectValue == Value {
 
     associatedtype PredicateValue
     associatedtype Description: NSPropertyDescription
-    associatedtype FieldConvertor: FieldConvertible
+    associatedtype FieldConvertor: PropertyAdaptor
 
     var isAttribute: Bool { get }
 
@@ -30,15 +30,14 @@ where FieldConvertor.RuntimeObjectValue == Value {
 }
 
 extension ValuedProperty {
-    @inlinable
-    public func createPropertyDescription() -> NSPropertyDescription {
+    @inlinable public func createPropertyDescription() -> NSPropertyDescription {
         createDescription()
     }
 }
 
 public protocol WritableValuedProperty: ValuedProperty { }
 
-extension AnyFieldConvertible where Self: ValuedProperty {
+extension AnyPropertyAdaptor where Self: ValuedProperty {
     public func managedToRuntime(_ managedValue: Any?) -> Any? {
         guard let managedValue = managedValue as? FieldConvertor.ManagedObjectValue else {
             return nil

@@ -100,19 +100,19 @@ where
     Root: Entity,
     Value == Root
 {
-    @inlinable public static func == <T: EntityEquatable>(lhs: KeyPath, rhs: T) -> PropertyCondition<T> {
+    @inlinable public static func == <T: EntityEquatableType>(lhs: KeyPath, rhs: T) -> PropertyCondition<T> {
         .equal(to: rhs)
     }
 
-    @inlinable public static func != <T: EntityEquatable>(lhs: KeyPath, rhs: T) -> PropertyCondition<T> {
+    @inlinable public static func != <T: EntityEquatableType>(lhs: KeyPath, rhs: T) -> PropertyCondition<T> {
         .notEqual(to: rhs)
     }
 
-    @inlinable public static func <> <T: EntityEquatable>(lhs: KeyPath, rhs: [T]) -> PropertyCondition<T> {
+    @inlinable public static func <> <T: EntityEquatableType>(lhs: KeyPath, rhs: [T]) -> PropertyCondition<T> {
         .with(in: rhs)
     }
 
-    @inlinable public static func <> <T: EntityEquatable & Hashable>(lhs: KeyPath, rhs: Set<T>) -> PropertyCondition<T> {
+    @inlinable public static func <> <T: EntityEquatableType & Hashable>(lhs: KeyPath, rhs: Set<T>) -> PropertyCondition<T> {
         .with(in: rhs)
     }
 }
@@ -263,14 +263,14 @@ extension KeyPath where
     Value: RelationshipProtocol,
     Value.Mapping == ToOne<Value.Destination>
 {
-    public static func == <T: EntityEquatable>(
+    public static func == <T: EntityEquatableType>(
         lhs: KeyPath, rhs: T) -> TypedPredicate<Root>
     {
         TypedPredicate<Root>(
             format: "\(lhs.propertyName) == %@", rhs.predicateValue)
     }
 
-    public static func != <T: EntityEquatable>(
+    public static func != <T: EntityEquatableType>(
         lhs: KeyPath, rhs: T) -> TypedPredicate<Root>
     {
         TypedPredicate<Root>(

@@ -1,18 +1,28 @@
 //
-//  PrimitiveAttribute+Transformable.swift
+//  PrimitiveAttributeType+Transformable.swift
 //  
 //
 //  Created by ezou on 2021/10/18.
 //
 
+import CoreData
 import Foundation
 
 #if os(iOS) || os(watchOS)
 import UIKit.UIImage
-extension UIImage: PrimitiveAttribute, PredicateEquatable {
+extension UIImage: PrimitiveAttributeType, PredicateEquatable {
+    public var predicateValue: NSObject { self }
+}
+extension UIColor: PrimitiveAttributeType, PredicateEquatable {
     public var predicateValue: NSObject { self }
 }
 #endif
+
+extension NSCoding where Self: AttributeType {
+    public typealias ManagedObjectValue = Self?
+    public typealias RuntimeObjectValue = Self?
+    public static var nativeType: NSAttributeType { .transformableAttributeType }
+}
 
 @objc(DefaultTransformer)
 class DefaultTransformer: ValueTransformer {

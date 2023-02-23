@@ -17,8 +17,8 @@ public enum Relation {
 }
 
 public enum Value {
-    public typealias Transform<T: NSCoding & FieldAttribute> = Attribute<T>
-    public typealias Codable<T: CodableProperty> = Attribute<T>
+    public typealias Transform<T: TransformableAttributeType> = TransformAttribute<Attribute<T>>
+    public typealias Codable<T: CodableAttributeType> = Attribute<T>
     public typealias Int = Attribute<Swift.Int>
     public typealias Int16 = Attribute<Swift.Int16>
     public typealias Int32 = Attribute<Swift.Int32>
@@ -31,14 +31,14 @@ public enum Value {
     public typealias Date = Attribute<Foundation.Date>
     public typealias Data = Attribute<Foundation.Data>
     public typealias UUID = Attribute<Foundation.UUID>
-    public typealias Enum<E: Enumerator> = Attribute<E>
+    public typealias Enum<E: EnumerableAttributeType> = Attribute<E>
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 public enum Derived {
-    public typealias Transform<T: NSCoding & FieldAttribute> = DerivedAttribute<T>
-    public typealias Codable<T: CodableProperty> = DerivedAttribute<T>
-    public typealias Int = Attribute<Swift.Int>
+    public typealias Transform<T: TransformableAttributeType> = TransformAttribute<DerivedAttribute<T>>
+    public typealias Codable<T: CodableAttributeType> = DerivedAttribute<T>
+    public typealias Int = DerivedAttribute<Swift.Int>
     public typealias Int16 = DerivedAttribute<Swift.Int16>
     public typealias Int32 = DerivedAttribute<Swift.Int32>
     public typealias Int64 = DerivedAttribute<Swift.Int64>
@@ -50,5 +50,5 @@ public enum Derived {
     public typealias Date = DerivedAttribute<Foundation.Date>
     public typealias Data = DerivedAttribute<Foundation.Data>
     public typealias UUID = DerivedAttribute<Foundation.UUID>
-    public typealias Enum<E: Enumerator> = DerivedAttribute<E>
+    public typealias Enum<E: EnumerableAttributeType> = DerivedAttribute<E>
 }

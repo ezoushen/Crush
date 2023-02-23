@@ -12,8 +12,14 @@ import XCTest
 @testable import Crush
 
 class ManagedDriverTests: XCTestCase {
+    struct StructValue: CodableAttributeType {
+        let value: Int
+    }
+    
     class TestEntity: Entity {
         var integerValue = Value.Int64("integerValue")
+        var structValue = Value.Codable<StructValue>("structValue")
+        
         var ordered = Relation.ToOrdered<TestEntity>("ordered")
         var unordered = Relation.ToMany<TestEntity>("unordered")
         var testEntity = Relation.ToOne<TestEntity>("testEntity")
@@ -84,6 +90,16 @@ class ManagedDriverTests: XCTestCase {
             let object = $0.edit(object: sut).driver()
             object.ordered.insert(newObject)
             XCTAssertTrue(object.ordered.contains(newObject))
+        }
+    }
+    
+    func test_keyPathLookupRawValue_shouldEqual() throws {
+        let session = container.startSession()
+        try session.sync {
+            let object = $0.edit(object: sut)
+            let value = StructValue(value: 10)
+            object.structValue = value
+            XCTAssertEqual(try JSONEncoder().encode(value), object.raw.structValue)
         }
     }
 }

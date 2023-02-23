@@ -14,7 +14,7 @@ public class DictionaryBuilderBase<Target: Crush.Entity>:
     let context: Context
     var config: FetchConfig<Target>
 
-    private var fieldConvertors: [String: any AnyFieldConvertible] = [:]
+    private var fieldConvertors: [String: any AnyPropertyAdaptor] = [:]
 
     init(config: FetchConfig<Target>, context: Context) {
         self.config = config
@@ -22,7 +22,7 @@ public class DictionaryBuilderBase<Target: Crush.Entity>:
     }
 
     func saveConvertor(keyPath: PartialKeyPath<Target>) {
-        if let convertor = Target()[keyPath: keyPath] as? AnyFieldConvertible,
+        if let convertor = Target()[keyPath: keyPath] as? AnyPropertyAdaptor,
            let name = keyPath.optionalPropertyName {
             fieldConvertors[name] = convertor
         }

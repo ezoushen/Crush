@@ -7,7 +7,7 @@
 
 import CoreData
 
-public protocol FetchedPropertyProtocol: ValuedProperty, FieldConvertible
+public protocol FetchedPropertyProtocol: ValuedProperty, PropertyAdaptor
 where
     RuntimeObjectValue == [ReadOnly<Destination>],
     ManagedObjectValue == [NSManagedObject],

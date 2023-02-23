@@ -1,5 +1,5 @@
 //
-//  PrimitiveAttribute.swift
+//  PrimitiveAttributeType.swift
 //  Crush
 //
 //  Created by ezou on 2019/9/21.
@@ -9,12 +9,12 @@
 import CoreData
 import Foundation
 
-public protocol AnyFieldConvertible {
+public protocol AnyPropertyAdaptor {
     func managedToRuntime(_ managedValue: Any?) -> Any?
     func runtimeToManaged(_ runtimeValue: Any?) -> Any?
 }
 
-public protocol FieldConvertible: AnyFieldConvertible {
+public protocol PropertyAdaptor: AnyPropertyAdaptor {
     associatedtype RuntimeObjectValue
     associatedtype ManagedObjectValue
     
@@ -25,47 +25,47 @@ public protocol FieldConvertible: AnyFieldConvertible {
     static var defaultManagedValue: ManagedObjectValue { get }
 }
 
-extension FieldConvertible where RuntimeObjectValue: OptionalProtocol {
+extension PropertyAdaptor where RuntimeObjectValue: OptionalProtocol {
     @inlinable
     public static var defaultRuntimeValue: RuntimeObjectValue {
         return RuntimeObjectValue.null
     }
 }
 
-extension FieldConvertible where ManagedObjectValue: OptionalProtocol {
+extension PropertyAdaptor where ManagedObjectValue: OptionalProtocol {
     @inlinable
     public static var defaultManagedValue: ManagedObjectValue {
         return ManagedObjectValue.null
     }
 }
 
-extension FieldConvertible where RuntimeObjectValue: Collection & ExpressibleByArrayLiteral {
+extension PropertyAdaptor where RuntimeObjectValue: Collection & ExpressibleByArrayLiteral {
     @inlinable
     public static var defaultRuntimeValue: RuntimeObjectValue {
         return []
     }
 }
 
-extension FieldConvertible where ManagedObjectValue: Collection & ExpressibleByArrayLiteral {
+extension PropertyAdaptor where ManagedObjectValue: Collection & ExpressibleByArrayLiteral {
     @inlinable
     public static var defaultManagedValue: ManagedObjectValue {
         return []
     }
 }
 
-extension FieldConvertible where ManagedObjectValue == NSMutableSet {
+extension PropertyAdaptor where ManagedObjectValue == NSMutableSet {
     public static var defaultManagedValue: NSMutableSet {
         NSMutableSet()
     }
 }
 
-extension FieldConvertible where ManagedObjectValue == NSMutableOrderedSet {
+extension PropertyAdaptor where ManagedObjectValue == NSMutableOrderedSet {
     public static var defaultManagedValue: NSMutableOrderedSet {
         NSMutableOrderedSet()
     }
 }
 
-extension FieldConvertible {
+extension PropertyAdaptor {
     public func managedToRuntime(_ managedValue: Any?) -> Any? {
         guard let managedValue = managedValue as? ManagedObjectValue else {
             return nil
@@ -91,20 +91,37 @@ public protocol PredicateEquatable {
 
 public protocol PredicateComparable: PredicateEquatable { }
 
-public protocol FieldAttributeProtocol {
+public protocol AttributeType: PropertyAdaptor
+where ManagedObjectValue: OptionalProtocol {
+    associatedtype RuntimeObjectValue: OptionalProtocol = Self?
     static var nativeType: NSAttributeType { get }
 }
 
-public protocol FieldAttribute: FieldAttributeProtocol, FieldConvertible
-where ManagedObjectValue: OptionalProtocol {
-    associatedtype RuntimeObjectValue: OptionalProtocol = Self?
-}
-
-public protocol PrimitiveAttribute: FieldAttribute {
+public protocol PrimitiveAttributeType: AttributeType {
     associatedtype ManagedObjectValue: OptionalProtocol = Self?
 }
 
-extension FieldAttribute
+public protocol TransformableAttributeType: NSObject, NSCoding, AttributeType
+where RuntimeObjectValue == ManagedObjectValue {
+    static var attributeValueClassName: String? { get }
+    static var valueTransformerName: String? { get }
+}
+
+extension TransformableAttributeType {
+    public static var nativeType: NSAttributeType { .transformableAttributeType }
+    
+    public static var attributeValueClassName: String? {
+        String(describing: Self.self)
+    }
+}
+
+extension TransformableAttributeType {
+    public static var valueTransformerName: String? {
+        NSStringFromClass(DefaultTransformer.self)
+    }
+}
+
+extension AttributeType
 where
     RuntimeObjectValue == Self?,
     RuntimeObjectValue == ManagedObjectValue
@@ -113,12 +130,12 @@ where
     public static func convert(value: Self?) -> Self? { value }
 }
 
-public typealias PredicateComparableAttribute = PrimitiveAttribute & PredicateComparable
-public typealias PredicateEquatableAttribute = PrimitiveAttribute & PredicateEquatable
+public typealias PredicateComparableAttributeType = PrimitiveAttributeType & PredicateComparable
+public typealias PredicateEquatableAttributeType = PrimitiveAttributeType & PredicateEquatable
 
-public typealias IntegerAttribute = PredicateComparableAttribute & PredicateExpressibleByString & PredicateComputable
+public typealias IntegerAttributeType = PredicateComparableAttributeType & PredicateExpressibleByString & PredicateComputable
 
-extension Int: IntegerAttribute {
+extension Int: IntegerAttributeType {
     public static var nativeType: NSAttributeType {
 #if (arch(x86_64) || arch(arm64))
         return .integer64AttributeType
@@ -129,22 +146,22 @@ extension Int: IntegerAttribute {
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int64: IntegerAttribute {
+extension Int64: IntegerAttributeType {
     public static var nativeType: NSAttributeType { .integer64AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int32: IntegerAttribute {
+extension Int32: IntegerAttributeType {
     public static var nativeType: NSAttributeType { .integer32AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Int16: IntegerAttribute {
+extension Int16: IntegerAttributeType {
     public static var nativeType: NSAttributeType { .integer16AttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension NSDecimalNumber: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
+extension NSDecimalNumber: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
     public typealias RuntimeObjectValue = NSDecimalNumber?
     public typealias ManagedObjectValue = NSDecimalNumber?
 
@@ -152,37 +169,37 @@ extension NSDecimalNumber: PredicateComparableAttribute, PredicateExpressibleByS
     public var predicateValue: NSObject { self }
 }
 
-extension Double: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
+extension Double: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .doubleAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Float: PredicateComparableAttribute, PredicateExpressibleByString, PredicateComputable {
+extension Float: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
     public static var nativeType: NSAttributeType { .floatAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension String: PrimitiveAttribute, PredicateComparable {
+extension String: PrimitiveAttributeType, PredicateComparable {
     public static var nativeType: NSAttributeType { .stringAttributeType }
     public var predicateValue: NSObject { NSString(string: self) }
 }
 
-extension Bool: PredicateEquatableAttribute, PredicateExpressibleByString {
+extension Bool: PredicateEquatableAttributeType, PredicateExpressibleByString {
     public static var nativeType: NSAttributeType { .booleanAttributeType }
     public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Date: PredicateComparableAttribute, PredicateExpressibleByString {
+extension Date: PredicateComparableAttributeType, PredicateExpressibleByString {
     public static var nativeType: NSAttributeType { .dateAttributeType }
     public var predicateValue: NSObject { self as NSDate }
 }
 
-extension Data: PrimitiveAttribute, PredicateEquatable {
+extension Data: PrimitiveAttributeType, PredicateEquatable {
     public static var nativeType: NSAttributeType { .binaryDataAttributeType }
     public var predicateValue: NSObject { self as NSData }
 }
 
-extension NSNull: FieldConvertible {
+extension NSNull: PropertyAdaptor {
     public typealias RuntimeObjectValue = NSNull
     public typealias ManagedObjectValue = NSNull
 
@@ -200,32 +217,21 @@ extension NSNull: FieldConvertible {
     }
 }
 
-extension UUID: PredicateEquatableAttribute, PredicateExpressibleByString {
+extension UUID: PredicateEquatableAttributeType, PredicateExpressibleByString {
     public static var nativeType: NSAttributeType { .UUIDAttributeType }
     public var predicateValue: NSObject { self as NSUUID }
 }
 
-extension NSCoding where Self: FieldAttribute {
-    public typealias RawType = Self
-    public typealias PresentingType = Self
-    public static var nativeType: NSAttributeType { .transformableAttributeType }
-}
+public protocol EntityEquatableType: PredicateEquatable { }
 
-extension RawRepresentable where Self: FieldAttribute {
-    public typealias ManagedObjectValue = RawValue?
-    public typealias RuntimeObjectValue = Self?
-}
-
-public protocol EntityEquatable: PredicateEquatable { }
-
-extension ReadOnly: EntityEquatable {
+extension ReadOnly: EntityEquatableType {
     public var predicateValue: NSObject { managedObject }
 }
 
-extension NSManagedObject: EntityEquatable {
+extension NSManagedObject: EntityEquatableType {
     public var predicateValue: NSObject { self }
 }
 
-extension NSManagedObjectID: EntityEquatable {
+extension NSManagedObjectID: EntityEquatableType {
     public var predicateValue: NSObject { self }
 }
