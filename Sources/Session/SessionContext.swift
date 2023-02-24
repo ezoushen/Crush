@@ -275,12 +275,9 @@ extension SessionContext where Self: RawContextProviderProtocol {
         
         do {
             try executionContext.save()
-        } catch let error as NSError {
-            let error = error.customError()
-            logger.log(
-                .error,
-                "Merge changes from execution context ended with error",
-                error: error)
+        } catch let _error as NSError {
+            let error: Error = CoreDataError(nsError: _error) ?? _error
+            logger.log(.error, "Merge changes from execution context ended with error", error: error)
             throw error
         }
         return (inserted: insertedObjectIDs, updated: updatedObjectIDs, deleted: deletedObjectIDs)
@@ -301,7 +298,8 @@ extension SessionContext where Self: RawContextProviderProtocol {
     internal func saveRootContext(_ rootContext: NSManagedObjectContext) throws {
         do {
             try rootContext.save()
-        } catch let error as NSError {
+        } catch let _error as NSError {
+            let error: Error = CoreDataError(nsError: _error) ?? _error
             logger.log(.error, "Merge changes from root context ended with error", error: error)
             rootContext.rollback()
             throw error

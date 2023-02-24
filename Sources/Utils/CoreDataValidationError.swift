@@ -8,63 +8,133 @@
 import CoreData
 import Foundation
 
-extension NSError {
-    func customError() -> Error {
-        switch code {
-        case NSValidationMultipleErrorsError:
-            return MultipleValidationError(errors: errors!)
-        case NSValidationMissingMandatoryPropertyError:
-            return MissingMadatoryPropertyError(object: object!, key: key!)
-        default:
-            return self
-        }
+public struct CoreDataError: Error {
+    public let code: Code
+    public let underlyingError: NSError
+
+    init?(nsError: NSError) {
+        guard let code = Code(rawValue: nsError.code) else { return nil }
+        self.code = code
+        self.underlyingError = nsError
     }
 
-    var key: String? {
-        userInfo[NSValidationKeyErrorKey] as? String
+    public var key: String? {
+        underlyingError.userInfo[NSValidationKeyErrorKey] as? String
     }
 
-    var predicate: NSPredicate? {
-        userInfo[NSValidationPredicateErrorKey] as? NSPredicate
+    public var value: Any? {
+        underlyingError.userInfo[NSValidationValueErrorKey]
     }
 
-    var localizedDescription: String? {
-        userInfo[NSLocalizedDescriptionKey] as? String
+    public var predicate: NSPredicate? {
+        underlyingError.userInfo[NSValidationPredicateErrorKey] as? NSPredicate
     }
 
-    var object: NSManagedObject? {
-        userInfo[NSValidationObjectErrorKey] as? NSManagedObject
+    public var localizedDescription: String? {
+        underlyingError.userInfo[NSLocalizedDescriptionKey] as? String
     }
-    
-    var nsErrors: [NSError]? {
-        guard let details = userInfo[NSDetailedErrorsKey] as? [NSError] else { return nil }
+
+    public var object: NSManagedObject? {
+        underlyingError.userInfo[NSValidationObjectErrorKey] as? NSManagedObject
+    }
+
+    public var constraintConflicts: [NSConstraintConflict]? {
+        underlyingError.userInfo[NSPersistentStoreSaveConflictsErrorKey] as? [NSConstraintConflict]
+    }
+
+    public var mergeConflicts: [NSMergeConflict]? {
+        underlyingError.userInfo[NSPersistentStoreSaveConflictsErrorKey] as? [NSMergeConflict]
+    }
+
+    public var detailedNSErrors: [NSError] {
+        guard let details = underlyingError.userInfo[NSDetailedErrorsKey] as? [NSError]
+        else { return [] }
         return details
     }
 
-    var errors: [Error]? {
-        nsErrors?.map { $0.customError() }
+    public var detailedErrors: [CoreDataError] {
+        detailedNSErrors.compactMap { CoreDataError(nsError: $0 as NSError) }
     }
 }
 
-public protocol CoreDataError: Error, CustomStringConvertible {
-    var object: NSManagedObject { get }
-}
+extension CoreDataError {
+    public enum Code: Int {
+        case managedObjectValidation = 1550
+        case managedObjectConstraintValidation = 1551
 
-public struct MissingMadatoryPropertyError: CoreDataError {
-    public let object: NSManagedObject
-    public let key: String
+        case validationMultipleErrors = 1560
+        case validationMissingMandatoryProperty = 1570
+        case validationRelationshipLacksMinimumCount = 1580
+        case validationRelationshipExceedsMaximumCount = 1590
+        case validationRelationshipDeniedDelete = 1600
+        case validationNumberTooLarge = 1610
+        case validationNumberTooSmall = 1620
+        case validationDateTooLate = 1630
+        case validationDateTooSoon = 1640
+        case validationInvalidDate = 1650
+        case validationStringTooLong = 1660
+        case validationStringTooShort = 1670
+        case validationStringPatternMatching = 1680
+        case validationInvalidURI = 1690
+
+        case managedObjectContextLocking = 132000
+        case persistentStoreCoordinatorLocking = 132010
+
+        case managedObjectReferentialIntegrity = 133000
+        case managedObjectExternalRelationship = 133010
+        case managedObjectMerge = 133020
+        case managedObjectConstraintMerge = 133021
+
+        case persistentStoreInvalidType = 134000
+        case persistentStoreTypeMismatch = 134010
+        case persistentStoreIncompatibleSchema = 134020
+        case persistentStoreSave = 134030
+        case persistentStoreIncompleteSave = 134040
+        case persistentStoreSaveConflicts = 134050
+
+        case coreData = 134060
+        case persistentStoreOperation = 134070
+        case persistentStoreOpen = 134080
+        case persistentStoreTimeout = 134090
+        case persistentStoreUnsupportedRequestType = 134091
+        case persistentStoreIncompatibleVersionHash = 134100
+
+        case migration = 134110
+        case migrationConstraintViolation = 134111
+        case migrationCancelled = 134120
+        case migrationMissingSourceModel = 134130
+        case migrationMissingMappingModel = 134140
+        case migrationManagerSourceStore = 134150
+        case migrationManagerDestinationStore = 134160
+        case entityMigrationPolicy = 134170
+
+        case sqlite = 134180
+
+        case inferredMappingModel = 134190
+        case externalRecordImport = 134200
+
+        case persistentHistoryTokenExpired = 134301
+    }
+}
+extension CoreDataError: CustomStringConvertible {
     public var description: String {
-        "\"\(key)\" is a required field in \(object.entity.name!)."
-    }
-}
-
-public struct MultipleValidationError: CoreDataError {
-    public var object: NSManagedObject {
-        errors.map { $0 as NSError }.first { $0.object != nil }!.object!
-    }
-    
-    public let errors: [Error]
-    public var description: String {
-        "Multiple errors, \(errors)"
+        switch code {
+        case .managedObjectValidation:
+            return "Predicate \(predicate.contentDescription) of \(key.contentDescription) failed with value \(value.contentDescription). Object: \(object.contentDescription)."
+        case .managedObjectMerge:
+            return "Merge conflicts: \(mergeConflicts.contentDescription)."
+        case .managedObjectConstraintMerge:
+            return "Constraint conflicts: \(constraintConflicts.contentDescription)."
+        case .validationMultipleErrors:
+            return "Multiple errors: \(detailedErrors)"
+        default:
+            var description = underlyingError.localizedDescription
+            if description.isEmpty {
+                description = "\(code)"
+            } else if let key = key {
+                description = description.replacingOccurrences(of: "%{PROPERTY}@", with: key)
+            }
+            return "\(description) Object: \(object.contentDescription)"
+        }
     }
 }

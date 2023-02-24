@@ -12,6 +12,10 @@ public protocol RuntimeObject {
 }
 
 public class ManagedObjectBase: NSManagedObject {
+    internal func originalValidateValue(_ value: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey: String) throws {
+        try super.validateValue(value, forKey: forKey)
+    }
+
     internal func originalValidateForDelete() throws {
         try super.validateForDelete()
     }
@@ -25,7 +29,7 @@ public class ManagedObjectBase: NSManagedObject {
     }
 }
 
-public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject, ObjectRuntimeDriver, ObjectProxy, ManagedStatus {
+public class ManagedObject<Entity: Crush.Entity>: ManagedObjectBase, RuntimeObject, ObjectRuntimeDriver, ObjectProxy, ManagedStatus {
     internal lazy var canTriggerEvent: Bool = {
         managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
     }()
@@ -85,6 +89,16 @@ public class ManagedObject<Entity: Crush.Entity>: NSManagedObject, RuntimeObject
         super.awake(fromSnapshotEvents: flags)
         if canTriggerEvent {
             Entity.awake(self, fromSnapshotEvents: flags)
+        }
+    }
+
+    public override func validateValue(
+        _ value: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey key: String) throws
+    {
+        if canTriggerEvent {
+            try Entity.validateValue(self, value: value, forKey: key)
+        } else {
+            try super.validateValue(value, forKey: key)
         }
     }
 

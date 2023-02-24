@@ -34,6 +34,13 @@ open class Entity {
     @objc open dynamic class func awakeFromInsert(_ managedObject: NSManagedObject) { }
     @objc open dynamic class func awake(_ managedObject: NSManagedObject,
                                         fromSnapshotEvents: NSSnapshotEventType) { }
+    @objc open dynamic class func validateValue(
+        _ managedObject: NSManagedObject,
+        value: AutoreleasingUnsafeMutablePointer<AnyObject?>,
+        forKey key: String) throws
+    {
+        try (managedObject as? ManagedObjectBase)?.originalValidateValue(value, forKey: key)
+    }
     @objc open dynamic class func validateForDelete(_ managedObject: NSManagedObject) throws {
         try (managedObject as? ManagedObjectBase)?.originalValidateForDelete()
     }
