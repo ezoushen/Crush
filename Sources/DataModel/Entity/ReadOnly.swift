@@ -101,8 +101,8 @@ public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
 }
 
 extension ReadOnly: ManagedStatus {
-    public var contentHashValue: Int {
-        managedObject.contentHashValue
+    public var propertyHashValue: Int {
+        managedObject.propertyHashValue
     }
 
     public var isInaccessible: Bool {
@@ -156,9 +156,8 @@ extension ReadaleObject where Self: Entity {
     public typealias ReadOnly = Crush.ReadOnly<Self>
 }
 
-#if canImport(SwiftUI) && canImport(Combine)
+#if canImport(Combine)
 import Combine
-import SwiftUI
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 public final class ObservableReadOnly<Entity: Crush.Entity>: ObservableObject {

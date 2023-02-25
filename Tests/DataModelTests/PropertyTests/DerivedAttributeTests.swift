@@ -9,7 +9,7 @@ import CoreData
 import Foundation
 import XCTest
 
-import Crush
+@testable import Crush
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
 class DerivedAttributeTests: XCTestCase {
@@ -48,5 +48,52 @@ class DerivedAttributeTests: XCTestCase {
     func test_expression_derivedAggregationCount() {
         let sut = Derived.Int16("derivedRelationship", from: \Entity_A.relationship, aggregation: .count)
         XCTAssertEqual(sut.expression, NSExpression(format: "relationship.@count"))
+    }
+
+    func test_derivedTransformable_derivationExpressionKeyPathShouldEqualToKeyPath() {
+        @objc(_TtCFC10CrushTests14AttributeTests39test_attributeString_typeShouldBeStringFERRERRL_7Subject)
+        class Subject: NSObject, NSCoding, TransformableAttributeType {
+            @objc var id: Int
+            init(id: Int) { self.id = id }
+            func encode(with coder: NSCoder) { coder.encode(id, forKey: "id") }
+            required init?(coder: NSCoder) { id = Int(coder.decodeInt64(forKey: "id")) }
+        }
+        class TestEntity: Entity {
+            @Optional
+            var integer = Value.Int("integer")
+            @Optional
+            var derivedInteger = Derived.Int("derivedInteger", from: \TestEntity.integer)
+            @Optional
+            var property = Value.Transformable<Subject>("property")
+            @Optional
+            var derivedProperty = Derived.Transformable<Subject>("derivedProperty", from: \TestEntity.property)
+            @Optional
+            var entity = Relation.ToOne<TestEntity>("entity")
+            @Optional
+            var derivedEntityProperty = Derived.Transformable<Subject>("entity", from: \TestEntity.entity, property: \.property)
+            @Optional
+            var derivedEntityInteger = Derived.Int("derivedEntityInteger", from: \TestEntity.entity, property: \.integer)
+        }
+        let entity = TestEntity()
+        _ = {
+            let description = entity.derivedProperty.createPropertyDescription() as! NSDerivedAttributeDescription
+            XCTAssertEqual(description.attributeType, .transformableAttributeType)
+            XCTAssertEqual(description.derivationExpression?.keyPath, "property")
+        }()
+        _ = {
+            let description = entity.derivedInteger.createPropertyDescription()
+            XCTAssertEqual(description.attributeType, Int.nativeType)
+            XCTAssertEqual(description.derivationExpression?.keyPath, "integer")
+        }()
+        _ = {
+            let description = entity.derivedEntityProperty.createPropertyDescription() as! NSDerivedAttributeDescription
+            XCTAssertEqual(description.attributeType, .transformableAttributeType)
+            XCTAssertEqual(description.derivationExpression?.keyPath, "entity.property")
+        }()
+        _ = {
+            let description = entity.derivedEntityInteger.createPropertyDescription()
+            XCTAssertEqual(description.attributeType, Int.nativeType)
+            XCTAssertEqual(description.derivationExpression?.keyPath, "entity.integer")
+        }()
     }
 }

@@ -23,6 +23,32 @@ class AttributeTests: XCTestCase {
         XCTAssertEqual(description.defaultValue as? String, "string")
     }
 
+    func test_attributeTransformable_typeShouldBeString() {
+        @objc(_TtCFC10CrushTests14AttributeTests39test_attributeString_typeShouldBeStringFERRERRL_7Subject)
+        class Subject: NSObject, NSCoding, TransformableAttributeType {
+            @objc var id: Int
+            init(id: Int) { self.id = id }
+            func encode(with coder: NSCoder) { coder.encode(id, forKey: "id") }
+            required init?(coder: NSCoder) { id = Int(coder.decodeInt64(forKey: "id")) }
+        }
+        let attribute = Value.Transformable<Subject>("attribute")
+        let description = attribute.createPropertyDescription()
+        XCTAssertEqual(description.attributeType, .transformableAttributeType)
+    }
+
+    func test_attributeTransformable_valueTransformerNameShouldBeDefaultTransformer() {
+        @objc(_TtCFC10CrushTests14AttributeTests39test_attributeString_typeShouldBeStringFERRERRL_7Subject)
+        class Subject: NSObject, NSCoding, TransformableAttributeType {
+            @objc var id: Int
+            init(id: Int) { self.id = id }
+            func encode(with coder: NSCoder) { coder.encode(id, forKey: "id") }
+            required init?(coder: NSCoder) { id = Int(coder.decodeInt64(forKey: "id")) }
+        }
+        let attribute = Value.Transformable<Subject>("attribute")
+        let description = attribute.createPropertyDescription()
+        XCTAssertEqual(description.valueTransformerName, NSStringFromClass(DefaultTransformer.self))
+    }
+
     func test_attributeBool_typeShouldBeBool() {
         let attribute = Value.Bool("attribute")
         let description = attribute.createPropertyDescription()

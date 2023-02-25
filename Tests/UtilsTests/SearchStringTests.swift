@@ -25,7 +25,77 @@ class SearchStringTests: XCTestCase {
     }
 
     func test_initializer_shouldEqualToString() {
-        let sut = SearchString("abc")
+        let sut: SearchString = "abc"
         XCTAssertEqual(sut, "abc")
+    }
+
+    func test_keyPath_shouldParsePropertyName() {
+        class TestEntity: Entity {
+            @Optional
+            var property = Value.String("property")
+        }
+        let string = SearchString(\TestEntity.property)
+        XCTAssertEqual(string.string, "property")
+        XCTAssertEqual(string.type, .plain)
+    }
+
+    func test_keyPathCaseInsensitive_shouldParsePropertyName() {
+        class TestEntity: Entity {
+            @Optional
+            var property = Value.String("property")
+        }
+        let string = SearchString.caseInsensitive(\TestEntity.property)
+        XCTAssertEqual(string.string, "property")
+        XCTAssertEqual(string.type, .caseInsensitive)
+    }
+
+    func test_keyPathCaseDiacriticInsensitive_shouldParsePropertyName() {
+        class TestEntity: Entity {
+            @Optional
+            var property = Value.String("property")
+        }
+        let string = SearchString.caseDiacriticInsensitive(\TestEntity.property)
+        XCTAssertEqual(string.string, "property")
+        XCTAssertEqual(string.type, .caseDiacriticInsensitive)
+    }
+
+    func test_keyPathDiacriticInsensitive_shouldParsePropertyName() {
+        class TestEntity: Entity {
+            @Optional
+            var property = Value.String("property")
+        }
+        let string = SearchString.diacriticInsensitive(\TestEntity.property)
+        XCTAssertEqual(string.string, "property")
+        XCTAssertEqual(string.type, .diacriticInsensitive)
+    }
+
+    func test_keyPathStringifyCaseInsensitive_shouldParsePropertyName() {
+        class TestEntity: Entity {
+            @Optional
+            var property = Value.Int16("property")
+        }
+        let string = SearchString.caseInsensitive(\TestEntity.property)
+        XCTAssertEqual(string.string, "property")
+        XCTAssertEqual(string.type, .caseInsensitive)
+    }
+
+    func test_keyPathStringifyCaseDiacriticInsensitive_shouldParsePropertyName() {
+        class TestEntity: Entity {
+            @Optional
+            var property = Value.Int16("property")
+        }
+        let string = SearchString.caseDiacriticInsensitive(\TestEntity.property)
+        XCTAssertEqual(string.string, "property")
+        XCTAssertEqual(string.type, .caseDiacriticInsensitive)
+    }
+
+    func test_keyPathStringifyDiacriticInsensitive_shouldParsePropertyName() {
+        class TestEntity: Entity {
+            @Optional
+            var property = Value.Int16("property")
+        }
+        let string = SearchString.diacriticInsensitive(\TestEntity.property)
+        XCTAssertEqual(string.string, "property")
+        XCTAssertEqual(string.type, .diacriticInsensitive)
     }
 }

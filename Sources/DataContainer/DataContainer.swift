@@ -8,6 +8,7 @@
 
 import CoreData
 
+/// DataContainer includes a well-defined CoreData stack and holds
 public class DataContainer {
     public static let uiContextDidRefresh = Notification.Name("DataContainerDidRefreshUiContext")
 

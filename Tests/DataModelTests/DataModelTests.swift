@@ -61,7 +61,7 @@ extension DataModel {
 }
 
 extension MigrationPolicy {
-    static func waterDoChain() -> MigrationPolicy {
+    static func chain() -> MigrationPolicy {
         .chain(MigrationChain {
             ModelMigration("V1") {
                 AddEntity("A") {

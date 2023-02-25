@@ -13,11 +13,7 @@ public protocol TransformableAttributeInitProtocol: AttributeProtocol {
 }
 
 public protocol TransformableDerivedAttributeInitProtocol: AttributeProtocol {
-    init<T: Entity>(_ name: String, from keyPath: KeyPath<T, Attribute<PropertyType>>)
-    init<T: Entity, S: Entity> (
-        _ name: String,
-        from keyPath: KeyPath<T, Relationship<ToOne<S>>>,
-        property extensionKeyPath: KeyPath<S, Attribute<PropertyType>>)
+    init(_ name: String, from keyPath: @autoclosure @escaping () -> String)
 }
 
 public class TransformableAttribute<Attribute: AttributeProtocol>: AttributeProtocol, AnyPropertyType
@@ -58,7 +54,13 @@ extension TransformableAttribute where Attribute: TransformableDerivedAttributeI
     public convenience init<T: Entity>(
         _ name: String, from keyPath: KeyPath<T, Crush.Attribute<PropertyType>>)
     {
-        self.init(attribute: Attribute(name, from: keyPath))
+        self.init(attribute: Attribute(name, from: keyPath.propertyName))
+    }
+
+    public convenience init<T: Entity>(
+        _ name: String, from keyPath: KeyPath<T, Crush.TransformableAttribute<Crush.Attribute<PropertyType>>>)
+    {
+        self.init(attribute: Attribute(name, from: keyPath.propertyName))
     }
     
     public convenience init<T: Entity, S: Entity> (
@@ -66,6 +68,14 @@ extension TransformableAttribute where Attribute: TransformableDerivedAttributeI
         from keyPath: KeyPath<T, Relationship<ToOne<S>>>,
         property extensionKeyPath: KeyPath<S, Crush.Attribute<PropertyType>>)
     {
-        self.init(attribute: Attribute(name, from: keyPath, property: extensionKeyPath))
+        self.init(attribute: Attribute(name, from: "\(keyPath.propertyName).\(extensionKeyPath.propertyName)"))
+    }
+
+    public convenience init<T: Entity, S: Entity> (
+        _ name: String,
+        from keyPath: KeyPath<T, Relationship<ToOne<S>>>,
+        property extensionKeyPath: KeyPath<S, Crush.TransformableAttribute<Crush.Attribute<PropertyType>>>)
+    {
+        self.init(attribute: Attribute(name, from: "\(keyPath.propertyName).\(extensionKeyPath.propertyName)"))
     }
 }

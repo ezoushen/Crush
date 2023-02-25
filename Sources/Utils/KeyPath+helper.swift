@@ -10,7 +10,7 @@ import Foundation
 import CoreData
 
 extension AnyKeyPath {
-    fileprivate static var lock: os_unfair_lock = .init()
+    fileprivate static var lock = UnfairLock()
     fileprivate static var propertyNameCache: [ObjectIdentifier: String] = [:]
 
     fileprivate var propertyNameCache: [ObjectIdentifier: String] {
@@ -21,8 +21,8 @@ extension AnyKeyPath {
 
 extension PartialKeyPath where Root: Entity {
     var optionalPropertyName: String? {
-        os_unfair_lock_lock(&Self.lock)
-        defer { os_unfair_lock_unlock(&Self.lock) }
+        Self.lock.lock()
+        defer { Self.lock.unlock() }
         return propertyNameCache[ObjectIdentifier(self)] ?? {
             let name = (Root()[keyPath: self] as? (any Property))?.name
             defer { if let name = name { propertyNameCache[ObjectIdentifier(self)] = name } }
@@ -33,8 +33,8 @@ extension PartialKeyPath where Root: Entity {
 
 extension KeyPath where Root: Entity, Value: Property {
     var propertyName: String {
-        os_unfair_lock_lock(&Self.lock)
-        defer { os_unfair_lock_unlock(&Self.lock) }
+        Self.lock.lock()
+        defer { Self.lock.unlock() }
         return propertyNameCache[ObjectIdentifier(self)] ?? {
             let name = Root()[keyPath: self].name
             defer { propertyNameCache[ObjectIdentifier(self)] = name }

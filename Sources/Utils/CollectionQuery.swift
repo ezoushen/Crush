@@ -7,7 +7,8 @@
 
 import Foundation
 
-public final class CollectionQuery<T: Entity> {
+/// Aggregate functions that used to evaluate collections. It defines the aggregate function and the following predicate.
+public struct CollectionQuery<T: Entity> {
 
     let function: String
     let keyPath: String?
@@ -23,29 +24,34 @@ public final class CollectionQuery<T: Entity> {
 
     // MARK: @count
 
+    /// It's equal to "@count == %d"
     public static func count(equalTo value: Int) -> CollectionQuery {
         CollectionQuery("count:", keyPath: nil, operator: .equalTo, value: value)
     }
 
+    /// It's equal to "@count > %d"
     public static func count(greaterThan value: Int) -> CollectionQuery {
         CollectionQuery("count:", keyPath: nil, operator: .greaterThan, value: value)
     }
 
+    /// It's equal to "@count >= %d"
     public static func count(greaterThanOrEqualTo value: Int) -> CollectionQuery {
         CollectionQuery("count:", keyPath: nil, operator: .greaterThanOrEqualTo, value: value)
     }
 
+    /// It's equal to "@count < %d"
     public static func count(lessThan value: Int) -> CollectionQuery {
         CollectionQuery("count:", keyPath: nil, operator: .lessThan, value: value)
     }
 
+    /// It's equal to "@count <= %d"
     public static func count(lessThanOrEqualTo value: Int) -> CollectionQuery {
         CollectionQuery("count:", keyPath: nil, operator: .lessThanOrEqualTo, value: value)
     }
 
     // MARK: @sum
 
-    /// `sum` only work with in-memory storage / array
+    /// It's equal to "@sum == %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
@@ -54,7 +60,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
-    /// `sum` only work with in-memory storage / array
+    /// It's equal to "@sum > %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
@@ -63,7 +69,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
-    /// `sum` only work with in-memory storage / array
+    /// It's equal to "@sum >= %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
@@ -72,7 +78,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
-    /// `sum` only work with in-memory storage / array
+    /// It's equal to "@sum < %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
@@ -81,7 +87,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
-    /// `sum` only work with in-memory storage / array
+    /// It's equal to "@sum <= %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
@@ -92,7 +98,7 @@ public final class CollectionQuery<T: Entity> {
 
     // MARK: @avg
 
-    /// `avg` only work with in-memory storage / array
+    /// It's equal to "@avg == %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
@@ -101,7 +107,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
-    /// `avg` only work with in-memory storage / array
+    /// It's equal to "@avg > %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
@@ -110,7 +116,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
-    /// `avg` only work with in-memory storage / array
+    /// It's equal to "@avg >= %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
@@ -119,7 +125,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
-    /// `avg` only work with in-memory storage / array
+    /// It's equal to "@avg < %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
@@ -128,7 +134,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
-    /// `avg` only work with in-memory storage / array
+    /// It's equal to "@avg <=> %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
@@ -139,7 +145,7 @@ public final class CollectionQuery<T: Entity> {
 
     // MARK: @min
 
-    /// `min` only work with in-memory storage / array
+    /// It's equal to "@min == %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
@@ -148,7 +154,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
-    /// `min` only work with in-memory storage / array
+    /// It's equal to "@min > %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
@@ -157,7 +163,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
-    /// `min` only work with in-memory storage / array
+    /// It's equal to "@min >= %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
@@ -166,7 +172,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
-    /// `min` only work with in-memory storage / array
+    /// It's equal to "@min < %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
@@ -175,7 +181,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
-    /// `min` only work with in-memory storage / array
+    /// It's equal to "@min <=> %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
@@ -186,7 +192,7 @@ public final class CollectionQuery<T: Entity> {
 
     // MARK: @max
 
-    /// `max` only work with in-memory storage / array
+    /// It's equal to "@max == %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
@@ -195,7 +201,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
 
-    /// `max` only work with in-memory storage / array
+    /// It's equal to "@max > %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
@@ -204,7 +210,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
 
-    /// `max` only work with in-memory storage / array
+    /// It's equal to "@max >= %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
@@ -213,7 +219,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
 
-    /// `max` only work with in-memory storage / array
+    /// It's equal to "@max < %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
@@ -222,7 +228,7 @@ public final class CollectionQuery<T: Entity> {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
 
-    /// `max` only work with in-memory storage / array
+    /// It's equal to "@max <= %d", only work with `NSArray` and CoreData subquery backed by in-memory store.
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where

@@ -7,10 +7,10 @@
 
 import Foundation
 
-public struct SearchString: Equatable {
+public struct SearchString<T: Entity>: Equatable {
     public enum Category {
         case caseInsensitive, diacriticInsensitive, caseDiacriticInsensitive, plain
-        
+
         public var modifier: String {
             switch self {
             case .plain: return ""
@@ -20,9 +20,10 @@ public struct SearchString: Equatable {
             }
         }
     }
-    
+
     public let type: Category
     public let string: String
+    public let placeholder: String
 }
 
 extension SearchString: ExpressibleByStringLiteral {
@@ -31,24 +32,74 @@ extension SearchString: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
         self.string = value
         self.type = .plain
-    }
-    
-    public init(_ value: String) {
-        self.string = value
-        self.type = .plain
+        self.placeholder = "%@"
     }
 }
 
 public extension SearchString {
     static func caseInsensitive(_ string: String) -> SearchString {
-        SearchString(type: .caseInsensitive, string: string)
+        SearchString(type: .caseInsensitive, string: string, placeholder: "%@")
     }
 
     static func diacriticInsensitive(_ string: String) -> SearchString {
-        SearchString(type: .diacriticInsensitive, string: string)
+        SearchString(type: .diacriticInsensitive, string: string, placeholder: "%@")
     }
 
     static func caseDiacriticInsensitive(_ string: String) -> SearchString {
-        SearchString(type: .caseDiacriticInsensitive, string: string)
+        SearchString(type: .caseDiacriticInsensitive, string: string, placeholder: "%@")
+    }
+}
+
+public extension SearchString {
+    init<Root: Entity, Value: WritableProperty>(
+        _ keyPath: KeyPath<Root, Value>, modifier: Category = .plain)
+    where Value.PredicateValue == String
+    {
+        self.init(type: modifier, string: keyPath.propertyName, placeholder: "%K")
+    }
+
+    init<Root: Entity, Value: WritableProperty>(
+        _ keyPath: KeyPath<Root, Value>, modifier: Category = .plain)
+    where Value.PredicateValue: PredicateExpressibleByString
+    {
+        self.init(type: modifier, string: "\(keyPath.propertyName).stringValue", placeholder: "%K")
+    }
+}
+
+public extension SearchString {
+    static func caseInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
+    where Value.PredicateValue == String {
+        SearchString(type: .caseInsensitive, string: keyPath
+            .propertyName, placeholder: "%K")
+    }
+
+    static func diacriticInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
+    where Value.PredicateValue == String {
+        SearchString(type: .diacriticInsensitive, string: keyPath
+            .propertyName, placeholder: "%K")
+    }
+
+    static func caseDiacriticInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
+    where Value.PredicateValue == String {
+        SearchString(type: .caseDiacriticInsensitive, string: keyPath
+            .propertyName, placeholder: "%K")
+    }
+
+    static func caseInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
+    where Value.PredicateValue: PredicateExpressibleByString {
+        SearchString(type: .caseInsensitive, string: keyPath
+            .propertyName, placeholder: "%K")
+    }
+
+    static func diacriticInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
+    where Value.PredicateValue: PredicateExpressibleByString {
+        SearchString(type: .diacriticInsensitive, string: keyPath
+            .propertyName, placeholder: "%K")
+    }
+
+    static func caseDiacriticInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
+    where Value.PredicateValue: PredicateExpressibleByString {
+        SearchString(type: .caseDiacriticInsensitive, string: keyPath
+            .propertyName, placeholder: "%K")
     }
 }

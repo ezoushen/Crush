@@ -11,7 +11,7 @@ import Foundation
 public protocol ManagedStatus {
     associatedtype Entity: Crush.Entity
     
-    var contentHashValue: Int { get }
+    var propertyHashValue: Int { get }
 
     func hasFault<T: RelationshipProtocol>(
         forRelationship keyPath: KeyPath<Entity, T>) -> Bool
@@ -39,13 +39,13 @@ extension ManagedStatus where Self: ObjectDriver {
         managedObject.committedValues(forKeys: keys)
     }
 
-    public var contentHashValue: Int {
-        managedObject.contentHashValue
+    public var propertyHashValue: Int {
+        managedObject.propertyHashValue
     }
 }
 
 extension NSManagedObject {
-    public var contentHashValue: Int {
+    public var propertyHashValue: Int {
         entity
             .properties
             .compactMap { value(forKey: $0.name) as? AnyHashable }

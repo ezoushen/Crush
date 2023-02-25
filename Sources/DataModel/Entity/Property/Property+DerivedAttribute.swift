@@ -37,25 +37,32 @@ public final class DerivedAttribute<PropertyType: AttributeType>:
     private let expressionBlock: () -> NSExpression
     public private(set) lazy var expression: NSExpression? = expressionBlock()
 
-    public required init<T: Entity>(
-        _ name: String, from keyPath: KeyPath<T, Attribute<PropertyType>>)
+    public required init(_ name: String, from keyPath: @autoclosure @escaping () -> String)
     {
         self.name = name
         self.defaultValue = .null
-        self.expressionBlock = { NSExpression(forKeyPath: keyPath.propertyName) }
+        self.expressionBlock = { NSExpression(forKeyPath: keyPath()) }
     }
 
-    public required init<T: Entity, S: Entity> (
+
+    public convenience init<T: Entity>(
+        _ name: String, from keyPath: KeyPath<T, Attribute<PropertyType>>)
+    {
+        self.init(name, from: keyPath.propertyName)
+    }
+
+    public convenience init<T: Entity>(
+        _ name: String, from keyPath: KeyPath<T, TransformableAttribute<Attribute<PropertyType>>>)
+    {
+        self.init(name, from: keyPath.propertyName)
+    }
+
+    public convenience init<T: Entity, S: Entity> (
         _ name: String,
         from keyPath: KeyPath<T, Relationship<ToOne<S>>>,
         property extensionKeyPath: KeyPath<S, Attribute<PropertyType>>)
     {
-        self.name = name
-        self.defaultValue = .null
-        self.expressionBlock = {
-            let keyPath = "\(keyPath.propertyName).\(extensionKeyPath.propertyName)"
-            return NSExpression(forKeyPath: keyPath)
-        }
+        self.init(name, from: "\(keyPath.propertyName).\(extensionKeyPath.propertyName)")
     }
 
     internal init(name: String, derivation: @autoclosure @escaping () -> NSExpression) {

@@ -8,34 +8,34 @@
 import CoreData
 
 extension NSPredicate {
+    /// Convenient getter for `NSPredicate(value: true)`
     @inlinable public static var `true`: Self {
         Self.init(value: true)
     }
 
+    /// Convenient getter for `NSPredicate(value: false)`
     @inlinable public static var `false`: Self {
         Self.init(value: false)
     }
 }
 
-public final class TypedPredicate<T: Entity>: NSPredicate { }
-
-@inlinable func BEGINSWITH(_ string: SearchString) -> String {
+@inlinable func BEGINSWITH<T: Entity>(_ string: SearchString<T>) -> String {
     "BEGINSWITH\(string.type.modifier)"
 }
 
-@inlinable func ENDSWITH(_ string: SearchString) -> String {
+@inlinable func ENDSWITH<T: Entity>(_ string: SearchString<T>) -> String {
     "ENDSWITH\(string.type.modifier)"
 }
 
-@inlinable func CONTAINS(_ string: SearchString) -> String {
+@inlinable func CONTAINS<T: Entity>(_ string: SearchString<T>) -> String {
     "CONTAINS\(string.type.modifier)"
 }
 
-@inlinable func LIKE(_ string: SearchString) -> String {
+@inlinable func LIKE<T: Entity>(_ string: SearchString<T>) -> String {
     "LIKE\(string.type.modifier)"
 }
 
-@inlinable func MATCHES(_ string: SearchString) -> String {
+@inlinable func MATCHES<T: Entity>(_ string: SearchString<T>) -> String {
     "MATCHES\(string.type.modifier)"
 }
 
@@ -44,41 +44,41 @@ public final class TypedPredicate<T: Entity>: NSPredicate { }
 public final class PropertyCondition<T>: NSPredicate { }
 
 extension PropertyCondition where T: PredicateEquatable {
-    @inlinable public static func notEqual(to value: T) -> Self {
+    @inlinable public static func compare(notEqualTo value: T) -> Self {
         self.init(format: "SELF != %@", value.predicateValue)
     }
 
-    @inlinable public static func equal(to value: T) -> Self {
+    @inlinable public static func compare(equalTo value: T) -> Self {
         self.init(format: "SELF == %@", value.predicateValue)
     }
 
-    @inlinable public static func with(in rhs: Array<T>) -> Self {
+    @inlinable public static func compare(in rhs: Array<T>) -> Self {
         self.init(format: "SELF IN %@", NSArray(array: rhs.map(\.predicateValue)))
     }
 }
 
 extension PropertyCondition where T: PredicateEquatable & Hashable {
-    @inlinable public static func with(in rhs: Set<T>) -> Self {
+    @inlinable public static func compare(in rhs: Set<T>) -> Self {
         self.init(format: "SELF IN %@", NSSet(set: rhs))
     }
 }
 
 extension PropertyCondition where T: PredicateComparable & Comparable {
-    @inlinable public static func with(in rhs: ClosedRange<T>) -> Self {
+    @inlinable public static func compare(between rhs: ClosedRange<T>) -> Self {
         self.init(
             format: "SELF BETWEEN {%@, %@}",
             rhs.lowerBound.predicateValue,
             rhs.upperBound.predicateValue)
     }
 
-    @inlinable public static func with(in rhs: Range<T>) -> Self {
+    @inlinable public static func compare(between rhs: Range<T>) -> Self {
         self.init(
             format: "SELF >= %@ AND SELF < %@",
             rhs.lowerBound.predicateValue,
             rhs.upperBound.predicateValue)
     }
 
-    @inlinable public static func compare(largerThanOrEqualTo rhs: T) -> Self {
+    @inlinable public static func compare(greaterThanOrEqualTo rhs: T) -> Self {
         self.init(format: "SELF >= \(rhs)")
     }
 
@@ -86,7 +86,7 @@ extension PropertyCondition where T: PredicateComparable & Comparable {
         self.init(format: "SELF <= \(rhs)")
     }
 
-    @inlinable public static func compare(largerThan rhs: T) -> Self {
+    @inlinable public static func compare(greaterThan rhs: T) -> Self {
         self.init(format: "SELF > \(rhs)")
     }
 
@@ -101,63 +101,63 @@ where
     Value == Root
 {
     @inlinable public static func == <T: EntityEquatableType>(lhs: KeyPath, rhs: T) -> PropertyCondition<T> {
-        .equal(to: rhs)
+        .compare(equalTo: rhs)
     }
 
     @inlinable public static func != <T: EntityEquatableType>(lhs: KeyPath, rhs: T) -> PropertyCondition<T> {
-        .notEqual(to: rhs)
+        .compare(notEqualTo: rhs)
     }
 
     @inlinable public static func <> <T: EntityEquatableType>(lhs: KeyPath, rhs: [T]) -> PropertyCondition<T> {
-        .with(in: rhs)
+        .compare(in: rhs)
     }
 
     @inlinable public static func <> <T: EntityEquatableType & Hashable>(lhs: KeyPath, rhs: Set<T>) -> PropertyCondition<T> {
-        .with(in: rhs)
+        .compare(in: rhs)
     }
 }
 
 extension PropertyCondition where T == String {
-    @inlinable public static func string(endsWith rhs: SearchString) -> Self {
-        self.init(format: "SELF \(ENDSWITH(rhs)) %@", rhs.string)
+    @inlinable public static func string(endsWith rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF \(ENDSWITH(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    @inlinable public static func string(beginsWith rhs: SearchString) -> Self {
-        self.init(format: "SELF \(BEGINSWITH(rhs)) %@", rhs.string)
+    @inlinable public static func string(beginsWith rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF \(BEGINSWITH(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    @inlinable public static func string(like rhs: SearchString) -> Self {
-        self.init(format: "SELF \(LIKE(rhs)) %@", rhs.string)
+    @inlinable public static func string(like rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF \(LIKE(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    @inlinable public static func string(matches rhs: SearchString) -> Self {
-        self.init(format: "SELF \(MATCHES(rhs)) %@", rhs.string)
+    @inlinable public static func string(matches rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF \(MATCHES(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    @inlinable public static func string(contains rhs: SearchString) -> Self {
-        self.init(format: "SELF \(CONTAINS(rhs)) %@", rhs.string)
+    @inlinable public static func string(contains rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF \(CONTAINS(rhs)) \(rhs.placeholder)", rhs.string)
     }
 }
 
 extension PropertyCondition where T: PredicateExpressibleByString {
-    @inlinable public static func string(endsWith rhs: SearchString) -> Self {
-        self.init(format: "SELF.stringValue \(ENDSWITH(rhs)) %@", rhs.string)
+    @inlinable public static func string(endsWith rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF.stringValue \(ENDSWITH(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    @inlinable public static func string(beginsWith rhs: SearchString) -> Self {
-        self.init(format: "SELF.stringValue \(BEGINSWITH(rhs)) %@", rhs.string)
+    @inlinable public static func string(beginsWith rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF.stringValue \(BEGINSWITH(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    @inlinable public static func string(like rhs: SearchString) -> Self {
-        self.init(format: "SELF.stringValue \(LIKE(rhs)) %@", rhs.string)
+    @inlinable public static func string(like rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF.stringValue \(LIKE(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    @inlinable public static func string(matches rhs: SearchString) -> Self {
-        self.init(format: "SELF.stringValue \(MATCHES(rhs)) %@", rhs.string)
+    @inlinable public static func string(matches rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF.stringValue \(MATCHES(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    @inlinable public static func string(contains rhs: SearchString) -> Self {
-        self.init(format: "SELF.stringValue \(CONTAINS(rhs)) %@", rhs.string)
+    @inlinable public static func string(contains rhs: SearchString<Entity>) -> Self {
+        self.init(format: "SELF.stringValue \(CONTAINS(rhs)) \(rhs.placeholder)", rhs.string)
     }
 }
 
@@ -166,7 +166,7 @@ extension PropertyCondition where T == String {
         self.init(format: "length == \(length)")
     }
 
-    @inlinable public static func length(largerThanOrEqualTo length: Int) -> Self {
+    @inlinable public static func length(greaterThanOrEqualTo length: Int) -> Self {
         self.init(format: "length >= \(length)")
     }
 
@@ -174,7 +174,7 @@ extension PropertyCondition where T == String {
         self.init(format: "length <= \(length)")
     }
 
-    @inlinable public static func length(largerThan length: Int) -> Self {
+    @inlinable public static func length(greaterThan length: Int) -> Self {
         self.init(format: "length > \(length)")
     }
 
@@ -196,7 +196,7 @@ extension PropertyCondition where T: PredicateExpressibleByString {
         self.init(format: "SELF.stringValue.length == \(length)")
     }
 
-    @inlinable public static func length(largerThanOrEqualTo length: Int) -> Self {
+    @inlinable public static func length(greaterThanOrEqualTo length: Int) -> Self {
         self.init(format: "SELF.stringValue.length > \(length)")
     }
 
@@ -204,7 +204,7 @@ extension PropertyCondition where T: PredicateExpressibleByString {
         self.init(format: "SELF.stringValue.length <= \(length)")
     }
 
-    @inlinable public static func length(largerThan length: Int) -> Self {
+    @inlinable public static func length(greaterThan length: Int) -> Self {
         self.init(format: "SELF.stringValue.length > \(length)")
     }
 
@@ -221,17 +221,43 @@ extension PropertyCondition where T: PredicateExpressibleByString {
     }
 }
 
+// MARK: Predicate
+
+/// NSPredicate bounded to generic type `T` that inheriting from ``Entity``.
+/// This class helps the compiler determines `Root` of the `KeyPath` that will be used in operators overloaded
+/// for instantiate a `NSPredicate`.
+///
+/// Example:
+///
+///     // Equal to "someProperty == 1"
+///     let predicate: TypedPredicate<SomeEntity> = \.someProperty == 1
+///
+/// It also provides `join` for concanating `KeyPath` in different classes and `subquery` for constructing subquery predicate.
+///
+/// Example:
+///
+///     let joinPredicate: TypedPredicate<SomeEntity> = .join(
+///         \.toOneRelationshipToAnotherEntity,
+///         predicate: \.propertyOfAnotherEntity == 1)
+///
+///     let subqueryPredicate: TypedPredicate<SomeEntity> = .subquery(
+///         \.toManyRelationshipToAnotherEntity,
+///         predicate: \.propertyOfAnotherEntity == 1,
+///         collectionQuery: .count(greaterThan: 1))
+///
+public final class TypedPredicate<T: Entity>: NSPredicate { }
+
 // MARK: - Operators
 
-// CONTAINS, BETWEEN operator
+/// CONTAINS, BETWEEN operator
 infix operator <>
-// BEGINSWITH operator
+/// BEGINSWITH operator
 infix operator |~
-// ENDSWITH operator
+/// ENDSWITH operator
 infix operator ~|
-// LINE operator
+/// LINE operator
 infix operator |~|
-// MATCHES operator
+/// MATCHES operator
 infix operator |*|
 
 // MARK: - Operator overloading for Entity
@@ -356,7 +382,7 @@ extension KeyPath where
         lhs: KeyPath, rhs: Range<Value.PredicateValue>) -> TypedPredicate<Root>
     {
         TypedPredicate<Root>(
-            format: "\(lhs.propertyName) >= %@ AND \(lhs.propertyName) < %@}",
+            format: "\(lhs.propertyName) >= %@ AND \(lhs.propertyName) < %@",
             rhs.lowerBound.predicateValue,
             rhs.upperBound.predicateValue)
     }
@@ -399,24 +425,69 @@ extension KeyPath where
     Value: WritableProperty,
     Value.PredicateValue == String
 {
-    public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(BEGINSWITH(rhs)) %@", rhs.string)
+    public static func |~ (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(BEGINSWITH(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    public static func ~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(ENDSWITH(rhs)) %@", rhs.string)
+    public static func ~| (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(ENDSWITH(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    public static func <> (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(CONTAINS(rhs)) %@", rhs.string)
+    public static func <> (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(CONTAINS(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    public static func |~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(LIKE(rhs)) %@", rhs.string)
+    public static func |~| (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(LIKE(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    public static func |*| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName) \(MATCHES(rhs)) %@", rhs.string)
+    public static func |*| (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) \(MATCHES(rhs)) \(rhs.placeholder)", rhs.string)
+    }
+
+    @inlinable public static func |~ (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs |~ SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func ~| (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs ~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func <> (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs <> SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~| (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs |~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |*| (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs |*| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~ <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs |~ SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func ~| <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs ~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func <> <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs <> SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~| <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs |~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |*| <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs |*| SearchString(rhs, modifier: .plain)
     }
 }
 
@@ -425,24 +496,69 @@ extension KeyPath where
     Value: AttributeProtocol,
     Value.PredicateValue: PredicateExpressibleByString
 {
-    public static func |~ (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(BEGINSWITH(rhs)) %@", rhs.string)
+    public static func |~ (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(BEGINSWITH(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    public static func ~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(ENDSWITH(rhs)) %@", rhs.string)
+    public static func ~| (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(ENDSWITH(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    public static func <> (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(CONTAINS(rhs)) %@", rhs.string)
+    public static func <> (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(CONTAINS(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    public static func |~| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(LIKE(rhs)) %@", rhs.string)
+    public static func |~| (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(LIKE(rhs)) \(rhs.placeholder)", rhs.string)
     }
 
-    public static func |*| (lhs: KeyPath, rhs: SearchString) -> TypedPredicate<Root> {
-        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(MATCHES(rhs)) %@", rhs.string)
+    public static func |*| (lhs: KeyPath, rhs: SearchString<Root>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName).stringValue \(MATCHES(rhs)) \(rhs.placeholder)", rhs.string)
+    }
+
+    @inlinable public static func |~ (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs |~ SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func ~| (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs ~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func <> (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs <> SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~| (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs |~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |*| (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
+        lhs |*| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~ <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs |~ SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func ~| <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs ~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func <> <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs <> SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~| <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs |~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |*| <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs |*| SearchString(rhs, modifier: .plain)
     }
 }
 
