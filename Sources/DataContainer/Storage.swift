@@ -28,7 +28,7 @@ public class Storage: CustomDebugStringConvertible, Hashable {
     public var debugDescription: String {
         let mirror = Mirror(reflecting: self)
         let content = mirror.children.map { "\($0.label!):\($0.value)" }.joined(separator: ",")
-        return "\(String(reflecting: Self.self))(\(content)"
+        return "\(String(reflecting: Self.self))(\(content))"
     }
 
     init(storeType: String, url: URL?, configuration: String?, options: [StorageOption]) {

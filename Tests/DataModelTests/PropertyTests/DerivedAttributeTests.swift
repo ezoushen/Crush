@@ -11,7 +11,7 @@ import XCTest
 
 @testable import Crush
 
-@available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+@available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 class DerivedAttributeTests: XCTestCase {
     class Entity_A: Entity {
         var attribute = Value.String("attribute")
@@ -51,7 +51,7 @@ class DerivedAttributeTests: XCTestCase {
     }
 
     func test_derivedTransformable_derivationExpressionKeyPathShouldEqualToKeyPath() {
-        @objc(_TtCFC10CrushTests14AttributeTests39test_attributeString_typeShouldBeStringFERRERRL_7Subject)
+        @objc(_TtCFC10CrushTests21DerivedAttributeTests73test_derivedTransformable_derivationExpressionKeyPathShouldEqualToKeyPathFT_T_L_7Subject)
         class Subject: NSObject, NSCoding, TransformableAttributeType {
             @objc var id: Int
             init(id: Int) { self.id = id }

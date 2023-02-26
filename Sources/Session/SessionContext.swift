@@ -130,11 +130,10 @@ internal struct _DetachedSessionContext: SessionContext, RawContextProviderProto
     internal let rootContext: NSManagedObjectContext
     internal let uiContext: NSManagedObjectContext
     internal let logger: DataContainer.LogHandler
-    internal let handler: SessionContext.ExecutionResultHandler?
-    
+
     internal func commit() throws {
         let result = try saveExecutionContext(executionContext)
-        handler?(result, [rootContext, uiContext])
+        refreshObjects(result, contexts: rootContext)
     }
     
     internal func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext {
@@ -151,17 +150,15 @@ internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
     internal let rootContext: NSManagedObjectContext
     internal let uiContext: NSManagedObjectContext
     internal let logger: DataContainer.LogHandler
-    internal let handler: SessionContext.ExecutionResultHandler?
-    
+
     internal func commit() throws {
         let author = executionContext.transactionAuthor
-        let result = try saveExecutionContext(executionContext)
+        _ = try saveExecutionContext(executionContext)
         try rootContext.performSync {
             rootContext.transactionAuthor = author
             try saveRootContext(rootContext)
             rootContext.transactionAuthor = nil
         }
-        handler?(result, [uiContext])
     }
     
     internal func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext {

@@ -8,10 +8,7 @@
 import CoreData
 import Foundation
 
-protocol ObjectProxy: RuntimeObject {
-    var managedObject: NSManagedObject { get }
-}
-
+///
 public protocol ObjectDriver: AnyObject {
     associatedtype Entity: Crush.Entity
     
@@ -21,6 +18,17 @@ public protocol ObjectDriver: AnyObject {
 }
 
 extension ObjectDriver {
+    /// Refresh the `managedObject` to keep it up to date
+    public func refresh() {
+        guard let context = managedObject.managedObjectContext else {
+            /// Ingore if the managedObject is stale
+            return
+        }
+        /// No need to wrap by `context.performAndWait` because `ObjectDriver`
+        /// should be used only within session block
+        context.refresh(managedObject, mergeChanges: true)
+    }
+
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> MutableSet<ManagedObject<Property.Destination>>
@@ -235,7 +243,7 @@ extension NSManagedObject {
     }
 }
 
-public class DriverBase<Entity: Crush.Entity>: ObjectDriver, ObjectProxy {
+public class DriverBase<Entity: Crush.Entity>: ObjectDriver {
     public let managedObject: NSManagedObject
 
     public init?(_ managedObject: NSManagedObject) {

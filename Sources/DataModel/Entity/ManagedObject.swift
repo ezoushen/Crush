@@ -7,10 +7,6 @@
 
 import CoreData
 
-public protocol RuntimeObject {
-    associatedtype Entity: Crush.Entity
-}
-
 public class ManagedObjectBase: NSManagedObject {
     internal func originalValidateValue(_ value: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey: String) throws {
         try super.validateValue(value, forKey: forKey)
@@ -29,7 +25,9 @@ public class ManagedObjectBase: NSManagedObject {
     }
 }
 
-public class ManagedObject<Entity: Crush.Entity>: ManagedObjectBase, RuntimeObject, ObjectRuntimeDriver, ObjectProxy, ManagedStatus {
+public class ManagedObject<Entity: Crush.Entity>: ManagedObjectBase, ObjectRuntimeDriver, ManagedStatus {
+    public typealias Entity = Entity
+    
     internal lazy var canTriggerEvent: Bool = {
         managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
     }()

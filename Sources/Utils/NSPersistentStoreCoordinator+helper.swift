@@ -98,6 +98,10 @@ struct CoreDataFeatureRequirement: OptionSet {
         }
         return true
     }
+
+    @inlinable func validate(persistentStore: NSPersistentStore) -> Bool {
+        Validator(requirement: self).validate(store: persistentStore)
+    }
 }
 
 extension CoreDataFeatureRequirement {

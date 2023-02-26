@@ -13,10 +13,14 @@ public protocol ManagedStatus {
     
     var propertyHashValue: Int { get }
 
+    /// Wrapper function of `NSManagedObject.hasFailt(forRelationshipNamed:)`
     func hasFault<T: RelationshipProtocol>(
         forRelationship keyPath: KeyPath<Entity, T>) -> Bool
+    /// Wrapper function of `NSManagedObject.changedValues()`
     func changedValues() -> [String: Any]
+    /// Wrapper function of `NSManagedObject.changedValuesForCurrentEvent()`
     func changedValuesForCurrentEvent() -> [String: Any]
+    /// Wrapper function of `NSManagedObject.commitedValues(forKeys:)`
     func commitedValues(forKeys keys: [String]?) -> [String: Any]
 }
 

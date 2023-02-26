@@ -57,12 +57,12 @@ public class CoreSpotlightIndexer {
 
     let coreSpotlightDelegate: AnyObject
 
-    @available(iOS 13.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     private func delegate() -> CoreSpotlightDelegate {
         return coreSpotlightDelegate as! CoreSpotlightDelegate
     }
 
-    @available(iOS 13.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     public init(
         provider: CoreSpotlightAttributeSetProvider,
         storeDescription: NSPersistentStoreDescription,
@@ -73,12 +73,12 @@ public class CoreSpotlightIndexer {
     }
 
 
-    @available(iOS 13.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     public func startIndexing() {
         delegate().startSpotlightIndexing()
     }
 
-    @available(iOS 13.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     public func stopIndexing() {
         delegate().stopSpotlightIndexing()
     }

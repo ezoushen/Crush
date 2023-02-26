@@ -25,7 +25,7 @@ class ReadOnlyTests: XCTestCase {
         var fetched = Fetched<TestEntity>("fetched") { $0.where(\.integerValue == 0) }
     }
 
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     class DerivedTestEntity: Entity {
         var integerValue = Value.Int16("integerValue")
         var derived = Derived.Int16("derived", from: \TestEntity.integerValue)
@@ -136,7 +136,7 @@ class ReadOnlyTests: XCTestCase {
         }
     }
 
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_readDerivedAttribute_shouldReturnDerivedValue() {
         let entity: DerivedTestEntity.ReadOnly = container.startSession().sync {
             context -> DerivedTestEntity.Managed in

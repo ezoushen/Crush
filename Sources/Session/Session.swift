@@ -68,7 +68,7 @@ public class Session {
 
 extension Session {
     public func load<T: Entity>(_ entity: T.ReadOnly) -> T.ReadOnly {
-        present(entity)
+        T.ReadOnly(object: context.present(entity.managedObject))
     }
 
     public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> T.ReadOnly? {
@@ -95,19 +95,6 @@ extension Session {
                 try context.commit()
             }
         }
-    }
-
-    func present<T: ObjectProxy>(_ entity: T) -> T.Entity.ReadOnly {
-        present(object: entity.managedObject)
-    }
-    
-    func present<T: ObjectDriver>(_ entity: T) -> T.Entity.ReadOnly {
-        present(object: entity.managedObject)
-    }
-
-    @inline(__always)
-    func present<T: Entity>(object: NSManagedObject) -> T.ReadOnly {
-        T.ReadOnly(object: context.present(object))
     }
 }
 
@@ -179,7 +166,12 @@ extension Session {
     }
 }
 
-extension NSManagedObjectContext {
+protocol TaskPerformable {
+    func perform(_ block: @escaping () -> Void)
+    func performAndWait(_ block: () -> Void)
+}
+
+extension TaskPerformable {
     @inlinable
     func performAsync(_ block: @escaping () -> Void) {
         perform(block)
@@ -208,7 +200,9 @@ extension NSManagedObjectContext {
 
         return try execute(block, rethrowing: { throw $0 })
     }
+}
 
+extension NSManagedObjectContext: TaskPerformable {
     func undoable<T>(_ block: () throws -> T) rethrows -> T {
         undoManager?.beginUndoGrouping()
         defer {

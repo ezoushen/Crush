@@ -61,7 +61,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
         return newAttribute
     }
 
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     public init<T: AttributeType>(
         _ name: String,
         type attributeType: T.Type,
@@ -75,7 +75,7 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
         self.attributeType = attributeType.nativeType
     }
 
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     public init(
         _ name: String,
         attributeType: NSAttributeType,

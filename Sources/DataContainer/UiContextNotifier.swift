@@ -1,5 +1,5 @@
 //
-//  PersistentHistoryTracker.swift
+//  UiContextNotifier.swift
 //  
 //
 //  Created by ezou on 2021/10/17.
@@ -10,7 +10,7 @@ import Foundation
 
 // MARK: User Info
 
-internal struct NSManagedObjectIDIterator: IteratorProtocol {
+struct NSManagedObjectIDIterator: IteratorProtocol {
     private var iterators: AnyIterator<AnyIterator<Any>>
     private var iterator: AnyIterator<Any>?
     
@@ -26,7 +26,7 @@ internal struct NSManagedObjectIDIterator: IteratorProtocol {
     }
 }
 
-internal class UserInfoMerger {
+class UserInfoMerger {
     var insertedObjectIDIterators: [AnyIterator<Any>] = []
     var updatedObjectIDIterators: [AnyIterator<Any>] = []
     var deletedObjectIDIterators: [AnyIterator<Any>] = []
@@ -87,18 +87,53 @@ internal class UserInfoMerger {
 
 // MARK: UiContextNotifier
 
-internal protocol UiContextNotifier {
-    var container: DataContainer { get }
-    var context: _SessionContext { get }
-    var sessionContextExecutionResultHandler: _SessionContext.ExecutionResultHandler? { get }
+class UiContextNotifier {
+    private weak var container: DataContainer?
 
-    func initialize()
-    func enable()
-    func disable()
-}
+    private let _persistentHistory: NotificationHandler?
+    
+    let contextDidSave: ContextDidSaveNotificationHandler
 
-extension UiContextNotifier {
-    internal func notifyOnMainThread(userInfo: [AnyHashable: Any]) {
+    @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
+    var persistentHistory: PersistentHistoryNotificationHandler? {
+        _persistentHistory as? PersistentHistoryNotificationHandler
+    }
+
+    init(container: DataContainer) {
+        let seenTokens = NotificationHandler.SeenTokens(size: 100)
+
+        contextDidSave =
+            ContextDidSaveNotificationHandler(container: container, seenTokens: seenTokens)
+
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *) {
+            _persistentHistory =
+                PersistentHistoryNotificationHandler(container: container, seenTokens: seenTokens)
+        } else {
+            _persistentHistory = nil
+        }
+
+        contextDidSave.notifier = self
+        _persistentHistory?.notifier = self
+
+        self.container = container
+    }
+
+    deinit {
+        disable()
+    }
+
+    func enable() {
+        contextDidSave.enable()
+        _persistentHistory?.enable()
+    }
+
+    func disable() {
+        contextDidSave.disable()
+        _persistentHistory?.disable()
+    }
+
+    fileprivate func postNotification(userInfo: [AnyHashable: Any]) {
+        guard let container = container else { return }
         DispatchQueue.performMainThreadTask {
             NotificationCenter.default.post(
                 name: DataContainer.uiContextDidRefresh,
@@ -107,153 +142,204 @@ extension UiContextNotifier {
     }
 }
 
-internal /*abstract*/ class _UiContextNotifier: UiContextNotifier {
-    internal lazy var context: _SessionContext = container.backgroundSessionContext()
+class NotificationHandler {
 
-    internal var sessionContextExecutionResultHandler: _SessionContext.ExecutionResultHandler? {
-        assertionFailure("Not implemented")
-        return nil
+    let seenTokens: SeenTokens
+
+    let uiContext: NSManagedObjectContext
+    let writerContext: NSManagedObjectContext
+
+    weak var notifier: UiContextNotifier?
+
+    private(set) var isEnabled: Bool = false
+
+    private var _logger: () -> LogHandler
+    var logger: LogHandler { _logger() }
+
+    init(container: DataContainer, seenTokens: SeenTokens) {
+        _logger = { [weak container] in container?.logger ?? .default }
+        self.seenTokens = seenTokens
+        self.uiContext = container.uiContext
+        self.writerContext = container.writerContext
     }
 
-    internal unowned let container: DataContainer
-
-    internal init(container: DataContainer) {
-        self.container = container
-    }
-
-    func initialize() {
-        assertionFailure("Not implemented")
-    }
-
-    func enable() {
-        assertionFailure("Not implemented")
-    }
-
-    func disable() {
-        assertionFailure("Not implemented")
-    }
-
-    deinit { disable() }
+    func enable() { isEnabled = true }
+    func disable() { isEnabled = false }
 }
 
-internal class ContextDidSaveNotifier: _UiContextNotifier {
-    private let notificationName: Notification.Name = .NSManagedObjectContextDidSave
+extension NotificationHandler {
+    class SeenTokens {
+        let tokens: MutableOrderedSet<NSPersistentHistoryToken> = []
+        let size: Int
 
-    override var sessionContextExecutionResultHandler: _SessionContext.ExecutionResultHandler {
-        { [unowned self] result, contexts in
-            let uiContext = context.uiContext
-            let contexts = contexts.filter { $0 !== uiContext }
-            guard contexts.isEmpty == false else { return }
-            NSManagedObjectContext.mergeChanges(
-                fromRemoteContextSave: [
-                    NSInsertedObjectIDsKey: result.inserted,
-                    NSUpdatedObjectIDsKey: result.updated,
-                    NSDeletedObjectIDsKey: result.deleted,
-                ],
-                into: contexts)
+        private let lock = UnfairLock()
+
+        init(size: Int) {
+            self.size = size
+        }
+
+        private func insert(_ token: NSPersistentHistoryToken) {
+            if tokens.count >= size {
+                tokens.removeFirst()
+            }
+            tokens.append(token)
+        }
+
+        private func remove(_ token: NSPersistentHistoryToken) -> Bool {
+            tokens.remove(token) != nil
+        }
+
+        func shouldProcessToken(_ token: NSPersistentHistoryToken) -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            /// Return false if it's already presented in the set
+            guard remove(token) else {
+                /// Return true if it's not been processed, and then mark the token as seen
+                insert(token)
+                return true
+            }
+            return false
         }
     }
+}
 
-    override func initialize() { }
-
+class ContextDidSaveNotificationHandler: NotificationHandler {
     override func enable() {
+        guard !isEnabled else { return }
+        super.enable()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(contextDidSave(notification:)),
-            name: notificationName,
-            object: context.rootContext)
+            name: .NSManagedObjectContextDidSave,
+            object: writerContext)
     }
 
     override func disable() {
+        guard isEnabled else { return }
+        super.disable()
         NotificationCenter.default.removeObserver(
             self,
-            name: notificationName,
-            object: context.rootContext)
+            name: .NSManagedObjectContextDidSave,
+            object: writerContext)
     }
 
-    @objc
-    internal func contextDidSave(notification: Notification) {
-        guard let userInfo = notification.userInfo,
+    @objc func contextDidSave(notification: Notification) {
+        /// Check the new change token and merge changes of the notification if it hadn't been processed
+        if #available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *),
+           let token = notification.userInfo?["newChangeToken"] as? NSPersistentHistoryToken,
+           seenTokens.shouldProcessToken(token) == false
+        {
+            return
+        }
+        /// Merge the changes if it's not empty
+        guard let notifier = notifier,
+              let userInfo = notification.userInfo,
               let managedObjectContext = notification.object as? NSManagedObjectContext,
-            userInfo.contains(where: {
-                ($0.key == AnyHashable(NSInsertedObjectsKey) ||
-                $0.key == AnyHashable(NSUpdatedObjectsKey) ||
-                $0.key == AnyHashable(NSDeletedObjectsKey)) &&
-                ($0.value as? NSSet)?.count ?? 0 > 0
-            }) else { return }
-        let uiContext = context.uiContext
+              userInfo.contains(where: {
+                  ($0.key == AnyHashable(NSInsertedObjectsKey) ||
+                   $0.key == AnyHashable(NSUpdatedObjectsKey) ||
+                   $0.key == AnyHashable(NSDeletedObjectsKey)) &&
+                  ($0.value as? NSSet)?.count ?? 0 > 0
+              }) else { return }
+
+        /// Merge changes into ui context and refresh deleted objects
+        let uiContext = uiContext
         let deletedObjectIDs = (userInfo[NSDeletedObjectsKey] as? NSSet)?
             .compactMap { ($0 as? NSManagedObject)?.objectID }
+
         DispatchQueue.performMainThreadTask {
             uiContext.mergeChanges(fromContextDidSave: notification)
-            // Refresh for forcing KVO on deleted objects
+            /// Refresh for forcing KVO on deleted objects
             if let deletedObjectIDs {
                 for object in deletedObjectIDs.compactMap(uiContext.registeredObject(for:)) {
                     uiContext.refresh(object, mergeChanges: true)
                 }
             }
         }
+        /// Send notification on main thread
         let merger = UserInfoMerger(userInfo: userInfo)
         let name = managedObjectContext.name ?? "Unknown"
-        notifyOnMainThread(userInfo: [
+        notifier.postNotification(userInfo: [
             AnyHashable(name): merger.createUserInfo()
         ])
     }
 }
 
 @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
-internal class PersistentHistoryNotifier: _UiContextNotifier {
+class PersistentHistoryNotificationHandler: NotificationHandler {
+    let coordinator: NSPersistentStoreCoordinator
+    var lastHistoryTokens: [URL: NSPersistentHistoryToken] = [:]
+    var transactionLifetime: TimeInterval = 604_800
 
-    internal let coordinator: NSPersistentStoreCoordinator
-    internal var lastHistoryTokens: [URL: NSPersistentHistoryToken] = [:]
-    internal var transactionLifetime: TimeInterval = 604_800
-
-    internal override var sessionContextExecutionResultHandler: _SessionContext.ExecutionResultHandler {
-        { result, contexts in
-            NSManagedObjectContext.mergeChanges(
-                fromRemoteContextSave: [
-                    NSInsertedObjectsKey: result.inserted,
-                    NSUpdatedObjectsKey: result.updated,
-                    NSDeletedObjectsKey: result.deleted,
-                ],
-                into: contexts)
-        }
+    var canTrackPersistentHistory: Bool {
+        coordinator.checkRequirement([
+           .sqliteStore, .persistentHistoryEnabled, .remoteChangeNotificationEnabled
+        ])
     }
 
-    private var lock = UnfairLock()
+    private let lock = UnfairLock()
 
-    private let logger = LogHandler.default
-
-    internal override init(container: DataContainer) {
+    override init(container: DataContainer, seenTokens: NotificationHandler.SeenTokens) {
         coordinator = container.coreDataStack.coordinator
-        super.init(container: container)
+        super.init(container: container, seenTokens: seenTokens)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reload),
+            name: .NSPersistentStoreCoordinatorStoresDidChange,
+            object: coordinator)
     }
 
-    internal override func initialize() {
-        purgeHistory()
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 
-        for store in coordinator.persistentStores where store.url != nil
-        {
-            loadHistoryToken(for: store.url!)
+    @objc func reload() {
+         guard canTrackPersistentHistory else { return disable() }
+        /// Purge out-dated history
+        let sevenDaysAgo = Date(timeIntervalSinceNow: -transactionLifetime)
+        deleteHistory(before: sevenDaysAgo)
+
+        /// Load persistent token from disk
+        for store in coordinator.persistentStores {
+            guard let storeURL = store.url, storeURL.isDevNull == false else { continue }
+            do {
+                let tokenFileURL = tokenURL(for: storeURL)
+                let tokenData = try Data(contentsOf: tokenFileURL)
+                let token = try NSKeyedUnarchiver
+                    .unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
+                lock.lock()
+                lastHistoryTokens[storeURL] = token
+                lock.unlock()
+            } catch let error {
+                switch (error as NSError).code {
+                case 260: break // File not found
+                case 4864: break // Data corrupted
+                default: logger.log(.error, "Failed to load history token", error: error)
+                }
+            }
         }
     }
 
-    internal override func enable() {
+    override func enable() {
+        guard !isEnabled else { return }
+        super.enable()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(persistentStoreHistoryChanged(_:)),
-            name: Notification.Name("NSPersistentStoreRemoteChangeNotification"),
+            name: .NSPersistentStoreRemoteChange,
             object: coordinator)
     }
 
-    internal override func disable() {
+    override func disable() {
+        guard isEnabled else { return }
+        super.disable()
         NotificationCenter.default.removeObserver(
             self,
-            name: Notification.Name("NSPersistentStoreRemoteChangeNotification"),
+            name: .NSPersistentStoreRemoteChange,
             object: coordinator)
     }
 
-    internal func storeHistoryToken(_ token: NSPersistentHistoryToken, for storeURL: URL) {
+    func storeHistoryToken(_ token: NSPersistentHistoryToken, for storeURL: URL) {
         if storeURL.isDevNull { return }
         do {
             lastHistoryTokens[storeURL] = token
@@ -266,42 +352,28 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         }
     }
 
-    internal func loadHistoryToken(for storeURL: URL) {
-        if storeURL.isDevNull { return }
-        do {
-            let tokenFileURL = tokenURL(for: storeURL)
-            let tokenData = try Data(contentsOf: tokenFileURL)
-            lastHistoryTokens[storeURL] = try NSKeyedUnarchiver
-                .unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
-        } catch let error {
-            switch (error as NSError).code {
-            case 260: break // File not found
-            case 4864: break // Data corrupted
-            default:
-                logger.log(.error, "Failed to load history token", error: error)
-            }
-        }
-    }
-    
     private func tokenURL(for storeURL: URL) -> URL {
         storeURL.appendingPathExtension("tokendata")
     }
 
-    @objc
-    internal func persistentStoreHistoryChanged(_ notification: Notification) {
-        guard let storeURL = notification.userInfo?["storeURL"] as? URL else { return }
+    @objc func persistentStoreHistoryChanged(_ notification: Notification) {
+        guard let storeURL = notification.userInfo?["storeURL"] as? URL,
+              let notifier = notifier else { return }
+
+        let token: NSPersistentHistoryToken? =
+            notification.userInfo?["historyToken"] as? NSPersistentHistoryToken
+
+        if let lastToken = token, !seenTokens.shouldProcessToken(lastToken) {
+            return
+        }
 
         lock.lock()
 
-        let uiContext = context.uiContext
-        let rootContext = context.rootContext
         let transactions = loadPersistentHistory(storeURL: storeURL)
             .sorted(by: { $0.timestamp < $1.timestamp })
         var mergers: [AnyHashable: UserInfoMerger] = [:]
         
-        if let lastToken = notification.userInfo?["historyToken"]
-            as? NSPersistentHistoryToken ?? transactions.last?.token
-        {
+        if let lastToken = token ?? transactions.last?.token {
             storeHistoryToken(lastToken, for: storeURL)
         }
 
@@ -320,15 +392,26 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
             merger.merge(userInfo: changes)
             
             NSManagedObjectContext.mergeChanges(
-                fromRemoteContextSave: changes, into: [rootContext, uiContext])
+                fromRemoteContextSave: changes, into: [writerContext, uiContext])
         }
 
         lock.unlock()
 
         if transactions.isEmpty == false {
             let userInfo = mergers.mapValues { $0.createUserInfo() }
-            notifyOnMainThread(userInfo: userInfo)
+            notifier.postNotification(userInfo: userInfo)
         }
+    }
+
+    func loadPersistentHistory(date: Date) -> [NSPersistentHistoryTransaction] {
+        let fetchHistoryRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: date)
+        return executePersistentHistoryRequest(fetchHistoryRequest)
+    }
+
+    func deleteHistory(before date: Date) {
+        let purgeHistoryRequest = NSPersistentHistoryChangeRequest
+            .deleteHistory(before: date)
+        _ = executePersistentHistoryRequest(purgeHistoryRequest)
     }
 
     private func loadPersistentHistory(storeURL: URL) -> [NSPersistentHistoryTransaction] {
@@ -336,12 +419,7 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
             .fetchHistory(after: lastHistoryTokens[storeURL])
         return executePersistentHistoryRequest(fetchHistoryRequest)
     }
-    
-    internal func loadPersistentHistory(date: Date) -> [NSPersistentHistoryTransaction] {
-        let fetchHistoryRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: date)
-        return executePersistentHistoryRequest(fetchHistoryRequest)
-    }
-    
+
     private func executePersistentHistoryRequest(_ request: NSPersistentHistoryChangeRequest) -> [NSPersistentHistoryTransaction] {
         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         context.persistentStoreCoordinator = coordinator
@@ -355,21 +433,6 @@ internal class PersistentHistoryNotifier: _UiContextNotifier {
         } catch {
             logger.log(.error, "Failed to load persistent history", error: error)
             return []
-        }
-    }
-
-    internal func purgeHistory() {
-        let sevenDaysAgo = Date(timeIntervalSinceNow: -transactionLifetime)
-        return deleteHistory(before: sevenDaysAgo)
-    }
-
-    internal func deleteHistory(before date: Date) {
-        let purgeHistoryRequest = NSPersistentHistoryChangeRequest
-            .deleteHistory(before: date)
-        do {
-            try context.rootContext.execute(purgeHistoryRequest)
-        } catch {
-            logger.log(.error, "Failed to purge persistent history", error: error)
         }
     }
 }

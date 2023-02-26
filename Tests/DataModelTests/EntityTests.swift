@@ -101,7 +101,7 @@ class EntityTests: XCTestCase {
         XCTAssertNotNil(result?.propertiesByName["value"])
     }
 
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_createEntityDescription_derivedAttributeShouldBeDefinedInProperties() {
         class TestEntity: Entity {
             var value = Value.Int64("value")

@@ -24,7 +24,7 @@ class AttributeTests: XCTestCase {
     }
 
     func test_attributeTransformable_typeShouldBeString() {
-        @objc(_TtCFC10CrushTests14AttributeTests39test_attributeString_typeShouldBeStringFERRERRL_7Subject)
+        @objc(_TtCFC10CrushTests14AttributeTests46test_attributeTransformable_typeShouldBeStringFT_T_L_7Subject)
         class Subject: NSObject, NSCoding, TransformableAttributeType {
             @objc var id: Int
             init(id: Int) { self.id = id }
@@ -37,7 +37,7 @@ class AttributeTests: XCTestCase {
     }
 
     func test_attributeTransformable_valueTransformerNameShouldBeDefaultTransformer() {
-        @objc(_TtCFC10CrushTests14AttributeTests39test_attributeString_typeShouldBeStringFERRERRL_7Subject)
+        @objc(_TtCFC10CrushTests14AttributeTests74test_attributeTransformable_valueTransformerNameShouldBeDefaultTransformerFT_T_L_7Subject)
         class Subject: NSObject, NSCoding, TransformableAttributeType {
             @objc var id: Int
             init(id: Int) { self.id = id }
@@ -230,14 +230,14 @@ class AttributeTests: XCTestCase {
         XCTAssertFalse(description.allowsExternalBinaryDataStorage)
     }
 
-    @available(iOS 13.0, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_attributeOption_preservesValueInHistoryOnDeletionShouldBeTrue() {
         let attribute = PreservesValueInHistoryOnDeletion(wrappedValue: Value.Bool("attribute"))
         let description = attribute.createPropertyDescription()
         XCTAssertTrue(description.preservesValueInHistoryOnDeletion)
     }
 
-    @available(iOS 13.0, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_attributeOption_preservesValueInHistoryOnDeletionShouldBeFalse() {
         let attribute = Value.Bool("attribute")
         let description = attribute.createPropertyDescription()

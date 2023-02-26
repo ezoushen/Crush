@@ -32,7 +32,7 @@ class AddAttributeTests: XCTestCase {
         XCTAssertEqual(description.isTransient, sut.isTransient)
     }
     
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_createProperty_shouldBeDerived() {
         let sut = AddAttribute("name", type: String.self, isOptional: false, derivedExpression: NSExpression(format: "another"))
         var store: [EntityMigrationCallback] = []
@@ -142,7 +142,7 @@ class UpdateAttributeTests: XCTestCase {
         XCTAssertEqual(description.versionHashModifier, nil)
     }
 
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_migrateAttribute_shouldUpdateDerivedExpression() throws {
         var store: [EntityMigrationCallback] = []
         let sut = UpdateAttribute("originName", type: Date.self, derivedExpression: NSExpression.dateNow())
@@ -168,7 +168,7 @@ class UpdateAttributeTests: XCTestCase {
         XCTAssertEqual(mapping?.name, destination.name)
     }
 
-    @available(iOS 13.0, watchOS 6.0, macOS 10.15, *)
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_createPropertyMapping_shouldSetAttributeMapping() throws {
         let sut = UpdateAttribute("originName", isOptional: false)
         let source = NSAttributeDescription()

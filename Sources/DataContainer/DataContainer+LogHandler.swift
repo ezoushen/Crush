@@ -6,17 +6,44 @@
 //
 
 import Foundation
+import os
 
 internal typealias LogHandler = DataContainer.LogHandler
 
 extension DataContainer {
+    /// Predefined `LogLevel` for `DataContainer`
     public enum LogLevel {
-        case info, warning, error, critical
+        /// Normal log
+        case info
+        /// Potential error
+        case warning
+        /// Non fatal error
+        case error
+        /// Fatal error
+        case critical
     }
 
+    /// Define desired logging behaviour.
+    ///
+    /// Example:
+    ///
+    ///     let handler = LogHandler(
+    ///         info: { print("info: \($0)") },
+    ///         warning: { print("warning: \($0)") },
+    ///         error: { msg, err in print("error: \(msg), details: \(String(describing: err))" },
+    ///         critical: { msg, err in print("critical: \(msg), details: \(String(describing: err)") })
+    ///
     public struct LogHandler {
         public static var `default`: LogHandler {
-            .init(
+            if #available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0, *) {
+                let logger = Logger()
+                return LogHandler(
+                    info: { logger.info("\($0)") },
+                    warning: { logger.warning("\($0)") },
+                    error: { msg, err in err == nil ? logger.error("\(msg)") : logger.error("\(msg), error: \(err!)") },
+                    critical: { msg, err in err == nil ? logger.critical("\(msg)") : logger.critical("\(msg), error: \(err!)") })
+            }
+            return LogHandler(
                 info: { print($0) },
                 warning: { print($0)},
                 error: { msg, err in err == nil ? print(msg) : print("\(msg), error: \(err!)") },

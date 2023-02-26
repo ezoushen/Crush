@@ -7,19 +7,21 @@
 
 import CoreData
 
-protocol ReadOnlyObjectProxy: ObjectProxy {
-    associatedtype Driver: DriverBase<Entity>
-    var driver: Driver { get }
-}
-
-extension ReadOnlyObjectProxy {
-
-}
-
+/// Wrapper of `NSManagedObject` for reading properties and guarantee thread safety at the same time.
+///
+/// Besides properties defined in `Entity`, you can access all other instance properties of `NSManagedObject`
+/// in read-only mode. Moreover, it guarantees that all data access would be executed on the main thread.
+///
+/// Example:
+///
+///     var readOnlyEntity: ReadOnly<Entity> = ...
+///     let property = readOnlyEntity.property // ✅ OK!!
+///     readOnlyEntity.property = newValue // ❌ Compiler error!!
+///
 @dynamicMemberLookup
-public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
+public struct ReadOnly<T: Crush.Entity> {
     @dynamicMemberLookup
-    public struct Raw: ReadOnlyObjectProxy {
+    public struct Raw {
         public typealias Driver = ManagedRawDriver<T>
         public typealias Entity = T
 
@@ -35,12 +37,19 @@ public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
             self.context = context
         }
 
+        /// Refresh the `managedObject` to keep it up to date
+        public func refresh() {
+            context.performSync { context.refresh(managedObject, mergeChanges: true) }
+        }
+
+        /// Read the attribute from the `managedObject` through dynamic callable api
         public subscript<T: AttributeProtocol>(
             dynamicMember keyPath: KeyPath<Entity, T>) -> T.ManagedValue
         {
             context.performSync { driver[rawValue: keyPath] }
         }
 
+        /// Read the relationship from the `managedObject` through dynamic callable api
         public subscript<T: RelationshipProtocol>(
             dynamicMember keyPath: KeyPath<Entity, T>
         ) -> T.RuntimeValue.Safe
@@ -58,10 +67,12 @@ public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
     internal let driver: ManagedDriver<Entity>
     internal let context: NSManagedObjectContext
 
+    /// Wrap the `ReadOnly` object to `ReadOnly.Raw`
     public var raw: ReadOnly<T>.Raw {
         Raw(driver: driver.rawDriver())
     }
-    
+
+    /// Wrap `Entity.Managed` object to `Entity.ReadOnly`
     public init(_ value: ManagedObject<Entity>) {
         self.init(driver: value.driver())
     }
@@ -78,18 +89,21 @@ public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
         self.context = context
     }
 
+    /// Access properties of the underlying `managedObject`
     public func access<T: Property>(
         keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
     {
         context.performSync { driver[value: keyPath] }
     }
 
+    /// Access properties of the underlying `managedObject`
     public subscript<T: Property>(
         dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
     {
         access(keyPath: keyPath)
     }
 
+    /// Access properties of the underlying `managedObject`
     public subscript<T: Property>(
         dynamicMember keyPath: KeyPath<Entity, T>
     ) -> T.RuntimeValue.Safe
@@ -100,21 +114,26 @@ public struct ReadOnly<T: Crush.Entity>: ReadOnlyObjectProxy {
     }
 }
 
-extension ReadOnly: ManagedStatus {
-    public var propertyHashValue: Int {
-        managedObject.propertyHashValue
-    }
-
+extension ReadOnly {
+    /// Check is the underlying object stale
     public var isInaccessible: Bool {
         managedObject.managedObjectContext == nil
     }
 
+    /// Read properties of `NSManagedObject` through dyncmic callable API.
     public subscript<T>(dynamicMember keyPath: KeyPath<NSManagedObject, T>) -> T {
         managedObject[keyPath: keyPath]
     }
-    
+
+    /// Read properties of `Entity.Driver` through dyncmic callable API.
     public subscript<T>(dynamicMember keyPath: KeyPath<ManagedDriver<Entity>, T>) -> T {
         driver[keyPath: keyPath]
+    }
+}
+
+extension ReadOnly: ManagedStatus { 
+    public var propertyHashValue: Int {
+        managedObject.propertyHashValue
     }
 
     public func hasFault<T: RelationshipProtocol>(
@@ -122,15 +141,15 @@ extension ReadOnly: ManagedStatus {
     {
         managedObject.hasFault(forRelationshipNamed: keyPath.propertyName)
     }
-    
+
     public func changedValues() -> [String: Any] {
         context.performSync { managedObject.changedValues() }
     }
-    
+
     public func changedValuesForCurrentEvent() -> [String: Any] {
         context.performSync { managedObject.changedValuesForCurrentEvent() }
     }
-    
+
     public func commitedValues(forKeys keys: [String]?) -> [String: Any] {
         context.performSync { managedObject.committedValues(forKeys: keys) }
     }
@@ -160,31 +179,20 @@ extension ReadaleObject where Self: Entity {
 import Combine
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
-public final class ObservableReadOnly<Entity: Crush.Entity>: ObservableObject {
+@propertyWrapper
+public final class ObservableEntity<Entity: Crush.Entity>: ObservableObject {
+    public var wrappedValue: ReadOnly<Entity> {
+        readOnly
+    }
 
     internal let readOnly: ReadOnly<Entity>
     internal var cancellable: AnyCancellable!
 
-    internal init(_ readOnly: ReadOnly<Entity>) {
+    public init(wrappedValue readOnly: ReadOnly<Entity>) {
         self.readOnly = readOnly
         self.cancellable = readOnly.managedObject
             .objectWillChange
             .sink { [unowned self] in objectWillChange.send() }
-    }
-
-    public subscript<T: Property>(
-        dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
-    {
-        readOnly.access(keyPath: keyPath)
-    }
-
-    public subscript<T: Property>(
-        dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> T.RuntimeValue.Safe
-    where
-        T.RuntimeValue: UnsafeSessionProperty
-    {
-        readOnly[dynamicMember: keyPath]
     }
 }
 #endif

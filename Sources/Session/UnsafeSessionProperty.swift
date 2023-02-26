@@ -22,7 +22,10 @@ extension UnsafeSessionProperty {
     public func wrap<T: ObjectDriver>(
         object: T, in session: Session?) -> ReadOnly<Entity> where T.Entity == Entity
     {
-        session?.present(object) ?? ReadOnly(driver: object.driver())
+        guard let session = session else {
+            return ReadOnly(driver: object.driver())
+        }
+        return ReadOnly<T.Entity>(object: session.context.present(object.managedObject))
     }
 }
 

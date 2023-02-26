@@ -96,7 +96,7 @@ final class ManagedObjectTests: XCTestCase {
 
     override func tearDown() {
         try? container.destroyStorages()
-        try! container.build(storage: storage)
+        try! container.load(storage: storage)
     }
 
     func test_willSaveEvent_shouldBeCalled() {
