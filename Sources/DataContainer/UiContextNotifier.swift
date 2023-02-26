@@ -8,88 +8,9 @@
 import CoreData
 import Foundation
 
-// MARK: User Info
-
-struct NSManagedObjectIDIterator: IteratorProtocol {
-    private var iterators: AnyIterator<AnyIterator<Any>>
-    private var iterator: AnyIterator<Any>?
-    
-    init<I: IteratorProtocol>(_ iterators: I) where I.Element == AnyIterator<Any> {
-        self.iterators = AnyIterator(iterators)
-    }
-    
-    mutating func next() -> NSManagedObjectID? {
-        if iterator == nil {
-            iterator = iterators.next()
-        }
-        return iterator?.next() as? NSManagedObjectID
-    }
-}
-
-class UserInfoMerger {
-    var insertedObjectIDIterators: [AnyIterator<Any>] = []
-    var updatedObjectIDIterators: [AnyIterator<Any>] = []
-    var deletedObjectIDIterators: [AnyIterator<Any>] = []
-    
-    init(userInfo: [AnyHashable: Any]) {
-        merge(userInfo: userInfo)
-    }
-    
-    init(userInfos: [[AnyHashable: Any]]) {
-        userInfos.forEach(merge(userInfo:))
-    }
-    
-    init() { }
-    
-    func merge(userInfo: [AnyHashable: Any]?) {
-        guard let userInfo = userInfo else { return }
-        
-        if let insertedObjectIDs = userInfo[AnyHashable(NSInsertedObjectIDsKey)] as? NSMutableSet {
-            insertedObjectIDIterators.append(AnyIterator(insertedObjectIDs.makeIterator()))
-        }
-        if let insertedObjects = userInfo[AnyHashable(NSInsertedObjectsKey)] as? NSMutableSet {
-            insertedObjectIDIterators.append(AnyIterator(
-                insertedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
-        }
-        if let updatedObjectIDs = userInfo[AnyHashable(NSUpdatedObjectIDsKey)] as? NSMutableSet {
-            updatedObjectIDIterators.append(AnyIterator(updatedObjectIDs.makeIterator()))
-        }
-        if let updatedObjects = userInfo[AnyHashable(NSUpdatedObjectsKey)] as? NSMutableSet {
-            updatedObjectIDIterators.append(AnyIterator(
-                updatedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
-        }
-        if let deletedObjectIDs = userInfo[AnyHashable(NSDeletedObjectIDsKey)] as? NSMutableSet {
-            deletedObjectIDIterators.append(AnyIterator(deletedObjectIDs.makeIterator()))
-        }
-        if let deletdeObjects = userInfo[AnyHashable(NSDeletedObjectsKey)] as? NSMutableSet {
-            deletedObjectIDIterators.append(AnyIterator(
-                deletdeObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
-        }
-    }
-    
-    func createUserInfo() -> [AnyHashable: Any] {
-        let inserted = insertedObjectIDIterators
-        let updated = updatedObjectIDIterators
-        let deleted = deletedObjectIDIterators
-        return [
-            AnyHashable(NSInsertedObjectIDsKey): AnySequence<NSManagedObjectID> {
-                NSManagedObjectIDIterator(inserted.makeIterator())
-            },
-            AnyHashable(NSUpdatedObjectIDsKey): AnySequence<NSManagedObjectID> {
-                NSManagedObjectIDIterator(updated.makeIterator())
-            },
-            AnyHashable(NSDeletedObjectIDsKey): AnySequence<NSManagedObjectID> {
-                NSManagedObjectIDIterator(deleted.makeIterator())
-            },
-        ]
-    }
-}
-
 // MARK: UiContextNotifier
 
 class UiContextNotifier {
-    private weak var container: DataContainer?
-
     private let _persistentHistory: NotificationHandler?
     
     let contextDidSave: ContextDidSaveNotificationHandler
@@ -98,6 +19,8 @@ class UiContextNotifier {
     var persistentHistory: PersistentHistoryNotificationHandler? {
         _persistentHistory as? PersistentHistoryNotificationHandler
     }
+
+    private let notificationBuilder: ([AnyHashable: Any]) -> Notification?
 
     init(container: DataContainer) {
         let seenTokens = NotificationHandler.SeenTokens(size: 100)
@@ -112,10 +35,15 @@ class UiContextNotifier {
             _persistentHistory = nil
         }
 
+        notificationBuilder = { [weak container] userInfo in
+            guard let container = container else { return nil }
+            return Notification(
+                name: DataContainer.uiContextDidRefresh,
+                object: container, userInfo: userInfo)
+        }
+
         contextDidSave.notifier = self
         _persistentHistory?.notifier = self
-
-        self.container = container
     }
 
     deinit {
@@ -133,11 +61,9 @@ class UiContextNotifier {
     }
 
     fileprivate func postNotification(userInfo: [AnyHashable: Any]) {
-        guard let container = container else { return }
+        guard let notification = notificationBuilder(userInfo) else { return }
         DispatchQueue.performMainThreadTask {
-            NotificationCenter.default.post(
-                name: DataContainer.uiContextDidRefresh,
-                object: container, userInfo: userInfo)
+            NotificationCenter.default.post(notification)
         }
     }
 }
@@ -437,13 +363,93 @@ class PersistentHistoryNotificationHandler: NotificationHandler {
     }
 }
 
+// MARK: User Info
+
+struct NSManagedObjectIDIterator: IteratorProtocol {
+    private var iterators: AnyIterator<AnyIterator<Any>>
+    private var iterator: AnyIterator<Any>?
+
+    init<I: IteratorProtocol>(_ iterators: I) where I.Element == AnyIterator<Any> {
+        self.iterators = AnyIterator(iterators)
+    }
+
+    mutating func next() -> NSManagedObjectID? {
+        if iterator == nil {
+            iterator = iterators.next()
+        }
+        return iterator?.next() as? NSManagedObjectID
+    }
+}
+
+class UserInfoMerger {
+    var insertedObjectIDIterators: [AnyIterator<Any>] = []
+    var updatedObjectIDIterators: [AnyIterator<Any>] = []
+    var deletedObjectIDIterators: [AnyIterator<Any>] = []
+
+    init(userInfo: [AnyHashable: Any]) {
+        merge(userInfo: userInfo)
+    }
+
+    init(userInfos: [[AnyHashable: Any]]) {
+        userInfos.forEach(merge(userInfo:))
+    }
+
+    init() { }
+
+    func merge(userInfo: [AnyHashable: Any]?) {
+        guard let userInfo = userInfo else { return }
+
+        if let insertedObjectIDs = userInfo[AnyHashable(NSInsertedObjectIDsKey)] as? NSMutableSet {
+            insertedObjectIDIterators.append(AnyIterator(insertedObjectIDs.makeIterator()))
+        }
+        if let insertedObjects = userInfo[AnyHashable(NSInsertedObjectsKey)] as? NSMutableSet {
+            insertedObjectIDIterators.append(AnyIterator(
+                insertedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+        }
+        if let updatedObjectIDs = userInfo[AnyHashable(NSUpdatedObjectIDsKey)] as? NSMutableSet {
+            updatedObjectIDIterators.append(AnyIterator(updatedObjectIDs.makeIterator()))
+        }
+        if let updatedObjects = userInfo[AnyHashable(NSUpdatedObjectsKey)] as? NSMutableSet {
+            updatedObjectIDIterators.append(AnyIterator(
+                updatedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+        }
+        if let deletedObjectIDs = userInfo[AnyHashable(NSDeletedObjectIDsKey)] as? NSMutableSet {
+            deletedObjectIDIterators.append(AnyIterator(deletedObjectIDs.makeIterator()))
+        }
+        if let deletdeObjects = userInfo[AnyHashable(NSDeletedObjectsKey)] as? NSMutableSet {
+            deletedObjectIDIterators.append(AnyIterator(
+                deletdeObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+        }
+    }
+
+    func createUserInfo() -> [AnyHashable: Any] {
+        let inserted = insertedObjectIDIterators
+        let updated = updatedObjectIDIterators
+        let deleted = deletedObjectIDIterators
+        return [
+            AnyHashable(NSInsertedObjectIDsKey): AnySequence<NSManagedObjectID> {
+                NSManagedObjectIDIterator(inserted.makeIterator())
+            },
+            AnyHashable(NSUpdatedObjectIDsKey): AnySequence<NSManagedObjectID> {
+                NSManagedObjectIDIterator(updated.makeIterator())
+            },
+            AnyHashable(NSDeletedObjectIDsKey): AnySequence<NSManagedObjectID> {
+                NSManagedObjectIDIterator(deleted.makeIterator())
+            },
+        ]
+    }
+}
+
 extension Entity {
+    /// Check if user info received from ``DataContainer/uiContextDidRefresh`` has related changes against specified `Entity`s
     public static func hasChanges(
         userInfo: [AnyHashable: Any], entities: [Entity.Type]) -> Bool
     {
-        let inserted = userInfo[NSInsertedObjectIDsKey] as! AnySequence<NSManagedObjectID>
-        let updated = userInfo[NSUpdatedObjectIDsKey] as! AnySequence<NSManagedObjectID>
-        let deleted = userInfo[NSDeletedObjectIDsKey] as! AnySequence<NSManagedObjectID>
+        guard let inserted = userInfo[NSInsertedObjectIDsKey] as? AnySequence<NSManagedObjectID>,
+              let updated = userInfo[NSUpdatedObjectIDsKey] as? AnySequence<NSManagedObjectID>,
+              let deleted = userInfo[NSDeletedObjectIDsKey] as? AnySequence<NSManagedObjectID>
+        else { return false }
+
         let entityNames = Set(entities.map { $0.name })
         
         return inserted.contains { entityNames.contains($0.entity.name ?? "") } ||
