@@ -8,93 +8,74 @@
 
 import CoreData
 
-// MARK: - Cache Protocol
-
-protocol CacheStore {
-    associatedtype Element
-    associatedtype Key: Hashable = AnyHashable
-    
-    static var cache: [Key: Element] { get set }
-    
-    static func get(_ key: Key) -> Element?
-    static func set(_ key: Key, value: Element)
-    static func reset()
-}
-
-extension CacheStore {
-    static func get(_ key: Key) -> Element? {
-        return cache[key]
-    }
-    
-    static func set(_ key: Key, value: Element) {
-        cache[key] = value
-    }
-    
-    static func reset() {
-        cache = [:]
-    }
-}
-
 // MARK: - Cache type protocol
 
-protocol Cache {
-    associatedtype Store: CacheStore
-    static var callbackStore: [Store.Key: [Callback]] { get set }
-}
+class Cache<Key: Hashable, Element> {
+    var cache: [Key: Element] = [:]
+    var callbackStore: [Key: [Callback]] = [:]
 
-extension Cache {
-    typealias Callback = (Store.Element) -> Void
-    
-    func set(_ key: Store.Key, value: Store.Element) {
-        Store.set(key, value: value)
-        
-        guard let callbacks = Self.callbackStore[key] else { return }
+    typealias Callback = (Element) -> Void
+
+    func set(_ key: Key, value: Element) {
+        cache[key] = value
+        guard let callbacks = callbackStore.removeValue(forKey: key) else { return }
         callbacks.forEach{ $0(value) }
-        Self.callbackStore[key] = []
     }
-    
-    func get(_ key: Store.Key) -> Store.Element? {
-        let value = Store.get(key)
-        return value
+
+    func get(_ key: Key) -> Element? {
+        cache[key]
     }
-    
-    func getAndWait(_ key: Store.Key, completion: @escaping Callback) {
-        let value = Store.get(key)
-        let callbackStore = Self.callbackStore
-        
+
+    func get(_ key: Key, completion: @escaping Callback) {
+        let value = get(key)
+
         if let value = value {
             completion(value)
         } else {
             let callbacks = callbackStore[key]
-            Self.callbackStore[key] = (callbacks ?? []) + [completion]
+            callbackStore[key] = (callbacks ?? []) + [completion]
         }
     }
-    
+
     func clean() {
-        Store.reset()
-        Self.callbackStore = [:]
+        cache = [:]
+        callbackStore = [:]
+    }
+}
+
+class ThreadSafeCache<Key: Hashable, Element>: Cache<Key, Element> {
+    private let lock = UnfairLock()
+
+    override func set(_ key: Key, value: Element) {
+        lock.lock()
+        defer { lock.unlock() }
+        super.set(key, value: value)
+    }
+
+    override func get(_ key: Key) -> Element? {
+        lock.lock()
+        defer { lock.unlock() }
+        return super.get(key)
+    }
+
+    override func get(_ key: Key, completion: @escaping Cache<Key, Element>.Callback) {
+        lock.lock()
+        defer { lock.unlock() }
+        super.get(key, completion: completion)
+    }
+
+    override func clean() {
+        lock.lock()
+        defer { lock.unlock() }
+        super.clean()
     }
 }
 
 // MARK: - Define all caches
 
-struct EntityCache: Cache {
-    struct Store: Crush.CacheStore {
-        static var cache: [String: NSEntityDescription] = [:]
-    }
-
-    static var callbackStore: [String : [Callback]] = [:]
-}
-
-struct ManagedObjectModelcache: Cache {
-    struct Store: CacheStore {
-        static var cache: [Int: NSManagedObjectModel] = [:]
-    }
-
-    static var callbackStore: [Int : [Callback]] = [:]
-}
+typealias EntityCache = Cache<String, NSEntityDescription>
+typealias ManagedObjectModelCache = ThreadSafeCache<Int, NSManagedObjectModel>
 
 internal enum Caches {
-    static let entity: EntityCache = .init()
-    static let managedObjectModel: ManagedObjectModelcache = .init()
+    static let managedObjectModel: ManagedObjectModelCache = .init()
 }

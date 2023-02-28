@@ -27,7 +27,7 @@ extension FetchedPropertyProtocol {
     }
 }
 
-public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
+public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol, EntityCachedProtocol {
     public typealias Destination = T
     public typealias RuntimeValue = [T.ReadOnly]
     public typealias ManagedValue = [NSManagedObject]
@@ -41,6 +41,8 @@ public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
     public let name: String
     public var isAttribute: Bool { false }
 
+    var cache: EntityCache?
+
     public init(_ name: String, _ block: @escaping Configuration) {
         self.name = name
         self.configuration = block
@@ -53,7 +55,8 @@ public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol {
         )
         let description = NSFetchedPropertyDescription()
         description.name = name
-        Caches.entity.getAndWait(T.entityCacheKey) {
+
+        cache?.get(T.entityCacheKey) {
             let request = NSFetchRequest<NSFetchRequestResult>()
             request.entity = $0
             builder.config.configureRequest(request)

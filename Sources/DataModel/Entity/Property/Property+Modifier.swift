@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-open class PropertyModifier<T: WritableProperty, S>: WritableProperty {
+open class PropertyModifier<T: WritableProperty, S>: WritableProperty, EntityCachedProtocol {
     public typealias Description = T.Description
     public typealias PropertyValue = T.RuntimeValue
     public typealias PredicateValue = T.PredicateValue
@@ -19,6 +19,11 @@ open class PropertyModifier<T: WritableProperty, S>: WritableProperty {
 
     public let property: T
     public let modifier: S
+
+    var cache: EntityCache? {
+        get { (property as? EntityCachedProtocol)?.cache }
+        set { (property as? EntityCachedProtocol)?.cache = newValue }
+    }
 
     public init(wrappedValue: T, _ modifier: S) {
         self.property = wrappedValue
@@ -307,7 +312,9 @@ public class Inverse<T: RelationshipProtocol, S: RelationshipProtocol>:
         let description = super.createPropertyDescription()
         let inverseName = self.modifier.propertyName
 
-        Caches.entity.getAndWait(Destination.entityCacheKey) {
+        let cache = (wrappedValue as? EntityCachedProtocol)?.cache
+
+        cache?.get(Destination.entityCacheKey) {
             guard let inverseRelationship = $0.relationshipsByName[inverseName] else {
                 return assertionFailure("inverse relationship not found")
             }

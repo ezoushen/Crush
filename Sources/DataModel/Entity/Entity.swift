@@ -25,6 +25,11 @@ open class Entity {
     internal static var registeredEntities: Set<ObjectIdentifier> = []
     internal static var propertyNamesByEntity: [ObjectIdentifier: [String]] = [:]
     required public init() { }
+
+    func typeIdentifier() -> ObjectIdentifier {
+        ObjectIdentifier(type(of: self))
+    }
+
     @objc open dynamic class func willSave(_ managedObject: NSManagedObject) { }
     @objc open dynamic class func didSave(_ managedObject: NSManagedObject) { }
     @objc open dynamic class func prepareForDeletion(_ managedObject: NSManagedObject) { }
@@ -49,6 +54,55 @@ open class Entity {
     }
     @objc open dynamic class func validateForUpdate(_ managedObject: NSManagedObject) throws {
         try (managedObject as? ManagedObjectBase)?.originalValidateForUpdate()
+    }
+
+    func createEntityDescription(
+        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        cache: EntityCache
+    ) -> NSEntityDescription? {
+        let identifier = ObjectIdentifier(Self.self)
+        let mirror = Mirror(reflecting: self)
+
+        defer {
+            Self.propertyNamesByEntity[ObjectIdentifier(Self.self)] = propertyNames(mirror: mirror)
+        }
+
+        /// If inheritance data no presented in dictionary, consider it as embedded entity
+        let inheritance = inheritanceData[identifier] ?? .embedded
+
+        guard inheritance != .embedded else {
+            return nil
+        }
+
+        // Setup properties
+        let description = NSEntityDescription()
+        let properties = createProperties(
+            mirror: mirror,
+            inheritanceData: inheritanceData,
+            cache: cache)
+
+        description.userInfo?[UserInfoKey.entityClassName] = Self.entityCacheKey
+        description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
+        description.name = Self.fetchKey
+        description.isAbstract = inheritance == .abstract
+        description.properties = properties
+
+        setupIndexes(description: description)
+        setupUniquenessConstraints(description: description)
+
+        if let superMirror = mirror.superclassMirror,
+           let superType = superMirror.subjectType as? Entity.Type,
+           (inheritanceData[ObjectIdentifier(superType)] ?? .embedded) != .embedded
+        {
+            cache.get(superType.entityCacheKey) {
+                $0.subentities.append(description)
+            }
+        }
+
+        cache.set(Self.entityCacheKey, value: description)
+        Self.registeredEntities.insert(ObjectIdentifier(Self.self))
+
+        return description
     }
 }
 
@@ -90,53 +144,6 @@ extension Entity {
     static func propertyNames() -> [String]? {
         Self.propertyNamesByEntity[ObjectIdentifier(Self.self)]
     }
-    
-    func createEntityDescription(
-        inhertanceData: [ObjectIdentifier: EntityInheritance]
-    ) -> NSEntityDescription? {
-        let identifier = ObjectIdentifier(Self.self)
-        let mirror = Mirror(reflecting: self)
-
-        defer {
-            Self.propertyNamesByEntity[ObjectIdentifier(Self.self)] = propertyNames(mirror: mirror)
-        }
-
-        guard let inheritance = inhertanceData[identifier],
-              inheritance != .embedded else {
-            return nil
-        }
-
-        let cache = Caches.entity
-        
-        // Setup properties
-        let description = NSEntityDescription()
-        let properties = createProperties(
-            mirror: mirror,
-            inhertanceData: inhertanceData)
-
-        description.userInfo?[UserInfoKey.entityClassName] = Self.entityCacheKey
-        description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
-        description.name = Self.fetchKey
-        description.isAbstract = inheritance == .abstract
-        description.properties = properties
-        
-        setupIndexes(description: description)
-        setupUniquenessConstraints(description: description)
-
-        if let superMirror = mirror.superclassMirror,
-           let superType = superMirror.subjectType as? Entity.Type,
-           inhertanceData[ObjectIdentifier(superType)] != .embedded
-        {
-            cache.getAndWait(superType.entityCacheKey) {
-                $0.subentities.append(description)
-            }
-        }
-
-        cache.set(Self.entityCacheKey, value: description)
-        Self.registeredEntities.insert(ObjectIdentifier(Self.self))
-        
-        return description
-    }
 
     private func propertyNames(mirror: Mirror) -> [String] {
         let names = mirror.children
@@ -150,18 +157,24 @@ extension Entity {
     
     private func createProperties(
         mirror: Mirror,
-        inhertanceData: [ObjectIdentifier: EntityInheritance]
+        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        cache: EntityCache
     ) -> [NSPropertyDescription] {
         let ownedProperties = mirror.children
             .compactMap { $0.value as? (any Property) }
-            .map { $0.createPropertyDescription() }
+            .map {
+                if let entityCached = $0 as? EntityCachedProtocol {
+                    entityCached.cache = cache
+                }
+                return $0.createPropertyDescription()
+            }
         
-        if let superMirror = mirror.superclassMirror,
-           let inheritance = inhertanceData[ObjectIdentifier(superMirror.subjectType)],
-           inheritance == .embedded
-        {
-            return ownedProperties + createProperties(
-                mirror: superMirror, inhertanceData: inhertanceData)
+        if let superMirror = mirror.superclassMirror {
+            let inheritance = inheritanceData[ObjectIdentifier(superMirror.subjectType)] ?? .embedded
+            if inheritance == .embedded {
+                return ownedProperties + createProperties(
+                    mirror: superMirror, inheritanceData: inheritanceData, cache: cache)
+            }
         }
         
         return ownedProperties

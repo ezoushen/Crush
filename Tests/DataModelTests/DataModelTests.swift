@@ -101,24 +101,6 @@ class DataModelTests: XCTestCase {
         XCTAssertEqual(sut.name, "Model")
     }
 
-    func test_abstractClass_shouldBeSet() {
-        XCTAssertEqual(sut.abstractEntities, [
-            AbstractEntity()
-        ])
-    }
-
-    func test_ebemeddedClass_shouldBeSet() {
-        XCTAssertEqual(sut.embeddedEntities, [
-            EmbeddedEntity()
-        ])
-    }
-
-    func test_concreteClass_shouldBeSet() {
-        XCTAssertEqual(sut.concreteEntities, [
-            ConcreteEntity_A(), ConcreteEntity_B()
-        ])
-    }
-
     func test_hashValueEffectedByAllEntities_shouldBeEqual() {
         let target: DataModel = {
             DataModel(
@@ -133,7 +115,7 @@ class DataModelTests: XCTestCase {
                     ConcreteEntity_A(), ConcreteEntity_B()
                 ])
         }()
-        XCTAssertEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+        XCTAssertEqual(sut.uniqueIdentifier, target.uniqueIdentifier)
     }
 
     func test_hashValueEffedctedByAbstractEntities_shouldNotBeEqual() {
@@ -147,7 +129,7 @@ class DataModelTests: XCTestCase {
                     ConcreteEntity_B()
                 ])
         }()
-        XCTAssertNotEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+        XCTAssertNotEqual(sut.uniqueIdentifier, target.uniqueIdentifier)
     }
 
     func test_hashValueEffedctedByEmbeddedEntities_shouldNotBeEqual() {
@@ -161,7 +143,7 @@ class DataModelTests: XCTestCase {
                     ConcreteEntity_A()
                 ])
         }()
-        XCTAssertNotEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+        XCTAssertNotEqual(sut.uniqueIdentifier, target.uniqueIdentifier)
     }
 
     func test_hashValueEffedctedByConcreteEntities_shouldNotBeEqual() {
@@ -176,7 +158,7 @@ class DataModelTests: XCTestCase {
                 ], concrete: [
                 ])
         }()
-        XCTAssertNotEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+        XCTAssertNotEqual(sut.uniqueIdentifier, target.uniqueIdentifier)
     }
 
     func test_hashValueEffedctedByName_shouldNotBeEqual() {
@@ -192,7 +174,7 @@ class DataModelTests: XCTestCase {
                     ConcreteEntity_A(), ConcreteEntity_B()
                 ])
         }()
-        XCTAssertNotEqual(sut.entityDescriptionHash(), target.entityDescriptionHash())
+        XCTAssertNotEqual(sut.uniqueIdentifier, target.uniqueIdentifier)
     }
 
     func test_managedObjectModelEntitiesCount_shouldEqualToNumberOfAllEntitiesMinusEmbeddedEntities() {

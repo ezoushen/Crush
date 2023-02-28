@@ -12,6 +12,17 @@ import Foundation
 @testable import Crush
 
 class EntityTests: XCTestCase {
+
+    var cache = EntityCache()
+
+    override func setUp() {
+        cache = .init()
+    }
+
+    override func tearDown() {
+        cache.clean()
+    }
+
     func test_hashValue_shouldOnlyEffectedByClassType() {
         class TestEntity: Entity { }
         let sut = TestEntity()
@@ -37,13 +48,13 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(type(of: sut)): .embedded
         ]
-        XCTAssertNil(sut.createEntityDescription(inhertanceData: data))
+        XCTAssertNil(sut.createEntityDescription(inheritanceData: data, cache: cache))
     }
 
     func test_createEntityDescription_shouldReturnNilWhileInheritanceTypeUndefined() {
         class TestEntity: Entity { }
         let sut = TestEntity()
-        let result = sut.createEntityDescription(inhertanceData: [:])
+        let result = sut.createEntityDescription(inheritanceData: [:], cache: cache)
         XCTAssertNil(result?.propertiesByName["value"])
     }
 
@@ -53,7 +64,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(type(of: sut)): .abstract
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)?.isAbstract
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)?.isAbstract
         XCTAssertTrue(result == true)
     }
 
@@ -63,7 +74,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)?.isAbstract
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)?.isAbstract
         XCTAssertTrue(result == false)
     }
 
@@ -73,7 +84,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(result?.name, TestEntity.fetchKey)
     }
 
@@ -85,7 +96,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertNotNil(result?.propertiesByName["value"])
     }
 
@@ -97,7 +108,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertNotNil(result?.propertiesByName["value"])
     }
 
@@ -111,7 +122,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertNotNil(result?.propertiesByName["derived"])
     }
 
@@ -124,7 +135,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         let description = result?.propertiesByName["fetched"] as! NSFetchedPropertyDescription
         XCTAssertNotNil(description.fetchRequest)
     }
@@ -151,14 +162,13 @@ class EntityTests: XCTestCase {
     class TestEntity: ParentEntity { }
 
     private func createInheritedEntityDescription(_ type: EntityInheritance) -> NSEntityDescription? {
-        
         let sut = TestEntity()
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(ParentEntity.self): type,
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        _ = ParentEntity().createEntityDescription(inhertanceData: data)
-        return sut.createEntityDescription(inhertanceData: data)
+        _ = ParentEntity().createEntityDescription(inheritanceData: data, cache: cache)
+        return sut.createEntityDescription(inheritanceData: data, cache: cache)
     }
 
     func test_createEntityDescription_shouldIncludeIndexes() {
@@ -170,7 +180,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.name, "value")
     }
 
@@ -183,7 +193,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.entity, result)
     }
 
@@ -196,7 +206,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.elements.first?.propertyName, "value")
     }
 
@@ -209,7 +219,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.elements.first?.collationType, .rTree)
     }
 
@@ -224,7 +234,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.elements.count, 2)
     }
 
@@ -237,7 +247,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.partialIndexPredicate, \TestEntity.value == 0)
     }
 
@@ -253,7 +263,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         let indexes = result?.indexes.sorted { $0.elements.count < $1.elements.count } ?? []
         XCTAssertEqual(indexes.count, 2)
         XCTAssertEqual(indexes.first?.elements.count, 1)
@@ -277,7 +287,7 @@ class EntityTests: XCTestCase {
             ObjectIdentifier(TestEntity.self): .embedded,
             ObjectIdentifier(ChildEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         let indexes = result?.indexes ?? []
         XCTAssertEqual(indexes.count, 1)
         XCTAssertEqual(indexes.first?.elements.count, 2)
@@ -292,7 +302,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(result?.uniquenessConstraints as! [[String]], [["value"]])
     }
 
@@ -309,7 +319,7 @@ class EntityTests: XCTestCase {
         let data: [ObjectIdentifier: EntityInheritance] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inhertanceData: data)
+        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
         XCTAssertEqual(Set(result?.uniquenessConstraints as! [[String]]), [["value", "value2"], ["value3"]])
     }
 }

@@ -8,58 +8,132 @@
 import CoreData
 import Foundation
 
-public class DataModel {
+open class DataModel {
+    public struct EntityConfiguration: Hashable {
+        public let name: String?
+        public let abstractEntities: Set<Entity>
+        public let embeddedEntities: Set<Entity>
+        public let concreteEntities: Set<Entity>
+
+        public init(name: String?, abstract: Set<Entity>, embedded: Set<Entity>, concrete: Set<Entity>) {
+            self.name = name
+            self.abstractEntities = abstract
+            self.embeddedEntities = embedded
+            self.concreteEntities = concrete
+        }
+
+        var entities: [Entity] {
+            Array(abstractEntities) + Array(embeddedEntities) + Array(concreteEntities)
+        }
+    }
+
     public let name: String
-    public let abstractEntities: Set<Entity>
-    public let embeddedEntities: Set<Entity>
-    public let concreteEntities: Set<Entity>
+
+    private lazy var descriptors: [any ConfigurationEntityDescriptior] = {
+        Mirror(reflecting: self).children.compactMap {
+            switch $0.value {
+            case let configuration as ConfigurationEntityDescriptior:
+                return configuration
+            case let entity as Entity:
+                return Crush.Configuration(wrappedValue: entity, names: nil)
+            default:
+                return nil
+            }
+        }
+    }()
+
+    public required init(name: String) {
+        self.name = name
+        self.uniqueIdentifier = ObjectIdentifier(type(of: Self.self)).hashValue
+    }
+
+    public init(name: String, configurations: Set<DataModel.EntityConfiguration>) {
+        self.name = name
+        self.uniqueIdentifier = configurations.hashValue
+
+        assert(Set(configurations.map(\.name)).count == configurations.count, "Configuration name must be unique")
+        
+        self.descriptors = configurations.flatMap { configuration in
+            configuration.abstractEntities.map {
+                Crush.Configuration(wrappedValue: Abstract(wrappedValue: $0), name: configuration.name)
+            } + configuration.embeddedEntities.map {
+                Crush.Configuration(wrappedValue: Embedded(wrappedValue: $0), name: configuration.name)
+            } + configuration.concreteEntities.map {
+                Crush.Configuration(wrappedValue: Concrete(wrappedValue: $0), name: configuration.name)
+            }
+        }
+    }
 
     public init(name: String, abstract: Set<Entity> = [], embedded: Set<Entity> = [], concrete: Set<Entity>) {
         self.name = name
-        self.abstractEntities = abstract
-        self.embeddedEntities = embedded
-        self.concreteEntities = concrete
+        self.uniqueIdentifier = {
+            var hasher = Hasher()
+            hasher.combine(name)
+            hasher.combine(abstract)
+            hasher.combine(embedded)
+            hasher.combine(concrete)
+            return hasher.finalize()
+        }()
+        self.descriptors =
+            abstract.map {
+                Crush.Configuration(wrappedValue: Abstract(wrappedValue: $0), name: nil)
+            } + embedded.map {
+                Crush.Configuration(wrappedValue: Embedded(wrappedValue: $0), name: nil)
+            } + concrete.map {
+                Crush.Configuration(wrappedValue: Concrete(wrappedValue: $0), name: nil)
+            }
     }
 
-    internal func entityDescriptionHash() -> Int {
-        var hasher = Hasher()
-        hasher.combine(name)
-        hasher.combine(abstractEntities)
-        hasher.combine(embeddedEntities)
-        hasher.combine(concreteEntities)
-        return hasher.finalize()
-    }
+    let uniqueIdentifier: Int
 
     lazy var managedObjectModel: NSManagedObjectModel = {
-        let key = entityDescriptionHash()
+        let key = uniqueIdentifier
+
+        /// Return cached data model if presented
         if let cachedModel = Caches.managedObjectModel.get(key) {
             return cachedModel
         }
+
         let model = NSManagedObjectModel()
-        Caches.entity.clean()
+        let cache = EntityCache()
+
         defer {
             Caches.managedObjectModel.set(key, value: model)
-            Caches.entity.clean()
         }
 
-        func identifier(_ object: AnyObject) -> ObjectIdentifier {
-            ObjectIdentifier(type(of: object))
+        typealias InheritanceData = [ObjectIdentifier: EntityInheritance]
+
+        /// Dictionary for looking up which inheritance type the entity applied
+        let inheritanceData = descriptors.reduce(into: InheritanceData()) {
+            $0[$1.typeIdentifier()] = $1.entityInheritance
         }
 
-        var inhertanceData = [ObjectIdentifier: EntityInheritance]()
-        abstractEntities.forEach { inhertanceData[identifier($0)] = .abstract }
-        embeddedEntities.forEach { inhertanceData[identifier($0)] = .embedded }
-        concreteEntities.forEach { inhertanceData[identifier($0)] = .concrete }
+        let entitiesIndexedByConfiguration = descriptors
+            .sorted { $0.entityInheritance < $1.entityInheritance }
+            .reduce(into: [String?: [NSEntityDescription]]()) { dict, descriptor in
+                guard let description = descriptor
+                    .createEntityDescription(inheritanceData: inheritanceData, cache: cache) else { return }
+                func configure(name: String?) {
+                    let arr = dict[name, default: []]
+                    dict[name] = arr + [description]
+                }
+                for name in descriptor.names ?? [] {
+                    configure(name: name)
+                }
+                configure(name: nil)
+            }
 
-        let entities: [NSEntityDescription] = (
-            Array(abstractEntities) +
-            Array(embeddedEntities) +
-            Array(concreteEntities)
-        )
-            .compactMap { $0.createEntityDescription(inhertanceData: inhertanceData) }
-        
+        assert(entitiesIndexedByConfiguration[nil]?.isEmpty == false, "DataModel should not be empty")
+
         model.versionIdentifiers = [name]
-        model.entities = entities
+        model.entities = entitiesIndexedByConfiguration[nil] ?? []
+
+        /// Set configurations
+        for (configuration, entities) in entitiesIndexedByConfiguration {
+            guard let name = configuration else { continue }
+            model.setEntities(entities, forConfigurationName: name)
+        }
+
         return model
     }()
 }

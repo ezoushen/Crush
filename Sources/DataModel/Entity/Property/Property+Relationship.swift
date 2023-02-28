@@ -10,6 +10,10 @@ import CoreData
 
 // MARK: - EntityRelationship
 
+protocol EntityCachedProtocol: AnyObject {
+    var cache: EntityCache? { get set }
+}
+
 public protocol RelationshipProtocol: WritableProperty
 where
     Description == NSRelationshipDescription,
@@ -84,6 +88,7 @@ public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, Prop
 
 public final class Relationship<Mapping: RelationMapping>:
     RelationshipProtocol,
+    EntityCachedProtocol,
     TransientProperty,
     AnyPropertyType
 {
@@ -96,6 +101,8 @@ public final class Relationship<Mapping: RelationMapping>:
     public let name: String
     public var isUniDirectional: Bool = false
 
+    var cache: EntityCache?
+
     public init(_ name: String) {
         self.name = name
     }
@@ -107,7 +114,7 @@ public final class Relationship<Mapping: RelationMapping>:
         description.minCount = Mapping.minCount
         description.isOrdered = Mapping.isOrdered
 
-        Caches.entity.getAndWait(Destination.entityCacheKey) {
+        cache?.get(Destination.entityCacheKey) {
             description.destinationEntity = $0
         }
 
