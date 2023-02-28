@@ -13,6 +13,7 @@ public typealias EntityMigrationCallback = ([String: NSEntityDescription]) throw
 public protocol EntityMigration {
     var originEntityName: String? { get }
     var name: String? { get }
+    var configurations: [String]? { get }
 
     func migrateEntity(
         _ entity: NSEntityDescription?,
@@ -27,6 +28,7 @@ public struct AddEntity: EntityMigration {
     public let name: String?
     public let parent: String?
     public let isAbstract: Bool
+    public let configurations: [String]?
     public let properties: [AddPropertyMigration]
     public let uniquenessConstraints: Set<[String]>
 
@@ -36,6 +38,7 @@ public struct AddEntity: EntityMigration {
         _ name: String,
         parent: String? = nil,
         isAbstract: Bool = false,
+        configurations: [String]? = nil,
         uniquenessConstraints: Set<[String]> = [],
         properties: [AddPropertyMigration]
     ) {
@@ -43,6 +46,7 @@ public struct AddEntity: EntityMigration {
         self.parent = parent
         self.isAbstract = isAbstract
         self.properties = properties
+        self.configurations = configurations
         self.uniquenessConstraints = uniquenessConstraints
     }
 
@@ -50,6 +54,7 @@ public struct AddEntity: EntityMigration {
         _ name: String,
         parent: String? = nil,
         isAbstract: Bool = false,
+        configurations: [String]? = nil,
         uniquenessConstraints: Set<[String]> = [],
         @CollectionBuilder<AddPropertyMigration>
         properties: () -> [AddPropertyMigration]
@@ -58,6 +63,7 @@ public struct AddEntity: EntityMigration {
         self.parent = parent
         self.isAbstract = isAbstract
         self.properties = properties()
+        self.configurations = configurations
         self.uniquenessConstraints = uniquenessConstraints
     }
 
@@ -65,12 +71,14 @@ public struct AddEntity: EntityMigration {
         _ name: String,
         parent: String? = nil,
         isAbstract: Bool = false,
+        configurations: [String]? = nil,
         uniquenessConstraints: Set<[String]> = []
     ) {
         self.name = name
         self.parent = parent
         self.isAbstract = isAbstract
         self.properties = []
+        self.configurations = configurations
         self.uniquenessConstraints = uniquenessConstraints
     }
 
@@ -112,6 +120,7 @@ public struct AddEntity: EntityMigration {
 public struct RemoveEntity: EntityMigration {
 
     public let originEntityName: String?
+    public let configurations: [String]? = nil
     public let name: String? = nil
 
     public init(_ name: String) {
@@ -142,10 +151,12 @@ public struct RemoveEntity: EntityMigration {
 public struct CopyEntity: EntityMigration {
     public let originEntityName: String?
     public let name: String?
+    public let configurations: [String]?
 
-    public init(_ name: String) {
+    public init(_ name: String, configurations: [String]? = nil) {
         self.originEntityName = name
         self.name = name
+        self.configurations = configurations
     }
 
     public func migrateEntity(
@@ -211,6 +222,7 @@ public struct UpdateEntity: EntityMigration {
 
     public let parent: String?
     public let isAbstract: Bool?
+    public let configurations: [String]?
     public var removedUniquenessConstraints: Set<[String]> = []
     public var addedUniquenessConstraints: Set<[String]> = []
     public let properties: [PropertyMigration]
@@ -220,12 +232,14 @@ public struct UpdateEntity: EntityMigration {
         name: String? = nil,
         parent: String? = nil,
         isAbstract: Bool? = nil,
+        configurations: [String]? = nil,
         properties: [PropertyMigration] = []
     ) {
         self.originEntityName = originName
         self.name = name
         self.parent = parent
         self.isAbstract = isAbstract
+        self.configurations = configurations
         self.properties = properties
     }
 
@@ -234,6 +248,7 @@ public struct UpdateEntity: EntityMigration {
         name: String? = nil,
         parent: String? = nil,
         isAbstract: Bool? = nil,
+        configurations: [String]? = nil,
         @CollectionBuilder<PropertyMigration>
         properties: () -> [PropertyMigration]
     ) {
@@ -241,6 +256,7 @@ public struct UpdateEntity: EntityMigration {
         self.name = name
         self.parent = parent
         self.isAbstract = isAbstract
+        self.configurations = configurations
         self.properties = properties()
     }
     

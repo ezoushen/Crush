@@ -73,6 +73,14 @@ extension NSManagedObjectModel {
 
 extension NSManagedObjectModel {
     func isCompactible(with anotherModel: NSManagedObjectModel) -> Bool {
-        entityVersionHashesByName == anotherModel.entityVersionHashesByName
+        entityVersionHashesByName == anotherModel.entityVersionHashesByName &&
+        entitiesIndexedByConfiguration() == anotherModel.entitiesIndexedByConfiguration()
+    }
+
+    private func entitiesIndexedByConfiguration() -> [String: Set<Data>] {
+        configurations.reduce(into: [String: Set<Data>]()) {
+            guard let entities = entities(forConfigurationName: $1) else { return }
+            $0[$1] = Set(entities.map(\.versionHash))
+        }
     }
 }

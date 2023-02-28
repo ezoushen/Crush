@@ -84,17 +84,31 @@ public struct ModelMigration: Hashable {
         _ model: NSManagedObjectModel) throws -> NSManagedObjectModel
     {
         let newModel = NSManagedObjectModel()
+        var configurationsByEntityName = model.configurations
+            .reduce(into: [String: Set<String>]()) {
+                guard let entities = model.entities(forConfigurationName: $1)
+                else { return }
+                for entity in entities {
+                    var set = $0[$1] ?? []
+                    set.insert(entity.name!)
+                    $0[$1] = set
+                }
+            }
         var entitiesByName = deepCopyEntitiesByName(model.entities)
         var callbackStore: [EntityMigrationCallback] = []
         // Executing migration
         for migration in entityMigrations {
             guard let entityName = migration.originEntityName
             else {
+                /// Add entity
                 if let description = try migration
                     .migrateEntity(nil, callbackStore: &callbackStore),
                    let name = description.name
                 {
                     entitiesByName[name] = description
+                    if let configurations = migration.configurations {
+                        configurationsByEntityName[name] = Set(configurations)
+                    }
                 }
                 continue
             }
@@ -102,7 +116,16 @@ public struct ModelMigration: Hashable {
                 .migrateEntity(entitiesByName[entityName], callbackStore: &callbackStore)
             {
                 entitiesByName[entityName] = migratedDescription
+
+                let originalConfigurations = configurationsByEntityName
+                    .removeValue(forKey: entityName)
+                if let configuratios = migration.configurations {
+                    configurationsByEntityName[migratedDescription.name!] = Set(configuratios)
+                } else {
+                    configurationsByEntityName[migratedDescription.name!] = originalConfigurations
+                }
             } else {
+                /// Will return nil only while removing entity
                 entitiesByName.removeValue(forKey: entityName)
             }
         }
@@ -112,6 +135,22 @@ public struct ModelMigration: Hashable {
         }
 
         newModel.entities = Array(entitiesByName.values)
+
+        let descriptionsByConfiguration = newModel.entities
+            .reduce(into: [String: [NSEntityDescription]]())
+        {
+            guard let name = $1.name,
+                  let configurations = configurationsByEntityName[name] else { return }
+            for configuration in configurations {
+                var set = $0[configuration] ?? []
+                set.append($1)
+                $0[configuration] = set
+            }
+        }
+
+        for (name, entities) in descriptionsByConfiguration {
+            newModel.setEntities(entities, forConfigurationName: name)
+        }
 
         return newModel
     }
