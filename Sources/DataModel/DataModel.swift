@@ -8,13 +8,13 @@
 import CoreData
 import Foundation
 
-/// Declare a map describing relationships between entites.
+/// Declare a map that describes relationships between entities.
 ///
-/// This class should always be subclassed and declared available entities within.
-/// There're three kinds of modifier you should use to mark an entity, including ``Abstract``,  ``Concrete``,  and ``Embedded``,
-/// where an unannotated entity would be considered as ``Concrete``. Besides, you can assign the entity to multiple
-/// configurations by annotating it with multiple ``Configuration``, and the order would not effect the final results.
-/// At the same time, it's a different story for entity type modifiers. The modifier on the top would trump the result.
+/// This class should always be subclassed and be responsible for declaring available entities within.
+/// There are three kinds of modifiers that you can use to mark an entity, including ``Abstract``, ``Concrete``, and ``Embedded``.
+/// An unannotated entity is considered ``Concrete``.
+/// Besides, you can assign the entity to multiple configurations by annotating it with multiple ``Configuration``. The order of annotation does not affect the final results.
+/// However, the modifier on the top will override the result.
 ///
 /// Example:
 ///
@@ -36,13 +36,31 @@ import Foundation
 ///     // "CONF" includes EmbeddedEntity and ConcreteEntity.
 ///     // "ANOTHER CONF" includes noly EmbeddedEntity.
 ///
+/// - Note: `EntityMap` should be subclassed and is responsible for declaring available entities within.
+///
+/// - Warning: A configuration name must be unique.
+///
 open /*abstract*/ class EntityMap {
     open var name: String {
         String(describing: Self.self)
     }
 }
 
+/// A `DataModel` is an immutable collection of configurations that define the entities within the model.
+///
+/// It also provides convenience methods for initializing the model, and generating a corresponding `NSManagedObjectModel`.
+/// You can create a `DataModel` by  ``init(entityMap:)`` or define the relationships between entities directly by ``init(name:configurations:)``
+///
+/// Usage:
+/// ```swift
+/// let dataModel = DataModel(name: "MyDataModel", abstract: [], embedded: [], concrete: [MyEntity.self])
+/// let dataModel = DataModel(entityMap: MyEntityMap())
+/// ```
+///
 public final class DataModel {
+    /**
+    An `EntityConfiguration` defines a configuration for entities in the data model.
+    */
     public struct EntityConfiguration: Hashable {
         public let name: String?
         public let abstractEntities: Set<Entity>
@@ -73,6 +91,9 @@ public final class DataModel {
         }()
     }
 
+    /// Initializes a `DataModel` instance based on an `EntityMap`.
+    ///
+    /// - Parameter entityMap: The `EntityMap` to be converted.
     public convenience init(entityMap: EntityMap) {
         let descriptors = Mirror(reflecting: entityMap).children.compactMap {
             switch $0.value {
@@ -84,6 +105,11 @@ public final class DataModel {
         self.init(name: entityMap.name, descriptors: descriptors)
     }
 
+    ///Initializes a `DataModel` instance based on entity configurations.
+    ///
+    /// - Parameters:
+    ///   - name: The name of the `DataModel`.
+    ///   - configurations: An array of `EntityConfiguration` objects.
     public convenience init(name: String, configurations: Set<DataModel.EntityConfiguration>) {
         assert(Set(configurations.map(\.name)).count == configurations.count, "Configuration name must be unique")
 
@@ -102,8 +128,7 @@ public final class DataModel {
                 return nil
             }
             /// Create the descriptor and wrap it with `Configuration`
-            let descriptor = instance()
-            let named = Configuration(wrappedValue: descriptor, configuration.name)
+            let named = Configuration(wrappedValue: instance(), configuration.name)
             descriptorsByEntity[entity] = named
             return named
         }
