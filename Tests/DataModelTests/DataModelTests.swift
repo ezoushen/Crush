@@ -53,23 +53,14 @@ class DataModelTests: XCTestCase {
         let target: DataModel = {
             DataModel(
                 name: "Model",
-                configurations: [
-                    DataModel.EntityConfiguration(
-                        name: nil,
-                        abstract: [
-                            AbstractEntity()
-                        ],
-                        embedded: [
-                            EmbeddedEntity()
-                        ],
-                        concrete: [
-                            ConcreteEntity_A(), ConcreteEntity_B()
-                        ]),
-                    DataModel.EntityConfiguration(
-                        name: "A_CONF",
-                        abstract: [
-                            AbstractEntity()
-                        ])
+                abstract: [
+                    Configuration(wrappedValue: AbstractEntity(), "A_CONF")
+                ],
+                embedded: [
+                    EmbeddedEntity()
+                ],
+                concrete: [
+                    ConcreteEntity_A(), ConcreteEntity_B()
                 ])
         }()
         XCTAssertTrue(sut.managedObjectModel.isCompactible(with: target.managedObjectModel))

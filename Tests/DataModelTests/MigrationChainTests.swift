@@ -66,7 +66,6 @@ class MigrationChainTests: XCTestCase {
     func test_configurations_modelConfigurationsShouldEqualToMigrationModel() throws {
         let modelFromMigrationChain = try migrationChain.managedObjectModels().last!
         let model = dataModel.managedObjectModel
-        print(model.entitiesByName["A"]?.isAbstract)
         XCTAssertEqual(Set(model.configurations), Set(modelFromMigrationChain.configurations))
     }
 

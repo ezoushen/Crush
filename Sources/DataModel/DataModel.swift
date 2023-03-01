@@ -52,28 +52,20 @@ open /*abstract*/ class EntityMap {
 /// You can create a `DataModel` by  ``init(entityMap:)`` or define the relationships between entities directly by ``init(name:configurations:)``
 ///
 /// Usage:
+///
 /// ```swift
-/// let dataModel = DataModel(name: "MyDataModel", abstract: [], embedded: [], concrete: [MyEntity.self])
-/// let dataModel = DataModel(entityMap: MyEntityMap())
+/// // These two `DataModel` is identical
+/// DataModel(name: "MyDataModel", concrete: [MyEntity()])
+/// DataModel(name: "MyDataModel", [Concrete(MyEntity())])
+///
+/// // This will assign `MyEntity` to "configuration"
+/// DataModel(name: "MyDataModel", concrete: [Configuration(MyEntity(), "configuration")])
+///
+/// // Load the entities from custom `EntityMap`
+/// DataModel(entityMap: MyEntityMap())
 /// ```
 ///
 public final class DataModel {
-    /**
-    An `EntityConfiguration` defines a configuration for entities in the data model.
-    */
-    public struct EntityConfiguration: Hashable {
-        public let name: String?
-        public let abstractEntities: Set<Entity>
-        public let embeddedEntities: Set<Entity>
-        public let concreteEntities: Set<Entity>
-
-        public init(name: String?, abstract: Set<Entity> = [], embedded: Set<Entity> = [], concrete: Set<Entity> = []) {
-            self.name = name
-            self.abstractEntities = abstract
-            self.embeddedEntities = embedded
-            self.concreteEntities = concrete
-        }
-    }
 
     public let name: String
 
@@ -81,6 +73,9 @@ public final class DataModel {
     private(set) var uniqueIdentifier: Int
 
     init(name: String, descriptors: [any EntityDescriptor]) {
+        assert(
+            Set(descriptors.map { $0.typeIdentifier() }).count == descriptors.count,
+            "Entities duplicated")
         self.name = name
         self.descriptors = descriptors
         self.uniqueIdentifier = {
@@ -91,78 +86,49 @@ public final class DataModel {
         }()
     }
 
+    /// Initializes a `DataModel` instance based on entities
+    ///
+    /// Uncategorized entities will be considering ``Concrete``
+    public convenience init(name: String, _ entities: [Entity]) {
+        self.init(name: name, descriptors: entities.map {
+            switch $0 {
+            case let descriptor as EntityDescriptor: return descriptor
+            default: return Configuration(wrappedValue: $0, nil)
+            }
+        })
+    }
+
+    /// Initializes a `DataModel` instance based on entities
+    ///
+    /// Uncategorized entities will be considering ``Concrete``
+    public convenience init(name: String, _ entities: Entity...) {
+        self.init(name: name, entities)
+    }
+
     /// Initializes a `DataModel` instance based on an `EntityMap`.
     ///
     /// - Parameter entityMap: The `EntityMap` to be converted.
     public convenience init(entityMap: EntityMap) {
-        let descriptors = Mirror(reflecting: entityMap).children.compactMap {
-            switch $0.value {
-            case let descriptor as EntityDescriptor: return descriptor
-            case let entity as Entity: return Configuration(wrappedValue: entity, nil)
-            default: return nil
-            }
-        }
-        self.init(name: entityMap.name, descriptors: descriptors)
+        self.init(name: entityMap.name, Mirror(reflecting: entityMap).children.compactMap {
+            $0.value as? Entity
+        })
     }
 
-    ///Initializes a `DataModel` instance based on entity configurations.
+    /// Initializes a `DataModel` instance based on categorized entities
     ///
-    /// - Parameters:
-    ///   - name: The name of the `DataModel`.
-    ///   - configurations: An array of `EntityConfiguration` objects.
-    public convenience init(name: String, configurations: Set<DataModel.EntityConfiguration>) {
-        assert(Set(configurations.map(\.name)).count == configurations.count, "Configuration name must be unique")
-
-        var descriptorsByEntity: [Entity: any EntityDescriptor] = [:]
-
-        func createDescriptor(
-            entity: Entity,
-            instance: @autoclosure () -> any EntityDescriptor,
-            configuration: EntityConfiguration) -> (any EntityDescriptor)?
-        {
-            guard descriptorsByEntity[entity] == nil else {
-                /// If the descriptor had been created, just update the configuration name
-                if let name = configuration.name {
-                    descriptorsByEntity[entity]?.configurations.append(name)
-                }
-                return nil
-            }
-            /// Create the descriptor and wrap it with `Configuration`
-            let named = Configuration(wrappedValue: instance(), configuration.name)
-            descriptorsByEntity[entity] = named
-            return named
-        }
-
-        let descriptors = configurations.flatMap { configuration in
-            configuration.abstractEntities.compactMap {
-                createDescriptor(
-                    entity: $0,
-                    instance: Abstract(wrappedValue: $0),
-                    configuration: configuration)
-            } + configuration.embeddedEntities.compactMap {
-                createDescriptor(
-                    entity: $0,
-                    instance: Embedded(wrappedValue: $0),
-                    configuration: configuration)
-            } + configuration.concreteEntities.compactMap {
-                createDescriptor(
-                    entity: $0,
-                    instance: Concrete(wrappedValue: $0),
-                    configuration: configuration)
-            }
-        }
-
-        self.init(name: name, descriptors: descriptors)
-    }
-
-    public convenience init(name: String, abstract: Set<Entity> = [], embedded: Set<Entity> = [], concrete: Set<Entity>) {
-        self.init(name: name, configurations: [
-            EntityConfiguration(
-                name: nil,
-                abstract: abstract,
-                embedded: embedded,
-                concrete: concrete)
-        ])
+    /// Entity type descriptor will be ignored if it'd already applied within the entity set
+    public convenience init(
+        name: String,
+        abstract: Set<Entity> = [],
+        embedded: Set<Entity> = [],
+        concrete: Set<Entity>)
+    {
+        self.init(
+            name: name,
+                abstract.map(Abstract.init) +
+                embedded.map(Embedded.init) +
+                concrete.map(Concrete.init)
+        )
     }
 
     lazy var managedObjectModel: NSManagedObjectModel = {

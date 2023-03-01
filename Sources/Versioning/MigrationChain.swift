@@ -12,8 +12,8 @@ public final class MigrationChain {
 
     let migrations: [ModelMigration]
 
-    fileprivate var _managedObjectModels: [NSManagedObjectModel]? = nil
-    fileprivate var _mappingModels: [NSMappingModel]? = nil
+    private var _managedObjectModels: [NSManagedObjectModel]? = nil
+    private var _mappingModels: [NSMappingModel]? = nil
 
     public init(_ migrations: [ModelMigration]) {
         self.migrations = migrations

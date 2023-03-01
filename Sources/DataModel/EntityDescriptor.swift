@@ -21,31 +21,42 @@ protocol EntityDescriptor: Entity {
     ) -> NSEntityDescription?
 }
 
-/// This will mark `T` as an abstract entity
-@propertyWrapper
-public final class Abstract<T: Entity>: Entity, EntityDescriptor {
+public class EntityTypeDescriptor<T: Entity>: Entity, EntityDescriptor {
     var configurations: [String]? {
-        get { (wrappedValue as? EntityDescriptor)?.configurations }
-        set { (wrappedValue as? EntityDescriptor)?.configurations = newValue }
+        get { (entity as? EntityDescriptor)?.configurations }
+        set { (entity as? EntityDescriptor)?.configurations = newValue }
     }
 
     var entityInheritance: EntityInheritance {
-        .abstract
+        fatalError("Unimplemented")
     }
 
     override func typeIdentifier() -> ObjectIdentifier {
-        wrappedValue.typeIdentifier()
+        entity.typeIdentifier()
     }
 
-    public var wrappedValue: T
+    let entity: T
 
-    public init(wrappedValue: T) {
-        self.wrappedValue = wrappedValue
+    public init(_ wrappedValue: T) {
+        self.entity = wrappedValue
     }
 
     public required init() {
-        self.wrappedValue = T()
+        self.entity = T()
     }
+}
+
+/// This will mark `T` as an abstract entity
+@propertyWrapper
+public final class Abstract<T: Entity>: EntityTypeDescriptor<T> {
+
+    public var wrappedValue: T { entity }
+
+    public convenience init(wrappedValue: T) {
+        self.init(wrappedValue)
+    }
+
+    override var entityInheritance: EntityInheritance { .abstract }
 
     override func createEntityDescription(
         inheritanceData: [ObjectIdentifier: EntityInheritance],
@@ -59,28 +70,14 @@ public final class Abstract<T: Entity>: Entity, EntityDescriptor {
 
 /// This will mark `T` as an concrete entity which is the default behaviour
 @propertyWrapper
-public final class Concrete<T: Entity>: Entity, EntityDescriptor {
-    var configurations: [String]? {
-        get { (wrappedValue as? EntityDescriptor)?.configurations }
-        set { (wrappedValue as? EntityDescriptor)?.configurations = newValue }
-    }
+public final class Concrete<T: Entity>: EntityTypeDescriptor<T> {
 
-    var entityInheritance: EntityInheritance {
-        .concrete
-    }
+    override var entityInheritance: EntityInheritance { .concrete }
 
-    override func typeIdentifier() -> ObjectIdentifier {
-        wrappedValue.typeIdentifier()
-    }
+    public var wrappedValue: T { entity }
 
-    public var wrappedValue: T
-
-    public init(wrappedValue: T) {
-        self.wrappedValue = wrappedValue
-    }
-
-    public required init() {
-        self.wrappedValue = T()
+    public convenience init(wrappedValue: T) {
+        self.init(wrappedValue)
     }
 
     override func createEntityDescription(
@@ -95,28 +92,14 @@ public final class Concrete<T: Entity>: Entity, EntityDescriptor {
 
 /// This will mark `T` as an embedded entity
 @propertyWrapper
-public final class Embedded<T: Entity>: Entity, EntityDescriptor {
-    var configurations: [String]? {
-        get { (wrappedValue as? EntityDescriptor)?.configurations }
-        set { (wrappedValue as? EntityDescriptor)?.configurations = newValue }
-    }
+public final class Embedded<T: Entity>: EntityTypeDescriptor<T> {
 
-    var entityInheritance: EntityInheritance {
-        .embedded
-    }
+    override var entityInheritance: EntityInheritance { .embedded }
 
-    override func typeIdentifier() -> ObjectIdentifier {
-        wrappedValue.typeIdentifier()
-    }
+    public var wrappedValue: T { entity }
 
-    public var wrappedValue: T
-
-    public init(wrappedValue: T) {
-        self.wrappedValue = wrappedValue
-    }
-
-    public required init() {
-        self.wrappedValue = T()
+    public convenience init(wrappedValue: T) {
+        self.init(wrappedValue)
     }
 
     override func createEntityDescription(
@@ -174,6 +157,11 @@ public final class Configuration<T: Entity>: Entity, ConfigurationEntityDescript
         }
     }
 
+    public init(_ value: T, _ configurations: String...) {
+        self.wrappedValue = value
+        self.names = configurations.isEmpty ? nil : configurations
+    }
+
     public required init() {
         self.names = nil
         self.wrappedValue = T()
@@ -183,6 +171,6 @@ public final class Configuration<T: Entity>: Entity, ConfigurationEntityDescript
         inheritanceData: [ObjectIdentifier: EntityInheritance],
         cache: EntityCache
     ) -> NSEntityDescription? {
-        return wrappedValue.createEntityDescription(inheritanceData: inheritanceData, cache: cache)
+        wrappedValue.createEntityDescription(inheritanceData: inheritanceData, cache: cache)
     }
 }
