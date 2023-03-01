@@ -39,6 +39,8 @@ extension UpdateConfig {
     }
 }
 
+
+/// `UpdateBuilder` is a request builder for creating update requests for a given Target entity type.
 public final class UpdateBuilder<Target: Entity>:
     PredicateRequestBuilder<Target>,
     RequestExecutor
@@ -56,6 +58,13 @@ public final class UpdateBuilder<Target: Entity>:
 }
 
 extension UpdateBuilder where Target: Entity {
+    /**
+    Adds an attribute and value to the list of properties to update for the request.
+
+     - Parameters:
+         - keyPath: The attribute key path for the value to update.
+         - value: The new value for the attribute.
+     */
     public func update<Value: AttributeProtocol>(
         _ keyPath: KeyPath<Target, Value>,
         value: Value.RuntimeValue) -> Self
@@ -67,12 +76,14 @@ extension UpdateBuilder where Target: Entity {
 }
 
 extension UpdateBuilder {
+    /// Executes the update request synchronously and returns an array of NSManagedObjectID objects for the updated entities.
     public func exec() throws -> [NSManagedObjectID] {
         try config.batch
             ? executeBatchUpdate()
             : executeLegacyBatchUpdate()
     }
 
+    /// Executes the update request asynchronously and returns the updated entities as an array of `NSManagedObjectID` objects.
     public func execAsync(completion: @escaping ([NSManagedObjectID]?, Error?) -> Void) {
         context.rootContext.performAsync {
             do {

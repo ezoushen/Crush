@@ -26,6 +26,7 @@ extension InsertionConfig: RequestConfig {
     }
 }
 
+/// InsertBuilder provides a simple interface for creating a new managed object for a specific entity.
 public final class InsertBuilder<Target: Entity>:
     PredicateRequestBuilder<Target>,
     RequestExecutor
@@ -43,24 +44,44 @@ public final class InsertBuilder<Target: Entity>:
 }
 
 extension InsertBuilder {
+    /**
+    Adds a new object to the configuration.
+
+    - Parameters value: The dictionary that describes the object to create.
+    */
     public func object(_ value: [String: Any]) -> Self {
         let objects = config.objects
         config.objects = objects + [value]
         return self
     }
-    
+
+    /**
+    Adds multiple objects to the configuration.
+
+    - Parameters values: The array of dictionaries that describes the objects to create.
+    */
     public func object(contentsOf values: [[String: Any]]) -> Self {
         let objects = config.objects
         config.objects = objects + values
         return self
     }
 
+    /**
+    Adds a new object to the configuration.
+
+    - Parameters object: The partial object to create.
+    */
     public func object(_ object: PartialObject<Target>) -> Self {
         let objects = config.objects
         config.objects = objects + [object.store]
         return self
     }
 
+    /**
+    Adds multiple objects to the configuration.
+
+    - Parameters  values: The array of partial objects to create.
+    */
     public func object(contentsOf values: [PartialObject<Target>]) -> Self {
         let objects = config.objects
         config.objects = objects + values.map(\.store)

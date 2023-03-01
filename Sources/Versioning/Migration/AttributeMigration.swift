@@ -41,7 +41,8 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
 
     public let name: String?
     public let isOptional: Bool
-    // isTransient will be ignoed if derivedExpression is defined
+
+    /// isTransient will be ignoed if derivedExpression is defined
     public let isTransient: Bool
     public let derivedExpression: NSExpression?
     public let attributeType: NSAttributeType

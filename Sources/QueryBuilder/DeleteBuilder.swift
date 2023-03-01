@@ -26,6 +26,7 @@ extension DeletionConfig: RequestConfig {
     }
 }
 
+/// A class that builds a deletion request for a given target entity.
 public final class DeleteBuilder<Target: Entity>: PredicateRequestBuilder<Target> {
     let context: Context
     var config: DeletionConfig<Target> {

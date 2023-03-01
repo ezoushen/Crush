@@ -332,30 +332,20 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
         return false
     }
 
-    /// Create a ``ReadOnlyFetchBuilder`` that returning fetched objects as `T.ReadOnly`
     public func fetch<T: Entity>(for type: T.Type) -> ReadOnlyFetchBuilder<T> {
         .init(config: .init(), context: querySessionContext())
     }
 
-    /// Create a ``InsertBuilder`` performing batch insertion.
-    ///
-    /// The changes will be committed into persistent store.
     public func insert<T: Entity>(for type: T.Type) -> InsertBuilder<T> {
         .init(config: .init(batch: canUseBatchRequest(type: type)),
               context: backgroundSessionContext())
     }
 
-    /// Create a ``UpdateBuilder`` performing batch updating.
-    ///
-    /// The changes will be committed into persistent store.
     public func update<T: Entity>(for type: T.Type) -> UpdateBuilder<T> {
         .init(config: .init(batch: canUseBatchRequest(type: type)),
               context: backgroundSessionContext())
     }
 
-    /// Create a ``DeleteBuilder`` performing batch deleting
-    ///
-    /// The changes will be committed into persistent store.
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
         .init(config: .init(batch: canUseBatchRequest(type: type)),
               context: backgroundSessionContext())

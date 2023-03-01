@@ -104,6 +104,14 @@ where
         return self
     }
 
+    /**
+    Sorts the fetch result by given `keyPath`.
+
+    - Parameters:
+     - keyPath: The key path to sort fetch result by.
+     - ascending: A Boolean value that determines whether fetch result should be sorted in ascending or descending order.
+     - option: An option to control sorting behavior.
+     */
     public func sort<V: WritableProperty>(
         _ keyPath: KeyPath<Target, V>,
         ascending: Bool,
@@ -133,28 +141,73 @@ where
 }
 
 extension FetchBuilder {
+    /**
+     Sets the predicate to be applied to the fetch request.
+
+     - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+     - Parameters:
+        - predicateString: A predicate string.
+        - args: Arguments used to evaluate the predicate string.
+     */
     public func predicate(_ predicateString: String, _ args: CVarArg...) -> Self {
         return predicate(NSPredicate(format: predicateString, argumentArray: args))
     }
 
+    /**
+     Sets the predicate to be applied to the fetch request.
+
+     - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+     - Parameters pred: A predicate to be applied to the fetch request.
+     */
     public func predicate(_ pred: TypedPredicate<Target>) -> Self {
         return predicate(pred as NSPredicate)
     }
 
-    /// It simply evaluates returned array by given predicate. Please be aware of that it has no effects to `count`, `exists`, and `batch`.
+    /**
+     Sets the predicate to be applied to the fetch request.
+
+     - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+     - Parameters pred: A predicate to be applied to the fetch request.
+     */
     public func predicate(_ predicate: NSPredicate) -> Self {
         config.postPredicate = predicate
         return self
     }
 
+    /**
+    Sets the predicate to be applied to the fetch request using `AND` operator.
+
+    - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+    - Parameters:
+     - predicateString: A predicate string.
+     - args: Arguments used to evaluate the predicate string.
+     */
     public func andPredicate(_ predicateString: String, _ args: CVarArg...) -> Self {
         return andPredicate(NSPredicate(format: predicateString, argumentArray: args))
     }
 
+    /**
+     Sets the predicate to be applied to the fetch request using `AND` operator.
+
+     - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+     - Parameters pred: A predicate to be applied to the fetch request.
+     */
     public func andPredicate(_ predicate: TypedPredicate<Target>) -> Self {
         return andPredicate(predicate as NSPredicate)
     }
 
+    /**
+     Sets the predicate to be applied to the fetch request using `AND` operator.
+
+     - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+     - Parameters pred: A predicate to be applied to the fetch request.
+     */
     public func andPredicate(_ predicate: NSPredicate) -> Self {
         guard let oldPredicate = config.postPredicate else {
             config.postPredicate = predicate
@@ -164,14 +217,37 @@ extension FetchBuilder {
         return self
     }
 
+    /**
+    Sets the predicate to be applied to the fetch request using OR operator.
+
+    - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+    - Parameters:
+     - predicateString: A predicate string.
+     - args: Arguments used to evaluate the predicate string.
+     */
     public func orPredicate(_ predicateString: String, _ args: CVarArg...) -> Self {
         return orPredicate(NSPredicate(format: predicateString, argumentArray: args))
     }
 
+    /**
+     Sets the predicate to be applied to the fetch request using OR operator.
+
+     - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+     - Parameters pred: A predicate to be applied to the fetch request.
+     */
     public func orPredicate(_ predicate: TypedPredicate<Target>) -> Self {
         return orPredicate(predicate as NSPredicate)
     }
 
+    /**
+     Sets the predicate to be applied to the fetch request using OR operator.
+
+     - Note: This method only applies the predicate and has no effect on ``ExecutableFetchBuilder/count()``, ``ExecutableFetchBuilder/exists()``, and ``ArrayExecutableFetchBuilder/batch(_:)`` methods.
+
+     - Parameters pred: A predicate to be applied to the fetch request.
+     */
     public func orPredicate(_ predicate: NSPredicate) -> Self {
         guard let oldPredicate = config.postPredicate else {
             config.postPredicate = predicate
@@ -186,17 +262,20 @@ public class ExecutableFetchBuilder<Target: Entity, Received: Collection>:
     FetchBuilder<Target>,
     NonThrowingRequestExecutor
 {
+    /// Fetch the first object matching the predicate
     @inlinable
     public func findOne() -> Received.Element? {
         let results: Received = limit(1).exec()
         return results.first
     }
-    
+
+    /// Count objects matching the predicate
     public func count() -> Int {
         config.modify { $0.resultType = .countResultType }
         return context.count(request: config.createFetchRequest())
     }
 
+    /// Check if any object matching the predicate
     public func exists() -> Bool {
         limit(1).count() > 0
     }
@@ -217,7 +296,9 @@ public class ExecutableFetchBuilder<Target: Entity, Received: Collection>:
         }
     }
     
-    /// Fetch only objectID of objects. `includesPropertyValues` is false by default.
+    /// Fetches only the `NSManagedObjectID` of the objects.
+    ///
+    /// - Parameter includesPropertyValues: A flag indicating whether property values should be included.
     public func objectIDs(includesPropertyValues flag: Bool = false) -> [NSManagedObjectID] {
         config.modify {
             $0.includesPropertyValues = flag
@@ -240,10 +321,12 @@ public class ExecutableFetchBuilder<Target: Entity, Received: Collection>:
 public class ArrayExecutableFetchBuilder<Target: Entity, Result>:
     ExecutableFetchBuilder<Target, [Result]>
 {
+    /// Convert the fetch builder into ``LazyFetchBuilder``
     public func lazy() -> LazyFetchBuilder<Target, Result> {
         LazyFetchBuilder(builder: self)
     }
-    
+
+    /// Convert the fetch builder into ``LazyFetchBuilder`` with fetching batch size specified
     public func batch(_ size: Int) -> LazyFetchBuilder<Target, Received.Element> {
         config.modify { $0.fetchBatchSize = size }
         return LazyFetchBuilder(builder: self)
@@ -257,6 +340,11 @@ public class ArrayExecutableFetchBuilder<Target: Entity, Result>:
 public final class ManagedFetchBuilder<Target: Entity>:
     ArrayExecutableFetchBuilder<Target, Target.Managed>
 {
+    /**
+     Sets whether subentities should be included in the fetch request.
+
+     - Parameters flag: A boolean indicating whether subentities should be included. Defaults to `true`.
+     */
     public func includesSubentities(_ flag: Bool = true) -> DriverFetchBuilder<Target> {
         DriverFetchBuilder(config: config, context: context)
             ._includesSubentities(flag)
@@ -270,6 +358,11 @@ public final class ManagedFetchBuilder<Target: Entity>:
 public class ObjectProxyFetchBuilder<Target: Entity, Received>:
     ArrayExecutableFetchBuilder<Target, Received>
 {
+    /**
+     Sets whether subentities should be included in the fetch request.
+
+     - Parameters flag: A boolean indicating whether subentities should be included. Defaults to `true`.
+     */
     public func includesSubentities(_ flag: Bool = true) -> Self {
         _includesSubentities(flag)
     }
@@ -300,38 +393,47 @@ extension LazyMapSequence where Base == [NSManagedObject] {
     }
 }
 
+/// A fetch builder that returns a lazy sequence of fetch results.
+///
+/// The fetch result is wrapped lazily which might become handy if you're not so sure whether the result would be totaly iterated or not.
 public final class LazyFetchBuilder<Target: Entity, Result>:
     ExecutableFetchBuilder<Target, LazyFetchResultCollection<Result>>
 {
     private let builder: ExecutableFetchBuilder<Target, [Result]>
-    
+
+    /// Specifies the size of the batch to fetch.
+    ///
+    /// - Parameter size: The size of the batch to fetch.
     public func batch(_ size: Int) -> Self {
         config.modify { $0.fetchBatchSize = size }
         return self
     }
-    
+
+    /// Specifies whether the fetch request should include subentities.
+    ///
+    /// - Parameter flag: A flag indicating whether to include subentities in the fetch request. Defaults to `true`.
     public func includesSubentities(_ flag: Bool = true) -> LazyFetchBuilder<Target, Target.Driver> {
         LazyFetchBuilder<Target, Target.Driver>(
             builder: DriverFetchBuilder(config: config, context: context)
         )
             ._includesSubentities(flag)
     }
-    
+
     init(builder: ExecutableFetchBuilder<Target, [Result]>) {
         self.builder = builder
         super.init(config: builder.config, context: builder.context)
     }
-    
+
     internal required init(config: FetchConfig<Target>, context: FetchBuilder<Target>.Context) {
         builder = ExecutableFetchBuilder(config: config, context: context)
         super.init(config: config, context: context)
     }
-    
+
     override func received() -> [NSManagedObject] {
         builder.config = config
         return builder.received()
     }
-    
+
     public override func exec() -> LazyFetchResultCollection<Result> {
         received().lazy.map { self.builder.wrap(object:$0) }
     }

@@ -24,22 +24,85 @@ extension RawContextProviderProtocol {
     }
 }
 
+/**
+ A protocol for a session context that conforms to QueryerProtocol and MutableQueryerProtocol.
+ */
 public protocol SessionContext: QueryerProtocol, MutableQueryerProtocol {
+
+    /**
+     Creates a managed object of the given entity type.
+
+     - Parameter entity: The type of entity to create a managed object for.
+
+     - Returns: The created managed object.
+     */
     func create<T: Entity>(entity: T.Type) -> ManagedObject<T>
+
+    /**
+     Deletes the given managed object.
+
+     - Parameter object: The managed object to delete.
+     */
     func delete<T: Entity>(_ object: ManagedObject<T>)
+
+    /**
+     Loads a managed object of the given entity type with the given object ID.
+
+     - Parameter objectID: The object ID of the managed object to load.
+     - Parameter isFault: A boolean indicating whether the object should be returned as a fault.
+
+     - Returns: The loaded managed object, or nil if it could not be loaded.
+     */
     func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool) -> ManagedObject<T>?
+
+    /**
+     Edits the given read-only object and returns a new managed object with the changes applied.
+
+     - Parameter object: The read-only object to edit.
+
+     - Returns: The edited managed object.
+     */
     func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T>
+
+    /**
+     Edits the given array of read-only objects and returns an array of new managed objects with the changes applied.
+
+     - Parameter objects: The read-only objects to edit.
+
+     - Returns: The edited managed objects.
+     */
     func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>]
 
-    /// Obtain objectID of objects to make them permanent. More specific, `isTemporary` will return false after retained
+    /**
+     Obtains the object IDs of the given objects to make them permanent. After this operation, `isTemporary` will return false for each object.
+
+     - Parameter objects: The objects to make permanent.
+
+     - Throws: An error if the permanent IDs could not be obtained.
+     */
     func obtainPermanentIDs(for objects: [NSManagedObject]) throws
-    /// Update in memory object graphs
+
+    /**
+     Updates in-memory object graphs with any pending changes.
+     */
     func processPendingChanges()
-    /// Save changes on the context
+
+    /**
+     Saves any changes made to the context.
+
+     - Throws: An error if the changes could not be saved.
+     */
     func commit() throws
 }
 
 extension SessionContext {
+    /**
+     Loads a managed object of the given entity type with the given object ID and returns it as a fault.
+
+     - Parameter objectID: The object ID of the managed object to load.
+
+     - Returns: The loaded managed object as a fault, or nil if it could not be loaded.
+     */
     @inlinable
     public func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>? {
         load(objectID: objectID, isFault: true)
@@ -61,6 +124,8 @@ extension SessionContext where Self: RawContextProviderProtocol {
         }
     }
 }
+
+// MARK: Implementation of QueryProtocol
 
 extension SessionContext where Self: RawContextProviderProtocol {
     private func canUseBatchRequest() -> Bool {
@@ -86,17 +151,25 @@ extension SessionContext where Self: RawContextProviderProtocol {
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
         .init(config: .init(batch: canUseBatchRequest()), context: self)
     }
+}
 
-    public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> ManagedObject<T>? {
-        executionContext.load(objectID: objectID, isFault: isFault) as? ManagedObject<T>
-    }
+extension SessionContext where Self: RawContextProviderProtocol {
+    /**
+    A public function to load a managed object of the specified entity type with the specified object ID.
+    - Parameter objectID: The object ID of the managed object to load.
+    - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
+    - Returns: A `ManagedObject` instance of the specified entity type.
+    */
+   public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> ManagedObject<T>? {
+       executionContext.load(objectID: objectID, isFault: isFault) as? ManagedObject<T>
+   }
 
-    public func load<T: Entity>(forURIRepresentation uri: String, isFault: Bool = true) -> ManagedObject<T>? {
-        guard let managedObjectID = rootContext.persistentStoreCoordinator!
-                .managedObjectID(forURIRepresentation: URL(string: uri)!) else { return nil }
-        return load(objectID: managedObjectID, isFault: isFault)
-    }
-
+   /**
+    A public function to load a managed object of the specified entity type with the specified URI representation.
+    - Parameter uri: The URI representation of the managed object to load.
+    - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
+    - Returns: A `ManagedObject` instance of the specified entity type.
+    */
     public func assign(object: NSManagedObject, to storage: Storage) {
         guard let store = rootContext.persistentStoreCoordinator!
                 .persistentStore(of: storage) else {
@@ -105,11 +178,17 @@ extension SessionContext where Self: RawContextProviderProtocol {
         }
         executionContext.assign(object, to: store)
     }
-    
+
+    /**
+    A function that obtains permanent IDs for the given objects in the context's execution context.
+
+    - Parameters objects: An array of NSManagedObject instances for which to obtain permanent IDs.
+    */
     public func obtainPermanentIDs(for objects: [NSManagedObject]) throws {
         try executionContext.obtainPermanentIDs(for: objects)
     }
-    
+
+    /// A function that processes any pending changes in the context's execution context.
     public func processPendingChanges() {
         executionContext.processPendingChanges()
     }
