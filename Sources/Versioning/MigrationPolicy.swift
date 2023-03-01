@@ -8,7 +8,24 @@
 import Foundation
 import CoreData
 
-public class MigrationPolicy {
+/// A policy for migrating data models in a Core Data persistent store.
+/// `MigrationPolicy` is an abstract class that provides a set of methods and properties for managing migrations of data
+/// models in a Core Data persistent store. It contains a set of abstract methods that must be implemented by its subclasses to define a specific migration policy.
+///
+/// This class provides a default implementation of a policy for checking if a persistent store is compatible with a given data model,
+/// and for validating a data model against a persistent store. It also defines methods for configuring the migration process and for resolving incompatibilities between a data model and a persistent store.
+///
+/// `MigrationPolicy` is not intended to be instantiated directly. Instead, you should create a subclass of MigrationPolicy to define a specific migration policy for your application.
+///
+/// To create a subclass of MigrationPolicy, you must override the abstract methods of this class to implement your specific migration policy.
+///
+/// The methods that **must** be implemented by a subclass of `MigrationPolicy` are:
+///
+/// - validateModel(_:in:)
+/// - configureStoreDescription(_:)
+/// - resolveIncompatible(dataModel:in:)
+///
+public /* abstract */ class MigrationPolicy {
     let forceValidateModel: Bool
 
     internal init(forceValidateModel: Bool) {
@@ -105,69 +122,88 @@ extension MigrationPolicy {
         #endif
     }
 
+    /// Returns a migration policy that throws an error if the store is not compatible with the data model.
     public static var error: MigrationPolicy {
         ErrorMigrationPolicy()
     }
 
+    /// Returns a migration policy for lightweight migration.
     public static var lightWeight: MigrationPolicy {
         LightWeightMigrationPolicy()
     }
 
+    /// Returns a migration policy to migrate the persistent store from one specific version to another.
+    ///
+    /// - Parameters:
+    ///   - migrations: The supported ad-hoc migration models.
+    ///   - lightWeightBackup: A Boolean value indicating whether to use light weight migration if no supported ad-hoc migration model matched.
+    ///   - forceValidateModel: A Boolean value indicating whether to check if the persistent store is compatible with any available model resolved from `migrations`, regardless of the value of `lightWeightBackup`.
     public static func adHoc(
         migrations: Set<AdHocMigration>,
-        lightWeightBackup flag: Bool = true,
+        lightWeightBackup: Bool = true,
         forceValidateModel: Bool? = nil) -> MigrationPolicy
     {
         AdHocMigrationPolicy(
             migrations,
-            lightWeightBackup: flag,
-            forceValidateModel: forceValidateModel
-                ?? defaultForceValidateModel)
+            lightWeightBackup: lightWeightBackup,
+            forceValidateModel: forceValidateModel ?? defaultForceValidateModel)
     }
 
-    public static func chain(
+    /// Returns a migration policy to migrate the persistent store changes incrementally.
+    ///
+    /// - Parameters:
+    ///   - chain: The incremental changes of the data model.
+    ///   - lightWeightBackup: A Boolean value indicating whether to use light weight migration if no supported ad-hoc migration model matched.
+    ///   - forceValidateModel: A Boolean value indicating whether to check if the persistent store is compatible with any available model resolved from `chain`, regardless of the value of `lightWeightBackup`.
+    public static func incremental(
         _ chain: MigrationChain,
-        lightWeightBackup flag: Bool = true,
+        lightWeightBackup: Bool = true,
         forceValidateModel: Bool? = nil) -> MigrationPolicy
     {
-        ChainMigrationPolicy(
+        IncrementalMigrationPolicy(
             chain,
-            lightWeightBackup: flag,
-            forceValidateModel: forceValidateModel
-                ?? defaultForceValidateModel)
+            lightWeightBackup: lightWeightBackup,
+            forceValidateModel: forceValidateModel ?? defaultForceValidateModel)
     }
 
-    public static func adHocChainComposite(
+
+    /// If no ad-hoc migration model matched, try migrate the persistent store by incremental changes
+    /// 
+    /// - Parameters:
+    ///   - adHoc: The supported ad-hoc migration models.
+    ///   - chain: The incremental changes of the data model.
+    ///   - lightWeightBackup: A Boolean value indicating whether to use light weight migration if no supported ad-hoc migration model matched.
+    ///   - forceValidateModel: A Boolean value indicating whether to check if the persistent store is compatible with any available model resolved from `chain`, regardless of the value of `lightWeightBackup
+    public static func composite(
         adHoc: Set<AdHocMigration>,
         chain: MigrationChain,
-        lightWeightBackup flag: Bool = true,
-        forceValidateModel: Bool? = nil) -> MigrationPolicy
+        lightWeightBackup: Bool = true,
+        forceValidateModel: Bool? = nil) async -> MigrationPolicy
     {
-        AdHocChainCompositeMigrationPolicy(
+        CompositeMigrationPolicy(
             adHocMigrations: adHoc,
             migrationChain: chain,
-            lightWeightBackup: flag,
-            forceValidateModel: forceValidateModel
-                ?? defaultForceValidateModel)
+            lightWeightBackup: lightWeightBackup,
+            forceValidateModel: forceValidateModel ?? defaultForceValidateModel)
     }
 }
 
 // MARK: Error
 
-public class ErrorMigrationPolicy: LightWeightBackupMigrationPolicy {
-    public init() {
+class ErrorMigrationPolicy: LightWeightBackupMigrationPolicy {
+    init() {
         super.init(lightWeightEnabled: false, forceValidateModel: false)
     }
 }
 
 // MARK: Lightweight
 
-public class LightWeightMigrationPolicy: LightWeightBackupMigrationPolicy {
-    public init() {
+class LightWeightMigrationPolicy: LightWeightBackupMigrationPolicy {
+    init() {
         super.init(lightWeightEnabled: true, forceValidateModel: false)
     }
 
-    public override func resolveIncompatible(
+    override func resolveIncompatible(
         dataModel: DataModel, in storage: Storage) throws -> Bool
     {
         true
@@ -176,13 +212,13 @@ public class LightWeightMigrationPolicy: LightWeightBackupMigrationPolicy {
 
 // MARK: AdHoc
 
-public class AdHocMigrationPolicy: LightWeightBackupMigrationPolicy {
+class AdHocMigrationPolicy: LightWeightBackupMigrationPolicy {
 
-    public let adHocMigrations: Set<AdHocMigration>
+    let adHocMigrations: Set<AdHocMigration>
 
     private var matchedMigration: AdHocMigration?
 
-    public init(
+    init(
         _ adHocMigrations: Set<AdHocMigration>,
         lightWeightBackup: Bool,
         forceValidateModel: Bool)
@@ -193,7 +229,7 @@ public class AdHocMigrationPolicy: LightWeightBackupMigrationPolicy {
             forceValidateModel: forceValidateModel)
     }
 
-    public override func validateModel(
+    override func validateModel(
         _ dataModel: DataModel, in storage: Storage) throws
     {
         guard let storage = storage as? ConcreteStorage,
@@ -216,7 +252,7 @@ public class AdHocMigrationPolicy: LightWeightBackupMigrationPolicy {
             }
     }
 
-    public override func resolveIncompatible(
+    override func resolveIncompatible(
         dataModel: DataModel, in storage: Storage) throws -> Bool
     {
         guard let storage = storage as? ConcreteStorage,
@@ -234,11 +270,11 @@ public class AdHocMigrationPolicy: LightWeightBackupMigrationPolicy {
 
 // MARK: Chain
 
-public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
+class IncrementalMigrationPolicy: LightWeightBackupMigrationPolicy {
 
-    public let migrationChain: MigrationChain
+    let migrationChain: MigrationChain
 
-    public init(
+    init(
         _ migrationChain: MigrationChain,
         lightWeightBackup: Bool,
         forceValidateModel: Bool)
@@ -249,7 +285,7 @@ public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
             forceValidateModel: forceValidateModel)
     }
 
-    public override func validateModel(_ model: DataModel, in storage: Storage) throws {
+    override func validateModel(_ model: DataModel, in storage: Storage) throws {
         guard let managedObjectModel = try migrationChain.managedObjectModels().last else {
             throw MigrationError.incompatible
         }
@@ -258,7 +294,7 @@ public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
         }
     }
 
-    public override func resolveIncompatible(
+    override func resolveIncompatible(
         dataModel: DataModel, in storage: Storage) throws -> Bool
     {
         guard let storage = storage as? ConcreteStorage else { return true }
@@ -272,15 +308,15 @@ public class ChainMigrationPolicy: LightWeightBackupMigrationPolicy {
 
 // MARK: AdHoc chain
 
-public class AdHocChainCompositeMigrationPolicy: AdHocMigrationPolicy {
-    public let migrationChain: MigrationChain
+class CompositeMigrationPolicy: AdHocMigrationPolicy {
+    let migrationChain: MigrationChain
     private lazy var chainMigrationPolicy =
-        ChainMigrationPolicy(
+        IncrementalMigrationPolicy(
             migrationChain,
             lightWeightBackup: lightWeightEnabled,
             forceValidateModel: forceValidateModel)
 
-    public init(
+    init(
         adHocMigrations: Set<AdHocMigration>,
         migrationChain: MigrationChain,
         lightWeightBackup: Bool,
@@ -293,7 +329,7 @@ public class AdHocChainCompositeMigrationPolicy: AdHocMigrationPolicy {
             forceValidateModel: forceValidateModel)
     }
 
-    public override func validateModel(
+    override func validateModel(
         _ dataModel: DataModel, in storage: Storage) throws
     {
         do {
@@ -303,7 +339,7 @@ public class AdHocChainCompositeMigrationPolicy: AdHocMigrationPolicy {
         }
     }
 
-    public override func resolveIncompatible(
+    override func resolveIncompatible(
         dataModel: DataModel, in storage: Storage) throws -> Bool
     {
         if try super.resolveIncompatible(dataModel: dataModel, in: storage) {

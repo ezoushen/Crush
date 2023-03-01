@@ -8,16 +8,50 @@
 import CoreData
 import Foundation
 
+/// It defined how will entities change within a model migration
+///
+/// There're four kinds of ``EntityMigration`` can use including ``AddEntity``, ``RemoveEntity``,
+/// ``UpdateEntity``, and ``CopyEntity``.
 public struct ModelMigration: Hashable {
 
     public let name: String
     public let entityMigrations: [EntityMigration]
 
+    /// Create instance of `ModelMigration`
+    ///
+    /// Example:
+    ///
+    /// ```swift
+    /// ModelMigration("name", entityMigrations: [
+    ///     AddEntity("Entity") { ... },
+    ///     RemoveEntity("ObsoleteEntity"),
+    ///     .
+    ///     .
+    /// ])
+    /// ```
+    /// - Parameters:
+    ///   - name: The name of the migration.
+    ///   - entityMigrations: Total changes over all entities.
     public init(_ name: String, entityMigrations: [EntityMigration]) {
         self.name = name
         self.entityMigrations = entityMigrations
     }
 
+    /// Create instance of `ModelMigration`
+    ///
+    /// Example:
+    ///
+    /// ```swift
+    /// ModelMigration("name") {
+    ///     AddEntity("Entity") { ... }
+    ///     RemoveEntity("ObsoleteEntity")
+    ///     .
+    ///     .
+    /// }
+    /// ```
+    /// - Parameters:
+    ///   - name: The name of the migration.
+    ///   - entityMigrations: Total changes over all entities.
     public init(
         _ name: String,
         @CollectionBuilder<EntityMigration>
@@ -37,6 +71,7 @@ public struct ModelMigration: Hashable {
         hasher.combine(name)
     }
 
+    /// Create `NSMappingModel` based on ``entityMigrations`` and also provided `sourceModel` and `destinationModel`
     public func createMappingModel(
         from sourceModel: NSManagedObjectModel,
         to destinationModel: NSManagedObjectModel) throws -> NSMappingModel
@@ -80,6 +115,7 @@ public struct ModelMigration: Hashable {
         return mappingModel
     }
 
+    /// Update the entities of the model based on ``entityMigrations``
     public func migrateModel(
         _ model: NSManagedObjectModel) throws -> NSManagedObjectModel
     {

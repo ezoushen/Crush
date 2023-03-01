@@ -34,6 +34,7 @@ public struct AddEntity: EntityMigration {
 
     public var originEntityName: String? { nil }
 
+    /// Add an entity with provided information
     public init(
         _ name: String,
         parent: String? = nil,
@@ -50,6 +51,7 @@ public struct AddEntity: EntityMigration {
         self.uniquenessConstraints = uniquenessConstraints
     }
 
+    /// Add an entity with provided information
     public init(
         _ name: String,
         parent: String? = nil,
@@ -123,6 +125,7 @@ public struct RemoveEntity: EntityMigration {
     public let configurations: [String]? = nil
     public let name: String? = nil
 
+    /// Remove an entity from by name
     public init(_ name: String) {
         self.originEntityName = name
     }
@@ -151,12 +154,12 @@ public struct RemoveEntity: EntityMigration {
 public struct CopyEntity: EntityMigration {
     public let originEntityName: String?
     public let name: String?
-    public let configurations: [String]?
+    public let configurations: [String]? = nil
 
-    public init(_ name: String, configurations: [String]? = nil) {
+    /// Copy an entity without any modification
+    public init(_ name: String) {
         self.originEntityName = name
         self.name = name
-        self.configurations = configurations
     }
 
     public func migrateEntity(
@@ -227,6 +230,7 @@ public struct UpdateEntity: EntityMigration {
     public var addedUniquenessConstraints: Set<[String]> = []
     public let properties: [PropertyMigration]
 
+    /// Update an entity with provided information
     public init(
         _ originName: String,
         name: String? = nil,
@@ -243,6 +247,7 @@ public struct UpdateEntity: EntityMigration {
         self.properties = properties
     }
 
+    /// Update an entity with provided information
     public init(
         _ originName: String,
         name: String? = nil,

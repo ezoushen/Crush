@@ -8,6 +8,9 @@
 import CoreData
 import Foundation
 
+/// You can defined how the data model changed over time.
+///
+/// It simply saved a collection of model migrations.
 public final class MigrationChain {
 
     let migrations: [ModelMigration]
