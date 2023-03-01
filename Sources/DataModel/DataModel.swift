@@ -49,7 +49,7 @@ open /*abstract*/ class EntityMap {
 /// A `DataModel` is an immutable collection of configurations that define the entities within the model.
 ///
 /// It also provides convenience methods for initializing the model, and generating a corresponding `NSManagedObjectModel`.
-/// You can create a `DataModel` by  ``init(entityMap:)`` or define the relationships between entities directly by ``init(name:configurations:)``
+/// You can create a `DataModel` by  ``init(entityMap:)`` or define the relationships between entities directly by ``init(name:_:)``
 ///
 /// Usage:
 ///
