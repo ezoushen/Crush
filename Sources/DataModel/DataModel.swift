@@ -98,13 +98,6 @@ public final class DataModel {
         })
     }
 
-    /// Initializes a `DataModel` instance based on entities
-    ///
-    /// Uncategorized entities will be considering ``Concrete``
-    public convenience init(name: String, _ entities: Entity...) {
-        self.init(name: name, entities)
-    }
-
     /// Initializes a `DataModel` instance based on an `EntityMap`.
     ///
     /// - Parameter entityMap: The `EntityMap` to be converted.
