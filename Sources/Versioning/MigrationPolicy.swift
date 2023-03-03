@@ -178,7 +178,7 @@ extension MigrationPolicy {
         adHoc: Set<AdHocMigration>,
         chain: MigrationChain,
         lightWeightBackup: Bool = true,
-        forceValidateModel: Bool? = nil) async -> MigrationPolicy
+        forceValidateModel: Bool? = nil) -> MigrationPolicy
     {
         CompositeMigrationPolicy(
             adHocMigrations: adHoc,
