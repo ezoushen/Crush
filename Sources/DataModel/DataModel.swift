@@ -139,18 +139,18 @@ public final class DataModel {
             Caches.managedObjectModel.set(key, value: model)
         }
 
-        typealias InheritanceData = [ObjectIdentifier: EntityInheritance]
+        typealias AbstractionData = [ObjectIdentifier: EntityAbstraction]
 
-        /// Dictionary for looking up which inheritance type the entity applied
-        let inheritanceData = descriptors.reduce(into: InheritanceData()) {
-            $0[$1.typeIdentifier()] = $1.entityInheritance
+        /// Dictionary for looking up which abstraction type the entity applied
+        let abstractionData = descriptors.reduce(into: AbstractionData()) {
+            $0[$1.typeIdentifier()] = $1.entityAbstraction
         }
 
         let entitiesIndexedByConfiguration = descriptors
-            .sorted { $0.entityInheritance < $1.entityInheritance }
+            .sorted { $0.entityAbstraction < $1.entityAbstraction }
             .reduce(into: [String?: [NSEntityDescription]]()) { dict, descriptor in
                 guard let description = descriptor
-                    .createEntityDescription(inheritanceData: inheritanceData, cache: cache) else { return }
+                    .createEntityDescription(abstractionData: abstractionData, cache: cache) else { return }
                 for configuration in descriptor.configurations ?? [] {
                     dict[configuration].append(description)
                 }

@@ -12,11 +12,11 @@ import Foundation
 
 protocol EntityDescriptor: Entity {
     var configurations: [String]? { get set }
-    var entityInheritance: EntityInheritance { get }
+    var entityAbstraction: EntityAbstraction { get }
     
     func typeIdentifier() -> ObjectIdentifier
     func createEntityDescription(
-        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        abstractionData: [ObjectIdentifier: EntityAbstraction],
         cache: EntityCache
     ) -> NSEntityDescription?
 }
@@ -27,7 +27,7 @@ public class EntityTypeDescriptor<T: Entity>: Entity, EntityDescriptor {
         set { (entity as? EntityDescriptor)?.configurations = newValue }
     }
 
-    var entityInheritance: EntityInheritance {
+    var entityAbstraction: EntityAbstraction {
         fatalError("Unimplemented")
     }
 
@@ -56,13 +56,13 @@ public final class Abstract<T: Entity>: EntityTypeDescriptor<T> {
         self.init(wrappedValue)
     }
 
-    override var entityInheritance: EntityInheritance { .abstract }
+    override var entityAbstraction: EntityAbstraction { .abstract }
 
     override func createEntityDescription(
-        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        abstractionData: [ObjectIdentifier: EntityAbstraction],
         cache: EntityCache
     ) -> NSEntityDescription? {
-        let description = wrappedValue.createEntityDescription(inheritanceData: inheritanceData, cache: cache)
+        let description = wrappedValue.createEntityDescription(abstractionData: abstractionData, cache: cache)
         description?.isAbstract = true
         return description
     }
@@ -72,7 +72,7 @@ public final class Abstract<T: Entity>: EntityTypeDescriptor<T> {
 @propertyWrapper
 public final class Concrete<T: Entity>: EntityTypeDescriptor<T> {
 
-    override var entityInheritance: EntityInheritance { .concrete }
+    override var entityAbstraction: EntityAbstraction { .concrete }
 
     public var wrappedValue: T { entity }
 
@@ -81,10 +81,10 @@ public final class Concrete<T: Entity>: EntityTypeDescriptor<T> {
     }
 
     override func createEntityDescription(
-        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        abstractionData: [ObjectIdentifier: EntityAbstraction],
         cache: EntityCache
     ) -> NSEntityDescription? {
-        let description = wrappedValue.createEntityDescription(inheritanceData: inheritanceData, cache: cache)
+        let description = wrappedValue.createEntityDescription(abstractionData: abstractionData, cache: cache)
         description?.isAbstract = false
         return description
     }
@@ -94,7 +94,7 @@ public final class Concrete<T: Entity>: EntityTypeDescriptor<T> {
 @propertyWrapper
 public final class Embedded<T: Entity>: EntityTypeDescriptor<T> {
 
-    override var entityInheritance: EntityInheritance { .embedded }
+    override var entityAbstraction: EntityAbstraction { .embedded }
 
     public var wrappedValue: T { entity }
 
@@ -103,7 +103,7 @@ public final class Embedded<T: Entity>: EntityTypeDescriptor<T> {
     }
 
     override func createEntityDescription(
-        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        abstractionData: [ObjectIdentifier: EntityAbstraction],
         cache: EntityCache
     ) -> NSEntityDescription? {
         nil
@@ -124,10 +124,10 @@ public final class Configuration<T: Entity>: Entity, ConfigurationEntityDescript
         set { names = newValue }
     }
 
-    var entityInheritance: EntityInheritance {
+    var entityAbstraction: EntityAbstraction {
         guard let descriptor = wrappedValue as? EntityDescriptor
         else { return .concrete }
-        return descriptor.entityInheritance
+        return descriptor.entityAbstraction
     }
 
     override func typeIdentifier() -> ObjectIdentifier {
@@ -168,9 +168,9 @@ public final class Configuration<T: Entity>: Entity, ConfigurationEntityDescript
     }
 
     override func createEntityDescription(
-        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        abstractionData: [ObjectIdentifier: EntityAbstraction],
         cache: EntityCache
     ) -> NSEntityDescription? {
-        wrappedValue.createEntityDescription(inheritanceData: inheritanceData, cache: cache)
+        wrappedValue.createEntityDescription(abstractionData: abstractionData, cache: cache)
     }
 }

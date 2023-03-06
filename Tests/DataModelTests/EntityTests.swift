@@ -45,46 +45,46 @@ class EntityTests: XCTestCase {
     func test_createEntityDescription_shouldReturnNilForEmbeddedEntity() {
         class TestEntity: Entity { }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(type(of: sut)): .embedded
         ]
-        XCTAssertNil(sut.createEntityDescription(inheritanceData: data, cache: cache))
+        XCTAssertNil(sut.createEntityDescription(abstractionData: data, cache: cache))
     }
 
-    func test_createEntityDescription_shouldReturnNilWhileInheritanceTypeUndefined() {
+    func test_createEntityDescription_shouldReturnNilWhileAbstractionUndefined() {
         class TestEntity: Entity { }
         let sut = TestEntity()
-        let result = sut.createEntityDescription(inheritanceData: [:], cache: cache)
+        let result = sut.createEntityDescription(abstractionData: [:], cache: cache)
         XCTAssertNil(result?.propertiesByName["value"])
     }
 
     func test_createEntityDescription_shouldReturnAbstractEntityDescription() {
         class TestEntity: Entity { }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(type(of: sut)): .abstract
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)?.isAbstract
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)?.isAbstract
         XCTAssertTrue(result == true)
     }
 
     func test_createEntityDescription_shouldReturnConcreteEntityDescription() {
         class TestEntity: Entity { }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)?.isAbstract
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)?.isAbstract
         XCTAssertTrue(result == false)
     }
 
     func test_createEntityDescription_nameShouldEqualToFetchKey() {
         class TestEntity: Entity { }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(result?.name, TestEntity.fetchKey)
     }
 
@@ -93,10 +93,10 @@ class EntityTests: XCTestCase {
             var value = Value.Int32("value")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertNotNil(result?.propertiesByName["value"])
     }
 
@@ -105,10 +105,10 @@ class EntityTests: XCTestCase {
             var value = Relation.ToOne<TestEntity>("value")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertNotNil(result?.propertiesByName["value"])
     }
 
@@ -119,10 +119,10 @@ class EntityTests: XCTestCase {
             var derived = Derived.Int64("derived", from: \TestEntity.value)
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(type(of: sut)): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertNotNil(result?.propertiesByName["derived"])
     }
 
@@ -132,10 +132,10 @@ class EntityTests: XCTestCase {
             var fetched = Fetched<TestEntity>("fetched") { $0.where(\.value == 1) }
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         let description = result?.propertiesByName["fetched"] as! NSFetchedPropertyDescription
         XCTAssertNotNil(description.fetchRequest)
     }
@@ -161,14 +161,14 @@ class EntityTests: XCTestCase {
     
     class TestEntity: ParentEntity { }
 
-    private func createInheritedEntityDescription(_ type: EntityInheritance) -> NSEntityDescription? {
+    private func createInheritedEntityDescription(_ type: EntityAbstraction) -> NSEntityDescription? {
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(ParentEntity.self): type,
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        _ = ParentEntity().createEntityDescription(inheritanceData: data, cache: cache)
-        return sut.createEntityDescription(inheritanceData: data, cache: cache)
+        _ = ParentEntity().createEntityDescription(abstractionData: data, cache: cache)
+        return sut.createEntityDescription(abstractionData: data, cache: cache)
     }
 
     func test_createEntityDescription_shouldIncludeIndexes() {
@@ -177,10 +177,10 @@ class EntityTests: XCTestCase {
             var value = Value.Int64("value")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.name, "value")
     }
 
@@ -190,10 +190,10 @@ class EntityTests: XCTestCase {
             var value = Value.Int16("value")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.entity, result)
     }
 
@@ -203,10 +203,10 @@ class EntityTests: XCTestCase {
             var value = Value.Int16("value")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.elements.first?.propertyName, "value")
     }
 
@@ -216,10 +216,10 @@ class EntityTests: XCTestCase {
             var value = Value.Int16("value")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.elements.first?.collationType, .rTree)
     }
 
@@ -231,10 +231,10 @@ class EntityTests: XCTestCase {
             var value2 = Value.Int16("value2")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.elements.count, 2)
     }
 
@@ -244,10 +244,10 @@ class EntityTests: XCTestCase {
             var value = Value.Int16("value")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(result?.indexes.first?.partialIndexPredicate, \TestEntity.value == 0)
     }
 
@@ -260,10 +260,10 @@ class EntityTests: XCTestCase {
             var value2 = Value.Int16("value2")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         let indexes = result?.indexes.sorted { $0.elements.count < $1.elements.count } ?? []
         XCTAssertEqual(indexes.count, 2)
         XCTAssertEqual(indexes.first?.elements.count, 1)
@@ -283,11 +283,11 @@ class EntityTests: XCTestCase {
             var value3 = Value.Int16("value3")
         }
         let sut = ChildEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .embedded,
             ObjectIdentifier(ChildEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         let indexes = result?.indexes ?? []
         XCTAssertEqual(indexes.count, 1)
         XCTAssertEqual(indexes.first?.elements.count, 2)
@@ -299,10 +299,10 @@ class EntityTests: XCTestCase {
             var value = Value.Int16("value")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(result?.uniquenessConstraints as! [[String]], [["value"]])
     }
 
@@ -316,10 +316,10 @@ class EntityTests: XCTestCase {
             var value3 = Value.Int16("value3")
         }
         let sut = TestEntity()
-        let data: [ObjectIdentifier: EntityInheritance] = [
+        let data: [ObjectIdentifier: EntityAbstraction] = [
             ObjectIdentifier(TestEntity.self): .concrete
         ]
-        let result = sut.createEntityDescription(inheritanceData: data, cache: cache)
+        let result = sut.createEntityDescription(abstractionData: data, cache: cache)
         XCTAssertEqual(Set(result?.uniquenessConstraints as! [[String]]), [["value", "value2"], ["value3"]])
     }
 }

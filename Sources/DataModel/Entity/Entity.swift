@@ -8,14 +8,14 @@
 
 import CoreData
 
-public enum EntityInheritance: Int {
+public enum EntityAbstraction: Int {
     case abstract, embedded, concrete
 }
 
-extension EntityInheritance: Comparable, Hashable {
+extension EntityAbstraction: Comparable, Hashable {
     public static func < (
-        lhs: EntityInheritance,
-        rhs: EntityInheritance) -> Bool
+        lhs: EntityAbstraction,
+        rhs: EntityAbstraction) -> Bool
     {
         lhs.rawValue < rhs.rawValue
     }
@@ -57,7 +57,7 @@ open class Entity {
     }
 
     func createEntityDescription(
-        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        abstractionData: [ObjectIdentifier: EntityAbstraction],
         cache: EntityCache
     ) -> NSEntityDescription? {
         let identifier = ObjectIdentifier(Self.self)
@@ -67,10 +67,10 @@ open class Entity {
             Self.propertyNamesByEntity[ObjectIdentifier(Self.self)] = propertyNames(mirror: mirror)
         }
 
-        /// If inheritance data no presented in dictionary, consider it as embedded entity
-        let inheritance = inheritanceData[identifier] ?? .embedded
+        /// If abstraction data no presented in dictionary, consider it as embedded entity
+        let abstraction = abstractionData[identifier] ?? .embedded
 
-        guard inheritance != .embedded else {
+        guard abstraction != .embedded else {
             return nil
         }
 
@@ -78,13 +78,13 @@ open class Entity {
         let description = NSEntityDescription()
         let properties = createProperties(
             mirror: mirror,
-            inheritanceData: inheritanceData,
+            abstractionData: abstractionData,
             cache: cache)
 
         description.userInfo?[UserInfoKey.entityClassName] = Self.entityCacheKey
         description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
         description.name = Self.fetchKey
-        description.isAbstract = inheritance == .abstract
+        description.isAbstract = abstraction == .abstract
         description.properties = properties
 
         setupIndexes(description: description)
@@ -92,7 +92,7 @@ open class Entity {
 
         if let superMirror = mirror.superclassMirror,
            let superType = superMirror.subjectType as? Entity.Type,
-           (inheritanceData[ObjectIdentifier(superType)] ?? .embedded) != .embedded
+           (abstractionData[ObjectIdentifier(superType)] ?? .embedded) != .embedded
         {
             cache.get(superType.entityCacheKey) {
                 $0.subentities.append(description)
@@ -157,7 +157,7 @@ extension Entity {
     
     private func createProperties(
         mirror: Mirror,
-        inheritanceData: [ObjectIdentifier: EntityInheritance],
+        abstractionData: [ObjectIdentifier: EntityAbstraction],
         cache: EntityCache
     ) -> [NSPropertyDescription] {
         let ownedProperties = mirror.children
@@ -170,10 +170,10 @@ extension Entity {
             }
         
         if let superMirror = mirror.superclassMirror {
-            let inheritance = inheritanceData[ObjectIdentifier(superMirror.subjectType)] ?? .embedded
-            if inheritance == .embedded {
+            let abstraction = abstractionData[ObjectIdentifier(superMirror.subjectType)] ?? .embedded
+            if abstraction == .embedded {
                 return ownedProperties + createProperties(
-                    mirror: superMirror, inheritanceData: inheritanceData, cache: cache)
+                    mirror: superMirror, abstractionData: abstractionData, cache: cache)
             }
         }
         
