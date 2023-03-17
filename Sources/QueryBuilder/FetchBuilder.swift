@@ -353,6 +353,18 @@ public final class ManagedFetchBuilder<Target: Entity>:
     override func wrap(object: NSManagedObject) -> ManagedObject<Target> {
         context.receive(object as! Target.Managed)
     }
+
+    /// Return immutable `ReadOnly<Target>` as fetch result rather than mutable object,
+    /// - note: Returned `ReadOnly<Target>` will be presented in execution context instead of ui context
+    public func asReadOnly() -> ReadOnlyFetchBuilder<Target> {
+        ReadOnlyFetchBuilder(
+            config: config,
+            context: _SessionContext(
+                executionContext: context.executionContext,
+                rootContext: context.rootContext,
+                uiContext: context.executionContext,
+                logger: context.logger))
+    }
 }
 
 public class ObjectProxyFetchBuilder<Target: Entity, Received>:

@@ -50,6 +50,24 @@ class SessionTests: XCTestCase {
         }
         XCTAssertEqual(result.integerValue, 11)
     }
+
+    func test_returnUnsafeReadOnlyObject_shouldBeWrapped() throws {
+        let session = container.startSession()
+        var fetchedContext: NSManagedObjectContext!
+        let result = try session.sync {
+            context -> TestEntity.ReadOnly in
+            let entity = context.create(entity: TestEntity.self)
+            entity.integerValue = 11
+            try context.commit()
+            let fetched = context
+                .fetch(for: TestEntity.self)
+                .asReadOnly()
+                .findOne()!
+            fetchedContext = fetched.context
+            return fetched
+        }
+        XCTAssertNotEqual(fetchedContext, result.context)
+    }
     
     func test_async_shouldNotBlock() {
         var flag = false

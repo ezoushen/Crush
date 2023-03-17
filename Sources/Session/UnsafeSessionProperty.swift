@@ -69,6 +69,17 @@ extension Set: UnsafeSessionProperty where Element: ObjectDriver {
     }
 }
 
+extension ReadOnly: UnsafeSessionPropertyProtocol { }
+extension ReadOnly: UnsafeSessionProperty {
+    public typealias Safe = ReadOnly<Entity>
+    public func wrapped(in session: Session?) -> ReadOnly<Entity> {
+        // Rewrap the object if its managedObjectContext is not ui context
+        guard let session = session,
+              session.context.uiContext !== context else { return self }
+        return ReadOnly(object: session.context.present(managedObject))
+    }
+}
+
 extension Swift.Optional: UnsafeSessionPropertyProtocol where Wrapped: UnsafeSessionProperty { }
 extension Swift.Optional: UnsafeSessionProperty where Wrapped: UnsafeSessionProperty {
     public typealias Entity = Wrapped.Entity
