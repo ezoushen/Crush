@@ -58,6 +58,15 @@ public class DictionaryBuilderBase<Target: Crush.Entity>:
     }
 }
 
+extension DictionaryBuilderBase {
+    /// Sets the flag to return distinct results.
+    /// - Parameters flag: The flag to set. Default is `true`.
+    public func returnsDistinctResults(_ flag: Bool = true) -> Self {
+        config.modify { $0.returnsDistinctResults = flag }
+        return self
+    }
+}
+
 /// A class for building dictionaries from `Target` entities.
 public final class DictionaryBuilder<Target: Crush.Entity>: DictionaryBuilderBase<Target> { }
 
@@ -356,19 +365,6 @@ public final class SelectBuilder<Target: Crush.Entity>: DictionaryBuilderBase<Ta
      */
     public func select(_ selectPaths: [SelectPath<Target>]) -> Self {
         config.modify { selectPaths.forEach($0.fetch(property:)) }
-        return self
-    }
-
-    /**
-     Sets the flag to return distinct results.
-
-     - Parameters:
-        - flag: The flag to set. Default is `true`.
-
-     - Returns: An instance of `Self`.
-     */
-    public func returnsDistinctResults(_ flag: Bool = true) -> Self {
-        config.modify { $0.returnsDistinctResults = flag }
         return self
     }
 }
