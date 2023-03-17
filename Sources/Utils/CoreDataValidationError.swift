@@ -20,35 +20,42 @@ public struct CoreDataError: Error {
 
     public var key: String? {
         underlyingError.userInfo[NSValidationKeyErrorKey] as? String
+            ?? underlyingError.userInfo["NSValidationKeyError"] as? String
     }
 
     public var value: Any? {
         underlyingError.userInfo[NSValidationValueErrorKey]
+            ?? underlyingError.userInfo["NSValidationValueError"]
     }
 
     public var predicate: NSPredicate? {
         underlyingError.userInfo[NSValidationPredicateErrorKey] as? NSPredicate
+            ?? underlyingError.userInfo["NSValidationPredicateError"] as? NSPredicate
     }
 
     public var localizedDescription: String? {
         underlyingError.userInfo[NSLocalizedDescriptionKey] as? String
+            ?? underlyingError.userInfo["NSLocalizedDescription"] as? String
     }
 
     public var object: NSManagedObject? {
         underlyingError.userInfo[NSValidationObjectErrorKey] as? NSManagedObject
+            ?? underlyingError.userInfo["NSValidationObjectError"] as? NSManagedObject
     }
 
     public var constraintConflicts: [NSConstraintConflict]? {
         underlyingError.userInfo[NSPersistentStoreSaveConflictsErrorKey] as? [NSConstraintConflict]
+            ?? underlyingError.userInfo["NSPersistentStoreSaveConflictsError"] as? [NSConstraintConflict]
     }
 
     public var mergeConflicts: [NSMergeConflict]? {
         underlyingError.userInfo[NSPersistentStoreSaveConflictsErrorKey] as? [NSMergeConflict]
+            ?? underlyingError.userInfo["NSPersistentStoreSaveConflictsError"] as? [NSMergeConflict]
     }
 
     public var detailedNSErrors: [NSError] {
         guard let details = underlyingError.userInfo[NSDetailedErrorsKey] as? [NSError]
-        else { return [] }
+                ?? underlyingError.userInfo["NSDetailedErrors"] as? [NSError] else { return [] }
         return details
     }
 
