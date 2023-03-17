@@ -78,9 +78,11 @@ extension NSManagedObjectModel {
     }
 
     private func entitiesIndexedByConfiguration() -> [String: Set<Data>] {
-        configurations.reduce(into: [String: Set<Data>]()) {
-            guard let entities = entities(forConfigurationName: $1) else { return }
-            $0[$1] = Set(entities.map(\.versionHash))
-        }
+        configurations
+            .filter { $0 != "PF_DEFAULT_CONFIGURATION_NAME" }
+            .reduce(into: [String: Set<Data>]()) {
+                guard let entities = entities(forConfigurationName: $1) else { return }
+                $0[$1] = Set(entities.map(\.versionHash))
+            }
     }
 }
