@@ -46,7 +46,7 @@ class EntityTests: XCTestCase {
         class TestEntity: Entity { }
         let sut = TestEntity()
         let data: [ObjectIdentifier: EntityAbstraction] = [
-            ObjectIdentifier(type(of: sut)): .embedded
+            ObjectIdentifier(type(of: sut)): .abstract(inheritance: .multiTable)
         ]
         XCTAssertNil(sut.createEntityDescription(abstractionData: data, cache: cache))
     }
@@ -62,7 +62,7 @@ class EntityTests: XCTestCase {
         class TestEntity: Entity { }
         let sut = TestEntity()
         let data: [ObjectIdentifier: EntityAbstraction] = [
-            ObjectIdentifier(type(of: sut)): .abstract
+            ObjectIdentifier(type(of: sut)): .abstract(inheritance: .singleTable)
         ]
         let result = sut.createEntityDescription(abstractionData: data, cache: cache)?.isAbstract
         XCTAssertTrue(result == true)
@@ -141,17 +141,17 @@ class EntityTests: XCTestCase {
     }
 
     func test_createEntityDescription_embeddedPropertyShouldNotBeParentEntity() {
-        let result = createInheritedEntityDescription(.embedded)
+        let result = createInheritedEntityDescription(.abstract(inheritance: .multiTable))
         XCTAssertNil(result?.superentity)
     }
 
     func test_createEntityDescription_embeddedPropertyShouldBeDefinedInProperties() {
-        let result = createInheritedEntityDescription(.embedded)
+        let result = createInheritedEntityDescription(.abstract(inheritance: .multiTable))
         XCTAssertNotNil(result?.propertiesByName["parentValue"])
     }
 
     func test_createEntityDescription_superEntityShouldNotBeNil() {
-        let result = createInheritedEntityDescription(.abstract)
+        let result = createInheritedEntityDescription(.abstract(inheritance: .singleTable))
         XCTAssertNotNil(result?.superentity)
     }
     
@@ -284,7 +284,7 @@ class EntityTests: XCTestCase {
         }
         let sut = ChildEntity()
         let data: [ObjectIdentifier: EntityAbstraction] = [
-            ObjectIdentifier(TestEntity.self): .embedded,
+            ObjectIdentifier(TestEntity.self): .abstract(inheritance: .multiTable),
             ObjectIdentifier(ChildEntity.self): .concrete
         ]
         let result = sut.createEntityDescription(abstractionData: data, cache: cache)

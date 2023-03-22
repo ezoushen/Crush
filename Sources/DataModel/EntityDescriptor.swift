@@ -52,18 +52,28 @@ public final class Abstract<T: Entity>: EntityTypeDescriptor<T> {
 
     public var wrappedValue: T { entity }
 
-    public convenience init(wrappedValue: T) {
+    var inheritance: EntityInheritance = .singleTable
+
+    public convenience init(wrappedValue: T, inheritance: EntityInheritance) {
         self.init(wrappedValue)
+        self.inheritance = inheritance
     }
 
-    override var entityAbstraction: EntityAbstraction { .abstract }
+    public convenience init(_ wrappedValue: T, inheritance: EntityInheritance) {
+        self.init(wrappedValue: wrappedValue, inheritance: inheritance)
+        self.inheritance = inheritance
+    }
+
+    override var entityAbstraction: EntityAbstraction {
+        .abstract(inheritance: inheritance)
+    }
 
     override func createEntityDescription(
         abstractionData: [ObjectIdentifier: EntityAbstraction],
         cache: EntityCache
     ) -> NSEntityDescription? {
         let description = wrappedValue.createEntityDescription(abstractionData: abstractionData, cache: cache)
-        description?.isAbstract = true
+        description?.isAbstract = inheritance == .singleTable
         return description
     }
 }
@@ -87,26 +97,6 @@ public final class Concrete<T: Entity>: EntityTypeDescriptor<T> {
         let description = wrappedValue.createEntityDescription(abstractionData: abstractionData, cache: cache)
         description?.isAbstract = false
         return description
-    }
-}
-
-/// This will mark `T` as an embedded entity
-@propertyWrapper
-public final class Embedded<T: Entity>: EntityTypeDescriptor<T> {
-
-    override var entityAbstraction: EntityAbstraction { .embedded }
-
-    public var wrappedValue: T { entity }
-
-    public convenience init(wrappedValue: T) {
-        self.init(wrappedValue)
-    }
-
-    override func createEntityDescription(
-        abstractionData: [ObjectIdentifier: EntityAbstraction],
-        cache: EntityCache
-    ) -> NSEntityDescription? {
-        nil
     }
 }
 

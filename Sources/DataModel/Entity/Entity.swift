@@ -8,16 +8,39 @@
 
 import CoreData
 
-public enum EntityAbstraction: Int {
-    case abstract, embedded, concrete
+public enum EntityInheritance: Int {
+    case singleTable = 0
+    case multiTable = 1
 }
 
-extension EntityAbstraction: Comparable, Hashable {
+public enum EntityAbstraction {
+    case abstract(inheritance: EntityInheritance), concrete
+}
+
+extension EntityAbstraction {
+    var isEntityDescriptionRequired: Bool {
+        guard case .abstract(let inheritance) = self else {
+            return true
+        }
+        return inheritance == .singleTable
+    }
+}
+
+extension EntityAbstraction: Comparable, Hashable, Equatable {
+    var order: Int {
+        switch self {
+        case .abstract(let inheritance):
+            return inheritance.rawValue
+        case .concrete:
+            return 2
+        }
+    }
+
     public static func < (
         lhs: EntityAbstraction,
         rhs: EntityAbstraction) -> Bool
     {
-        lhs.rawValue < rhs.rawValue
+        lhs.order < rhs.order
     }
 }
 
@@ -68,9 +91,9 @@ open class Entity {
         }
 
         /// If abstraction data no presented in dictionary, consider it as embedded entity
-        let abstraction = abstractionData[identifier] ?? .embedded
+        let abstraction = abstractionData[identifier] ?? .abstract(inheritance: .multiTable)
 
-        guard abstraction != .embedded else {
+        guard abstraction.isEntityDescriptionRequired else {
             return nil
         }
 
@@ -84,7 +107,7 @@ open class Entity {
         description.userInfo?[UserInfoKey.entityClassName] = Self.entityCacheKey
         description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
         description.name = Self.fetchKey
-        description.isAbstract = abstraction == .abstract
+        description.isAbstract = abstraction != .concrete
         description.properties = properties
 
         setupIndexes(description: description)
@@ -92,7 +115,8 @@ open class Entity {
 
         if let superMirror = mirror.superclassMirror,
            let superType = superMirror.subjectType as? Entity.Type,
-           (abstractionData[ObjectIdentifier(superType)] ?? .embedded) != .embedded
+           let superAbstraction = abstractionData[ObjectIdentifier(superType)],
+           superAbstraction != .abstract(inheritance: .multiTable)
         {
             cache.get(superType.entityCacheKey) {
                 $0.subentities.append(description)
@@ -170,8 +194,8 @@ extension Entity {
             }
         
         if let superMirror = mirror.superclassMirror {
-            let abstraction = abstractionData[ObjectIdentifier(superMirror.subjectType)] ?? .embedded
-            if abstraction == .embedded {
+            let abstraction = abstractionData[ObjectIdentifier(superMirror.subjectType)] ?? .abstract(inheritance: .multiTable)
+            if abstraction == .abstract(inheritance: .multiTable) {
                 return ownedProperties + createProperties(
                     mirror: superMirror, abstractionData: abstractionData, cache: cache)
             }

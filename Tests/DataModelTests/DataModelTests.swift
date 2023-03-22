@@ -23,11 +23,11 @@ class DataModelTests: XCTestCase {
                 "Model"
             }
 
-            @Embedded
-            var embedded: EmbeddedEntity
+            @Abstract(inheritance: .multiTable)
+            var embedded = EmbeddedEntity()
 
             @Configuration("A_CONF")
-            @Abstract
+            @Abstract(inheritance: .singleTable)
             var abstract = AbstractEntity()
 
             @Concrete

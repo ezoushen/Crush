@@ -52,7 +52,7 @@ class MigrationChainTests: XCTestCase {
 
     var dataModel: DataModel {
         class V1: EntityMap {
-            @Embedded
+            @Abstract(inheritance: .multiTable)
             var c = C()
 
             @Configuration("configuration")

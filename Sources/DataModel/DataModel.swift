@@ -118,9 +118,9 @@ public final class DataModel {
     {
         self.init(
             name: name,
-                abstract.map(Abstract.init) +
-                embedded.map(Embedded.init) +
-                concrete.map(Concrete.init)
+                abstract.map { Abstract($0, inheritance: .singleTable) } +
+                embedded.map { Abstract($0, inheritance: .multiTable) } +
+                concrete.map { Concrete($0) }
         )
     }
 
