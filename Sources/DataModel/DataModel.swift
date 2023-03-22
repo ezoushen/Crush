@@ -11,7 +11,7 @@ import Foundation
 /// Declare a map that describes relationships between entities.
 ///
 /// This class should always be subclassed and be responsible for declaring available entities within.
-/// There are three kinds of modifiers that you can use to mark an entity, including ``Abstract``, ``Concrete``, and ``Embedded``.
+/// There are three kinds of modifiers that you can use to mark an entity, including ``Abstract``, and ``Concrete``
 /// An unannotated entity is considered ``Concrete``.
 /// Besides, you can assign the entity to multiple configurations by annotating it with multiple ``Configuration``. The order of annotation does not affect the final results.
 /// However, the modifier on the top will override the result.

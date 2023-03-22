@@ -252,14 +252,21 @@ public class SQLiteStorageOption: PersistentStorageOption {
     }
 }
 
-#if !os(iOS) && !os(tvOS) && !os(watchOS)
 public class XMLStorageOption: PersistentStorageOption {
+    @available(macOS 10.4, *)
+    @available(iOS, unavailable)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
     public static var validateXMLStore: Self {
         self.init("validateXMLStore") { $0.setOption(true as NSNumber, forKey: NSValidateXMLStoreOption) }
     }
 }
 
 extension Storage {
+    @available(macOS 10.4, *)
+    @available(iOS, unavailable)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
     public static func xml(
         url: URL,
         configuration: String? = nil,
@@ -272,7 +279,6 @@ extension Storage {
             options: options)
     }
 }
-#endif
 
 extension URL {
     var isDevNull: Bool {
