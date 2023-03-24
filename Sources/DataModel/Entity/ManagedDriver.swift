@@ -8,7 +8,6 @@
 import CoreData
 import Foundation
 
-///
 public protocol ObjectDriver: AnyObject {
     associatedtype Entity: Crush.Entity
     
@@ -269,12 +268,61 @@ public class DriverBase<Entity: Crush.Entity>: ObjectDriver {
     }
 }
 
+/// Access `NSManagedObject` data flexibly, especially when dealing with inheritance relationships.
+///
+/// This class provides a convenient way to access data in lifecycle functions, such as ``Entity/willSave(_:)``,
+/// when you have entities with inheritance relationships. It can be particularly useful when attempting to access data as a parent class.
+///  Consider the following example with three entity types: `Animal`, `Dog`, and `Cat`.
+///
+/// ```swift
+/// class Animal: Entity {
+///   @Optional
+///   var activeDate = Value.Date("activeDate")
+///
+///   override func willSave(_ managedObject: NSManagedObject) {
+///     // You cannot perform the following cast directly, as it may cause a crash.
+///     // `let animal = managedObject as! ManagedObject<Animal>`
+///
+///     // Instead, use `ManagedDriver` to safely access the data.
+///     guard let animal = ManagedDriver<Animal>(managedObject) else {
+///       return
+///     }
+///     animal.activeDate = Date()
+///   }
+/// }
+///
+/// class Dog: Animal { }
+/// class Cat: Animal { }
+/// ```
+///
+/// ## See Also
+/// - ``ManagedObject``
+/// - ``ManagedRawDriver``
 public class ManagedDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectRuntimeDriver, ManagedStatus {
     @inlinable public override func driver() -> Entity.Driver {
         self
     }
 }
 
+/// Like ``ManagedDriver``, but you can access raw data directly from `NSManagedObject` by this class.
+///
+/// Use this class for performance-sensitive code to avoid data wrapping and access read/write data directly.
+///
+/// Example:
+///
+/// ```swift
+/// enum Size: Int16, EnumerableAttributeType {
+///   case small, medium, large
+/// }
+///
+/// class MyEntity: Entity {
+///   @Default(.small)
+///   var size = Value.Enum<Size>("size")
+/// }
+/// let rawDriver = managedObject.rawDriver()
+/// print(rawDriver.size) // prints 0, not .small
+/// ```
+///
 public class ManagedRawDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectRawDriver {
     @inlinable public override func rawDriver() -> Entity.RawDriver {
         self

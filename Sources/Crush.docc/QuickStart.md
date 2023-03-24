@@ -58,7 +58,7 @@ All store types defined in `CoreData` are supported, including xml (macOS only),
 let container = try DataContainer.load(storages: .inMemory(), dataModel: myDataModel)
 ```
 
-You can learn how to use in ``DataContainer`` pages
+Fore more details, you can learn how to use it in ``DataContainer`` page.
 
 ## Topics
 

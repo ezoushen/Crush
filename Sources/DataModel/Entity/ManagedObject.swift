@@ -25,6 +25,13 @@ public class ManagedObjectBase: NSManagedObject {
     }
 }
 
+/// A class that is responsible for data access.
+///
+/// It is used for creating, updating, or deleting data in the CoreData database. You should use `ManagedObject`
+/// when you need to modify the data within a `Session`'s sync or async callback block.
+///
+/// ## See Also
+/// - ``ManagedDriver``
 public class ManagedObject<Entity: Crush.Entity>: ManagedObjectBase, ObjectRuntimeDriver, ManagedStatus {
     public typealias Entity = Entity
     

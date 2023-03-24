@@ -7,11 +7,14 @@
 
 import CoreData
 
-/// Wrapper of `NSManagedObject` for reading properties and guarantee thread safety at the same time.
+/// A class responsible for thread-safe data access of the managed object.
 ///
-/// Besides properties defined in `Entity`, you can access all other instance properties of `NSManagedObject`
-/// in read-only mode. Moreover, it guarantees that all data access would be executed on the main thread.
+/// It is used to safely read data from the managed object without worrying about concurrency issues. Besides properties defined in
+/// `Entity`, you can access all other instance properties of `NSManagedObject` in read-only mode. Moreover, it guarantees
+/// that all data access would be executed on the same given thread.
 ///
+/// - Note: You should only use `ReadOnly` objects when you need to access the data outside of a `Session`'s callback block .
+/// 
 /// Example:
 ///
 ///     var readOnlyEntity: ReadOnly<Entity> = ...

@@ -31,4 +31,5 @@ let package = Package(
 
 ### Getting Started
 
+- <doc:Concepts>
 - <doc:QuickStart>
