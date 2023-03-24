@@ -23,7 +23,7 @@ public final class MigrationChain {
     }
 
     public init(
-        @CollectionBuilder<ModelMigration>
+        @OrderedSetBuilder<ModelMigration>
         builder: () -> OrderedSet<ModelMigration>)
     {
         self.migrations = Array(builder())

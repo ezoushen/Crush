@@ -287,15 +287,15 @@ extension SessionContext where Self: RawContextProviderProtocol {
         if let changes: [AnyHashable: Any] = {
             if let result = result as? NSBatchDeleteResult {
                 return [
-                    NSDeletedObjectsKey: result.result ?? []
+                    NSDeletedObjectsKey: result.result ?? [NSManagedObject]()
                 ]
             } else if let result = result as? NSBatchUpdateResult {
                 return [
-                    NSUpdatedObjectsKey: result.result ?? []
+                    NSUpdatedObjectsKey: result.result ?? [NSManagedObject]()
                 ]
             } else if #available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *), let result = result as? NSBatchInsertResult {
                 return [
-                    NSInsertedObjectsKey: result.result ?? []
+                    NSInsertedObjectsKey: result.result ?? [NSManagedObject]()
                 ]
             }
             return nil

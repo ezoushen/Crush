@@ -87,7 +87,7 @@ extension DerivedAttribute where PropertyType == String {
         from keyPath: KeyPath<T, S>,
         mapping: DerivedStringMapping)
     where
-        S.PropertyType == String
+        S.ManagedValue == String?
     {
         self.init(
             name: name,

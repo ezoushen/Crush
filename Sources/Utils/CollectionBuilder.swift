@@ -14,12 +14,18 @@ public struct CollectionBuilder<T> {
     }
 }
 
-extension CollectionBuilder where T: Hashable {
+
+@resultBuilder
+public struct SetBuilder<T: Hashable> {
     public static func buildBlock(_ components: T...) -> Set<T> {
         return Set(components)
     }
-    
+}
+
+@resultBuilder
+public struct OrderedSetBuilder<T: Hashable> {
     public static func buildBlock(_ components: T...) -> OrderedSet<T> {
         return OrderedSet(components)
     }
 }
+

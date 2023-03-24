@@ -252,13 +252,20 @@ public class SQLiteStorageOption: PersistentStorageOption {
     }
 }
 
+
 public class XMLStorageOption: PersistentStorageOption {
     @available(macOS 10.4, *)
     @available(iOS, unavailable)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
     public static var validateXMLStore: Self {
-        self.init("validateXMLStore") { $0.setOption(true as NSNumber, forKey: NSValidateXMLStoreOption) }
+        self.init("validateXMLStore") {
+#if os(macOS)
+            $0.setOption(true as NSNumber, forKey: NSValidateXMLStoreOption)
+#else
+            fatalError("Unavailable")
+#endif
+        }
     }
 }
 
@@ -272,11 +279,15 @@ extension Storage {
         configuration: String? = nil,
         options: XMLStorageOption...) -> Storage
     {
-        Storage(
+#if os(macOS)
+        return Storage(
             storeType: NSXMLStoreType,
             url: url,
             configuration: configuration,
             options: options)
+#else
+        fatalError("Unavailable")
+#endif
     }
 }
 

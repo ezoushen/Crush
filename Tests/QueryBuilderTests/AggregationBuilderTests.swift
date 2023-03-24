@@ -70,9 +70,9 @@ class AggregationBuilderTests: XCTestCase {
             .exec() as NSArray
         XCTAssertTrue(results
             .isEqual(to: [
-                ["integerValue": 1, "stringValue": "a"],
-                ["integerValue": 1, "stringValue": "b"],
-                ["integerValue": 2, "stringValue": "b"],
+                ["integerValue": 1, "stringValue": "a"] as [String : Any],
+                ["integerValue": 1, "stringValue": "b"] as [String : Any],
+                ["integerValue": 2, "stringValue": "b"] as [String : Any],
             ]))
     }
     
@@ -103,8 +103,8 @@ class AggregationBuilderTests: XCTestCase {
             .exec() as NSArray
         XCTAssertTrue(results
             .isEqual(to: [
-                ["integerValue": 1, "stringCount": 3, "maxString": "b"],
-                ["integerValue": 2, "stringCount": 1, "maxString": "b"],
+                ["integerValue": 1, "stringCount": 3, "maxString": "b"] as [String : Any],
+                ["integerValue": 2, "stringCount": 1, "maxString": "b"] as [String : Any],
             ]))
     }
     
@@ -135,8 +135,8 @@ class AggregationBuilderTests: XCTestCase {
             .exec() as NSArray
         XCTAssertTrue(results
             .isEqual(to: [
-                ["integerValue": 1, "stringCount": 2, "maxString": "b"],
-                ["integerValue": 2, "stringCount": 1, "maxString": "b"],
+                ["integerValue": 1, "stringCount": 2, "maxString": "b"] as [String : Any],
+                ["integerValue": 2, "stringCount": 1, "maxString": "b"] as [String : Any],
             ]))
     }
     
@@ -206,7 +206,7 @@ class AggregationBuilderTests: XCTestCase {
             .aggregate(.max(\.integerValue), as: "maxInt")
             .exec() as NSArray
         XCTAssertTrue(results
-            .isEqual(to: [["stringValue": "string", "maxInt": 2]]))
+            .isEqual(to: [["stringValue": "string", "maxInt": 2] as [String : Any]]))
     }
     
     func test_aggregate_shouldFindMinInstance() throws {
@@ -226,7 +226,7 @@ class AggregationBuilderTests: XCTestCase {
             .aggregate(.min(\.integerValue), as: "minInt")
             .exec() as NSArray
         XCTAssertTrue(results
-            .isEqual(to: [["stringValue": "string", "minInt": 1]]))
+            .isEqual(to: [["stringValue": "string", "minInt": 1] as [String : Any]]))
     }
     
     func test_aggregate_shouldSum() throws {
@@ -246,7 +246,7 @@ class AggregationBuilderTests: XCTestCase {
             .aggregate(.sum(\.integerValue), as: "sum")
             .exec() as NSArray
         XCTAssertTrue(results
-            .isEqual(to: [["stringValue": "string", "sum": 3]]))
+            .isEqual(to: [["stringValue": "string", "sum": 3] as [String : Any]]))
     }
     
     func test_aggregate_shouldCalculateAverage() throws {
@@ -266,7 +266,7 @@ class AggregationBuilderTests: XCTestCase {
             .aggregate(.average(\.integerValue), as: "avg")
             .exec() as NSArray
         XCTAssertTrue(results
-            .isEqual(to: [["stringValue": "string", "avg": 1.5]]))
+            .isEqual(to: [["stringValue": "string", "avg": 1.5] as [String : Any]]))
     }
 }
 
