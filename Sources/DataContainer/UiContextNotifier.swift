@@ -72,8 +72,10 @@ class NotificationHandler {
 
     let seenTokens: SeenTokens
 
-    let uiContext: NSManagedObjectContext
-    let writerContext: NSManagedObjectContext
+    private let _uiContext: () -> NSManagedObjectContext?
+    private var _writerContext: () -> NSManagedObjectContext?
+    lazy var uiContext: NSManagedObjectContext? = _uiContext()
+    lazy var writerContext: NSManagedObjectContext? = _writerContext()
 
     weak var notifier: UiContextNotifier?
 
@@ -84,9 +86,10 @@ class NotificationHandler {
 
     init(container: DataContainer, seenTokens: SeenTokens) {
         _logger = { [weak container] in container?.logger ?? .default }
+        // Load contexts lazily to prevent potential dead lock on initialization
+        _uiContext = { [weak container] in container?.uiContext }
+        _writerContext = { [weak container] in container?.writerContext }
         self.seenTokens = seenTokens
-        self.uiContext = container.uiContext
-        self.writerContext = container.writerContext
     }
 
     func enable() { isEnabled = true }
@@ -158,7 +161,8 @@ class ContextDidSaveNotificationHandler: NotificationHandler {
             return
         }
         /// Merge the changes if it's not empty
-        guard let notifier = notifier,
+        guard let uiContext = uiContext,
+              let notifier = notifier,
               let userInfo = notification.userInfo,
               let managedObjectContext = notification.object as? NSManagedObjectContext,
               userInfo.contains(where: {
@@ -169,7 +173,6 @@ class ContextDidSaveNotificationHandler: NotificationHandler {
               }) else { return }
 
         /// Merge changes into ui context and refresh deleted objects
-        let uiContext = uiContext
         let deletedObjectIDs = (userInfo[NSDeletedObjectsKey] as? NSSet)?
             .compactMap { ($0 as? NSManagedObject)?.objectID }
 
@@ -283,7 +286,9 @@ class PersistentHistoryNotificationHandler: NotificationHandler {
     }
 
     @objc func persistentStoreHistoryChanged(_ notification: Notification) {
-        guard let storeURL = notification.userInfo?["storeURL"] as? URL,
+        guard let uiContext = uiContext,
+              let writerContext = writerContext,
+              let storeURL = notification.userInfo?["storeURL"] as? URL,
               let notifier = notifier else { return }
 
         let token: NSPersistentHistoryToken? =
