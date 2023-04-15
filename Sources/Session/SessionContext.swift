@@ -235,7 +235,7 @@ internal struct _SessionContext: SessionContext, RawContextProviderProtocol {
         _ = try saveExecutionContext(executionContext)
         try rootContext.performSync {
             rootContext.transactionAuthor = author
-            try saveRootContext(rootContext)
+            try saveRootContext(rootContext, executionContext: executionContext)
             rootContext.transactionAuthor = nil
         }
     }
@@ -371,7 +371,13 @@ extension SessionContext where Self: RawContextProviderProtocol {
             into: contexts)
     }
     
-    internal func saveRootContext(_ rootContext: NSManagedObjectContext) throws {
+    internal func saveRootContext(
+        _ rootContext: NSManagedObjectContext,
+        executionContext: NSManagedObjectContext) throws
+    {
+        let originalMergePolicy = rootContext.mergePolicy
+        defer { rootContext.mergePolicy = originalMergePolicy }
+        rootContext.mergePolicy = executionContext.mergePolicy
         do {
             try rootContext.save()
         } catch let _error as NSError {
