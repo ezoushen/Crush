@@ -99,8 +99,7 @@ extension NonThrowingRequestExecutor {
 }
 
 protocol RequestBuilder: AnyObject {
-    typealias Context = Crush.SessionContext & RawContextProviderProtocol
-
+    typealias Context = SessionContext
     associatedtype Target: Entity
 }
 

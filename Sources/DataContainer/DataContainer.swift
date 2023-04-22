@@ -275,28 +275,28 @@ extension DataContainer {
             logger: logger)
     }
     
-    internal func backgroundSessionContext(name: String? = nil) -> _SessionContext {
+    internal func backgroundSessionContext(name: String? = nil) -> SessionContext {
         let context = coreDataStack.createBackgroundContext(parent: writerContext)
         context.name = name ?? "background"
-        return _SessionContext(
+        return SessionContext(
             executionContext: context,
             rootContext: writerContext,
             uiContext: uiContext,
             logger: logger)
     }
     
-    internal func uiSessionContext(name: String? = nil) -> _SessionContext {
+    internal func uiSessionContext(name: String? = nil) -> SessionContext {
         let context = coreDataStack.createMainThreadContext(parent: writerContext)
         context.name = name ?? "ui"
-        return _SessionContext(
+        return SessionContext(
             executionContext: context,
             rootContext: writerContext,
             uiContext: context,
             logger: logger)
     }
     
-    internal func querySessionContext(name: String? = nil) -> _SessionContext {
-        return _SessionContext(
+    internal func querySessionContext(name: String? = nil) -> SessionContext {
+        return SessionContext(
             executionContext: uiContext,
             rootContext: writerContext,
             uiContext: uiContext,

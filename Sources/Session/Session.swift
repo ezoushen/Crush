@@ -20,7 +20,7 @@ fileprivate func warning(
 }
 
 public class Session {
-    internal let context: SessionContext & RawContextProviderProtocol
+    internal let context: SessionContext
     /// A flag that indicates whether a warning message should be logged when saving changes that have not been committed to disk.
     public var enabledWarningForUnsavedChanges: Bool = true
     /// The merge policy to be used for the session.
@@ -42,7 +42,7 @@ public class Session {
         - context: The context of the session.
         - mergePolicy: The merge policy to be used for the session.
      */
-    internal init(context: SessionContext & RawContextProviderProtocol, mergePolicy: NSMergePolicy) {
+    internal init(context: SessionContext, mergePolicy: NSMergePolicy) {
         self.context = context
         self.mergePolicy = mergePolicy
 

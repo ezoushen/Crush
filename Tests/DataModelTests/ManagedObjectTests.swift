@@ -135,9 +135,8 @@ final class ManagedObjectTests: XCTestCase {
     func test_willTurnIntoFault_shouldBeCalled() {
         var called: Bool = false
         TestEntity.willTurnIntoFaultEvent = { _ in called = true }
-        container.startSession().sync {
-            let context = $0 as! RawContextProviderProtocol
-            let entity = $0.edit(object: sut)
+        container.startSession().sync { context in
+            let entity = context.edit(object: sut)
             entity.fireFault()
             context.executionContext.refresh(entity, mergeChanges: true)
         }
@@ -147,9 +146,8 @@ final class ManagedObjectTests: XCTestCase {
     func test_didTurnIntoFault_shouldBeCalled() {
         var called: Bool = false
         TestEntity.didTurnIntoFaultEvent = { _ in called = true }
-        container.startSession().sync {
-            let context = $0 as! RawContextProviderProtocol
-            let entity = $0.edit(object: sut)
+        container.startSession().sync { context in
+            let entity = context.edit(object: sut)
             entity.fireFault()
             context.executionContext.refresh(entity, mergeChanges: true)
         }

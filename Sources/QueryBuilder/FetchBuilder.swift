@@ -359,7 +359,7 @@ public final class ManagedFetchBuilder<Target: Entity>:
     public func asReadOnly() -> ReadOnlyFetchBuilder<Target> {
         ReadOnlyFetchBuilder(
             config: config,
-            context: _SessionContext(
+            context: SessionContext(
                 executionContext: context.executionContext,
                 rootContext: context.rootContext,
                 uiContext: context.executionContext,

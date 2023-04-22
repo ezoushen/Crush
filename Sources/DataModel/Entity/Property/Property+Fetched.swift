@@ -51,7 +51,7 @@ public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol, EntityCa
     public func createPropertyDescription() -> NSFetchedPropertyDescription {
         let builder = configuration(
             FetchBuilder(
-                config: .init(), context: DummyContext())
+                config: .init(), context: .dummy())
         )
         let description = NSFetchedPropertyDescription()
         description.name = name
