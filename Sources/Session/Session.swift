@@ -452,7 +452,9 @@ extension NSManagedObjectContext {
     {
         if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
             return await perform(schedule: schedule.toScheduledTaskType()) {
-                let result = self.undoable(block)
+                let result = self.signed(authorName: authorName) {
+                    self.undoable(block)
+                }
                 return result
             }
         } else {
@@ -480,7 +482,9 @@ extension NSManagedObjectContext {
     {
         if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
             return try await perform(schedule: schedule.toScheduledTaskType()) {
-                let result = try self.undoable(block)
+                let result = try self.signed(authorName: authorName) {
+                    try self.undoable(block)
+                }
                 return result
             }
         } else {
