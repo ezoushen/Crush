@@ -105,7 +105,7 @@ public /*abstract*/ class LightWeightBackupMigrationPolicy: MigrationPolicy {
             if lightWeightEnabled {
                 LogHandler.default.log(
                     .error,
-                    "Migration of \(Self.self) ends with error: \(error), will try to perform lightweight migration later")
+                    "Migration of \(Self.self) ends with error: \(error), will try to perform lightweight migration later if migration is needed")
             } else {
                 throw error
             }
@@ -290,7 +290,9 @@ class IncrementalMigrationPolicy: LightWeightBackupMigrationPolicy {
             throw MigrationError.incompatible
         }
         if managedObjectModel.isCompactible(with: model.managedObjectModel) == false {
-            throw ChainMigratorError.migrationChainIncompatibleWithDataModel
+            throw ChainMigratorIncompatibleModelError(
+                incrementalModel: managedObjectModel,
+                targetModel: model.managedObjectModel)
         }
     }
 
