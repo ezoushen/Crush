@@ -44,30 +44,18 @@ import CoreData
 /// 
 /// ```swift
 ///  // For fetching data
-///  dataContainer
-///     .fetch(for: MyEntity.self)
-///     .where(\.property == value)
-///     .andWhere(\.anotherProperty == anotherValue)
-///     .exec()
+///  dataContainer.fetch(for: MyEntity.self)...
 ///
 ///  // Batch insertion
-///  try dataContainer
-///     .insert(for: MyEntity.self)
-///     .object(objectInDictionaryRepresentation)
-///     .exec()
+///  try dataContainer.insert(for: MyEntity.self)...
 ///
 ///  // Batch delete
-///  try dataContainer
-///     .delete(for: MyEntity.self)
-///     .exec()
+///  try dataContainer.delete(for: MyEntity.self)...
 ///
 ///  // Batch update
-///  try dataContainer
-///     .update(for: MyEntity.self)
-///     .where(\.property == value)
-///     .update(\.property, value: newValue)
-///     .exec()
+///  try dataContainer.update(for: MyEntity.self)...
 /// ```
+/// 
 /// Metadata manipulation is also supported in well-defined format
 /// ```swift
 /// // Getter

@@ -33,3 +33,5 @@ let package = Package(
 
 - <doc:Concepts>
 - <doc:QuickStart>
+
+### Working with ``Session``

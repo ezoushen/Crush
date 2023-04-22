@@ -4,7 +4,7 @@ Basic concepts behind `Crush`
 
 ## What is Crush
 
-`Crush` is a framework that facilitates interacting with CoreData features in a Swifty and type-safe manner. It differs from vanilla CoreData in several ways, such as the CoreData stack, schema declaration, concurrency management, and data migration.
+`Crush` is a framework that facilitates interacting with CoreData features in a Swifty and type-safe manner. It differs from vanilla CoreData in several ways, such as the CoreData stack, schema declaration, concurrency management, more powerful predicate builder (thanks to operator overloading), and data migration.
 
 ### CoreData stack
 
@@ -41,3 +41,29 @@ try dataContainer.startSession().sync { context in
 }
 print(myEntity.integerValue) // 10
 ```
+
+### Predicate Builder
+
+In `Crush`, predicates are built using operator overloading. This allows for a more concise, type-safe, error-prone and readable syntax.
+
+```swift
+container
+    .fetch(MyEntity.self)
+    .where(\.stringValue <> "some string") // stringValue CONTAINS "some string"
+    .andWhere(\.intValue > 10)             // AND intValue > 10
+    .exec()
+```
+
+### Data Migration
+
+Based on the data migration provided by `CoreData`, `Crush` offers a more flexible approach to data migration, including:
+
+- Lightweight migration
+- Heavyweight migration:
+    - Ad-Hoc (version-to-version)
+    - Incremental (migration chain)
+    - Hybrid (uses Ad-Hoc if version matched, otherwise iterates through the provided chain)
+
+You can choose your own migration policy through `migrationPolicy` of factory method of ``DataContainer``. 
+
+
