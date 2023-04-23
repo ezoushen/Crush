@@ -85,62 +85,62 @@ where PrimitiveType: BinaryInteger {
 
 public enum Int16AttributeType: IntAttributeType {
     public typealias PrimitiveType = Int16
-    public static var nativeType: NSAttributeType { .integer16AttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .integer16AttributeType }
 }
 
 public enum Int32AttributeType: IntAttributeType {
     public typealias PrimitiveType = Int32
-    public static var nativeType: NSAttributeType { .integer32AttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .integer32AttributeType }
 }
 
 public enum Int64AttributeType: IntAttributeType {
     public typealias PrimitiveType = Int64
-    public static var nativeType: NSAttributeType { .integer64AttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .integer64AttributeType }
 }
 
 public enum DoubleAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = Double
-    public static var nativeType: NSAttributeType { .doubleAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .doubleAttributeType }
 }
 
 public enum FloatAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = Float
-    public static var nativeType: NSAttributeType { .floatAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .floatAttributeType }
 }
 
 public enum StringAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = String
-    public static var nativeType: NSAttributeType { .stringAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .stringAttributeType }
 }
 
 public enum DateAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = Date
-    public static var nativeType: NSAttributeType { .dateAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .dateAttributeType }
 }
 
 public enum BoolAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = Bool
-    public static var nativeType: NSAttributeType { .booleanAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .booleanAttributeType }
 }
 
 public enum BinaryDataAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = Data
-    public static var nativeType: NSAttributeType { .binaryDataAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .binaryDataAttributeType }
 }
 
 public enum DecimalAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = Decimal
-    public static var nativeType: NSAttributeType { .decimalAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .decimalAttributeType }
 }
 
 public enum UUIDAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = UUID
-    public static var nativeType: NSAttributeType { .UUIDAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .UUIDAttributeType }
 }
 
 public enum URIAttributeType: PrimitiveAttributeType {
     public typealias PrimitiveType = URL
-    public static var nativeType: NSAttributeType { .URIAttributeType }
+    @inlinable public static var nativeType: NSAttributeType { .URIAttributeType }
 }
 
 extension NSNull: PropertyType {
@@ -169,51 +169,51 @@ public protocol PredicateEquatable: Predicatable { }
 public protocol PredicateComparable: PredicateEquatable { }
 
 extension Int: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { NSNumber(value: self) }
+    @inlinable public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension Int64: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { NSNumber(value: self) }
+    @inlinable public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension Int32: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { NSNumber(value: self) }
+    @inlinable public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension Int16: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { NSNumber(value: self) }
+    @inlinable public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension Double: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { NSNumber(value: self) }
+    @inlinable public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension Float: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { NSNumber(value: self) }
+    @inlinable public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension String: PredicateComparable {
-    public var predicateValue: NSObject { NSString(string: self) }
+    @inlinable public var predicateValue: NSObject { NSString(string: self) }
 }
 
 extension Bool: PredicateEquatable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { NSNumber(value: self) }
+    @inlinable public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
 extension Data: PredicateEquatable {
-    public var predicateValue: NSObject { self as NSData }
+    @inlinable public var predicateValue: NSObject { self as NSData }
 }
 
 extension Date: PredicateComparable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { self as NSDate }
+    @inlinable public var predicateValue: NSObject { self as NSDate }
 }
 
 extension Decimal: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { self as NSDecimalNumber }
+    @inlinable public var predicateValue: NSObject { self as NSDecimalNumber }
 }
 
 extension UUID: PredicateEquatable, PredicateExpressibleByString {
-    public var predicateValue: NSObject { self as NSUUID }
+    @inlinable public var predicateValue: NSObject { self as NSUUID }
 }
 
 public protocol EntityEquatableType: PredicateEquatable { }
@@ -223,9 +223,9 @@ extension ReadOnly: EntityEquatableType {
 }
 
 extension NSManagedObject: EntityEquatableType {
-    public var predicateValue: NSObject { self }
+    @inlinable public var predicateValue: NSObject { self }
 }
 
 extension NSManagedObjectID: EntityEquatableType {
-    public var predicateValue: NSObject { self }
+    @inlinable public var predicateValue: NSObject { self }
 }
