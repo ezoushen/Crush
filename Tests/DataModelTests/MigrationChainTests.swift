@@ -29,11 +29,11 @@ class MigrationChainTests: XCTestCase {
         MigrationChain {
             ModelMigration("V0") {
                 AddEntity("A", configurations: ["configuration"]) {
-                    AddAttribute("name", type: String.self, isOptional: true)
-                    AddAttribute("integer", type: Int.self)
+                    AddAttribute("name", type: StringAttributeType.self, isOptional: true)
+                    AddAttribute("integer", type: Int64AttributeType.self)
                 }
                 AddEntity("D") {
-                    AddAttribute("value", type: Bool.self)
+                    AddAttribute("value", type: BoolAttributeType.self)
                 }
             }
             ModelMigration("V1") {

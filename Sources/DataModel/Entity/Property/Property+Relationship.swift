@@ -44,16 +44,21 @@ public protocol ToManyRelationMappingProtocol: RelationMapping { }
 public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, PropertyType {
     public typealias RuntimeValue = ManagedObject<EntityType>?
     public typealias ManagedValue = ManagedObject<EntityType>?
+    public typealias PredicateValue = NSObject
 
     public static var isOrdered: Bool { false }
     public static var maxCount: Int { 1 }
     public static var minCount: Int { 1 }
+
+    @inlinable public static var defaultManagedValue: ManagedObject<EntityType>? { nil }
+    @inlinable public static var defaultRuntimeValue: ManagedObject<EntityType>? { nil }
 }
 
 public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyType {
     public typealias RuntimeValue = MutableSet<ManagedObject<EntityType>>
     public typealias ManagedValue = NSMutableSet
-    
+    public typealias PredicateValue = NSObject
+
     public static var isOrdered: Bool { false }
     public static var maxCount: Int { 0 }
     public static var minCount: Int { 0 }
@@ -66,11 +71,15 @@ public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, Propert
     public static func convert(runtimeValue: RuntimeValue) -> ManagedValue {
         return runtimeValue.mutableSet
     }
+
+    @inlinable public static var defaultManagedValue: ManagedValue { [] }
+    @inlinable public static var defaultRuntimeValue: RuntimeValue { [] }
 }
 
 public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyType {
     public typealias RuntimeValue = MutableOrderedSet<ManagedObject<EntityType>>
     public typealias ManagedValue = NSMutableOrderedSet
+    public typealias PredicateValue = NSObject
 
     public static var isOrdered: Bool { true }
     public static var maxCount: Int { 0 }
@@ -84,13 +93,15 @@ public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, Prop
     public static func convert(runtimeValue: RuntimeValue) -> ManagedValue {
         return runtimeValue.orderedSet
     }
+
+    @inlinable public static var defaultManagedValue: ManagedValue { [] }
+    @inlinable public static var defaultRuntimeValue: RuntimeValue { [] }
 }
 
 public final class Relationship<Mapping: RelationMapping>:
     RelationshipProtocol,
     EntityCachedProtocol,
-    TransientProperty,
-    AnyPropertyType
+    TransientProperty
 {
     public typealias PropertyType = Mapping
     public typealias PredicateValue = Mapping.ManagedValue

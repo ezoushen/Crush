@@ -9,6 +9,8 @@
 import CoreData
 import Foundation
 
+// MARK: - AttributeType
+
 public protocol AnyPropertyType {
     func managedToRuntime(_ managedValue: Any?) -> Any?
     func runtimeToManaged(_ runtimeValue: Any?) -> Any?
@@ -17,52 +19,13 @@ public protocol AnyPropertyType {
 public protocol PropertyType: AnyPropertyType {
     associatedtype RuntimeValue
     associatedtype ManagedValue
+    associatedtype PredicateValue
     
     static func convert(managedValue: ManagedValue) -> RuntimeValue
     static func convert(runtimeValue: RuntimeValue) -> ManagedValue
 
     static var defaultRuntimeValue: RuntimeValue { get }
     static var defaultManagedValue: ManagedValue { get }
-}
-
-extension PropertyType where RuntimeValue: OptionalProtocol {
-    @inlinable
-    public static var defaultRuntimeValue: RuntimeValue {
-        return RuntimeValue.null
-    }
-}
-
-extension PropertyType where ManagedValue: OptionalProtocol {
-    @inlinable
-    public static var defaultManagedValue: ManagedValue {
-        return ManagedValue.null
-    }
-}
-
-extension PropertyType where RuntimeValue: Collection & ExpressibleByArrayLiteral {
-    @inlinable
-    public static var defaultRuntimeValue: RuntimeValue {
-        return []
-    }
-}
-
-extension PropertyType where ManagedValue: Collection & ExpressibleByArrayLiteral {
-    @inlinable
-    public static var defaultManagedValue: ManagedValue {
-        return []
-    }
-}
-
-extension PropertyType where ManagedValue == NSMutableSet {
-    public static var defaultManagedValue: NSMutableSet {
-        NSMutableSet()
-    }
-}
-
-extension PropertyType where ManagedValue == NSMutableOrderedSet {
-    public static var defaultManagedValue: NSMutableOrderedSet {
-        NSMutableOrderedSet()
-    }
 }
 
 extension PropertyType {
@@ -81,127 +44,175 @@ extension PropertyType {
     }
 }
 
-public protocol PredicateExpressibleByString { }
-
-public protocol PredicateComputable { }
-
-public protocol PredicateEquatable {
-    var predicateValue: NSObject { get }
-}
-
-public protocol PredicateComparable: PredicateEquatable { }
-
-public protocol AttributeType: PropertyType
-where ManagedValue: OptionalProtocol {
-    associatedtype RuntimeValue: OptionalProtocol = Self?
-    static var nativeType: NSAttributeType { get }
-}
-
-public protocol PrimitiveAttributeType: AttributeType {
-    associatedtype ManagedValue: OptionalProtocol = Self?
-}
-
-public protocol TransformableAttributeType: NSObject, NSCoding, AttributeType
-where RuntimeValue == ManagedValue {
-    static var attributeValueClassName: String? { get }
-    static var valueTransformerName: String? { get }
-}
-
-extension TransformableAttributeType {
-    public static var nativeType: NSAttributeType { .transformableAttributeType }
-    
-    public static var attributeValueClassName: String? {
-        String(describing: Self.self)
-    }
-}
-
-extension TransformableAttributeType {
-    public static var valueTransformerName: String? {
-        NSStringFromClass(DefaultTransformer.self)
-    }
-}
-
 extension PropertyType where RuntimeValue == ManagedValue {
     @inlinable public static func convert(runtimeValue: RuntimeValue) -> ManagedValue { runtimeValue }
     @inlinable public static func convert(managedValue: ManagedValue) -> RuntimeValue { managedValue }
 }
 
-public typealias PredicateComparableAttributeType = PrimitiveAttributeType & PredicateComparable
-public typealias PredicateEquatableAttributeType = PrimitiveAttributeType & PredicateEquatable
-
-public typealias IntegerAttributeType = PredicateComparableAttributeType & PredicateExpressibleByString & PredicateComputable
-
-extension Int: IntegerAttributeType {
-    public static var nativeType: NSAttributeType {
-#if (arch(x86_64) || arch(arm64))
-        return .integer64AttributeType
-#else
-        return .integer32AttributeType
-#endif
-    }
-    public var predicateValue: NSObject { NSNumber(value: self) }
+public protocol AttributeType: PropertyType
+where
+    ManagedValue: OptionalProtocol,
+    RuntimeValue: OptionalProtocol
+{
+    static var nativeType: NSAttributeType { get }
 }
 
-extension Int64: IntegerAttributeType {
-    public static var nativeType: NSAttributeType { .integer64AttributeType }
-    public var predicateValue: NSObject { NSNumber(value: self) }
+public protocol PrimitiveAttributeType: AttributeType
+where
+    ManagedValue == RuntimeValue,
+    PredicateValue == PrimitiveType,
+    ManagedValue == PrimitiveType?
+{
+    associatedtype PrimitiveType
+
+    associatedtype RuntimeValue = PrimitiveType?
+    associatedtype ManagedValue = PrimitiveType?
+    associatedtype PredicateValue = PrimitiveType
 }
 
-extension Int32: IntegerAttributeType {
-    public static var nativeType: NSAttributeType { .integer32AttributeType }
-    public var predicateValue: NSObject { NSNumber(value: self) }
+extension PrimitiveAttributeType {
+    @inlinable public static var defaultRuntimeValue: RuntimeValue { nil }
+    @inlinable public static var defaultManagedValue: ManagedValue { nil }
 }
 
-extension Int16: IntegerAttributeType {
+/// This protocol is used to mark all integer attribute types
+public protocol IntAttributeType: PrimitiveAttributeType
+where PrimitiveType: BinaryInteger {
+    associatedtype RuntimeValue = PrimitiveType?
+    associatedtype ManagedValue = PrimitiveType?
+    associatedtype PredicateValue = PrimitiveType
+}
+
+public enum Int16AttributeType: IntAttributeType {
+    public typealias PrimitiveType = Int16
     public static var nativeType: NSAttributeType { .integer16AttributeType }
-    public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Double: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
+public enum Int32AttributeType: IntAttributeType {
+    public typealias PrimitiveType = Int32
+    public static var nativeType: NSAttributeType { .integer32AttributeType }
+}
+
+public enum Int64AttributeType: IntAttributeType {
+    public typealias PrimitiveType = Int64
+    public static var nativeType: NSAttributeType { .integer64AttributeType }
+}
+
+public enum DoubleAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = Double
     public static var nativeType: NSAttributeType { .doubleAttributeType }
-    public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension Float: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
+public enum FloatAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = Float
     public static var nativeType: NSAttributeType { .floatAttributeType }
-    public var predicateValue: NSObject { NSNumber(value: self) }
 }
 
-extension String: PrimitiveAttributeType, PredicateComparable {
+public enum StringAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = String
     public static var nativeType: NSAttributeType { .stringAttributeType }
-    public var predicateValue: NSObject { NSString(string: self) }
 }
 
-extension Bool: PredicateEquatableAttributeType, PredicateExpressibleByString {
-    public static var nativeType: NSAttributeType { .booleanAttributeType }
-    public var predicateValue: NSObject { NSNumber(value: self) }
-}
-
-extension Data: PrimitiveAttributeType, PredicateEquatable {
-    public static var nativeType: NSAttributeType { .binaryDataAttributeType }
-    public var predicateValue: NSObject { self as NSData }
-}
-
-extension Date: PredicateComparableAttributeType, PredicateExpressibleByString {
+public enum DateAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = Date
     public static var nativeType: NSAttributeType { .dateAttributeType }
-    public var predicateValue: NSObject { self as NSDate }
 }
 
-extension Decimal: PredicateComparableAttributeType, PredicateExpressibleByString, PredicateComputable {
+public enum BoolAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = Bool
+    public static var nativeType: NSAttributeType { .booleanAttributeType }
+}
+
+public enum BinaryDataAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = Data
+    public static var nativeType: NSAttributeType { .binaryDataAttributeType }
+}
+
+public enum DecimalAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = Decimal
     public static var nativeType: NSAttributeType { .decimalAttributeType }
-    public var predicateValue: NSObject { self as NSDecimalNumber }
+}
+
+public enum UUIDAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = UUID
+    public static var nativeType: NSAttributeType { .UUIDAttributeType }
+}
+
+public enum URIAttributeType: PrimitiveAttributeType {
+    public typealias PrimitiveType = URL
+    public static var nativeType: NSAttributeType { .URIAttributeType }
 }
 
 extension NSNull: PropertyType {
     public typealias RuntimeValue = NSNull
     public typealias ManagedValue = NSNull
+    public typealias PredicateValue = NSNull
 
     @inlinable public static var defaultRuntimeValue: NSNull { NSNull() }
     @inlinable public static var defaultManagedValue: NSNull { NSNull() }
 }
 
-extension UUID: PredicateEquatableAttributeType, PredicateExpressibleByString {
-    public static var nativeType: NSAttributeType { .UUIDAttributeType }
+
+// MARK: - Predicatable
+
+public protocol Predicatable {
+    associatedtype PredicateType: CVarArg = NSObject
+    var predicateValue: PredicateType { get }
+}
+
+public protocol PredicateExpressibleByString: Predicatable { }
+
+public protocol PredicateComputable: Predicatable { }
+
+public protocol PredicateEquatable: Predicatable { }
+
+public protocol PredicateComparable: PredicateEquatable { }
+
+extension Int: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { NSNumber(value: self) }
+}
+
+extension Int64: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { NSNumber(value: self) }
+}
+
+extension Int32: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { NSNumber(value: self) }
+}
+
+extension Int16: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { NSNumber(value: self) }
+}
+
+extension Double: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { NSNumber(value: self) }
+}
+
+extension Float: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { NSNumber(value: self) }
+}
+
+extension String: PredicateComparable {
+    public var predicateValue: NSObject { NSString(string: self) }
+}
+
+extension Bool: PredicateEquatable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { NSNumber(value: self) }
+}
+
+extension Data: PredicateEquatable {
+    public var predicateValue: NSObject { self as NSData }
+}
+
+extension Date: PredicateComparable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { self as NSDate }
+}
+
+extension Decimal: PredicateComparable, PredicateComputable, PredicateExpressibleByString {
+    public var predicateValue: NSObject { self as NSDecimalNumber }
+}
+
+extension UUID: PredicateEquatable, PredicateExpressibleByString {
     public var predicateValue: NSObject { self as NSUUID }
 }
 

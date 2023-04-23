@@ -19,36 +19,34 @@ public enum Relation {
 public enum Value {
     public typealias Transformable<T: TransformableAttributeType> = TransformableAttribute<Attribute<T>>
     public typealias Codable<T: CodableAttributeType> = Attribute<T>
-    public typealias Int = Attribute<Swift.Int>
-    public typealias Int16 = Attribute<Swift.Int16>
-    public typealias Int32 = Attribute<Swift.Int32>
-    public typealias Int64 = Attribute<Swift.Int64>
-    public typealias Double = Attribute<Swift.Double>
-    public typealias Float = Attribute<Swift.Float>
-    public typealias String = Attribute<Swift.String>
-    public typealias Bool = Attribute<Swift.Bool>
-    public typealias Data = Attribute<Foundation.Data>
-    public typealias Date = Attribute<Foundation.Date>
-    public typealias Decimal = Attribute<Foundation.Decimal>
-    public typealias UUID = Attribute<Foundation.UUID>
     public typealias Enum<E: EnumerableAttributeType> = Attribute<E>
+    public typealias Int16 = Attribute<Int16AttributeType>
+    public typealias Int32 = Attribute<Int32AttributeType>
+    public typealias Int64 = Attribute<Int64AttributeType>
+    public typealias Double = Attribute<DoubleAttributeType>
+    public typealias Float = Attribute<FloatAttributeType>
+    public typealias String = Attribute<StringAttributeType>
+    public typealias Bool = Attribute<BoolAttributeType>
+    public typealias Data = Attribute<BinaryDataAttributeType>
+    public typealias Date = Attribute<DateAttributeType>
+    public typealias Decimal = Attribute<DecimalAttributeType>
+    public typealias UUID = Attribute<UUIDAttributeType>
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 public enum Derived {
     public typealias Transformable<T: TransformableAttributeType> = TransformableAttribute<DerivedAttribute<T>>
     public typealias Codable<T: CodableAttributeType> = DerivedAttribute<T>
-    public typealias Int = DerivedAttribute<Swift.Int>
-    public typealias Int16 = DerivedAttribute<Swift.Int16>
-    public typealias Int32 = DerivedAttribute<Swift.Int32>
-    public typealias Int64 = DerivedAttribute<Swift.Int64>
-    public typealias Double = DerivedAttribute<Swift.Double>
-    public typealias Float = DerivedAttribute<Swift.Float>
-    public typealias String = DerivedAttribute<Swift.String>
-    public typealias Bool = DerivedAttribute<Swift.Bool>
-    public typealias Data = DerivedAttribute<Foundation.Data>
-    public typealias Date = DerivedAttribute<Foundation.Date>
-    public typealias Decimal = DerivedAttribute<Foundation.Decimal>
-    public typealias UUID = DerivedAttribute<Foundation.UUID>
     public typealias Enum<E: EnumerableAttributeType> = DerivedAttribute<E>
+    public typealias Int16 = DerivedAttribute<Int16AttributeType>
+    public typealias Int32 = DerivedAttribute<Int32AttributeType>
+    public typealias Int64 = DerivedAttribute<Int64AttributeType>
+    public typealias Double = DerivedAttribute<DoubleAttributeType>
+    public typealias Float = DerivedAttribute<FloatAttributeType>
+    public typealias String = DerivedAttribute<StringAttributeType>
+    public typealias Bool = DerivedAttribute<BoolAttributeType>
+    public typealias Data = DerivedAttribute<BinaryDataAttributeType>
+    public typealias Date = DerivedAttribute<DateAttributeType>
+    public typealias Decimal = DerivedAttribute<DecimalAttributeType>
+    public typealias UUID = DerivedAttribute<UUIDAttributeType>
 }

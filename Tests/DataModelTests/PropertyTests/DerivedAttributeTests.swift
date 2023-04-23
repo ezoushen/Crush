@@ -52,7 +52,7 @@ class DerivedAttributeTests: XCTestCase {
 
     func test_derivedTransformable_derivationExpressionKeyPathShouldEqualToKeyPath() {
         @objc(_TtCFC10CrushTests21DerivedAttributeTests73test_derivedTransformable_derivationExpressionKeyPathShouldEqualToKeyPathFT_T_L_7Subject)
-        class Subject: NSObject, NSCoding, TransformableAttributeType {
+        final class Subject: NSObject, NSCoding, TransformableAttributeType {
             @objc var id: Int
             init(id: Int) { self.id = id }
             func encode(with coder: NSCoder) { coder.encode(id, forKey: "id") }
@@ -60,9 +60,9 @@ class DerivedAttributeTests: XCTestCase {
         }
         class TestEntity: Entity {
             @Optional
-            var integer = Value.Int("integer")
+            var integer = Value.Int64("integer")
             @Optional
-            var derivedInteger = Derived.Int("derivedInteger", from: \TestEntity.integer)
+            var derivedInteger = Derived.Int64("derivedInteger", from: \TestEntity.integer)
             @Optional
             var property = Value.Transformable<Subject>("property")
             @Optional
@@ -72,7 +72,7 @@ class DerivedAttributeTests: XCTestCase {
             @Optional
             var derivedEntityProperty = Derived.Transformable<Subject>("entity", from: \TestEntity.entity, property: \.property)
             @Optional
-            var derivedEntityInteger = Derived.Int("derivedEntityInteger", from: \TestEntity.entity, property: \.integer)
+            var derivedEntityInteger = Derived.Int64("derivedEntityInteger", from: \TestEntity.entity, property: \.integer)
         }
         let entity = TestEntity()
         _ = {
@@ -82,7 +82,7 @@ class DerivedAttributeTests: XCTestCase {
         }()
         _ = {
             let description = entity.derivedInteger.createPropertyDescription()
-            XCTAssertEqual(description.attributeType, Int.nativeType)
+            XCTAssertEqual(description.attributeType, Int64AttributeType.nativeType)
             XCTAssertEqual(description.derivationExpression?.keyPath, "integer")
         }()
         _ = {
@@ -92,7 +92,7 @@ class DerivedAttributeTests: XCTestCase {
         }()
         _ = {
             let description = entity.derivedEntityInteger.createPropertyDescription()
-            XCTAssertEqual(description.attributeType, Int.nativeType)
+            XCTAssertEqual(description.attributeType, Int64AttributeType.nativeType)
             XCTAssertEqual(description.derivationExpression?.keyPath, "entity.integer")
         }()
     }

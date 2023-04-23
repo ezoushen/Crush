@@ -13,8 +13,8 @@ import CoreData
 public protocol Property: AnyObject {
     typealias RuntimeValue = PropertyType.RuntimeValue
     typealias ManagedValue = PropertyType.ManagedValue
+    typealias PredicateValue = PropertyType.PredicateValue
 
-    associatedtype PredicateValue
     associatedtype Description: NSPropertyDescription
     associatedtype PropertyType: Crush.PropertyType
 
@@ -25,19 +25,3 @@ public protocol Property: AnyObject {
 }
 
 public protocol WritableProperty: Property { }
-
-extension AnyPropertyType where Self: Property {
-    public func managedToRuntime(_ managedValue: Any?) -> Any? {
-        guard let managedValue = managedValue as? PropertyType.ManagedValue else {
-            return nil
-        }
-        return PropertyType.convert(managedValue: managedValue)
-    }
-
-    public func runtimeToManaged(_ runtimeValue: Any?) -> Any? {
-        guard let runtimeValue = runtimeValue as? PropertyType.RuntimeValue else {
-            return nil
-        }
-        return PropertyType.convert(runtimeValue: runtimeValue)
-    }
-}

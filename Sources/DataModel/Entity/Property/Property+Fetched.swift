@@ -25,6 +25,9 @@ extension FetchedPropertyProtocol {
     public static func convert(runtimeValue: RuntimeValue) -> ManagedValue {
         runtimeValue.map(\.managedObject)
     }
+
+    @inlinable public static var defaultManagedValue: ManagedValue { [] }
+    @inlinable public static var defaultRuntimeValue: RuntimeValue { [] }
 }
 
 public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol, EntityCachedProtocol {

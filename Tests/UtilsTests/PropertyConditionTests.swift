@@ -354,7 +354,7 @@ class PropertyConditionTests: XCTestCase {
 class PropertyCondiationOperatorsTests: XCTestCase {
     class TestEntity: Entity {
         @Optional
-        var integerValue = Value.Int("integerValue")
+        var integerValue = Value.Int64("integerValue")
     }
 
     let storage = Storage.sqliteInMemory()

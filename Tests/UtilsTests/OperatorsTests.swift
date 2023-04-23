@@ -614,7 +614,7 @@ class OperatorsTests: XCTestCase {
     }
 
     func test_subquery_shouldReturnObjectsWhichObjectPropertyEqualTo1() {
-        let sut = TypedPredicate<Entity>.join(\.object, predicate: \Entity.property == 1)
+        let sut = TypedPredicate<Entity>.subquery(\.object, predicate: \Entity.property == 1)
         let target = NSArray(array: [
             Object(Object(1)), Object(Object(0)), Object(Object(3))
         ])
@@ -635,7 +635,7 @@ class OperatorsTests: XCTestCase {
 
     func test_subqueryUUID_shouldNotThrowingException() {
         let uuids = [UUID(), UUID(), UUID()]
-        let sut = TypedPredicate<Entity>.join(
+        let sut = TypedPredicate<Entity>.subquery(
             \.object, predicate: \Entity.uuid == uuids[0] && \.property == nil)
         let target = NSArray(array: [
             Object(Object(UUID())), Object(Object(UUID())), Object(Object(uuids[0]))

@@ -13,7 +13,7 @@ import XCTest
 class AggregationBuilderTests: XCTestCase {
     class TestEntity: Entity {
         @Optional
-        var integerValue = Value.Int("integerValue")
+        var integerValue = Value.Int64("integerValue")
         
         @Optional
         var stringValue = Value.String("stringValue")
@@ -43,7 +43,7 @@ class AggregationBuilderTests: XCTestCase {
             .asDictionary()
             .group(by: \.integerValue)
             .exec()
-        XCTAssertEqual(results as! [[String: Int]], [["integerValue": 1]])
+        XCTAssertEqual(results as! [[String: Int64]], [["integerValue": 1]])
     }
     
     func test_groupBy_shouldGroupByIntegerValueAndStringValue() throws {
@@ -185,7 +185,7 @@ class AggregationBuilderTests: XCTestCase {
             .aggregate(.count(\.stringValue), as: "stringCount")
             .exec()
         XCTAssertEqual(
-            results as! [[String: Int]],
+            results as! [[String: Int64]],
             [["integerValue": 1, "stringCount": 1]])
     }
     
@@ -273,7 +273,7 @@ class AggregationBuilderTests: XCTestCase {
 class SelectBuilderTests: XCTestCase {
     class TestEntity: Entity {
         @Optional
-        var integerValue = Value.Int("integerValue")
+        var integerValue = Value.Int64("integerValue")
     }
     
     let storage = Storage.sqliteInMemory()
@@ -291,7 +291,7 @@ class SelectBuilderTests: XCTestCase {
         try container.startSession().sync { context in
             for i in 0...10 {
                 let entity = context.create(entity: TestEntity.self)
-                entity.integerValue = i
+                entity.integerValue = Int64(i)
             }
             try context.commit()
         }
@@ -314,7 +314,7 @@ class SelectBuilderTests: XCTestCase {
         try container.startSession().sync { context in
             for i in 0...10 {
                 let entity = context.create(entity: TestEntity.self)
-                entity.integerValue = i
+                entity.integerValue = Int64(i)
             }
             try context.commit()
         }

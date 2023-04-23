@@ -263,7 +263,7 @@ public final class AggregateExpression<T: Entity> {
    /// - Parameter keyPath: The key path for the property to be used in the `max` function.
    /// - Returns: An `AggregateExpression` with a `max` aggregate function.
    public static func max<S: AttributeProtocol>(_ keyPath: KeyPath<T, S>) -> AggregateExpression
-   where S.PropertyType: PredicateComparable {
+   where S.PropertyType.PredicateValue: PredicateComparable {
        return AggregateExpression(keyPath: keyPath) { description in
            let exp = NSExpression(forKeyPath: keyPath.propertyName)
            description.expressionResultType = S.PropertyType.nativeType
@@ -276,7 +276,7 @@ public final class AggregateExpression<T: Entity> {
    /// - Parameter keyPath: The key path for the property to be used in the `min` function.
    /// - Returns: An `AggregateExpression` with a `min` aggregate function.
    public static func min<S: AttributeProtocol>(_ keyPath: KeyPath<T, S>) -> AggregateExpression
-   where S.PropertyType: PredicateComparable {
+   where S.PropertyType.PredicateValue: PredicateComparable {
        return AggregateExpression(keyPath: keyPath) { description in
            let exp = NSExpression(forKeyPath: keyPath.propertyName)
            description.expressionResultType = S.PropertyType.nativeType
@@ -289,7 +289,7 @@ public final class AggregateExpression<T: Entity> {
    /// - Parameter keyPath: The key path for the property to be used in the `sum` function.
    /// - Returns: An `AggregateExpression` with a `sum` aggregate function.
    public static func sum<S: AttributeProtocol>(_ keyPath: KeyPath<T, S>) -> AggregateExpression
-    where S.PropertyType: PredicateComputable {
+    where S.PropertyType.PredicateValue: PredicateComputable {
         return AggregateExpression(keyPath: keyPath) { description in
             let exp = NSExpression(forKeyPath: keyPath.propertyName)
             description.expressionResultType = S.PropertyType.nativeType
@@ -302,7 +302,7 @@ public final class AggregateExpression<T: Entity> {
     /// - Parameter keyPath: The key path for the property to be used in the `average` function.
     /// - Returns: An `AggregateExpression` with a `average` aggregate function.
     public static func average<S: AttributeProtocol>(_ keyPath: KeyPath<T, S>) -> AggregateExpression
-    where S.PropertyType: PredicateComputable {
+    where S.PropertyType.PredicateValue: PredicateComputable {
         return AggregateExpression(keyPath: keyPath) { description in
             let exp = NSExpression(forKeyPath: keyPath.propertyName)
             description.expressionResultType = .doubleAttributeType

@@ -12,7 +12,7 @@ import XCTest
 @testable import Crush
 
 class AddAttributeTests: XCTestCase {
-    let sut = AddAttribute("name", type: String.self, isOptional: false, isTransient: true)
+    let sut = AddAttribute("name", type: StringAttributeType.self, isOptional: false, isTransient: true)
     
     func test_createProperty_shouldSetName() {
         var store: [EntityMigrationCallback] = []
@@ -34,7 +34,7 @@ class AddAttributeTests: XCTestCase {
     
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_createProperty_shouldBeDerived() {
-        let sut = AddAttribute("name", type: String.self, isOptional: false, derivedExpression: NSExpression(format: "another"))
+        let sut = AddAttribute("name", type: StringAttributeType.self, isOptional: false, derivedExpression: NSExpression(format: "another"))
         var store: [EntityMigrationCallback] = []
         let description = sut.createProperty(callbackStore: &store)
         XCTAssertTrue(description is NSDerivedAttributeDescription)
@@ -100,7 +100,7 @@ class UpdateAttributeTests: XCTestCase {
 
     func test_migrateAttribute_shouldUpdateAttributeType() throws {
         var store: [EntityMigrationCallback] = []
-        let sut = UpdateAttribute("originName", type: String.self) {
+        let sut = UpdateAttribute("originName", type: StringAttributeType.self) {
             guard let value = $0 as? Int else { return nil }
             return String(value)
         }
@@ -145,7 +145,7 @@ class UpdateAttributeTests: XCTestCase {
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_migrateAttribute_shouldUpdateDerivedExpression() throws {
         var store: [EntityMigrationCallback] = []
-        let sut = UpdateAttribute("originName", type: Date.self, derivedExpression: NSExpression.dateNow())
+        let sut = UpdateAttribute("originName", type: DateAttributeType.self, derivedExpression: NSExpression.dateNow())
         var description = NSAttributeDescription()
         description.name = "originName"
         description = try sut.migrateAttribute(description, callbackStore: &store)!
@@ -180,7 +180,7 @@ class UpdateAttributeTests: XCTestCase {
     }
 
     func test_createPropertyMapping_shouldUpdateUserInfo() throws {
-        let sut = UpdateAttribute("originName", type: String.self) {
+        let sut = UpdateAttribute("originName", type: StringAttributeType.self) {
             guard let value = $0 as? Int else { return nil }
             return String(value)
         }
@@ -197,7 +197,7 @@ class UpdateAttributeTests: XCTestCase {
     }
     
     func test_createPropertyObjectMapping_shouldUpdateUserInfo() throws {
-        let sut = UpdateAttribute("originName", type: String.self) { (_: NSManagedObject) in
+        let sut = UpdateAttribute("originName", type: StringAttributeType.self) { (_: NSManagedObject) in
             return nil
         }
         let source = NSAttributeDescription()

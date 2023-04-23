@@ -8,34 +8,42 @@
 import CoreData
 import Foundation
 
-public protocol EnumerableAttributeType:
+public protocol EnumerableAttributeType<RawAttributeType>:
     RawRepresentable,
     AttributeType,
     PredicateEquatable,
     PredicateComparable,
     Hashable
 where
-    RawValue: AttributeType & PredicateEquatable & PredicateComparable & Hashable { }
-
-extension RawRepresentable where Self: AttributeType {
-    public typealias ManagedValue = RawValue?
-    public typealias RuntimeValue = Self?
+    RawValue: PredicateEquatable & PredicateComparable & Hashable,
+    ManagedValue == RawAttributeType.ManagedValue,
+    RuntimeValue == Self?,
+    PredicateValue == RawAttributeType.PredicateValue,
+    PredicateType == RawValue.PredicateType
+{
+    associatedtype RawAttributeType: PrimitiveAttributeType
+    associatedtype PredicateValue = RawValue
+    associatedtype ManagedValue = RawValue?
+    associatedtype RuntimeValue = Self?
 }
 
 extension EnumerableAttributeType {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(rawValue)
-    }
+    @inlinable public static var defaultRuntimeValue: RuntimeValue { nil }
+    @inlinable public static var defaultManagedValue: ManagedValue { nil }
 
     public static func convert(managedValue: RawValue?) -> Self? {
         guard let value = managedValue else { return nil }
         return Self.init(rawValue: value)
     }
 
-    public static func convert(runtimeValue: Self?) -> RawValue? {
+    @inlinable public static func convert(runtimeValue: Self?) -> RawValue? {
         runtimeValue?.rawValue
     }
 
-    public static var nativeType: NSAttributeType { RawValue.nativeType }
-    public var predicateValue: NSObject { self.rawValue.predicateValue }
+    @inlinable public static var nativeType: NSAttributeType { RawAttributeType.nativeType }
+    @inlinable public var predicateValue: PredicateType { self.rawValue.predicateValue }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(rawValue)
+    }
 }

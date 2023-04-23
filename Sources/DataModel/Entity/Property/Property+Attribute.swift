@@ -13,7 +13,6 @@ import CoreData
 public protocol AttributeProtocol: WritableProperty
 where
     PropertyType: AttributeType,
-    PredicateValue == PropertyType,
     Description: NSAttributeDescription
 { }
 
@@ -32,10 +31,9 @@ public protocol ConcreteAttriuteProcotol: AttributeProtocol { }
 public class Attribute<PropertyType: AttributeType>:
     ConcreteAttriuteProcotol,
     TransformableAttributeInitProtocol,
-    TransientProperty,
-    AnyPropertyType
+    TransientProperty
 {
-    public typealias PredicateValue = PropertyType
+    public typealias PredicateValue = PropertyType.PredicateValue
     public typealias PropertyValue = PropertyType.RuntimeValue
     
     public let name: String

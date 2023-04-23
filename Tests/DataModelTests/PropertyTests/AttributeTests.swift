@@ -25,7 +25,7 @@ class AttributeTests: XCTestCase {
 
     func test_attributeTransformable_typeShouldBeString() {
         @objc(_TtCFC10CrushTests14AttributeTests46test_attributeTransformable_typeShouldBeStringFT_T_L_7Subject)
-        class Subject: NSObject, NSCoding, TransformableAttributeType {
+        final class Subject: NSObject, NSCoding, TransformableAttributeType {
             @objc var id: Int
             init(id: Int) { self.id = id }
             func encode(with coder: NSCoder) { coder.encode(id, forKey: "id") }
@@ -38,7 +38,7 @@ class AttributeTests: XCTestCase {
 
     func test_attributeTransformable_valueTransformerNameShouldBeDefaultTransformer() {
         @objc(_TtCFC10CrushTests14AttributeTests74test_attributeTransformable_valueTransformerNameShouldBeDefaultTransformerFT_T_L_7Subject)
-        class Subject: NSObject, NSCoding, TransformableAttributeType {
+        final class Subject: NSObject, NSCoding, TransformableAttributeType {
             @objc var id: Int
             init(id: Int) { self.id = id }
             func encode(with coder: NSCoder) { coder.encode(id, forKey: "id") }
@@ -191,7 +191,7 @@ class AttributeTests: XCTestCase {
 
     func test_attributeEnum_typeShouldBeEnumString() {
         enum Model: String, EnumerableAttributeType {
-            typealias RawValue = String
+            typealias RawAttributeType = StringAttributeType
             case dummy
         }
         let attribute = Value.Enum<Model>("attribute")
@@ -201,7 +201,7 @@ class AttributeTests: XCTestCase {
     
     func test_attributeEnumWithDefaultValue_defaultValueShouldBeStringDummy() {
         enum Model: String, EnumerableAttributeType {
-            typealias RawValue = String
+            typealias RawAttributeType = StringAttributeType
             case dummy
         }
         let attribute = Default(wrappedValue: Value.Enum<Model>("attribute"), .dummy)
@@ -210,7 +210,7 @@ class AttributeTests: XCTestCase {
     }
 
     func test_attributeOption_validationsShouldBeSet() {
-        let predicate = PropertyCondition<Bool>(format: "SELF == NO")
+        let predicate = PropertyCondition<BoolAttributeType>(format: "SELF == NO")
         let warning = "warning"
         let attribute = Validation(wrappedValue: Value.Bool("attribute"), predicate, warning: "warning")
         let description = attribute.createPropertyDescription()

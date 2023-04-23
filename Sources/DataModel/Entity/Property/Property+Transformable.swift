@@ -16,7 +16,7 @@ public protocol TransformableDerivedAttributeInitProtocol: AttributeProtocol {
     init(_ name: String, from keyPath: @autoclosure @escaping () -> String)
 }
 
-public class TransformableAttribute<Attribute: AttributeProtocol>: AttributeProtocol, AnyPropertyType
+public class TransformableAttribute<Attribute: AttributeProtocol>: AttributeProtocol
 where Attribute.PropertyType: TransformableAttributeType {
     public typealias Description = NSAttributeDescription
     public typealias PredicateValue = Attribute.PredicateValue

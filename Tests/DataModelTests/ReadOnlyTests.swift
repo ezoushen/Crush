@@ -13,6 +13,7 @@ import XCTest
 
 class ReadOnlyTests: XCTestCase {
     enum EnumValue: Int16, Crush.EnumerableAttributeType {
+        typealias RawAttributeType = Int16AttributeType
         case value
     }
     

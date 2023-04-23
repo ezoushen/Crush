@@ -25,12 +25,11 @@ public enum DerivedAggregation: String {
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
 public final class DerivedAttribute<PropertyType: AttributeType>:
     AttributeProtocol,
-    AnyPropertyType,
     TransformableDerivedAttributeInitProtocol
 {
     public typealias Description = NSDerivedAttributeDescription
     public typealias PropertyValue = PropertyType.RuntimeValue
-    public typealias PredicateValue = PropertyType
+    public typealias PredicateValue = PropertyType.PredicateValue
 
     public let defaultValue: PropertyValue
     public let name: String
@@ -81,7 +80,7 @@ public final class DerivedAttribute<PropertyType: AttributeType>:
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
-extension DerivedAttribute where PropertyType == String {
+extension DerivedAttribute where PropertyType == StringAttributeType {
     public convenience init<T: Entity, S: AttributeProtocol>(
         _ name: String,
         from keyPath: KeyPath<T, S>,
@@ -96,14 +95,14 @@ extension DerivedAttribute where PropertyType == String {
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
-extension DerivedAttribute where PropertyType == Date {
+extension DerivedAttribute where PropertyType == DateAttributeType {
     public convenience init(_ name: String) {
         self.init(name: name, derivation: .dateNow())
     }
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
-extension DerivedAttribute where PropertyType: CoreDataInteger {
+extension DerivedAttribute where PropertyType: IntAttributeType {
     public convenience init<T: Entity, S: RelationshipProtocol>(
         _ name: String,
         from keyPath: KeyPath<T, S>,
