@@ -595,7 +595,7 @@ extension TypedPredicate {
         }
     }
 
-    public static func join<Property: RelationshipProtocol>(
+    public static func subquery<Property: RelationshipProtocol>(
         _ keyPath: KeyPath<T, Property>, predicate: TypedPredicate<Property.Destination>
     ) -> Self
     where
