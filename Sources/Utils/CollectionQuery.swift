@@ -55,7 +55,7 @@ public struct CollectionQuery<T: Entity> {
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
@@ -64,7 +64,7 @@ public struct CollectionQuery<T: Entity> {
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
@@ -73,7 +73,7 @@ public struct CollectionQuery<T: Entity> {
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
@@ -82,7 +82,7 @@ public struct CollectionQuery<T: Entity> {
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
@@ -91,7 +91,7 @@ public struct CollectionQuery<T: Entity> {
     public static func sum<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("sum:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
@@ -102,7 +102,7 @@ public struct CollectionQuery<T: Entity> {
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
@@ -111,7 +111,7 @@ public struct CollectionQuery<T: Entity> {
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
@@ -120,7 +120,7 @@ public struct CollectionQuery<T: Entity> {
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
@@ -129,7 +129,7 @@ public struct CollectionQuery<T: Entity> {
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
@@ -138,7 +138,7 @@ public struct CollectionQuery<T: Entity> {
     public static func avg<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("avg:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
@@ -149,7 +149,7 @@ public struct CollectionQuery<T: Entity> {
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
@@ -158,7 +158,7 @@ public struct CollectionQuery<T: Entity> {
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
@@ -167,7 +167,7 @@ public struct CollectionQuery<T: Entity> {
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
@@ -176,7 +176,7 @@ public struct CollectionQuery<T: Entity> {
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
@@ -185,7 +185,7 @@ public struct CollectionQuery<T: Entity> {
     public static func min<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("min:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
@@ -196,7 +196,7 @@ public struct CollectionQuery<T: Entity> {
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, equalTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .equalTo, value: value)
     }
@@ -205,7 +205,7 @@ public struct CollectionQuery<T: Entity> {
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, greaterThan value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .greaterThan, value: value)
     }
@@ -214,7 +214,7 @@ public struct CollectionQuery<T: Entity> {
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, greaterThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .greaterThanOrEqualTo, value: value)
     }
@@ -223,7 +223,7 @@ public struct CollectionQuery<T: Entity> {
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, lessThan value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .lessThan, value: value)
     }
@@ -232,7 +232,7 @@ public struct CollectionQuery<T: Entity> {
     public static func max<S: Property>(
         _ selector: KeyPath<T, S>, lessThanOrEqualTo value: Int) -> CollectionQuery
     where
-        S.PropertyType: PredicateComputable
+        S.PredicateValue: PredicateComputable
     {
         CollectionQuery("max:", keyPath: selector.propertyName, operator: .lessThanOrEqualTo, value: value)
     }
