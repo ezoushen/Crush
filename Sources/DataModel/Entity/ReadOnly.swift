@@ -2,7 +2,7 @@
 //  ReadOnly.swift
 //  Crush
 //
-//  Created by 沈昱佐 on 2020/5/6.
+//  Created by EZOU on 2020/5/6.
 //
 
 import CoreData

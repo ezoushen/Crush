@@ -2,7 +2,7 @@
 //  Property.swift
 //  Crush
 //
-//  Created by 沈昱佐 on 2019/9/21.
+//  Created by EZOU on 2019/9/21.
 //  Copyright © 2019 ezou. All rights reserved.
 //
 
