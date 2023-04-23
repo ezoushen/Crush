@@ -253,7 +253,7 @@ public class ExternalBinaryDataStorage<T: AttributeProtocol>: PropertyModifier<T
 }
 
 @propertyWrapper
-public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondition<T.PropertyType>> {
+public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondition<T.PredicateValue>> {
     @inlinable public var wrappedValue: T {
         get { property }
         set { /* dummy */ }
@@ -261,7 +261,7 @@ public class Validation<T: AttributeProtocol>: PropertyModifier<T, PropertyCondi
     public let warning: String
 
     public init(
-        wrappedValue: T, _ modifier: PropertyCondition<T.PropertyType>, warning: String = "")
+        wrappedValue: T, _ modifier: PropertyCondition<T.PredicateValue>, warning: String = "")
     {
         self.warning = warning
         super.init(wrappedValue: wrappedValue, modifier)
