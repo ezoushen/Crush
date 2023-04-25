@@ -20,7 +20,7 @@ final class DataContainerTests: XCTestCase {
         var property = Value.Bool("property")
     }
 
-    override func setUp() async throws {
+    override func setUpWithError() throws {
         storage = Storage.sqliteInMemory(
             options: .persistentHistoryTracking(true), .remoteChangeNotification(true))
         container = try DataContainer.load(
@@ -84,7 +84,7 @@ final class DataContainerTests: XCTestCase {
     }
 
     @available(iOS 12.0, macOS 10.14, tvOS 12.0, watchOS 5.0, *)
-    func test_loadTransactionHistory_shouldBeNotEmpty() async throws {
+    func test_loadTransactionHistory_shouldBeNotEmpty() throws {
         let now = Date()
         try container.startSession().sync { context in
             let entity = context.create(entity: TestEntity.self)

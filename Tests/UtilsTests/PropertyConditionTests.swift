@@ -360,7 +360,7 @@ class PropertyCondiationOperatorsTests: XCTestCase {
     let storage = Storage.sqliteInMemory()
     var container: DataContainer!
 
-    override func setUp() async throws {
+    override func setUpWithError() throws {
         container = try DataContainer.load(
             storages: storage,
             dataModel: DataModel(
@@ -368,7 +368,7 @@ class PropertyCondiationOperatorsTests: XCTestCase {
                 concrete: [TestEntity()]))
     }
 
-    override func tearDown() async throws {
+    override func tearDownWithError() throws {
         try container.destroyStorages()
     }
 
