@@ -124,13 +124,10 @@ extension ReadOnly {
     }
 
     /// Read properties of `NSManagedObject` through dyncmic callable API.
-    public subscript<T>(dynamicMember keyPath: KeyPath<ManagedObject<Entity>, T>) -> T {
-        guard let managedObject = managedObject as? Entity.Managed else {
-            fatalError("Internal error, please file an issue")
-        }
-        return managedObject[keyPath: keyPath]
+    public subscript<T>(dynamicMember keyPath: KeyPath<NSManagedObject, T>) -> T {
+        managedObject[keyPath: keyPath]
     }
-    
+
     /// Read properties of `Entity.Driver` through dyncmic callable API.
     public subscript<T>(dynamicMember keyPath: KeyPath<ManagedDriver<Entity>, T>) -> T {
         driver[keyPath: keyPath]
