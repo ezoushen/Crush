@@ -66,7 +66,7 @@ extension UpdateBuilder where Target: Entity {
          - value: The new value for the attribute.
      */
     public func update<Value: AttributeProtocol>(
-        _ keyPath: KeyPath<Target, Value>,
+        _ keyPath: WritableKeyPath<Target, Value>,
         value: Value.RuntimeValue) -> Self
     {
         config.propertiesToUpdate[keyPath.propertyName] =
