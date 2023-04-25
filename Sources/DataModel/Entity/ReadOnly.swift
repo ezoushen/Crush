@@ -41,8 +41,8 @@ public struct ReadOnly<T: Crush.Entity> {
         }
 
         /// Refresh the `managedObject` to keep it up to date
-        public func refresh() {
-            context.performSync { context.refresh(managedObject, mergeChanges: true) }
+        public func refresh(mergeChanges flag: Bool = true) {
+            context.performSync { context.refresh(managedObject, mergeChanges: flag) }
         }
 
         /// Read the attribute from the `managedObject` through dynamic callable api
@@ -134,7 +134,7 @@ extension ReadOnly {
     }
 }
 
-extension ReadOnly: ManagedStatus { 
+extension ReadOnly: ManagedStatus {
     public var propertyHashValue: Int {
         managedObject.propertyHashValue
     }
@@ -155,6 +155,10 @@ extension ReadOnly: ManagedStatus {
 
     public func commitedValues(forKeys keys: [String]?) -> [String: Any] {
         context.performSync { managedObject.committedValues(forKeys: keys) }
+    }
+    
+    public func refresh(mergeChanges flag: Bool = true) {
+        context.refresh(managedObject, mergeChanges: flag)
     }
 }
 

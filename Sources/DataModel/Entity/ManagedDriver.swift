@@ -17,17 +17,6 @@ public protocol ObjectDriver<Entity>: AnyObject {
 }
 
 extension ObjectDriver {
-    /// Refresh the `managedObject` to keep it up to date
-    public func refresh() {
-        guard let context = managedObject.managedObjectContext else {
-            /// Ingore if the managedObject is stale
-            return
-        }
-        /// No need to wrap by `context.performAndWait` because `ObjectDriver`
-        /// should be used only within session block
-        context.refresh(managedObject, mergeChanges: true)
-    }
-
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> MutableSet<ManagedObject<Property.Destination>>

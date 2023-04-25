@@ -22,6 +22,8 @@ public protocol ManagedStatus {
     func changedValuesForCurrentEvent() -> [String: Any]
     /// Wrapper function of `NSManagedObject.commitedValues(forKeys:)`
     func commitedValues(forKeys keys: [String]?) -> [String: Any]
+    /// Wrapper function of `NSManagedObjectContext.refresh(_:mergeChages:)`
+    func refresh(mergeChanges flag: Bool)
 }
 
 extension ManagedStatus where Self: ObjectDriver {
@@ -45,6 +47,10 @@ extension ManagedStatus where Self: ObjectDriver {
 
     public var propertyHashValue: Int {
         managedObject.propertyHashValue
+    }
+    
+    public func refresh(mergeChanges flag: Bool = true) {
+        managedObject.managedObjectContext?.refresh(managedObject, mergeChanges: flag)
     }
 }
 
