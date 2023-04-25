@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-public protocol ObjectDriver: AnyObject {
+public protocol ObjectDriver<Entity>: AnyObject {
     associatedtype Entity: Crush.Entity
     
     var managedObject: NSManagedObject { get }
@@ -128,7 +128,7 @@ extension ObjectDriver {
 }
 
 @dynamicMemberLookup
-public protocol ObjectRuntimeDriver: ObjectDriver { }
+public protocol ObjectRuntimeDriver<Entity>: ObjectDriver { }
 
 extension ObjectRuntimeDriver {
     public subscript<Property: Crush.Property>(
