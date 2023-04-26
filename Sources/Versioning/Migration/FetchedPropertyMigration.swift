@@ -27,7 +27,7 @@ public struct AddFetchedProperty: FetchedPropertyMigration, AddPropertyMigration
     public let name: String?
     public let fetchRequest: NSFetchRequest<NSFetchRequestResult>
     
-    public init(name: String, fetchRequest: NSFetchRequest<NSFetchRequestResult>) {
+    public init(_ name: String, fetchRequest: NSFetchRequest<NSFetchRequestResult>) {
         self.name = name
         self.fetchRequest = fetchRequest
     }

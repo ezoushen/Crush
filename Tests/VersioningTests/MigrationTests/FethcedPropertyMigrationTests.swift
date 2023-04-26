@@ -14,7 +14,7 @@ import XCTest
 class AddFetchedPropertyTests: XCTestCase {
     func test_createProperty_shouldSetupNameAndFetchRequest() {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>()
-        let sut = AddFetchedProperty(name: "NAME", fetchRequest: fetchRequest)
+        let sut = AddFetchedProperty("NAME", fetchRequest: fetchRequest)
         var callback: [EntityMigrationCallback] = []
         let description = sut.createProperty(callbackStore: &callback)
         XCTAssertTrue(description is NSFetchedPropertyDescription)
