@@ -13,8 +13,10 @@ import XCTest
 
 class FetchedPropertyTests: XCTestCase {
     class TestEntity: Entity {
-        var value = Value.Int16("value")
-        var feteched = Fetched<TestEntity>("fetched") { $0.where(\.value == 1) }
+        var int16value = Value.Int16("int16value")
+        var feteched = Fetched<TestEntity>("fetched") {
+            $0.where("int16value = $FETCH_SOURCE.int16value")
+        }
     }
 
     static let model = DataModel(name: "NAME", concrete: [TestEntity()])
@@ -41,7 +43,7 @@ class FetchedPropertyTests: XCTestCase {
 
     func test_descriptionFetchRequest_shouldBeCondfigured() {
         let configuration: Fetched<TestEntity>.Configuration = {
-            $0.where(\.value == 1)
+            $0.where("int16value = $FETCH_SOURCE.int16value")
         }
         let fetchBuilder = FetchBuilder<TestEntity>(config: .init(), context: .dummy())
         let request = configuration(fetchBuilder).config.createStoreRequest()
@@ -50,5 +52,19 @@ class FetchedPropertyTests: XCTestCase {
             .propertiesByName["fetched"] as! NSFetchedPropertyDescription
         XCTAssertEqual(
             description.fetchRequest, request)
+    }
+    
+    func test_fetchedInDataContainer_shouldReturnEntities() throws {
+        let container = try DataContainer.load(
+            storages: .sqliteInMemory(),
+            dataModel: FetchedPropertyTests.model)
+        let entity: TestEntity.ReadOnly = try container.startSession().sync {
+            let entity = $0.create(entity: TestEntity.self)
+            entity.int16value = 1
+            try $0.commit()
+            return entity
+        }
+        let fetched = entity.feteched
+        XCTAssertEqual(fetched.count, 1)
     }
 }

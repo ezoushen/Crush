@@ -52,17 +52,15 @@ public final class FetchedProperty<T: Entity>: FetchedPropertyProtocol, EntityCa
     }
 
     public func createPropertyDescription() -> NSFetchedPropertyDescription {
-        let builder = configuration(
-            FetchBuilder(
-                config: .init(), context: .dummy())
-        )
+        let builder = configuration(FetchBuilder(config: .init(), context: .dummy()))
         let description = NSFetchedPropertyDescription()
         description.name = name
 
         cache?.get(T.entityCacheKey) {
             let request = NSFetchRequest<NSFetchRequestResult>()
-            request.entity = $0
             builder.config.configureRequest(request)
+            request.entity = $0
+            request.resultType = .managedObjectResultType
             description.fetchRequest = request
         }
         return description

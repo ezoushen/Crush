@@ -61,6 +61,17 @@ public struct ReadOnly<T: Crush.Entity> {
         {
             context.performSync { driver[value: keyPath].wrapped() }
         }
+
+        /// Read the fetched property from the `managedObject` through dynamic callable api
+        public subscript<T: FetchedPropertyProtocol>(
+            dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
+        {
+            context.performSync {
+                NSManagedObject.$currentFetchSource.withValue(managedObject) {
+                    driver[value: keyPath]
+                }
+            }
+        }
     }
 
     public typealias Entity = T
@@ -104,6 +115,17 @@ public struct ReadOnly<T: Crush.Entity> {
         dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
     {
         access(keyPath: keyPath)
+    }
+
+    /// Access the fetched property of the underlying `managedObject`.
+    public subscript<T: FetchedPropertyProtocol>(
+        dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
+    {
+        context.performSync {
+            NSManagedObject.$currentFetchSource.withValue(managedObject) {
+                driver[value: keyPath]
+            }
+        }
     }
 
     /// Access properties of the underlying `managedObject`

@@ -126,6 +126,14 @@ extension ObjectRuntimeDriver {
         self[value: keyPath]
     }
 
+    public subscript<Property: FetchedPropertyProtocol>(
+        dynamicMember keyPath: KeyPath<Entity, Property>
+    ) -> Property.RuntimeValue {
+        NSManagedObject.$currentFetchSource.withValue(managedObject) {
+            self[value: keyPath]
+        }
+    }
+
     public subscript<Property: WritableProperty>(
         dynamicMember keyPath: WritableKeyPath<Entity, Property>
     ) -> Property.RuntimeValue {
@@ -144,6 +152,14 @@ extension ObjectRuntimeDriver {
 public protocol ObjectRawDriver: ObjectDriver { }
 
 extension ObjectRawDriver {
+    public subscript<Property: FetchedPropertyProtocol>(
+        dynamicMember keyPath: KeyPath<Entity, Property>
+    ) -> Property.ManagedValue {
+        NSManagedObject.$currentFetchSource.withValue(managedObject) {
+            self[rawValue: keyPath]
+        }
+    }
+
     public subscript<Property: AttributeProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> Property.ManagedValue {
@@ -191,7 +207,21 @@ extension ObjectRawDriver {
     }
 }
 
+extension NSManagedObjectID {
+    open override func value(forUndefinedKey key: String) -> Any? {
+        if #available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *) {
+            guard let fetchSource = NSManagedObject.currentFetchSource else { return nil }
+            let value = fetchSource.value(forKey: key)
+            return value
+        }
+        return nil
+    }
+}
+
 extension NSManagedObject {
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+    @TaskLocal static var currentFetchSource: NSManagedObject? = nil
+
     @inlinable
     internal func getValue<T>(key: String) -> T? {
         willAccessValue(forKey: key)
