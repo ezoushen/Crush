@@ -169,8 +169,11 @@ public struct UpdateAttribute: AttributeMigration, UpdatePropertyMigration {
     public let isOptional: Bool?
     public let isTransient: Bool?
     public let attributeType: NSAttributeType?
+    /// Map value from source value
     public let transform: ((Any?) -> Any?)?
+    /// Map value from source object
     public let objectTransform: ((NSManagedObject) -> Any?)?
+    /// Derived expression
     public let derivedExpression: NSExpression?
 
     public var defaultValue: Any?
