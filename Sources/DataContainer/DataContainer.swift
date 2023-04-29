@@ -83,7 +83,9 @@ public class DataContainer {
 
     /// Backbone of `DataContainer`
     public let coreDataStack: CoreDataStack
-    public var logger: LogHandler = .default
+    public var logger: LogHandler = .default {
+        didSet { LogHandler.current = logger }
+    }
 
 #if os(iOS) || os(macOS)
     /// CoreSpotlight indexers indexed by corresponding storage
@@ -271,8 +273,7 @@ extension DataContainer {
         return _DetachedSessionContext(
             executionContext: context,
             rootContext: writerContext,
-            uiContext: uiContext,
-            logger: logger)
+            uiContext: uiContext)
     }
     
     internal func backgroundSessionContext(name: String? = nil) -> SessionContext {
@@ -281,8 +282,7 @@ extension DataContainer {
         return SessionContext(
             executionContext: context,
             rootContext: writerContext,
-            uiContext: uiContext,
-            logger: logger)
+            uiContext: uiContext)
     }
     
     internal func uiSessionContext(name: String? = nil) -> SessionContext {
@@ -291,16 +291,14 @@ extension DataContainer {
         return SessionContext(
             executionContext: context,
             rootContext: writerContext,
-            uiContext: context,
-            logger: logger)
+            uiContext: context)
     }
     
     internal func querySessionContext(name: String? = nil) -> SessionContext {
         return SessionContext(
             executionContext: uiContext,
             rootContext: writerContext,
-            uiContext: uiContext,
-            logger: logger)
+            uiContext: uiContext)
     }
 }
 

@@ -17,25 +17,21 @@ public class SessionContext {
     @inline(__always) var executionContext: NSManagedObjectContext { _executionContext }
     @inline(__always) var rootContext: NSManagedObjectContext { _rootContext }
     @inline(__always) var uiContext: NSManagedObjectContext { _uiContext }
-    @inline(__always) var logger: DataContainer.LogHandler { _logger }
 
     private let _executionContext: NSManagedObjectContext!
     private let _rootContext: NSManagedObjectContext!
     private let _uiContext: NSManagedObjectContext!
-    private let _logger: DataContainer.LogHandler!
 
-    init(executionContext: NSManagedObjectContext, rootContext: NSManagedObjectContext, uiContext: NSManagedObjectContext, logger: DataContainer.LogHandler) {
+    init(executionContext: NSManagedObjectContext, rootContext: NSManagedObjectContext, uiContext: NSManagedObjectContext) {
         self._executionContext = executionContext
         self._rootContext = rootContext
         self._uiContext = uiContext
-        self._logger = logger
     }
 
     private init() {
         self._executionContext = nil
         self._rootContext = nil
         self._uiContext = nil
-        self._logger = nil
     }
 
     /// Creates a managed object of the given entity type.
@@ -70,7 +66,7 @@ public class SessionContext {
     public func assign(object: NSManagedObject, to storage: Storage) {
         guard let store = rootContext.persistentStoreCoordinator!
             .persistentStore(of: storage) else {
-            logger.log(.error, "Persistent store for \(storage) not found")
+            LogHandler.current.log(.error, "Persistent store for \(storage) not found")
             return
         }
         executionContext.assign(object, to: store)
@@ -163,7 +159,7 @@ public class SessionContext {
             do {
                 result = try context.count(for: request)
             } catch {
-                logger.log(.error, "Unabled to count the records", error: error)
+                LogHandler.current.log(.error, "Unabled to count the records", error: error)
             }
         }
 
@@ -277,7 +273,7 @@ extension SessionContext {
             try executionContext.save()
         } catch let _error as NSError {
             let error: Error = CoreDataError(nsError: _error) ?? _error
-            logger.log(.error, "Merge changes from execution context ended with error", error: error)
+            LogHandler.current.log(.error, "Merge changes from execution context ended with error", error: error)
             throw error
         }
         return (inserted: insertedObjectIDs, updated: updatedObjectIDs, deleted: deletedObjectIDs)
@@ -294,7 +290,7 @@ extension SessionContext {
             try rootContext.save()
         } catch let _error as NSError {
             let error: Error = CoreDataError(nsError: _error) ?? _error
-            logger.log(.error, "Merge changes from root context ended with error", error: error)
+            LogHandler.current.log(.error, "Merge changes from root context ended with error", error: error)
             rootContext.rollback()
             throw error
         }

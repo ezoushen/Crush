@@ -50,6 +50,8 @@ extension DataContainer {
                 critical: { msg, err in err == nil ? print(msg) : print("\(msg), error: \(err!)") })
         }
 
+        static var current: LogHandler = .default
+
         private static let queue: DispatchQueue = .init(
             label: "\(Bundle.main.bundleIdentifier ?? "").LogHandler",
             qos: .background)

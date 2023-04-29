@@ -362,8 +362,7 @@ public final class ManagedFetchBuilder<Target: Entity>:
             context: SessionContext(
                 executionContext: context.executionContext,
                 rootContext: context.rootContext,
-                uiContext: context.executionContext,
-                logger: context.logger))
+                uiContext: context.executionContext))
     }
 }
 

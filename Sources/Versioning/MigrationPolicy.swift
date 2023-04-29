@@ -103,7 +103,7 @@ public /*abstract*/ class LightWeightBackupMigrationPolicy: MigrationPolicy {
             try super.process(storage: storage, with: dataModel)
         } catch {
             if lightWeightEnabled {
-                LogHandler.default.log(
+                LogHandler.current.log(
                     .error,
                     "Migration of \(Self.self) ends with error: \(error), will try to perform lightweight migration later if migration is needed")
             } else {

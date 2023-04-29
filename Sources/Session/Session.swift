@@ -82,7 +82,7 @@ public class Session {
     internal func checkUndoManager() {
         #if DEBUG
         if context.executionContext.undoManager == nil {
-            context.logger.log(.warning, "Please enable undo manager first.")
+            LogHandler.current.log(.warning, "Please enable undo manager first.")
         }
         #endif
     }
@@ -188,7 +188,7 @@ extension Session {
                 try block(context)
             } catch {
                 if completion == nil {
-                    context.logger.log(.critical, "unhandled error occured", error: error)
+                    LogHandler.current.log(.critical, "unhandled error occured", error: error)
                 }
                 DispatchQueue.main.async {
                     completion?(error)
