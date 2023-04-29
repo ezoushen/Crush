@@ -9,9 +9,13 @@
 import CoreData
 
 extension NSManagedObjectContext {
-    func load(objectID: NSManagedObjectID, isFault: Bool) -> NSManagedObject! {
+    func load(objectID: NSManagedObjectID, isFault: Bool) -> NSManagedObject {
         guard isFault else { return object(with: objectID) }
-        return try? existingObject(with: objectID)
+        do {
+            return try existingObject(with: objectID)
+        } catch {
+            return object(with: objectID)
+        }
     }
 
     func receive<T: NSManagedObject>(runtimeObject: T) -> T {
