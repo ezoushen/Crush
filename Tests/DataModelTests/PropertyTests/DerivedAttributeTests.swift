@@ -53,6 +53,7 @@ class DerivedAttributeTests: XCTestCase {
     func test_derivedTransformable_derivationExpressionKeyPathShouldEqualToKeyPath() {
         @objc(_TtCFC10CrushTests21DerivedAttributeTests73test_derivedTransformable_derivationExpressionKeyPathShouldEqualToKeyPathFT_T_L_7Subject)
         final class Subject: NSObject, NSCoding, TransformableAttributeType {
+            typealias PrimitiveType = Subject
             @objc var id: Int
             init(id: Int) { self.id = id }
             func encode(with coder: NSCoder) { coder.encode(id, forKey: "id") }

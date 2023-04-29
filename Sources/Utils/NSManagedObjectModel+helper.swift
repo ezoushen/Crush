@@ -44,8 +44,8 @@ extension NSManagedObjectModel {
 
     static func load(from url: URL) -> NSManagedObjectModel? {
         guard FileManager.default.fileExists(atPath: url.path),
-              let model = NSKeyedUnarchiver
-                .unarchiveObject(withFile: url.path) as? NSManagedObjectModel
+              let model = try? NSKeyedUnarchiver
+                .unarchivedObject(ofClass: NSManagedObjectModel.self, from: Data(contentsOf: url))
         else { return nil }
         return model
     }
@@ -64,7 +64,8 @@ extension NSManagedObjectModel {
     func save(to url: URL) {
         let copy = copy() as! NSManagedObjectModel
         copy.entities.forEach { $0.managedObjectClassName = nil }
-        let data = NSKeyedArchiver.archivedData(withRootObject: copy)
+        let data = try! NSKeyedArchiver
+            .archivedData(withRootObject: copy, requiringSecureCoding: false)
         try! data.write(to: url)
     }
 }
