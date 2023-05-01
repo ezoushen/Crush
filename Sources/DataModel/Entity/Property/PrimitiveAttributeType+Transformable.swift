@@ -25,9 +25,7 @@ where
 }
 
 extension TransformableAttributeType {
-    public static var valueTransformerName: String? {
-        nil
-    }
+    @inlinable public static var valueTransformerName: String? { nil }
 }
 
 extension TransformableAttributeType {
@@ -37,24 +35,16 @@ extension TransformableAttributeType {
 
 #if os(iOS) || os(watchOS)
 import UIKit.UIImage
-extension UIImage: TransformableAttributeType {
+extension UIImage: PrimitiveAttributeType {
     public typealias PrimitiveType = UIImage
 }
 
-extension UIImage: PredicateEquatable {
-    @inlinable public var predicateValue: NSObject { self }
-}
-
-extension UIColor: TransformableAttributeType {
+extension UIColor: PrimitiveAttributeType {
     public typealias PrimitiveType = UIColor
-}
-
-extension UIColor: PredicateEquatable {
-    @inlinable public var predicateValue: NSObject { self }
 }
 #endif
 
-extension NSCoding where Self: PrimitiveAttributeType {
-    public typealias PrimitveType = Self
-    public static var nativeType: NSAttributeType { .transformableAttributeType }
+extension NSCoding where Self: PrimitiveAttributeType & NSObject {
+    @inlinable public static var nativeType: NSAttributeType { .transformableAttributeType }
+    @inlinable public var predicateValue: NSObject { self }
 }
