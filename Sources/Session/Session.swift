@@ -150,6 +150,7 @@ extension Session {
                 try context.commit()
             }
         }
+        context.resolveExecutionResultInUiContext()
     }
 }
 
@@ -183,6 +184,7 @@ extension Session {
     {
         let context = context
         let executionContext = context.executionContext
+        let uiContext = context.uiContext
         executionContext.performSignedUndoableAsync(authorName: name) {
             do {
                 try block(context)
@@ -190,7 +192,11 @@ extension Session {
                 if completion == nil {
                     LogHandler.current.log(.critical, "unhandled error occured", error: error)
                 }
-                DispatchQueue.main.async {
+                let result = context.dumpExecutionResult()
+                DispatchQueue.performMainThreadTask {
+                    if let result {
+                        uiContext.resolveExecutionResult(result)
+                    }
                     completion?(error)
                 }
             }
@@ -218,6 +224,7 @@ extension Session {
                 try block(context)
             }
         warnUnsavedChangesIfNeeded()
+        context.resolveExecutionResultInUiContext()
         return result.wrapped(in: self)
     }
 
@@ -243,6 +250,7 @@ extension Session {
         warning(
             result is UnsafeSessionPropertyProtocol,
             "Return an \(type(of: result)) is not recommended")
+        context.resolveExecutionResultInUiContext()
         return result
     }
 }
@@ -340,6 +348,7 @@ extension Session {
     {
         let context = context
         let executionContext = context.executionContext
+        defer { context.resolveExecutionResultInUiContext() }
         return await executionContext
             .performSignedUndoableAsync(authorName: name, schedule: schedule) {
                 block(context)
@@ -370,6 +379,7 @@ extension Session {
             .performSignedUndoableAsync(authorName: name, schedule: schedule) {
                 block(context)
             }
+        context.resolveExecutionResultInUiContext()
         return result.wrapped(in: self)
     }
 
@@ -395,6 +405,7 @@ extension Session {
     {
         let context = context
         let executionContext = context.executionContext
+        defer { context.resolveExecutionResultInUiContext() }
         return try await executionContext
             .performThrowingSignedUndoableAsync(authorName: name, schedule: schedule) {
                 try block(context)
@@ -427,6 +438,7 @@ extension Session {
             .performThrowingSignedUndoableAsync(authorName: name, schedule: schedule) {
                 try block(context)
             }
+        context.resolveExecutionResultInUiContext()
         return result.wrapped(in: self)
     }
 }

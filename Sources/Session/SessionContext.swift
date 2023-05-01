@@ -21,6 +21,7 @@ public class SessionContext {
     private let _executionContext: NSManagedObjectContext!
     private let _rootContext: NSManagedObjectContext!
     private let _uiContext: NSManagedObjectContext!
+    private var _executionResult: ExecutionResult?
 
     init(executionContext: NSManagedObjectContext, rootContext: NSManagedObjectContext, uiContext: NSManagedObjectContext) {
         self._executionContext = executionContext
@@ -116,12 +117,13 @@ public class SessionContext {
     /// - Throws: An error if the changes could not be saved.
     public func commit() throws {
         let author = executionContext.transactionAuthor
-        _ = try saveExecutionContext(executionContext)
+        let result = try saveExecutionContext(executionContext)
         try rootContext.performSync {
             rootContext.transactionAuthor = author
             try saveRootContext(rootContext, executionContext: executionContext)
             rootContext.transactionAuthor = nil
         }
+        updateExecutionResult(result)
     }
 
     // MARK: Internal methods
@@ -206,6 +208,27 @@ public class SessionContext {
         }
         return result
     }
+
+    func dumpExecutionResult() -> ExecutionResult? {
+        executionContext.performSync {
+            guard let result = _executionResult else { return nil }
+            _executionResult = nil
+            return result
+        }
+    }
+
+    func resolveExecutionResultInUiContext() {
+        guard let result = dumpExecutionResult() else { return }
+        uiContext.resolveExecutionResult(result)
+    }
+
+    private func updateExecutionResult(_ patch: ExecutionResult) {
+        if _executionResult != nil {
+            _executionResult?.merge(patch)
+        } else {
+            _executionResult = patch
+        }
+    }
 }
 
 // MARK: Implementation of QueryProtocol
@@ -255,15 +278,24 @@ class _DetachedSessionContext: SessionContext {
 
 extension SessionContext {
     typealias ExecutionResultHandler = (ExecutionResult, [NSManagedObjectContext]) -> Void
-    typealias ExecutionResult = (inserted: [NSManagedObjectID],
-                                 updated: [NSManagedObjectID],
-                                 deleted: [NSManagedObjectID])
+
+    struct ExecutionResult {
+        var inserted: [NSManagedObjectID]
+        var updated: [NSManagedObjectID]
+        var deleted: [NSManagedObjectID]
+
+        mutating func merge(_ result: ExecutionResult) {
+            inserted.append(contentsOf: result.inserted)
+            updated.append(contentsOf: result.updated)
+            deleted.append(contentsOf: result.deleted)
+        }
+    }
 
     fileprivate func saveExecutionContext(
         _ executionContext: NSManagedObjectContext) throws -> ExecutionResult
     {
         guard executionContext.hasChanges else {
-            return ([], [], [])
+            return .init(inserted: [], updated: [], deleted: [])
         }
         let deletedObjectIDs = executionContext.deletedObjects.map(\.objectID)
         let updatedObjectIDs = executionContext.updatedObjects.map(\.objectID)
@@ -276,7 +308,7 @@ extension SessionContext {
             LogHandler.current.log(.error, "Merge changes from execution context ended with error", error: error)
             throw error
         }
-        return (inserted: insertedObjectIDs, updated: updatedObjectIDs, deleted: deletedObjectIDs)
+        return .init(inserted: insertedObjectIDs, updated: updatedObjectIDs, deleted: deletedObjectIDs)
     }
     
     fileprivate func saveRootContext(
@@ -296,7 +328,7 @@ extension SessionContext {
         }
     }
 
-    fileprivate func refreshObjects(
+    func refreshObjects(
         _ executionResult: ExecutionResult, contexts: NSManagedObjectContext...)
     {
         NSManagedObjectContext.mergeChanges(
@@ -305,5 +337,16 @@ extension SessionContext {
                 NSUpdatedObjectsKey: executionResult.updated,
                 NSDeletedObjectsKey: executionResult.deleted,
             ], into: contexts)
+    }
+}
+
+extension NSManagedObjectContext {
+    func resolveExecutionResult(_ result: SessionContext.ExecutionResult) {
+        NSManagedObjectContext.mergeChanges(
+            fromRemoteContextSave: [
+                NSInsertedObjectsKey: result.inserted,
+                NSUpdatedObjectsKey: result.updated,
+                NSDeletedObjectsKey: result.deleted,
+            ], into: [self])
     }
 }

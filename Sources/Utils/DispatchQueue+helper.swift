@@ -8,13 +8,14 @@
 import Foundation
 
 extension DispatchQueue {
-    @inlinable
     static func performMainThreadTask(_ block: @escaping () -> Void){
         if Thread.isMainThread {
             return block()
         }
         DispatchQueue.main.async {
-            block()
+            performMainThreadTask {
+                block()
+            }
         }
     }
 }
