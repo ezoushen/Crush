@@ -30,13 +30,21 @@ import Foundation
 
     let defaultValue: Value
 
-    private lazy var key: pthread_key_t = {
+    private lazy var keyPointer: UnsafeMutablePointer<pthread_key_t> = {
         let key = UnsafeMutablePointer<pthread_key_t>.allocate(capacity: 1)
         pthread_key_create(key, nil)
-        return key.pointee
+        return key
     }()
+    private var key: pthread_key_t {
+        keyPointer.pointee
+    }
 
     @inlinable var projectedValue: ThreadLocal<Value> { self }
+    
+    deinit {
+        keyPointer.deinitialize(count: 1)
+        keyPointer.deallocate()
+    }
 
     init(wrappedValue: Value) {
         self.defaultValue = wrappedValue
@@ -116,6 +124,8 @@ func __pthread_specific_pop_data_node(_ key: pthread_key_t) {
         if pointer == head {
             pthread_setspecific(key, nil)
         }
+        pointer.pointee.next.deinitialize(count: 1)
+        pointer.pointee.next.deallocate()
         pointer.deinitialize(count: 1)
         pointer.deallocate()
     }
