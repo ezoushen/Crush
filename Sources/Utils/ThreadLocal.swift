@@ -77,11 +77,11 @@ import Foundation
 @usableFromInline
 struct __pthread_specific_data_node {
     @usableFromInline let pointer: UnsafeRawPointer
-    @usableFromInline let next: UnsafeMutablePointer<__pthread_specific_data_node>
+    @usableFromInline let next: UnsafeMutablePointer<__pthread_specific_data_node?>
 
     @usableFromInline init(
         _ pointer: UnsafeRawPointer,
-        _ next: UnsafeMutablePointer<__pthread_specific_data_node>)
+        _ next: UnsafeMutablePointer<__pthread_specific_data_node?>)
     {
         self.pointer = pointer
         self.next = next
@@ -92,7 +92,7 @@ struct __pthread_specific_data_node {
 @inline(__always)
 func __pthread_specific_current_data_node(_ key: pthread_key_t) -> __pthread_specific_data_node? {
     var node = __pthread_specific_get_data_node(key)
-    while let next = node?.next.pointee, next.pointer.uintValue != 0 {
+    while let next = node?.next.pointee {
         node = next
     }
     return node
@@ -102,13 +102,15 @@ func __pthread_specific_current_data_node(_ key: pthread_key_t) -> __pthread_spe
 @inline(__always)
 func __pthread_specific_push_data_node(_ key: pthread_key_t, _ object: UnsafeRawPointer) {
     if var node = __pthread_specific_get_data_node(key) {
-        while node.next.pointee.pointer.uintValue != 0 {
-            node = node.next.pointee
+        while let nexNode = node.next.pointee {
+            node = nexNode
         }
         node.next.initialize(to: __pthread_specific_data_node(object, .allocate(capacity: 1)))
+        node.next.pointee?.next.initialize(to: nil)
     } else {
         let value = UnsafeMutablePointer<__pthread_specific_data_node>.allocate(capacity: 1)
         value.initialize(to: __pthread_specific_data_node(object, .allocate(capacity: 1)))
+        value.pointee.next.initialize(to: nil)
         pthread_setspecific(key, value)
     }
 }
@@ -118,14 +120,14 @@ func __pthread_specific_push_data_node(_ key: pthread_key_t, _ object: UnsafeRaw
 func __pthread_specific_pop_data_node(_ key: pthread_key_t) {
     let head = __pthread_specific_get_data_head_pointer(key)
     if var pointer = head {
-        while pointer.pointee.next.pointee.pointer.uintValue != 0 {
-            pointer = pointer.pointee.next
+        while pointer.pointee?.next.pointee != nil {
+            pointer = pointer.pointee!.next
         }
         if pointer == head {
             pthread_setspecific(key, nil)
         }
-        pointer.pointee.next.deinitialize(count: 1)
-        pointer.pointee.next.deallocate()
+        pointer.pointee?.next.deinitialize(count: 1)
+        pointer.pointee?.next.deallocate()
         pointer.deinitialize(count: 1)
         pointer.deallocate()
     }
@@ -139,8 +141,8 @@ func __pthread_specific_get_data_node(_ key: pthread_key_t) -> __pthread_specifi
 
 @inlinable
 @inline(__always)
-func __pthread_specific_get_data_head_pointer(_ key: pthread_key_t) -> UnsafeMutablePointer<__pthread_specific_data_node>? {
-    pthread_getspecific(key)?.assumingMemoryBound(to: __pthread_specific_data_node.self)
+func __pthread_specific_get_data_head_pointer(_ key: pthread_key_t) -> UnsafeMutablePointer<__pthread_specific_data_node?>? {
+    pthread_getspecific(key)?.assumingMemoryBound(to: __pthread_specific_data_node?.self)
 }
 
 extension _Pointer {
