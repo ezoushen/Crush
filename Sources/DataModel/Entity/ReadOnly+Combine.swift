@@ -58,9 +58,13 @@ extension ManagedObject {
 
             public override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
                 if let managedObject = object as? NSManagedObject, managedObject.isDeleted {
-                    lock.lock()
-                    defer { lock.unlock() }
-                    return removeObservation()
+                    if lock.tryLock() {
+                        removeObservation()
+                        lock.unlock()
+                    } else {
+                        waitingForCancellation = true
+                    }
+                    return
                 }
                 sendValue(change: change, key: .oldKey)
                 sendValue(change: change, key: .newKey)

@@ -296,7 +296,7 @@ class FetchBuilderPostPredicateTests: XCTestCase {
     
     var sut: FetchBuilder<TestEntity>!
     
-    override func setUp() async throws {
+    override func setUp() {
         sut = suite.createFetchBuilder()
     }
     
@@ -359,7 +359,7 @@ class FetchBuilderCountTests: XCTestCase {
     
     var sut: ReadOnlyFetchBuilder<TestEntity>!
     
-    override func setUp() async throws {
+    override func setUp() {
         sut = suite.createFetchBuilder()
     }
     
@@ -376,7 +376,7 @@ class FetchBuilderExistsTests: XCTestCase {
 
     var sut: ReadOnlyFetchBuilder<TestEntity>!
 
-    override func setUp() async throws {
+    override func setUp() {
         sut = suite.createFetchBuilder()
     }
 
@@ -398,7 +398,7 @@ class FetchBuilderObjectIDsTests: XCTestCase {
 
     var sut: ReadOnlyFetchBuilder<TestEntity>!
 
-    override func setUp() async throws {
+    override func setUp() {
         sut = suite.createFetchBuilder()
     }
 
@@ -416,11 +416,11 @@ class FetchBuilderExecutionTests: XCTestCase {
 
     var container: DataContainer { suite.container }
 
-    override func setUp() async throws {
+    override func setUpWithError() throws {
         try container.rebuildStorages()
     }
     
-    override func tearDown() async throws {
+    override func tearDownWithError() throws {
         try container.destroyStorages()
     }
 

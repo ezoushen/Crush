@@ -22,7 +22,7 @@ class AggregationBuilderTests: XCTestCase {
     let storage = Storage.sqliteInMemory()
     var container: DataContainer!
     
-    override func setUp() async throws {
+    override func setUpWithError() throws {
         container = try .load(
             storages: storage,
             dataModel: DataModel(
@@ -279,7 +279,7 @@ class SelectBuilderTests: XCTestCase {
     let storage = Storage.sqliteInMemory()
     var container: DataContainer!
     
-    override func setUp() async throws {
+    override func setUpWithError() throws {
         container = try .load(
             storages: storage,
             dataModel: DataModel(
