@@ -120,6 +120,7 @@ extension InsertBuilder {
     }
 
     /// The batch insert request will keep inserting objects into the persistent store until the handler return true.
+    /// - Note: The dictionary handler would be ignored if the managed object handler is set.
     public func objectHandler(
         _ handler: @escaping (NSMutableDictionary) -> Bool) -> any RequestExecutor<Received>
     {
@@ -128,6 +129,7 @@ extension InsertBuilder {
     }
 
     /// The batch insert request builder will insert all elements int the given source into the persistent store.
+    /// - Note: The dictionary handler would be ignored if the managed object handler is set.
     public func objects<Source: Sequence>(
         from: Source,
         handler: @escaping (Source.Element, NSMutableDictionary) -> Void
