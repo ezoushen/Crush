@@ -310,7 +310,7 @@ class PersistentHistoryNotificationHandler: NotificationHandler {
 
         for transaction in transactions {
             let notification = transaction.objectIDNotification()
-
+            
             guard let changes = notification.userInfo else { continue }
 
             let key = AnyHashable(transaction.author ?? "Unknown")

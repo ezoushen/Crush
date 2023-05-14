@@ -66,4 +66,3 @@ Based on the data migration provided by `CoreData`, `Crush` offers a more flexib
 
 You can choose your own migration policy through `migrationPolicy` of factory method of ``DataContainer``. 
 
-

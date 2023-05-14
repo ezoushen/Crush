@@ -29,9 +29,19 @@ let package = Package(
 
 ## Topics
 
-### Getting Started
+### Getting started
 
 - <doc:Concepts>
 - <doc:QuickStart>
+- <doc:CRUDOperations>
 
-### Working with ``Session``
+### Working with Session
+
+- <doc:IntroducingSession>
+- <doc:TypesOfSessions>
+- <doc:SigningSessionBlock>
+- <doc:UndoRedoInSession>
+
+### Managing data schema
+
+### Query builders 

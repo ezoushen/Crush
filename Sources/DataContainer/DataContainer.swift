@@ -364,9 +364,11 @@ extension DataContainer {
     /// - Parameters:
     ///     - name: Name that would be used as transaction author name in persistent history
     public func startInteractiveSession(name: String? = nil) -> Session {
-        Session(
+        let session = Session(
             context: uiSessionContext(name: name),
             mergePolicy: coreDataStack.mergePolicy)
+        session.enabledWarningForUnsavedChanges = false
+        return session
     }
 
     /// Load the object by the given object ID

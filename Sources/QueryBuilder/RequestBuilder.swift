@@ -69,7 +69,7 @@ protocol RequestConfig {
     func createStoreRequest() -> NSPersistentStoreRequest
 }
 
-public protocol RequestExecutor: AnyObject {
+public protocol RequestExecutor<Received>: AnyObject {
     associatedtype Received
 
     /// Executes the persisten store request and returns the result.

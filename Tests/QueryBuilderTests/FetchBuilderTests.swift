@@ -53,7 +53,7 @@ class FetchBuilderTestSuite {
             let objects = (0..<amount).map { _ in ["parentValue": true] }
             _ = try! $0
                 .insert(for: ParentEntity.self)
-                .object(contentsOf: objects)
+                .objects(contentsOf: objects)
                 .exec()
         }
     }
@@ -63,7 +63,7 @@ class FetchBuilderTestSuite {
             let objects = (0..<amount).map { ["integerValue": $0] }
             _ = try! $0
                 .insert(for: TestEntity.self)
-                .object(contentsOf: objects)
+                .objects(contentsOf: objects)
                 .exec()
         }
     }
