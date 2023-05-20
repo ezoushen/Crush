@@ -31,7 +31,6 @@ extension ManagedObject {
                 keyPath: keyPath.propertyName,
                 options: options)
             subscriber.receive(subscription: subscription)
-            subscription.subscribe()
         }
 
         public class Subscription<S: Combine.Subscriber>: NSObject, Combine.Subscription
@@ -96,6 +95,7 @@ extension ManagedObject {
 
             public func request(_ demand: Subscribers.Demand) {
                 self.demand += demand
+                self.subscribe()
             }
 
             public func cancel() {
