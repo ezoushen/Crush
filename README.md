@@ -1,24 +1,36 @@
 # Crush
 
-## Example
+Enhance the development experience with CoreData by providing greater type-safety and intuitive functionality
 
-To run the example project, clone the repo, select `Scheme -> Example -> Your device`, and you can build and run.
+## Overview
 
-## Installation
+### Installation
 
-### Cocoapods
+Make sure you've declared `Crush` as your dependency before getting started 
 
-Crush is available through [CocoaPods](https://cocoapods.org). To install
-it, simply add the following line to your Podfile:
-
-```ruby
-pod 'Crush'
+```swift
+let package = Package(
+  dependencies: [
+    .package(
+      url: "https://github.com/ezoushen/Crush",
+      from: "1.0.0"
+    ),
+  ],
+  targets: [
+    .target(
+      name: "<your-target-name>",
+      dependencies: [
+        "Crush"
+      ]
+    )
+  ]
+)
 ```
 
-## Author
+## Documentation
 
-ezoushen, ezoushen@gmail.com
+Swift DocC style documentation is available [here](https://ezoushen.github.io/Crush/documentation/crush)
 
-## License
+## Coorporation
 
-Crush is available under the MIT license. See the LICENSE file for more info.
+If you want to contribute to the project, please feel free to open a pull request/issue. 
