@@ -35,7 +35,7 @@ let package = Package(
 
 Only three steps to start using Crush
 
-### Define your schema
+**1. Define your schema**
 
 ```swift
 class Todo: Entity {
@@ -58,7 +58,7 @@ class Todo: Entity {
 }
 ```
 
-### Create your DataContainer
+**2. Create your DataContainer**
 
 ```swift
 let container = try DataContainer.load(
@@ -66,10 +66,10 @@ let container = try DataContainer.load(
     dataModel: DataModel(name: "V1", [ Todo() ]))
 ```
 
-### Start coding!
+**3. Start coding**
 
 ```swift
-try container.sync { context in
+try container.startSession().sync { context in
     let todo = context.create(Todo.self)
     todo.title = "Hello Crush"
     try context.commit()
