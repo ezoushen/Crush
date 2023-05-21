@@ -4,9 +4,9 @@ Enhance the development experience with CoreData by providing greater type-safet
 
 ## Overview
 
-Take full control of your CoreData management. 
-100% managed code, no code generation required. 
-Free from Xcode GUI, and human-friendly diff records on git.
+🕹️ Take full control of your CoreData management.<br/>
+🧑‍💻 100% managed code, no code generation required.<br/> 
+📖 Free from Xcode GUI, and human-friendly diff records on git.
 
 ### Installation
 
