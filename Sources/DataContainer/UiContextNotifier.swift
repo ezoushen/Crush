@@ -404,24 +404,24 @@ class UserInfoMerger {
     func merge(userInfo: [AnyHashable: Any]?) {
         guard let userInfo = userInfo else { return }
 
-        if let insertedObjectIDs = userInfo[AnyHashable(NSInsertedObjectIDsKey)] as? NSMutableSet {
+        if let insertedObjectIDs = userInfo[AnyHashable(NSInsertedObjectIDsKey)] as? NSSet {
             insertedObjectIDIterators.append(AnyIterator(insertedObjectIDs.makeIterator()))
         }
-        if let insertedObjects = userInfo[AnyHashable(NSInsertedObjectsKey)] as? NSMutableSet {
+        if let insertedObjects = userInfo[AnyHashable(NSInsertedObjectsKey)] as? NSSet {
             insertedObjectIDIterators.append(AnyIterator(
                 insertedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
         }
-        if let updatedObjectIDs = userInfo[AnyHashable(NSUpdatedObjectIDsKey)] as? NSMutableSet {
+        if let updatedObjectIDs = userInfo[AnyHashable(NSUpdatedObjectIDsKey)] as? NSSet {
             updatedObjectIDIterators.append(AnyIterator(updatedObjectIDs.makeIterator()))
         }
-        if let updatedObjects = userInfo[AnyHashable(NSUpdatedObjectsKey)] as? NSMutableSet {
+        if let updatedObjects = userInfo[AnyHashable(NSUpdatedObjectsKey)] as? NSSet {
             updatedObjectIDIterators.append(AnyIterator(
                 updatedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
         }
-        if let deletedObjectIDs = userInfo[AnyHashable(NSDeletedObjectIDsKey)] as? NSMutableSet {
+        if let deletedObjectIDs = userInfo[AnyHashable(NSDeletedObjectIDsKey)] as? NSSet {
             deletedObjectIDIterators.append(AnyIterator(deletedObjectIDs.makeIterator()))
         }
-        if let deletdeObjects = userInfo[AnyHashable(NSDeletedObjectsKey)] as? NSMutableSet {
+        if let deletdeObjects = userInfo[AnyHashable(NSDeletedObjectsKey)] as? NSSet {
             deletedObjectIDIterators.append(AnyIterator(
                 deletdeObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
         }
