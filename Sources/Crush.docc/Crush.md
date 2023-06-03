@@ -35,13 +35,15 @@ let package = Package(
 - <doc:QuickStart>
 - <doc:CRUDOperations>
 
+### Managing data schema
+
+- <doc:ManageProperties>
+
 ### Working with Session
 
 - <doc:IntroducingSession>
 - <doc:TypesOfSessions>
 - <doc:SigningSessionBlock>
 - <doc:UndoRedoInSession>
-
-### Managing data schema
 
 ### Query builders 

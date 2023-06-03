@@ -26,7 +26,7 @@ You can create an entity by calling ``SessionContext/create(entity:)``
 try session.sync { context in
     let todo = context.create(entity: Todo.self)
     todo.title = "todo title"
-    // setup the entity
+    // setup the entity here
     try context.commit()
 }
 ```

@@ -236,7 +236,7 @@ extension PropertyCondition where T: PredicateExpressibleByString {
 ///
 /// Example:
 ///
-///     let joinPredicate: TypedPredicate<SomeEntity> = .join(
+///     let joinPredicate: TypedPredicate<SomeEntity> = .subquery(
 ///         \.toOneRelationshipToAnotherEntity,
 ///         predicate: \.propertyOfAnotherEntity == 1)
 ///

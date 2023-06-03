@@ -23,6 +23,19 @@ import CoreData
 ///
 @dynamicMemberLookup
 public struct ReadOnly<T: Crush.Entity> {
+    /// This struct is used to access the raw data of the `ReadOnly` object. It's useful especially while you're
+    /// trying to read the wrapper property and get the underlying value for multiple times
+    ///
+    /// Example:
+    ///
+    ///     /*
+    ///     enum TodoStatus: Int16, EnumerableAttributeType {
+    ///         typealias RawAttributeType = Int16AttributeType
+    ///         case finished, undone
+    ///     }
+    ///     */
+    ///     print(todo.status)     // TodoStatus.undone
+    ///     print(todo.raw.status) // 0
     @dynamicMemberLookup
     public struct Raw {
         public typealias Driver = ManagedRawDriver<T>

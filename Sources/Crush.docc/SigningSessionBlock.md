@@ -4,7 +4,7 @@ Enable signing `transactionAuthor` for the code block
 
 ## What is transactionAuthor
 
-`transactionAuthor` is a property of `NSManagedObjectContext` that identifies the author of the transaction. It is used to track the changes made by each user. 
+`transactionAuthor` is a property of `NSManagedObjectContext` that identifies the author of the transaction. It is used to track the changes made by each user in persistent history tracking. 
 
 ## When to sign the transactionAuthor
 

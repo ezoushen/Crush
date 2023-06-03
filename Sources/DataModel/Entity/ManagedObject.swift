@@ -30,6 +30,16 @@ public class ManagedObjectBase: NSManagedObject {
 /// It is used for creating, updating, or deleting data in the CoreData database. You should use `ManagedObject`
 /// when you need to modify the data within a `Session`'s sync or async callback block.
 ///
+/// - Note: You should always access a `ManagedObject` within a `Session`'s callback block.
+///
+/// Examples:
+///
+///     try session.sync { context in
+///         let managedTodo = context.edit(object: todo)
+///         managedTodo.title = "new title"
+///         try context.commit()
+///     }
+///
 /// ## See Also
 /// - ``ManagedDriver``
 public class ManagedObject<Entity: Crush.Entity>: ManagedObjectBase, ObjectRuntimeDriver, ManagedStatus {
