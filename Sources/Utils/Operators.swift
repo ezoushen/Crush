@@ -318,6 +318,14 @@ extension KeyPath where
     public static func != (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) != \(rhs.propertyName)")
     }
+
+    public static func == (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) == \(rhs.expression)")
+    }
+
+    public static func != (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) != \(rhs.expression)")
+    }
 }
 
 extension KeyPath where
@@ -345,6 +353,14 @@ extension KeyPath where
 
     public static func != (lhs: KeyPath, rhs: KeyPath) -> TypedPredicate<Root> {
         TypedPredicate<Root>(format: "\(lhs.propertyName) != \(rhs.propertyName)")
+    }
+
+    public static func == (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) == \(rhs.expression)")
+    }
+
+    public static func != (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) != \(rhs.expression)")
     }
 }
 
@@ -386,7 +402,7 @@ extension KeyPath where
             rhs.lowerBound.predicateValue,
             rhs.upperBound.predicateValue)
     }
-    
+
     public static func > <T>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
     where
         T: WritableProperty,
@@ -417,6 +433,38 @@ extension KeyPath where
         T.PredicateValue == Value.PredicateValue
     {
         TypedPredicate<Root>(format: "\(lhs.propertyName) <= \(rhs.propertyName)")
+    }
+
+    public static func > <T>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where
+        T: WritableProperty,
+        T.PredicateValue == Value.PredicateValue
+    {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) > \(rhs.expression)")
+    }
+
+    public static func < <T>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where
+        T: WritableProperty,
+        T.PredicateValue == Value.PredicateValue
+    {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) < \(rhs.expression)")
+    }
+
+    public static func >= <T>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where
+        T: WritableProperty,
+        T.PredicateValue == Value.PredicateValue
+    {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) >= \(rhs.expression)")
+    }
+
+    public static func <= <T>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where
+        T: WritableProperty,
+        T.PredicateValue == Value.PredicateValue
+    {
+        TypedPredicate<Root>(format: "\(lhs.propertyName) <= \(rhs.expression)")
     }
 }
 
@@ -489,6 +537,51 @@ extension KeyPath where
     where T.PredicateValue: PredicateExpressibleByString {
         lhs |*| SearchString(rhs, modifier: .plain)
     }
+
+    @inlinable public static func |~ (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs |~ SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func ~| (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs ~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func <> (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs <> SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~| (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs |~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |*| (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs |*| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~ <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs |~ SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func ~| <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs ~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func <> <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs <> SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~| <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs |~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |*| <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue: PredicateExpressibleByString {
+        lhs |*| SearchString(rhs, modifier: .plain)
+    }
 }
 
 extension KeyPath where
@@ -557,6 +650,51 @@ extension KeyPath where
     }
 
     @inlinable public static func |*| <T: WritableProperty>(lhs: KeyPath, rhs: KeyPath<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs |*| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~ (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs |~ SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func ~| (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs ~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func <> (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs <> SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~| (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs |~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |*| (lhs: KeyPath, rhs: FetchSource<Root, Value>) -> TypedPredicate<Root> {
+        lhs |*| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~ <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs |~ SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func ~| <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs ~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func <> <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs <> SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |~| <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
+    where T.PredicateValue == String {
+        lhs |~| SearchString(rhs, modifier: .plain)
+    }
+
+    @inlinable public static func |*| <T: WritableProperty>(lhs: KeyPath, rhs: FetchSource<Root, T>) -> TypedPredicate<Root>
     where T.PredicateValue == String {
         lhs |*| SearchString(rhs, modifier: .plain)
     }

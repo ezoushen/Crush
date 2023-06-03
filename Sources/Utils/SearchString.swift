@@ -50,56 +50,135 @@ public extension SearchString {
     }
 }
 
+// MARK: Extension for KeyPath
+
 public extension SearchString {
     init<Root: Entity, Value: WritableProperty>(
         _ keyPath: KeyPath<Root, Value>, modifier: Category = .plain)
     where Value.PredicateValue == String
     {
-        self.init(type: modifier, string: keyPath.propertyName, placeholder: "%K")
+        self.init(type: modifier,
+                  string: keyPath.propertyName,
+                  placeholder: "%K")
     }
 
     init<Root: Entity, Value: WritableProperty>(
         _ keyPath: KeyPath<Root, Value>, modifier: Category = .plain)
     where Value.PredicateValue: PredicateExpressibleByString
     {
-        self.init(type: modifier, string: "\(keyPath.propertyName).stringValue", placeholder: "%K")
+        self.init(type: modifier,
+                  string: "\(keyPath.propertyName).stringValue",
+                  placeholder: "%K")
     }
 }
 
 public extension SearchString {
     static func caseInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
     where Value.PredicateValue == String {
-        SearchString(type: .caseInsensitive, string: keyPath
-            .propertyName, placeholder: "%K")
+        SearchString(type: .caseInsensitive,
+                     string: keyPath.propertyName,
+                     placeholder: "%K")
     }
 
     static func diacriticInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
     where Value.PredicateValue == String {
-        SearchString(type: .diacriticInsensitive, string: keyPath
-            .propertyName, placeholder: "%K")
+        SearchString(type: .diacriticInsensitive,
+                     string: keyPath.propertyName,
+                     placeholder: "%K")
     }
 
     static func caseDiacriticInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
     where Value.PredicateValue == String {
-        SearchString(type: .caseDiacriticInsensitive, string: keyPath
-            .propertyName, placeholder: "%K")
+        SearchString(type: .caseDiacriticInsensitive,
+                     string: keyPath.propertyName,
+                     placeholder: "%K")
     }
 
     static func caseInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
     where Value.PredicateValue: PredicateExpressibleByString {
-        SearchString(type: .caseInsensitive, string: keyPath
-            .propertyName, placeholder: "%K")
+        SearchString(type: .caseInsensitive,
+                     string: keyPath.propertyName,
+                     placeholder: "%K")
     }
 
     static func diacriticInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
     where Value.PredicateValue: PredicateExpressibleByString {
-        SearchString(type: .diacriticInsensitive, string: keyPath
-            .propertyName, placeholder: "%K")
+        SearchString(type: .diacriticInsensitive,
+                     string: keyPath.propertyName,
+                     placeholder: "%K")
     }
 
     static func caseDiacriticInsensitive<Value: WritableProperty>(_ keyPath: KeyPath<T, Value>) -> SearchString
     where Value.PredicateValue: PredicateExpressibleByString {
-        SearchString(type: .caseDiacriticInsensitive, string: keyPath
-            .propertyName, placeholder: "%K")
+        SearchString(type: .caseDiacriticInsensitive,
+                     string: keyPath.propertyName,
+                     placeholder: "%K")
     }
 }
+
+// MARK: Extension for FetchSource
+
+public extension SearchString {
+    init<Root: Entity, Value: WritableProperty>(
+        _ fetchSource: FetchSource<Root, Value>, modifier: Category = .plain)
+    where Value.PredicateValue == String
+    {
+        self.init(type: modifier,
+                  string: fetchSource.expression,
+                  placeholder: "%K")
+    }
+
+    init<Root: Entity, Value: WritableProperty>(
+        _ fetchSource: FetchSource<Root, Value>, modifier: Category = .plain)
+    where Value.PredicateValue: PredicateExpressibleByString
+    {
+        self.init(type: modifier,
+                  string: "\(fetchSource.expression).stringValue",
+                  placeholder: "%K")
+    }
+}
+
+public extension SearchString {
+    static func caseInsensitive<Value: WritableProperty>(_ fetchSource: FetchSource<T, Value>) -> SearchString
+    where Value.PredicateValue == String {
+        SearchString(type: .caseInsensitive,
+                     string: fetchSource.expression,
+                     placeholder: "%K")
+    }
+
+    static func diacriticInsensitive<Value: WritableProperty>(_ fetchSource: FetchSource<T, Value>) -> SearchString
+    where Value.PredicateValue == String {
+        SearchString(type: .diacriticInsensitive,
+                     string: fetchSource.expression,
+                     placeholder: "%K")
+    }
+
+    static func caseDiacriticInsensitive<Value: WritableProperty>(_ fetchSource: FetchSource<T, Value>) -> SearchString
+    where Value.PredicateValue == String {
+        SearchString(type: .caseDiacriticInsensitive,
+                     string: fetchSource.expression,
+                     placeholder: "%K")
+    }
+
+    static func caseInsensitive<Value: WritableProperty>(_ fetchSource: FetchSource<T, Value>) -> SearchString
+    where Value.PredicateValue: PredicateExpressibleByString {
+        SearchString(type: .caseInsensitive,
+                     string: fetchSource.expression,
+                     placeholder: "%K")
+    }
+
+    static func diacriticInsensitive<Value: WritableProperty>(_ fetchSource: FetchSource<T, Value>) -> SearchString
+    where Value.PredicateValue: PredicateExpressibleByString {
+        SearchString(type: .diacriticInsensitive,
+                     string: fetchSource.expression,
+                     placeholder: "%K")
+    }
+
+    static func caseDiacriticInsensitive<Value: WritableProperty>(_ fetchSource: FetchSource<T, Value>) -> SearchString
+    where Value.PredicateValue: PredicateExpressibleByString {
+        SearchString(type: .caseDiacriticInsensitive,
+                     string: fetchSource.expression,
+                     placeholder: "%K")
+    }
+}
+

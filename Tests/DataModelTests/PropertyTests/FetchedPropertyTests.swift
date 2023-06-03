@@ -15,7 +15,7 @@ class FetchedPropertyTests: XCTestCase {
     class TestEntity: Entity {
         var int16value = Value.Int16("int16value")
         var feteched = Fetched<TestEntity>("fetched") {
-            $0.where("int16value = $FETCH_SOURCE.int16value")
+            $0.where(\.int16value == FetchSource.int16value)
         }
     }
 
@@ -43,7 +43,7 @@ class FetchedPropertyTests: XCTestCase {
 
     func test_descriptionFetchRequest_shouldBeCondfigured() {
         let configuration: Fetched<TestEntity>.Configuration = {
-            $0.where("int16value = $FETCH_SOURCE.int16value")
+            $0.where(\.int16value == FetchSource.int16value)
         }
         let fetchBuilder = FetchBuilder<TestEntity>(config: .init(), context: .dummy())
         let request = configuration(fetchBuilder).config.createStoreRequest()
