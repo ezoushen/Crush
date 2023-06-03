@@ -95,6 +95,15 @@ where
         return self
     }
 
+    /// Prefetch attributes according to specified
+    public func prefetch<T: AttributeProtocol>(attribute: KeyPath<Target, T>) -> Self {
+        config.modify {
+            $0.propertiesToFetch.initializeIfNeeded()
+            $0.propertiesToFetch?.append(attribute.propertyName)
+        }
+        return self
+    }
+
     /// Prefetch related entities according to specified relationship
     public func prefetch<T: RelationshipProtocol>(relationship: KeyPath<Target, T>) -> Self {
         config.modify {
@@ -309,7 +318,7 @@ public class ExecutableFetchBuilder<Target: Entity, Received: Collection>:
     
     fileprivate func received() -> [NSManagedObject] {
         let request = config.createFetchRequest()
-        let objects: [NSManagedObject] = try! context.execute(request: request)
+        let objects: [NSManagedObject] = try! context.execute(request: request as! NSFetchRequest<NSManagedObject>)
         if let predicate = config.postPredicate {
             let nsArray = objects as NSArray
             return nsArray.filtered(using: predicate) as! [ManagedObject<Target>]
