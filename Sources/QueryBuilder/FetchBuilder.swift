@@ -318,7 +318,7 @@ public class ExecutableFetchBuilder<Target: Entity, Received: Collection>:
     
     fileprivate func received() -> [NSManagedObject] {
         let request = config.createFetchRequest()
-        let objects: [NSManagedObject] = try! context.execute(request: request as! NSFetchRequest<NSManagedObject>)
+        let objects: [NSManagedObject] = try! context.execute(request: request)
         if let predicate = config.postPredicate {
             let nsArray = objects as NSArray
             return nsArray.filtered(using: predicate) as! [ManagedObject<Target>]

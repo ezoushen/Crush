@@ -179,7 +179,6 @@ public class SessionContext {
     func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest) throws -> T {
         let context = context(for: request)
         let result: T = try context.performSync {
-            context.processPendingChanges()
             return try context.execute(request) as! T
         }
         if let changes: [AnyHashable: Any] = {
@@ -191,18 +190,14 @@ public class SessionContext {
                 return [
                     NSUpdatedObjectsKey: result.result ?? [NSManagedObject]()
                 ]
-            } else if #available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *), let result = result as? NSBatchInsertResult {
-                return [
-                    NSInsertedObjectsKey: result.result ?? [NSManagedObject]()
-                ]
             }
             return nil
         }() {
-            let contexts = [
+            let contexts: [NSManagedObjectContext] = [
                 self.rootContext,
                 self.uiContext,
                 self.executionContext
-            ]
+            ].filter { $0 !== context }
 
             NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: contexts)
         }
