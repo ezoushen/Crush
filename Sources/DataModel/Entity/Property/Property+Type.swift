@@ -16,6 +16,7 @@ public enum Relation {
     public typealias ToOrdered<D: Entity> = Relationship<Crush.ToOrdered<D>>
 }
 
+/// This is a namespace listing all supported attribute types.
 public enum Value {
     public typealias Transformable<T: TransformableAttributeType> = TransformableAttribute<Attribute<T>>
     public typealias Codable<T: CodableAttributeType> = Attribute<T>
@@ -31,6 +32,7 @@ public enum Value {
     public typealias Date = Attribute<DateAttributeType>
     public typealias Decimal = Attribute<DecimalAttributeType>
     public typealias UUID = Attribute<UUIDAttributeType>
+    public typealias URL = Attribute<URIAttributeType>
 }
 
 @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
@@ -49,4 +51,5 @@ public enum Derived {
     public typealias Date = DerivedAttribute<DateAttributeType>
     public typealias Decimal = DerivedAttribute<DecimalAttributeType>
     public typealias UUID = DerivedAttribute<UUIDAttributeType>
+    public typealias URL = DerivedAttribute<URIAttributeType>
 }
