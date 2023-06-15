@@ -120,21 +120,21 @@ extension ManagedObject {
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 extension ReadOnly {
     /// Please be aware that observing property changes requires the managed object not to be a fault. Thus, it'll fire the faulting object first if needed
-    public func observe<T: Property>(
-        _ keyPath: KeyPath<Entity, T>, options: NSKeyValueObservingOptions
-    ) -> ManagedObject<Entity>.KVOPublisher<T> {
-        ManagedObject<Entity>.KVOPublisher<T>(
+    public func observe<Property: Crush.Property>(
+        _ keyPath: KeyPath<Entity, Property>, options: NSKeyValueObservingOptions
+    ) -> ManagedObject<Entity>.KVOPublisher<Property> {
+        ManagedObject<Entity>.KVOPublisher<Property>(
             subject: driver, keyPath: keyPath, options: options)
     }
 
     /// Please be aware that observing property changes requires the managed object not to be a fault. Thus, it'll fire the faulting object first if needed
-    public func observe<T: Property>(
-        _ keyPath: KeyPath<Entity, T>, options: NSKeyValueObservingOptions
-    ) -> AnyPublisher<T.RuntimeValue.Safe, Never>
+    public func observe<Property: Crush.Property>(
+        _ keyPath: KeyPath<Entity, Property>, options: NSKeyValueObservingOptions
+    ) -> AnyPublisher<Property.RuntimeValue.Safe, Never>
     where
-        T.RuntimeValue: UnsafeSessionProperty
+        Property.RuntimeValue: UnsafeSessionProperty
     {
-        return ManagedObject<Entity>.KVOPublisher<T>(
+        return ManagedObject<Entity>.KVOPublisher<Property>(
             subject: driver, keyPath: keyPath, options: options
         )
             .map { $0.wrapped() }
