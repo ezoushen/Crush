@@ -48,7 +48,7 @@ extension DeleteBuilder: RequestExecutor {
     }
 
     public func execAsync(completion: @escaping ([NSManagedObjectID]?, Error?) -> Void) {
-        context.rootContext.performAsync {
+        context.executionContext.performAsync {
             do {
                 let result = try self.exec()
                 completion(result, nil)
@@ -66,7 +66,7 @@ extension DeleteBuilder: RequestExecutor {
 
     private func executeLegacyBatchDelete() throws -> [NSManagedObjectID] {
         let request = config.createStoreRequest()
-        let context = context.rootContext
+        let context = context.executionContext
         return try context.performSync {
             let request = request as! NSFetchRequest<NSManagedObject>
             let objects = try context.fetch(request)

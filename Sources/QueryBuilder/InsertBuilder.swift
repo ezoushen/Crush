@@ -153,7 +153,7 @@ extension InsertBuilder {
     }
 
     public func execAsync(completion: @escaping ([NSManagedObjectID]?, Error?) -> Void) {
-        context.rootContext.performAsync {
+        context.executionContext.performAsync {
             do {
                 let result = try self.exec()
                 completion(result, nil)
@@ -172,7 +172,7 @@ extension InsertBuilder {
 
     private func executeLegacyBatchInsert() throws -> [NSManagedObjectID] {
         let entity = Target.entity()
-        let context = context.rootContext
+        let context = context.executionContext
         return try context.performSync {
             let result = config.objects.map { object -> NSManagedObject in
                 let rawObject = NSManagedObject(entity: entity, insertInto: context)

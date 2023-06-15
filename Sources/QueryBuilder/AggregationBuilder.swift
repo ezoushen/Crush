@@ -51,7 +51,7 @@ public class DictionaryBuilderBase<Target: Crush.Entity>:
     }
 
     public func execAsync(completion: @escaping ([[String: Any]]) -> Void) {
-        context.rootContext.performAsync {
+        context.executionContext.performAsync {
             let result = self.exec()
             completion(result)
         }

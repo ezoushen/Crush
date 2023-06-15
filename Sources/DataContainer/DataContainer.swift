@@ -72,8 +72,7 @@ public class DataContainer {
     /// and after remote changes being merged into writer context and ui context.
     public static let uiContextDidRefresh = Notification.Name("DataContainerDidRefreshUiContext")
 
-    internal lazy var writerContext: NSManagedObjectContext = coreDataStack.createWriterContext()
-    internal lazy var uiContext: NSManagedObjectContext = coreDataStack.createUiContext(parent: writerContext)
+    internal lazy var uiContext: NSManagedObjectContext = coreDataStack.createUiContext()
     
     internal let createdDate: Date = Date()
 
@@ -238,7 +237,7 @@ extension DataContainer {
 
     /// Commit to-be-stored data to its persistent store
     public func saveMetadata() throws {
-        let context = coreDataStack.createBackgroundDetachedContext()
+        let context = coreDataStack.createBackgroundContext()
         try context.performSync { try context.save() }
     }
 
@@ -252,7 +251,7 @@ extension DataContainer {
     private func criticalSectionForModifyingMetadata(autoSave: Bool, _ block: () -> Void) {
         metadataLock.lock()
         let context: NSManagedObjectContext? = autoSave
-            ? nil : coreDataStack.createBackgroundDetachedContext()
+            ? nil : coreDataStack.createBackgroundContext()
         defer {
             context?.performAndWait { try! context!.save() }
             metadataLock.unlock()
@@ -262,42 +261,25 @@ extension DataContainer {
 }
 
 extension DataContainer {
-    internal func detachedSessionContext(name: String? = nil) -> _DetachedSessionContext {
-        let context = coreDataStack.createBackgroundDetachedContext()
-        if context.persistentStoreCoordinator?.checkRequirement([
-            .sqliteStore, .concreteFile
-        ]) ?? false {
-            try! context.setQueryGenerationFrom(.current)
-        }
-        context.name = name ?? "backgroundDetached"
-        return _DetachedSessionContext(
-            executionContext: context,
-            rootContext: writerContext,
-            uiContext: uiContext)
-    }
-    
     internal func backgroundSessionContext(name: String? = nil) -> SessionContext {
-        let context = coreDataStack.createBackgroundContext(parent: writerContext)
+        let context = coreDataStack.createBackgroundContext()
         context.name = name ?? "background"
         return SessionContext(
             executionContext: context,
-            rootContext: writerContext,
             uiContext: uiContext)
     }
     
     internal func uiSessionContext(name: String? = nil) -> SessionContext {
-        let context = coreDataStack.createMainThreadContext(parent: writerContext)
+        let context = coreDataStack.createMainThreadContext()
         context.name = name ?? "ui"
         return SessionContext(
             executionContext: context,
-            rootContext: writerContext,
             uiContext: context)
     }
     
     internal func querySessionContext(name: String? = nil) -> SessionContext {
         return SessionContext(
             executionContext: uiContext,
-            rootContext: writerContext,
             uiContext: uiContext)
     }
 }
@@ -339,16 +321,6 @@ extension DataContainer: MutableQueryerProtocol, ReadOnlyQueryerProtocol {
 }
 
 extension DataContainer {
-    /// Create a detached session that its execution context is connecting directly to the persistent store coordinator.
-    ///
-    /// - Parameters:
-    ///     - name: Name that would be used as transaction author name in persistent history
-    public func startDetachedSession(name: String? = nil) -> Session {
-        Session(
-            context: detachedSessionContext(name: name),
-            mergePolicy: coreDataStack.mergePolicy)
-    }
-
     /// Create a working session.
     ///
     /// - Parameters:
@@ -403,7 +375,6 @@ extension DataContainer {
     /// It helps reduce the memory usage and also refresh objects in context.
     public func faultAllObjects() {
         uiContext.refreshAllObjects()
-        writerContext.refreshAllObjects()
     }
 }
 

@@ -134,7 +134,7 @@ extension Session {
         - Returns: The read-only representation of the entity if found; otherwise, nil.
     */
     public func load<T: Entity>(forURIRepresentation uri: URL, isFault: Bool = true) -> T.ReadOnly? {
-        guard let managedObjectID = context.rootContext.persistentStoreCoordinator!
+        guard let managedObjectID = context.executionContext.persistentStoreCoordinator!
                 .managedObjectID(forURIRepresentation: uri) else { return nil }
         return load(objectID: managedObjectID, isFault: isFault)
     }

@@ -73,9 +73,7 @@ class NotificationHandler {
     let seenTokens: SeenTokens
 
     private let _uiContext: () -> NSManagedObjectContext?
-    private var _writerContext: () -> NSManagedObjectContext?
     lazy var uiContext: NSManagedObjectContext? = _uiContext()
-    lazy var writerContext: NSManagedObjectContext? = _writerContext()
 
     weak var notifier: UiContextNotifier?
 
@@ -88,7 +86,6 @@ class NotificationHandler {
         _logger = { [weak container] in container?.logger ?? .default }
         // Load contexts lazily to prevent potential dead lock on initialization
         _uiContext = { [weak container] in container?.uiContext }
-        _writerContext = { [weak container] in container?.writerContext }
         self.seenTokens = seenTokens
     }
 
@@ -140,7 +137,7 @@ class ContextDidSaveNotificationHandler: NotificationHandler {
             self,
             selector: #selector(contextDidSave(notification:)),
             name: .NSManagedObjectContextDidSave,
-            object: writerContext)
+            object: nil)
     }
 
     override func disable() {
@@ -149,7 +146,7 @@ class ContextDidSaveNotificationHandler: NotificationHandler {
         NotificationCenter.default.removeObserver(
             self,
             name: .NSManagedObjectContextDidSave,
-            object: writerContext)
+            object: nil)
     }
 
     @objc func contextDidSave(notification: Notification) {
@@ -287,7 +284,6 @@ class PersistentHistoryNotificationHandler: NotificationHandler {
 
     @objc func persistentStoreHistoryChanged(_ notification: Notification) {
         guard let uiContext = uiContext,
-              let writerContext = writerContext,
               let storeURL = notification.userInfo?["storeURL"] as? URL,
               let notifier = notifier else { return }
 
@@ -323,7 +319,7 @@ class PersistentHistoryNotificationHandler: NotificationHandler {
             merger.merge(userInfo: changes)
             
             NSManagedObjectContext.mergeChanges(
-                fromRemoteContextSave: changes, into: [writerContext, uiContext])
+                fromRemoteContextSave: changes, into: [uiContext])
         }
 
         lock.unlock()

@@ -85,7 +85,7 @@ extension UpdateBuilder {
 
     /// Executes the update request asynchronously and returns the updated entities as an array of `NSManagedObjectID` objects.
     public func execAsync(completion: @escaping ([NSManagedObjectID]?, Error?) -> Void) {
-        context.rootContext.performAsync {
+        context.executionContext.performAsync {
             do {
                 let result = try self.exec()
                 completion(result, nil)
@@ -102,7 +102,7 @@ extension UpdateBuilder {
     }
 
     private func executeLegacyBatchUpdate() throws -> [NSManagedObjectID] {
-        let context = context.rootContext
+        let context = context.executionContext
         return try context.performSync {
             let request = config
                 .createStoreRequest() as! NSFetchRequest<NSManagedObject>

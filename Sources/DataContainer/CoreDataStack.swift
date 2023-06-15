@@ -9,7 +9,6 @@ import CoreData
 import Foundation
 
 internal let DefaultContextPrefix: String = "DefaultContext."
-internal let WriterContextName: String = "DefaultContext.writer"
 internal let UiContextName: String = "DefaultContext.ui"
 
 public class CoreDataStack {
@@ -86,24 +85,15 @@ public class CoreDataStack {
         coordinator.persistentStore(of: storage) != nil
     }
 
-    internal func createWriterContext() -> NSManagedObjectContext {
-        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        context.persistentStoreCoordinator = coordinator
-        context.mergePolicy = mergePolicy
-        context.automaticallyMergesChangesFromParent = false
-        context.name = WriterContextName
-        return context
-    }
-
-    internal func createUiContext(parent: NSManagedObjectContext) -> NSManagedObjectContext {
+    internal func createUiContext() -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-        context.parent = parent
+        context.persistentStoreCoordinator = coordinator
         context.automaticallyMergesChangesFromParent = false
         context.name = UiContextName
         return context
     }
-    
-    internal func createBackgroundDetachedContext() -> NSManagedObjectContext {
+
+    internal func createBackgroundContext() -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         context.persistentStoreCoordinator = coordinator
         context.mergePolicy = mergePolicy
@@ -111,16 +101,10 @@ public class CoreDataStack {
         return context
     }
 
-    internal func createBackgroundContext(parent: NSManagedObjectContext?) -> NSManagedObjectContext {
-        let context = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        context.parent = parent
-        context.automaticallyMergesChangesFromParent = false
-        return context
-    }
-
-    internal func createMainThreadContext(parent: NSManagedObjectContext?) -> NSManagedObjectContext {
+    internal func createMainThreadContext() -> NSManagedObjectContext {
         let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-        context.parent = parent
+        context.persistentStoreCoordinator = coordinator
+        context.mergePolicy = mergePolicy
         context.automaticallyMergesChangesFromParent = false
         return context
     }

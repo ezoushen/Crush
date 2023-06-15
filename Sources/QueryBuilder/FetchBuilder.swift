@@ -370,7 +370,6 @@ public final class ManagedFetchBuilder<Target: Entity>:
             config: config,
             context: SessionContext(
                 executionContext: context.executionContext,
-                rootContext: context.rootContext,
                 uiContext: context.executionContext))
     }
 }

@@ -15,23 +15,19 @@ public class SessionContext {
     }
 
     @inline(__always) var executionContext: NSManagedObjectContext { _executionContext }
-    @inline(__always) var rootContext: NSManagedObjectContext { _rootContext }
     @inline(__always) var uiContext: NSManagedObjectContext { _uiContext }
 
     private let _executionContext: NSManagedObjectContext!
-    private let _rootContext: NSManagedObjectContext!
     private let _uiContext: NSManagedObjectContext!
     private var _executionResult: ExecutionResult?
 
-    init(executionContext: NSManagedObjectContext, rootContext: NSManagedObjectContext, uiContext: NSManagedObjectContext) {
+    init(executionContext: NSManagedObjectContext, uiContext: NSManagedObjectContext) {
         self._executionContext = executionContext
-        self._rootContext = rootContext
         self._uiContext = uiContext
     }
 
     private init() {
         self._executionContext = nil
-        self._rootContext = nil
         self._uiContext = nil
     }
 
@@ -65,7 +61,7 @@ public class SessionContext {
     /// - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
     /// - Returns: A `ManagedObject` instance of the specified entity type.
     public func assign(object: NSManagedObject, to storage: Storage) {
-        guard let store = rootContext.persistentStoreCoordinator!
+        guard let store = executionContext.persistentStoreCoordinator!
             .persistentStore(of: storage) else {
             LogHandler.current.log(.error, "Persistent store for \(storage) not found")
             return
@@ -116,29 +112,11 @@ public class SessionContext {
     /// Saves any changes made to the context.
     /// - Throws: An error if the changes could not be saved.
     public func commit() throws {
-        let author = executionContext.transactionAuthor
         let result = try saveExecutionContext(executionContext)
-        try rootContext.performSync {
-            rootContext.transactionAuthor = author
-            try saveRootContext(rootContext, executionContext: executionContext)
-            rootContext.transactionAuthor = nil
-        }
         updateExecutionResult(result)
     }
 
     // MARK: Internal methods
-
-    func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext {
-        rootContext
-    }
-
-    func context(for fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext {
-        executionContext
-    }
-
-    func context(for asyncFetchRequest: NSAsynchronousFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext {
-        context(for: asyncFetchRequest.fetchRequest)
-    }
 
     func receive<T: NSManagedObject>(_ object: T) -> T {
         guard executionContext !== object.managedObjectContext else { return object }
@@ -156,7 +134,7 @@ public class SessionContext {
 
     func count(request: NSFetchRequest<NSFetchRequestResult>) -> Int {
         var result: Int? = nil
-        let context = context(for: request)
+        let context = executionContext
         context.performAndWait {
             do {
                 result = try context.count(for: request)
@@ -169,7 +147,7 @@ public class SessionContext {
     }
 
     func execute<T>(request: NSFetchRequest<NSFetchRequestResult>) throws -> [T] {
-        let context = context(for: request)
+        let context = executionContext
         return try context.performSync {
             let result = try context.fetch(request) as! [T]
             return result
@@ -177,7 +155,7 @@ public class SessionContext {
     }
 
     func execute<T: NSPersistentStoreResult>(request: NSPersistentStoreRequest) throws -> T {
-        let context = context(for: request)
+        let context = executionContext
         let result: T = try context.performSync {
             return try context.execute(request) as! T
         }
@@ -193,12 +171,7 @@ public class SessionContext {
             }
             return nil
         }() {
-            let contexts: [NSManagedObjectContext] = [
-                self.rootContext,
-                self.uiContext,
-                self.executionContext
-            ].filter { $0 !== context }
-
+            let contexts: [NSManagedObjectContext] = [ uiContext ]
             NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: contexts)
         }
         return result
@@ -231,7 +204,7 @@ public class SessionContext {
 extension SessionContext: QueryerProtocol, MutableQueryerProtocol {
 
     private func canUseBatchRequest() -> Bool {
-        rootContext
+        executionContext
             .persistentStoreCoordinator?
             .checkRequirement([.sqliteStore]) ?? false
     }
@@ -252,22 +225,6 @@ extension SessionContext: QueryerProtocol, MutableQueryerProtocol {
 
     public func delete<T: Entity>(for type: T.Type) -> DeleteBuilder<T> {
         .init(config: .init(batch: canUseBatchRequest()), context: self)
-    }
-}
-
-class _DetachedSessionContext: SessionContext {
-
-    override func commit() throws {
-        let result = try saveExecutionContext(executionContext)
-        refreshObjects(result, contexts: rootContext)
-    }
-    
-    override func context(for persistentStoreRequest: NSPersistentStoreRequest) -> NSManagedObjectContext {
-        executionContext
-    }
-    
-    override func context(for fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> NSManagedObjectContext {
-        executionContext
     }
 }
 
