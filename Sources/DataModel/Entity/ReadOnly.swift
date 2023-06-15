@@ -22,7 +22,7 @@ import CoreData
 ///     readOnlyEntity.property = newValue // ❌ Compiler error!!
 ///
 @dynamicMemberLookup
-public struct ReadOnly<T: Crush.Entity> {
+public struct ReadOnly<Entity: Crush.Entity> {
     /// This struct is used to access the raw data of the `ReadOnly` object. It's useful especially while you're
     /// trying to read the wrapper property and get the underlying value for multiple times
     ///
@@ -38,8 +38,7 @@ public struct ReadOnly<T: Crush.Entity> {
     ///     print(todo.raw.status) // 0
     @dynamicMemberLookup
     public struct Raw {
-        public typealias Driver = ManagedRawDriver<T>
-        public typealias Entity = T
+        public typealias Driver = ManagedRawDriver<Entity>
 
         internal var managedObject: NSManagedObject { driver.managedObject }
         internal let driver: Driver
@@ -59,25 +58,25 @@ public struct ReadOnly<T: Crush.Entity> {
         }
 
         /// Read the attribute from the `managedObject` through dynamic callable api
-        public subscript<T: AttributeProtocol>(
-            dynamicMember keyPath: KeyPath<Entity, T>) -> T.ManagedValue
+        public subscript<Attribute: AttributeProtocol>(
+            dynamicMember keyPath: KeyPath<Entity, Attribute>) -> Attribute.ManagedValue
         {
             context.performSync { driver[rawValue: keyPath] }
         }
 
         /// Read the relationship from the `managedObject` through dynamic callable api
-        public subscript<T: RelationshipProtocol>(
-            dynamicMember keyPath: KeyPath<Entity, T>
-        ) -> T.RuntimeValue.Safe
+        public subscript<Relationship: RelationshipProtocol>(
+            dynamicMember keyPath: KeyPath<Entity, Relationship>
+        ) -> Relationship.RuntimeValue.Safe
         where
-            T.RuntimeValue: UnsafeSessionProperty
+            Relationship.RuntimeValue: UnsafeSessionProperty
         {
             context.performSync { driver[value: keyPath].wrapped() }
         }
 
         /// Read the fetched property from the `managedObject` through dynamic callable api
-        public subscript<T: FetchedPropertyProtocol>(
-            dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
+        public subscript<Relationship: FetchedPropertyProtocol>(
+            dynamicMember keyPath: KeyPath<Entity, Relationship>) -> Relationship.RuntimeValue
         {
             context.performSync {
                 NSManagedObject.$currentFetchSource.withValue(managedObject) {
@@ -87,15 +86,14 @@ public struct ReadOnly<T: Crush.Entity> {
         }
     }
 
-    public typealias Entity = T
-    public typealias Driver = ManagedDriver<T>
-    
+    public typealias Driver = ManagedDriver<Entity>
+
     internal var managedObject: NSManagedObject { driver.managedObject }
     internal let driver: ManagedDriver<Entity>
     internal let context: NSManagedObjectContext
 
     /// Wrap the `ReadOnly` object to `ReadOnly.Raw`
-    public var raw: ReadOnly<T>.Raw {
+    public var raw: ReadOnly<Entity>.Raw {
         Raw(driver: driver.rawDriver())
     }
 
@@ -117,22 +115,22 @@ public struct ReadOnly<T: Crush.Entity> {
     }
 
     /// Access properties of the underlying `managedObject`
-    public func access<T: Property>(
-        keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
+    public func access<Property: Crush.Property>(
+        keyPath: KeyPath<Entity, Property>) -> Property.RuntimeValue
     {
         context.performSync { driver[value: keyPath] }
     }
 
     /// Access properties of the underlying `managedObject`
-    public subscript<T: Property>(
-        dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
+    public subscript<Property: Crush.Property>(
+        dynamicMember keyPath: KeyPath<Entity, Property>) -> Property.RuntimeValue
     {
         access(keyPath: keyPath)
     }
 
     /// Access the fetched property of the underlying `managedObject`.
-    public subscript<T: FetchedPropertyProtocol>(
-        dynamicMember keyPath: KeyPath<Entity, T>) -> T.RuntimeValue
+    public subscript<FetchedProperty: FetchedPropertyProtocol>(
+        dynamicMember keyPath: KeyPath<Entity, FetchedProperty>) -> FetchedProperty.RuntimeValue
     {
         context.performSync {
             NSManagedObject.$currentFetchSource.withValue(managedObject) {
@@ -142,11 +140,11 @@ public struct ReadOnly<T: Crush.Entity> {
     }
 
     /// Access properties of the underlying `managedObject`
-    public subscript<T: Property>(
-        dynamicMember keyPath: KeyPath<Entity, T>
-    ) -> T.RuntimeValue.Safe
+    public subscript<Property: Crush.Property>(
+        dynamicMember keyPath: KeyPath<Entity, Property>
+    ) -> Property.RuntimeValue.Safe
     where
-        T.RuntimeValue: UnsafeSessionProperty
+        Property.RuntimeValue: UnsafeSessionProperty
     {
         context.performSync { driver[value: keyPath].wrapped() }
     }
@@ -174,8 +172,8 @@ extension ReadOnly: ManagedStatus {
         managedObject.propertyHashValue
     }
 
-    public func hasFault<T: RelationshipProtocol>(
-        forRelationship keyPath: KeyPath<Entity, T>) -> Bool
+    public func hasFault<Relationship: RelationshipProtocol>(
+        forRelationship keyPath: KeyPath<Entity, Relationship>) -> Bool
     {
         managedObject.hasFault(forRelationshipNamed: keyPath.propertyName)
     }
