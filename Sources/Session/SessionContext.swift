@@ -262,34 +262,6 @@ extension SessionContext {
         }
         return .init(inserted: insertedObjectIDs, updated: updatedObjectIDs, deleted: deletedObjectIDs)
     }
-    
-    fileprivate func saveRootContext(
-        _ rootContext: NSManagedObjectContext,
-        executionContext: NSManagedObjectContext) throws
-    {
-        let originalMergePolicy = rootContext.mergePolicy
-        defer { rootContext.mergePolicy = originalMergePolicy }
-        rootContext.mergePolicy = executionContext.mergePolicy
-        do {
-            try rootContext.save()
-        } catch let _error as NSError {
-            let error: Error = CoreDataError(nsError: _error) ?? _error
-            LogHandler.current.log(.error, "Merge changes from root context ended with error", error: error)
-            rootContext.rollback()
-            throw error
-        }
-    }
-
-    func refreshObjects(
-        _ executionResult: ExecutionResult, contexts: NSManagedObjectContext...)
-    {
-        NSManagedObjectContext.mergeChanges(
-            fromRemoteContextSave: [
-                NSInsertedObjectsKey: executionResult.inserted,
-                NSUpdatedObjectsKey: executionResult.updated,
-                NSDeletedObjectsKey: executionResult.deleted,
-            ], into: contexts)
-    }
 }
 
 extension NSManagedObjectContext {

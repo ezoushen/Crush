@@ -58,7 +58,7 @@ All store types defined in `CoreData` are supported, including xml (macOS only),
 let container = try DataContainer.load(storages: .inMemory(), dataModel: myDataModel)
 ```
 
-Fore more details, you can learn how to use it in ``DataContainer`` page. After creating a data container, now you can access and modify data through the ``Session`` object. The following code snippet shows how to create a new ``Todo`` object and save it to the database.
+Fore more details, you can learn how to use it in ``DataContainer`` page. After creating a data container, now you can access and modify data through the ``Session`` object. The following code snippet shows how to create a new `Todo` object and save it to the database.
 
  
 ```swift

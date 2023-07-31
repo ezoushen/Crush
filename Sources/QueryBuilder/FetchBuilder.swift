@@ -147,6 +147,37 @@ where
         config.modify { $0.includesSubentities = flag }
         return self
     }
+
+    /// Adds one or more key paths to the select clause.
+    /// - Parameter keyPaths: The key paths to add to the select clause.
+    public func select(_ keyPaths: PartialKeyPath<Target>...) -> Self {
+        select(keyPaths)
+    }
+
+    /// Adds one or more `SelectPath` instances to the select clause.
+    /// - Parameter selectPaths: The `SelectPath` instances to add to the select clause.
+    public func select(_ selectPaths: SelectPath<Target>...) -> Self {
+        select(selectPaths)
+    }
+
+    /// Adds an array of key paths to the select clause.
+    /// - Parameter keyPaths: An array of key paths to add to the select clause.
+    public func select(_ keyPaths: [PartialKeyPath<Target>]) -> Self {
+        config.modify {
+            for keyPath in keyPaths {
+                guard let expressible = keyPath as? Expressible else { continue }
+                $0.fetch(property: expressible)
+            }
+        }
+        return self
+    }
+
+     /// Adds an array of `SelectPath` instances to the select clause.
+     /// - Parameter selectPaths: An array of `SelectPath` instances to add to the select clause.
+    public func select(_ selectPaths: [SelectPath<Target>]) -> Self {
+        config.modify { selectPaths.forEach($0.fetch(property:)) }
+        return self
+    }
 }
 
 extension FetchBuilder {

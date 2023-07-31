@@ -12,7 +12,6 @@ A session is composed of three `NSManagedObjectContext`s, each with a different 
 
 - **Execution context**: This context is responsible for performing data mutations.
 - **UI context**: This context is responsible for presenting data on the main thread.
-- **Writer context**: This context is responsible for pushing changes to the persistent store coordinator.
 
 By separating the execution context and the UI context, we can ensure that the main thread is free from direct communication with the database. This separation of concerns allows for a smoother user experience and helps prevent issues such as UI lag or freezes.
 
