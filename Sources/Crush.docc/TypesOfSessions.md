@@ -14,14 +14,9 @@ This session type is suitable for interactive use cases. The execution context, 
 
 The use case of this session type is to perform data mutation in the main thread, and present data in the main thread. It is suitable for interactive use cases, such as editing data in a form. All changes are available during the session regardless .
 
-## Detached Session
-
-The execution context for this type of Session is directly connected to the persistent store coordinator, making it similar to a remote session. Changes made in this session won't be applied to the core data stack of the data container until they are fully committed. This session type is ideal for background tasks, such as background syncing.
-
 ## Table of comparison between different session types
 
-| Session Type | Execution Thread | Parent of the execution context | UI Context | Writer Context | Use Case |
-| --- | --- | --- | --- | --- | --- |
-| General Session | Background thread | The writer context | Main UI context | The writer context | Apply data changes into the database
-| Interactive Session | Main thread | The writer context | The writer context | The writer context | Interactive data editing
-| Detached Session | Background thread | The PSC | Main UI context | The writer context | Background syncing
+| Session Type | Execution Thread | UI Context | Use Case |
+| --- | --- | --- | --- |
+| General Session | Background thread | Main UI context | Apply data changes into the database
+| Interactive Session | Main thread | The writer context | Interactive data editing

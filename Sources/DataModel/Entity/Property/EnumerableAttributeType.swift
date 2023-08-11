@@ -12,10 +12,9 @@ public protocol EnumerableAttributeType<RawAttributeType>:
     RawRepresentable,
     AttributeType,
     PredicateEquatable,
-    PredicateComparable,
     Hashable
 where
-    RawValue: PredicateEquatable & PredicateComparable & Hashable,
+    RawValue: PredicateEquatable & Hashable,
     ManagedValue == RawAttributeType.ManagedValue,
     RuntimeValue == Self?,
     PredicateValue == RawAttributeType.PredicateValue,
@@ -47,3 +46,8 @@ extension EnumerableAttributeType {
         hasher.combine(rawValue)
     }
 }
+
+public protocol ComparableEnumerableAttributeType<RawAttributeType>:
+    EnumerableAttributeType, PredicateComparable
+where
+    RawValue: PredicateComparable { }

@@ -4,7 +4,7 @@ Basic concepts behind `Crush`
 
 ## What is Crush
 
-`Crush` is a framework that facilitates interacting with CoreData features in a Swifty and type-safe manner. It differs from vanilla CoreData in several ways, such as the CoreData stack, schema declaration, concurrency management, more powerful predicate builder (thanks to operator overloading), and data migration.
+`Crush` is a framework that facilitates interacting with CoreData features in a Swifty and type-safe manner. It differs from vanilla CoreData in several ways, such as schema declaration, concurrency management, more powerful predicate builder (thanks to operator overloading), and data migration.
 
 ### Schema declaration
 
