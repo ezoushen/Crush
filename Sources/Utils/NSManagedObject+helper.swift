@@ -9,12 +9,26 @@
 import CoreData
 
 extension NSManagedObjectContext {
-    func load(objectID: NSManagedObjectID, isFault: Bool) -> NSManagedObject {
-        guard isFault else { return object(with: objectID) }
-        do {
-            return try existingObject(with: objectID)
-        } catch {
-            return object(with: objectID)
+    func load(objectID: NSManagedObjectID, isFault: Bool) -> NSManagedObject? {
+        // Load from registered object first
+        if let object = registeredObject(for: objectID) {
+            return object
+        }
+        // Load from persistent store
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: objectID.entity.name!)
+        request.predicate = NSPredicate(format: "SELF = %@", objectID)
+        request.fetchLimit = 1
+        request.returnsObjectsAsFaults = isFault
+        request.resultType = isFault ? .managedObjectIDResultType : .managedObjectResultType
+
+        let result = try! fetch(request).first
+
+        if let id = result as? NSManagedObjectID {
+            return object(with: id)
+        } else if let object = result as? NSManagedObject {
+            return object
+        } else {
+            return nil
         }
     }
 
@@ -24,11 +38,6 @@ extension NSManagedObjectContext {
 }
 
 extension NSManagedObject {
-    func fireFaultIfNeeded() {
-        guard isFault else { return }
-        fireFault()
-    }
-
     func fireFault() {
         let description = Self.entity()
         let key = description.allAttributeKeys().first ??

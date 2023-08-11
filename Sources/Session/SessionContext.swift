@@ -56,6 +56,14 @@ public class SessionContext {
         executionContext.load(objectID: objectID, isFault: isFault) as? ManagedObject<T>
     }
 
+    /// A public function to load a managed object of the specified entity type with the specified object ID.
+    /// - Parameter objectID: The object ID of the managed object to load.
+    /// - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
+    /// - Returns: A `ManagedObject` instance of the specified entity type.
+    public func load<T: Entity>(objectIDs: [NSManagedObjectID], isFault: Bool = true) -> [ManagedObject<T>?] {
+        objectIDs.map { load(objectID: $0, isFault: isFault) }
+    }
+
     /// A public function to load a managed object of the specified entity type with the specified URI representation.
     /// - Parameter uri: The URI representation of the managed object to load.
     /// - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
@@ -67,14 +75,6 @@ public class SessionContext {
             return
         }
         executionContext.assign(object, to: store)
-    }
-
-    /// Loads a managed object of the given entity type with the given object ID and returns it as a fault.
-    /// - Parameter objectID: The object ID of the managed object to load.
-    /// - Returns: The loaded managed object as a fault, or nil if it could not be loaded.
-    @inlinable
-    public func load<T: Entity>(objectID: NSManagedObjectID) -> ManagedObject<T>? {
-        load(objectID: objectID, isFault: true)
     }
 
     /// Edits the given read-only object and returns a new managed object with the changes applied.

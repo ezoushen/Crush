@@ -353,7 +353,7 @@ extension DataContainer {
 
     /// Load the objects by the given object IDs
     public func load<T: Entity>(objectIDs: [NSManagedObjectID], isFault: Bool = true) -> [T.ReadOnly?] {
-        objectIDs.lazy.map { load(objectID: $0, isFault: isFault)}
+        objectIDs.map { load(objectID: $0, isFault: isFault)}
     }
 
     /// Load the object by the given `NSManagedObjectID` in uri representation

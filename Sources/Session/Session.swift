@@ -114,15 +114,15 @@ extension Session {
     }
 
     /**
-        Loads the entities with the given object IDs and returns their read-only representations.
+        Loads the entity with the given object ID and returns its read-only representation.
 
         - Parameters:
-          - objectIDs: The object IDs of the entities to be loaded.
-          - isFault: A Boolean value indicating whether the entities should be returned as fault objects.
-        - Returns: An array of read-only representations of the entities.
+          - objectID: The object ID of the entity to be loaded.
+          - isFault: A Boolean value indicating whether the entity should be returned as a fault object.
+        - Returns: The read-only representation of the entity if found; otherwise, nil.
     */
     public func load<T: Entity>(objectIDs: [NSManagedObjectID], isFault: Bool = true) -> [T.ReadOnly?] {
-        objectIDs.lazy.map { load(objectID: $0, isFault: isFault) }
+        objectIDs.map { load(objectID: $0, isFault: isFault) }
     }
 
     /**
