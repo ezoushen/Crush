@@ -8,8 +8,13 @@
 import CoreData
 import Foundation
 
-/// Represents a primary key for an entity.
-public struct PrimaryKey<T: Entity> {
+/// Represents a primary key for an entity in Core Data.
+///
+/// The `PrimaryKey` struct is a generic struct that takes a type parameter `T` which must conform to the `Entity` protocol.
+/// It has properties for the entity name and the incremental ID of the object.
+/// It provides initializers to create a primary key with an incremental ID or an object ID.
+/// It also includes an extension that adds a method to retrieve the `NSManagedObjectID` associated with the primary key.
+public struct PrimaryKey<T: Entity>: Equatable {
     /// The name of the entity.
     public let entityName: String
     /// The incremental ID of the object.
@@ -86,13 +91,11 @@ extension PrimaryKeyLoader where Self: NSPersistentStoreCoordinatorHolder {
         }
 
         // Load from registered stores sequentially if not provided
-        for store in coordinator?.persistentStores ?? [] {
-            guard let id = managedObjectID(in: store) else { continue }
-            return id
+        if let store = coordinator?.persistentStores.first(where: { managedObjectID(in: $0) != nil }) {
+            return managedObjectID(in: store)
+        } else {
+            return nil
         }
-
-        // Return nil otherwise
-        return nil
     }
 }
 
