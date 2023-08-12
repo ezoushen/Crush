@@ -178,6 +178,14 @@ where
         config.modify { selectPaths.forEach($0.fetch(property:)) }
         return self
     }
+
+    /// Sets the flag indicating whether the refetched objects should be refreshed.
+    /// - Parameter flag: A boolean value indicating whether to refresh refetched objects. Default is true.
+    /// - Returns: The FetchBuilder instance.
+    public func refreshRefetchedObjects(_ flag: Bool = true) -> Self {
+        config.modify { $0.shouldRefreshRefetchedObjects = flag }
+        return self
+    }
 }
 
 extension FetchBuilder {

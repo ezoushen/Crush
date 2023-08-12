@@ -33,7 +33,7 @@ extension NSManagedObjectContext {
     }
 
     func receive<T: NSManagedObject>(runtimeObject: T) -> T {
-        load(objectID: runtimeObject.objectID, isFault: runtimeObject.isFault) as! T
+        (load(objectID: runtimeObject.objectID, isFault: runtimeObject.isFault) ?? object(with: runtimeObject.objectID)) as! T
     }
 }
 

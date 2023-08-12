@@ -9,13 +9,15 @@ import CoreData
 
 fileprivate func warning(
     _ condition: @autoclosure () -> Bool,
-    _ message: @autoclosure () -> String)
-{
+    _ message: @autoclosure () -> String,
+    _ file: String = #file,
+    _ line: Int = #line
+){
     #if DEBUG
     guard condition() else { return }
     print(message(),
           "to resolve this warning, you can set breakpoint at " +
-            "\(#file.split(separator: "/").last ?? "") \(#line)")
+            "\(file.split(separator: "/").last ?? "") \(line) to trace the execution")
     #endif
 }
 
@@ -167,7 +169,7 @@ extension Session {
 
     private func warnUnsavedChangesIfNeeded() {
         warning(shouldWarnUnsavedChangesOnPrivateContext(),
-                "You should commit changes in session before return")
+                "Ensure that you commit any unsaved changes before the block completes. Otherwise, uncommitted changes might result in unexpected issues.")
     }
 
     /**

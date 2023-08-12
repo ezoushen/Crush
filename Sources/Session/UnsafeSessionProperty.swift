@@ -35,7 +35,12 @@ extension MutableSet: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Safe = Set<Entity.ReadOnly>
 
     public func wrapped(in session: Session?) -> Set<Entity.ReadOnly> {
-        Set(map { wrap(object: $0, in: session) })
+        if let moc = first?.managedObject.managedObjectContext,
+           session != nil && session?.context.uiContext != moc
+       {
+            try? moc.obtainPermanentIDs(for: map { $0.managedObject })
+        }
+        return Set(map { wrap(object: $0, in: session) })
     }
 }
 
@@ -45,7 +50,12 @@ extension MutableOrderedSet: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Safe = OrderedSet<Entity.ReadOnly>
 
     public func wrapped(in session: Session?) -> OrderedSet<Entity.ReadOnly> {
-        OrderedSet(map { wrap(object: $0, in: session) })
+        if let moc = first?.managedObject.managedObjectContext,
+           session != nil && session?.context.uiContext != moc
+        {
+            try? moc.obtainPermanentIDs(for: map { $0.managedObject })
+        }
+        return OrderedSet(map { wrap(object: $0, in: session) })
     }
 }
 
@@ -55,7 +65,12 @@ extension Array: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Safe = Array<Entity.ReadOnly>
 
     public func wrapped(in session: Session?) -> Array<Entity.ReadOnly> {
-        map { wrap(object: $0, in: session) }
+        if let moc = first?.managedObject.managedObjectContext,
+           session != nil && session?.context.uiContext != moc
+        {
+            try? moc.obtainPermanentIDs(for: map { $0.managedObject })
+        }
+        return map { wrap(object: $0, in: session) }
     }
 }
 
@@ -65,7 +80,12 @@ extension Set: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Safe = Set<Entity.ReadOnly>
 
     public func wrapped(in session: Session?) -> Set<Entity.ReadOnly> {
-        Set<Entity.ReadOnly>(map { wrap(object: $0, in: session) })
+        if let moc = first?.managedObject.managedObjectContext,
+            session != nil && session?.context.uiContext != moc
+        {
+            try? moc.obtainPermanentIDs(for: map { $0.managedObject })
+        }
+        return Set<Entity.ReadOnly>(map { wrap(object: $0, in: session) })
     }
 }
 
@@ -76,6 +96,7 @@ extension ReadOnly: UnsafeSessionProperty {
         // Rewrap the object if its managedObjectContext is not ui context
         guard let session = session,
               session.context.uiContext !== context else { return self }
+        try? context.obtainPermanentIDs(for: [managedObject])
         return ReadOnly(object: session.context.present(managedObject))
     }
 }
@@ -94,7 +115,10 @@ extension Swift.Optional: UnsafeSessionProperty where Wrapped: UnsafeSessionProp
 extension ObjectDriver where Self: UnsafeSessionProperty {
     public typealias Safe = ReadOnly<Entity>
     public func wrapped(in session: Session?) -> ReadOnly<Entity> {
-        wrap(object: self, in: session)
+        if session != nil && session?.context.uiContext != managedObject.managedObjectContext {
+            try? managedObject.managedObjectContext?.obtainPermanentIDs(for: [managedObject])
+        }
+        return wrap(object: self, in: session)
     }
 }
 
