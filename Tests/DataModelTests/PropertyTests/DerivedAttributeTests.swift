@@ -18,7 +18,9 @@ class DerivedAttributeTests: XCTestCase {
         var relationship = Relation.ToMany<Entity_B>("relationship")
     }
 
-    class Entity_B: Entity { }
+    class Entity_B: Entity {
+        var integer = Value.Int16("integer")
+    }
 
     func test_expression_timestampShouldBeNow() {
         let sut = Derived.Date("timestamp")
@@ -48,6 +50,11 @@ class DerivedAttributeTests: XCTestCase {
     func test_expression_derivedAggregationCount() {
         let sut = Derived.Int16("derivedRelationship", from: \Entity_A.relationship, aggregation: .count)
         XCTAssertEqual(sut.expression, NSExpression(format: "relationship.@count"))
+    }
+
+    func test_expression_derivedAggregationSum() {
+        let sut = Derived.Int16("derivedRelationship", from: \Entity_A.relationship, property: \.integer, aggregation: .sum)
+        XCTAssertEqual(sut.expression, NSExpression(format: "relationship.integer.@sum"))
     }
 
     func test_derivedTransformable_derivationExpressionKeyPathShouldEqualToKeyPath() {

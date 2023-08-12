@@ -56,19 +56,43 @@ var children = Relation.ToMany<ChildEntity>("children")
 
 ### Derived Attribute
 
-Derived property is a powerful feature of CoreData, it allows you to define a property that is computed from other properties. You can declare a derived property as example below.
+``DerivedAttribute`` is a powerful feature of CoreData that allows you to define a property computed from other properties. You can declare a derived bool property as shown below.
 
 ``` swift
-// This declare a derived bool property named "derivedProperty" from "PROPERTY_NAME"
 let derivedProperty = Derived.Bool("derivedProperty", from: "PROPERTY_NAME")
+```
+
+There are also some pre-defined functions that can be used as the value of the derived property.
+
+``` swift
+// This declares a derived date property named "modifiedDate" that will be updated on save.
+let modifiedDate = Derived.Date("modifiedDate", derivation: .dateNow())
+
+// This declares a derived int16 property named "entitiesCount" that will store the count of entities.
+let entitiesCount = Derived.Int16("entitiesCount", from: \.toManyEntities, aggregation: .count)
+
+// This declares a derived int16 property named "entitiesSum" that will store the sum of entities.
+let entitiesSum = Derived.Int16("entitiesSum", from: \.toManyEntities, property: \.integerValue, aggregation: .sum)
 ```
 
 ### Fetched Property
 
-Fetched property is also a powerful feature designed by CoreData, it helps you fetch entities based on the provided pre-defined predicate by only accessing this property. You can declare a fetched property as example below.
+``FetchedProperty`` is a powerful feature provided by CoreData. It allows you to fetch entities based on a pre-defined predicate by accessing this property. Here is an example of declaring a fetched property:
 
 ``` swift
 let fetchedProperty = Fetched<TargetEntity>("fetchedProperty") { 
     $0.where(\.boolValue == true)
 }
 ```
+
+It also provides a convenient way to fetch entities based on the fetch source property. In the following example, entities with the same boolValue as the fetch source will be fetched:
+
+``` swift
+let fetchedProperty = Fetched<TargetEntity>("fetchedProperty") {
+    $0.where(\.boolValue == FetchSource.boolValue)
+}
+```
+
+## Property Modifiers
+
+

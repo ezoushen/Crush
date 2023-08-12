@@ -198,4 +198,28 @@ extension DerivedAttribute where PropertyType: IntAttributeType {
                 toManyRelationship: keyPath.propertyName,
                 aggregation: aggregation))
     }
+
+    /**
+     Initializes a derived integer attribute with a name, a key path, and an aggregation.
+
+     - Parameters:
+        - name: The name of the attribute.
+        - keyPath: The key path used to calculate the attribute value.
+        - aggregation: The aggregation used to calculate the attribute value.
+     */
+    public convenience init<T: Entity, S: RelationshipProtocol, U: Property>(
+        _ name: String,
+        from keyPath: KeyPath<T, S>,
+        property: KeyPath<S.Destination, U>,
+        aggregation: DerivedAggregation)
+    where
+        S.Mapping: ToManyRelationMappingProtocol
+    {
+        self.init(
+            name: name,
+            derivation: .aggregate(
+                toManyRelationship: keyPath.propertyName,
+                property: property.propertyName,
+                aggregation: aggregation))
+    }
 }

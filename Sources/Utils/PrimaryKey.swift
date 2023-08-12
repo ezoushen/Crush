@@ -23,9 +23,9 @@ public struct PrimaryKey<T: Entity>: Equatable {
     /// Initializes a primary key with the given incremental ID.
     ///
     /// - Parameter incrementalID: The incremental ID of the object.
-    public init(_ incrementalID: Int) {
+    public init(type: T.Type = T.self, _ id: Int) {
         self.entityName = T.name
-        self.incrementalID = incrementalID
+        self.incrementalID = id
     }
 
     /// Initializes a primary key with the given object ID.
@@ -36,7 +36,7 @@ public struct PrimaryKey<T: Entity>: Equatable {
         guard objectID.isTemporaryID == false, objectID.entity == T.entity()
         else { return nil }
         let uri = objectID.uriRepresentation()
-        let idString = String(uri.lastPathComponent.dropFirst(1))
+        let idString = uri.lastPathComponent.replacingOccurrences(of: "p", with: "")
         guard let id = Int(idString) else { return nil }
         self.init(id)
     }

@@ -38,6 +38,7 @@ let package = Package(
 ### Managing data schema
 
 - <doc:ManageProperties>
+- <doc:PropertyModifier>
 
 ### Working with Session
 
@@ -47,3 +48,8 @@ let package = Package(
 - <doc:UndoRedoInSession>
 
 ### Query builders 
+
+// Fetch Builder
+// Aggreation Builder
+// Update Builder
+// Delete Builder

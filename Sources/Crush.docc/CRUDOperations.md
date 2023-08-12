@@ -35,7 +35,7 @@ try session.sync { context in
 
 ### Load by NSManagedObjectID
 
-You can load an entity by calling ``SessionContext/load(objectID:)``
+You can load an entity by calling ``SessionContext/load(objectID:isFault:)``
 
 ```swift 
 session.sync { context in

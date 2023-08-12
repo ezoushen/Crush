@@ -51,6 +51,10 @@ public extension NSExpression {
     static func aggregate(toManyRelationship name: String, aggregation: DerivedAggregation) -> NSExpression {
         NSExpression(format: "\(name).@\(aggregation)")
     }
+
+    static func aggregate(toManyRelationship name: String, property: String, aggregation: DerivedAggregation) -> NSExpression {
+        NSExpression(format: "\(name).\(property).@\(aggregation)")
+    }
     
     static func stringMapping(propertyName name: String, mapping: DerivedStringMapping) -> NSExpression {
         NSExpression(format: "\(mapping.rawValue)(\(name))")
