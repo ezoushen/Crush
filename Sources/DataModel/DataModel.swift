@@ -18,29 +18,31 @@ import Foundation
 ///
 /// Example:
 ///
-///     class CurrentEntityMap: EntityMap {
-///         @Abstract
-///         var abstractEntity = AbstractEntity()
+/// ``` swift
+/// class CurrentEntityMap: EntityMap {
+///     @Abstract
+///     var abstractEntity = AbstractEntity()
 ///
-///         @Configuration("CONF")
-///         @Configuration("ANOTHER CONF")
-///         @Embedded
-///         @Abstract // This modifier will be ignored
-///         var embeddedEntity = EmbeddedEntity()
+///     @Configuration("CONF")
+///     @Configuration("ANOTHER CONF")
+///     @Embedded
+///     @Abstract // This modifier will be ignored
+///     var embeddedEntity = EmbeddedEntity()
 ///
-///         @Concrete
-///         @Configuration("CONF")
-///         var concreteEntity = ConcreteEntity()
-///     }
+///     @Concrete
+///     @Configuration("CONF")
+///     var concreteEntity = ConcreteEntity()
+/// }
 ///
-///     // "CONF" includes EmbeddedEntity and ConcreteEntity.
-///     // "ANOTHER CONF" includes noly EmbeddedEntity.
+/// // "CONF" includes EmbeddedEntity and ConcreteEntity.
+/// // "ANOTHER CONF" includes noly EmbeddedEntity.
+/// ```
 ///
 /// - Note: `EntityMap` should be subclassed and is responsible for declaring available entities within.
 ///
 /// - Warning: A configuration name must be unique.
 ///
-open /*abstract*/ class EntityMap {
+open class /* abstract */ EntityMap {
     open var name: String {
         String(describing: Self.self)
     }

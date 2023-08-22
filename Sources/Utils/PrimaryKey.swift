@@ -50,10 +50,11 @@ extension PrimaryKey {
     ///
     /// Usage:
     ///
-    ///     let loader = PrimaryKeyLoader()
-    ///     let objectID = primaryKey.objectID(loader)
-    ///     print(objectID) // prints the NSManagedObjectID or nil
-    ///
+    /// ``` swift
+    /// let loader = PrimaryKeyLoader()
+    /// let objectID = primaryKey.objectID(loader)
+    /// print(objectID) // prints the NSManagedObjectID or nil
+    /// ```
     public func objectID(_ loader: PrimaryKeyLoader) -> NSManagedObjectID? {
         loader.objectID(from: self)
     }
@@ -116,10 +117,10 @@ extension DataContainer: PrimaryKeyLoader, NSPersistentStoreCoordinatorHolder {
     /// - Returns: The loaded object if found, otherwise nil.
     ///
     /// Usage:
-    ///
-    ///     let primaryKey = PrimaryKey<MyEntity>(1)
-    ///     let object = dataContainer.load(primaryKey: primaryKey)
-    ///
+    /// ``` swift
+    /// let primaryKey = PrimaryKey<MyEntity>(1)
+    /// let object = dataContainer.load(primaryKey: primaryKey)
+    /// ```
     public func load<T: Entity>(primaryKey pk: PrimaryKey<T>, isFault: Bool = true) -> T.ReadOnly? {
         guard let id = _objectID(entityName: pk.entityName, incrementalID: pk.incrementalID)
         else { return nil }
@@ -134,11 +135,11 @@ extension DataContainer: PrimaryKeyLoader, NSPersistentStoreCoordinatorHolder {
     /// - Returns: An array of loaded objects. The array may contain nil values for objects that were not found.
     ///
     /// Usage:
-    ///
-    ///     let primaryKey1 = PrimaryKey<MyEntity>(1)
-    ///     let primaryKey2 = PrimaryKey<MyEntity>(2)
-    ///     let objects = dataContainer.load(primaryKeys: [primaryKey1, primaryKey2])
-    ///
+    /// ``` swift
+    /// let primaryKey1 = PrimaryKey<MyEntity>(1)
+    /// let primaryKey2 = PrimaryKey<MyEntity>(2)
+    /// let objects = dataContainer.load(primaryKeys: [primaryKey1, primaryKey2])
+    /// ```
     public func load<T: Entity>(primaryKeys pks: [PrimaryKey<T>], isFault: Bool = true) -> [T.ReadOnly?] {
         pks.map { load(primaryKey: $0, isFault: isFault) }
     }
@@ -161,10 +162,10 @@ extension Session: PrimaryKeyLoader, NSPersistentStoreCoordinatorHolder {
     /// - Returns: The loaded object if found, otherwise nil.
     ///
     /// Usage:
-    ///
-    ///     let primaryKey = PrimaryKey<MyEntity>(1)
-    ///     let object = session.load(primaryKey: primaryKey)
-    ///
+    /// ``` swift
+    /// let primaryKey = PrimaryKey<MyEntity>(1)
+    /// let object = session.load(primaryKey: primaryKey)
+    /// ```
     public func load<T: Entity>(primaryKey pk: PrimaryKey<T>, isFault: Bool = true) -> T.ReadOnly? {
         guard let id = _objectID(entityName: pk.entityName, incrementalID: pk.incrementalID)
         else { return nil }
@@ -179,11 +180,11 @@ extension Session: PrimaryKeyLoader, NSPersistentStoreCoordinatorHolder {
     /// - Returns: An array of loaded objects. The array may contain nil values for objects that were not found.
     ///
     /// Usage:
-    ///
-    ///     let primaryKey1 = PrimaryKey<MyEntity>(1)
-    ///     let primaryKey2 = PrimaryKey<MyEntity>(2)
-    ///     let objects = session.load(primaryKeys: [primaryKey1, primaryKey2])
-    ///
+    /// ``` swift
+    /// let primaryKey1 = PrimaryKey<MyEntity>(1)
+    /// let primaryKey2 = PrimaryKey<MyEntity>(2)
+    /// let objects = session.load(primaryKeys: [primaryKey1, primaryKey2])
+    /// ```
     public func load<T: Entity>(primaryKeys pks: [PrimaryKey<T>], isFault: Bool = true) -> [T.ReadOnly?] {
         pks.map { load(primaryKey: $0, isFault: isFault) }
     }
@@ -206,10 +207,10 @@ extension SessionContext: PrimaryKeyLoader, NSPersistentStoreCoordinatorHolder {
     /// - Returns: The loaded object if found, otherwise nil.
     ///
     /// Usage:
-    ///
-    ///     let primaryKey = PrimaryKey<MyEntity>(1)
-    ///     let object = sessionContext.load(primaryKey: primaryKey)
-    ///
+    /// ``` swift
+    /// let primaryKey = PrimaryKey<MyEntity>(1)
+    /// let object = sessionContext.load(primaryKey: primaryKey)
+    /// ```
     public func load<T: Entity>(primaryKey pk: PrimaryKey<T>, isFault: Bool = true) -> T.Managed? {
         guard let id = _objectID(entityName: pk.entityName, incrementalID: pk.incrementalID)
         else { return nil }
@@ -224,11 +225,11 @@ extension SessionContext: PrimaryKeyLoader, NSPersistentStoreCoordinatorHolder {
     /// - Returns: An array of loaded objects. The array may contain nil values for objects that were not found.
     ///
     /// Usage:
-    ///
-    ///     let primaryKey1 = PrimaryKey<MyEntity>(1)
-    ///     let primaryKey2 = PrimaryKey<MyEntity>(2)
-    ///     let objects = sessionContext.load(primaryKeys: [primaryKey1, primaryKey2])
-    ///
+    /// ``` swift
+    /// let primaryKey1 = PrimaryKey<MyEntity>(1)
+    /// let primaryKey2 = PrimaryKey<MyEntity>(2)
+    /// let objects = sessionContext.load(primaryKeys: [primaryKey1, primaryKey2])
+    /// ```
     public func load<T: Entity>(primaryKeys pks: [PrimaryKey<T>], isFault: Bool = true) -> [T.Managed?] {
         pks.map { load(primaryKey: $0, isFault: isFault) }
     }
