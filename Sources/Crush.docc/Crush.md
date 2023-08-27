@@ -13,7 +13,7 @@ let package = Package(
   dependencies: [
     .package(
       url: "https://github.com/ezoushen/Crush",
-      from: "1.0.0"
+      from: "TARGET_VERSION"
     ),
   ],
   targets: [
