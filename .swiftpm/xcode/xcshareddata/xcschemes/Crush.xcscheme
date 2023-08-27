@@ -53,8 +53,8 @@
       allowLocationSimulation = "YES">
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-com.apple.CoreData.SQLDebug 4"
-            isEnabled = "NO">
+            argument = "-com.apple.CoreData.SQLDebug 1"
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>

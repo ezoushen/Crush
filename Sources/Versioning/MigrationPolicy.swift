@@ -25,7 +25,7 @@ import CoreData
 /// - configureStoreDescription(_:)
 /// - resolveIncompatible(dataModel:in:)
 ///
-public /* abstract */ class MigrationPolicy {
+public class /* abstract */ MigrationPolicy {
     let forceValidateModel: Bool
 
     internal init(forceValidateModel: Bool) {

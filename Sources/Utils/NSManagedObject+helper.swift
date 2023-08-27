@@ -64,3 +64,12 @@ extension NSEntityDescription {
             .map { $0.key }
     }
 }
+
+extension NSManagedObjectContext {
+    func getRootStoreCoordinator() -> NSPersistentStoreCoordinator? {
+        if let coordinator = persistentStoreCoordinator {
+            return coordinator
+        }
+        return parent?.getRootStoreCoordinator()
+    }
+}

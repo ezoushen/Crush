@@ -39,6 +39,7 @@ let package = Package(
 
 - <doc:ManageProperties>
 - <doc:PropertyModifier>
+- <doc:VersioningAndMigration>
 
 ### Working with Session
 
