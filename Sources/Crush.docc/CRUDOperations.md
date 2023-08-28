@@ -77,7 +77,3 @@ try session.sync { context in
     try context.commit()
 }
 ```
-
-## Batch Operation
-
-In Core Data

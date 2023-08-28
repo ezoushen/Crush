@@ -92,7 +92,3 @@ let fetchedProperty = Fetched<TargetEntity>("fetchedProperty") {
     $0.where(\.boolValue == FetchSource.boolValue)
 }
 ```
-
-## Property Modifiers
-
-
