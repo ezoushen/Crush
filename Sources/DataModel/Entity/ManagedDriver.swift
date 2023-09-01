@@ -17,58 +17,6 @@ public protocol ObjectDriver<Entity>: AnyObject {
 }
 
 extension ObjectDriver {
-    public subscript<Property: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> MutableSet<ManagedObject<Property.Destination>>
-    where
-        Property.Mapping == ToMany<Property.Destination>
-    {
-        self[toMany: keyPath]
-    }
-
-    public subscript<Property: RelationshipProtocol>(
-        dynamicMember keyPath: WritableKeyPath<Entity, Property>
-    ) -> MutableSet<ManagedObject<Property.Destination>>
-    where
-        Property.Mapping == ToMany<Property.Destination>
-    {
-        get {
-            self[toMany: keyPath]
-        }
-        set {
-            self[toMany: keyPath] = newValue
-        }
-    }
-
-    public subscript<Property: RelationshipProtocol>(
-        dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
-    where
-        Property.Mapping == ToOrdered<Property.Destination>
-    {
-        self[toManyOrdered: keyPath]
-    }
-
-    public subscript<Property: RelationshipProtocol>(
-        dynamicMember keyPath: WritableKeyPath<Entity, Property>
-    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
-    where
-        Property.Mapping == ToOrdered<Property.Destination>
-    {
-        get {
-            self[toManyOrdered: keyPath]
-        }
-        set {
-            self[toManyOrdered: keyPath] = newValue
-        }
-    }
-
-    public subscript<Value>(
-        dynamicMember keyPath: KeyPath<NSManagedObject, Value>) -> Value
-    {
-        managedObject[keyPath: keyPath]
-    }
-
     internal subscript<Property: RelationshipProtocol>(
         toMany keyPath: KeyPath<Entity, Property>
     ) -> MutableSet<ManagedObject<Property.Destination>>
@@ -120,6 +68,58 @@ extension ObjectDriver {
 public protocol ObjectRuntimeDriver<Entity>: ObjectDriver { }
 
 extension ObjectRuntimeDriver {
+    public subscript<Property: RelationshipProtocol>(
+        dynamicMember keyPath: KeyPath<Entity, Property>
+    ) -> MutableSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToMany<Property.Destination>
+    {
+        self[toMany: keyPath]
+    }
+
+    public subscript<Property: RelationshipProtocol>(
+        dynamicMember keyPath: WritableKeyPath<Entity, Property>
+    ) -> MutableSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToMany<Property.Destination>
+    {
+        get {
+            self[toMany: keyPath]
+        }
+        set {
+            self[toMany: keyPath] = newValue
+        }
+    }
+
+    public subscript<Property: RelationshipProtocol>(
+        dynamicMember keyPath: KeyPath<Entity, Property>
+    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToOrdered<Property.Destination>
+    {
+        self[toManyOrdered: keyPath]
+    }
+
+    public subscript<Property: RelationshipProtocol>(
+        dynamicMember keyPath: WritableKeyPath<Entity, Property>
+    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
+    where
+        Property.Mapping == ToOrdered<Property.Destination>
+    {
+        get {
+            self[toManyOrdered: keyPath]
+        }
+        set {
+            self[toManyOrdered: keyPath] = newValue
+        }
+    }
+
+    public subscript<Value>(
+        dynamicMember keyPath: KeyPath<NSManagedObject, Value>) -> Value
+    {
+        managedObject[keyPath: keyPath]
+    }
+    
     public subscript<Property: Crush.Property>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> Property.RuntimeValue {
