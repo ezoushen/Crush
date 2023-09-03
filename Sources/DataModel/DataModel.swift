@@ -20,13 +20,13 @@ import Foundation
 ///
 /// ``` swift
 /// class CurrentEntityMap: EntityMap {
-///     @Abstract
+///     @Abstract(inheritance: .singleTable)
 ///     var abstractEntity = AbstractEntity()
 ///
 ///     @Configuration("CONF")
 ///     @Configuration("ANOTHER CONF")
-///     @Embedded
-///     @Abstract // This modifier will be ignored
+///     @Abstract(inheritance: .singleTable)
+///     @Abstract(inheritance: .multiTable) // This modifier will be ignored
 ///     var embeddedEntity = EmbeddedEntity()
 ///
 ///     @Concrete
@@ -46,6 +46,8 @@ open class /* abstract */ EntityMap {
     open var name: String {
         String(describing: Self.self)
     }
+
+    public init() { }
 }
 
 /// A `DataModel` is an immutable collection of configurations that define the entities within the model.

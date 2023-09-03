@@ -8,13 +8,13 @@ In Crush, a schema is defined by subclassing ``EntityMap``.
 
 ``` swift
 class CurrentEntityMap: EntityMap {
-    @Abstract    
+    @Abstract(inheritance: .singleTable)
     var abstractEntity = AbstractEntity()    
 
     @Configuration("CONF")
     @Configuration("ANOTHER CONF")
-    @Embedded
-    @Abstract // This modifier will be ignored    
+    @Abstract(inheritance: .singleTable)
+    @Abstract(inheritance: .multiTable) // This modifier will be ignored    
     var embeddedEntity = EmbeddedEntity()
 
     @Concrete
