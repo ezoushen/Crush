@@ -51,7 +51,7 @@ public class SessionContext {
     /// A public function to load a managed object of the specified entity type with the specified object ID.
     /// - Parameter objectID: The object ID of the managed object to load.
     /// - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
-    /// - Returns: A `ManagedObject` instance of the specified entity type.
+    /// - Returns: A `ManagedDriver` instance of the specified entity type.
     public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> T.Driver? {
         guard let object = executionContext.load(objectID: objectID, isFault: isFault) else { return nil }
         return T.Driver(object)
@@ -60,7 +60,7 @@ public class SessionContext {
     /// A public function to load a managed object of the specified entity type with the specified object ID.
     /// - Parameter objectID: The object ID of the managed object to load.
     /// - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
-    /// - Returns: A `ManagedObject` instance of the specified entity type.
+    /// - Returns: A `ManagedDriver` instance of the specified entity type.
     public func load<T: Entity>(objectIDs: [NSManagedObjectID], isFault: Bool = true) -> [T.Driver?] {
         objectIDs.map { load(objectID: $0, isFault: isFault) }
     }
@@ -68,7 +68,7 @@ public class SessionContext {
     /// A public function to load a managed object of the specified entity type with the specified URI representation.
     /// - Parameter uri: The URI representation of the managed object to load.
     /// - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
-    /// - Returns: A `ManagedObject` instance of the specified entity type.
+    /// - Returns: A `ManagedDriver` instance of the specified entity type.
     public func assign(object: NSManagedObject, to storage: Storage) {
         guard let store = executionContext.persistentStoreCoordinator!
             .persistentStore(of: storage) else {

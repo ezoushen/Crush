@@ -311,7 +311,6 @@ public class DriverBase<Entity: Crush.Entity>: ObjectDriver, Hashable, CustomDeb
 /// ```
 ///
 /// ## See Also
-/// - ``ManagedObject``
 /// - ``ManagedRawDriver``
 public class ManagedDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectRuntimeDriver, ManagedStatus {
     @inlinable public override func driver() -> Entity.Driver {
