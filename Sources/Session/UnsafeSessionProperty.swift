@@ -124,3 +124,6 @@ extension ObjectDriver where Self: UnsafeSessionProperty {
 
 extension ManagedDriver: UnsafeSessionPropertyProtocol { }
 extension ManagedDriver: UnsafeSessionProperty { }
+
+extension ManagedRawDriver: UnsafeSessionPropertyProtocol { }
+extension ManagedRawDriver: UnsafeSessionProperty { }
