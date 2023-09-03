@@ -377,6 +377,7 @@ extension NSManagedObject {
 }
 
 infix operator =>
+infix operator =>?
 
 @inlinable public func => <T: Crush.Entity, S: Crush.Entity>(lhs: S.RawDriver, rhs: T.Type) -> T.RawDriver {
     lhs.unsafeCast(to: rhs)
@@ -390,15 +391,15 @@ infix operator =>
     lhs.unsafeCast(to: rhs)
 }
 
-@inlinable public func => <T: Crush.Entity, S: Crush.Entity>(lhs: S.RawDriver?, rhs: T.Type) -> T.RawDriver? {
+@inlinable public func =>? <T: Crush.Entity, S: Crush.Entity>(lhs: S.RawDriver?, rhs: T.Type) -> T.RawDriver? {
     lhs?.unsafeCast(to: rhs)
 }
 
-@inlinable public func => <T: Crush.Entity, S: Crush.Entity>(lhs: S.Driver?, rhs: T.Type) -> T.Driver? {
+@inlinable public func =>? <T: Crush.Entity, S: Crush.Entity>(lhs: S.Driver?, rhs: T.Type) -> T.Driver? {
     lhs?.unsafeCast(to: rhs)
 }
 
-@inlinable public func => <T: Crush.Entity>(lhs: NSManagedObject?, rhs: T.Type) -> T.Driver? {
+@inlinable public func =>? <T: Crush.Entity>(lhs: NSManagedObject?, rhs: T.Type) -> T.Driver? {
     lhs?.unsafeCast(to: rhs)
 }
 
