@@ -97,14 +97,28 @@ public class SessionContext {
     /// A function that obtains permanent IDs for the given objects in the context's execution context.
     /// - Parameters objects: An array of NSManagedObject instances for which to obtain permanent IDs.
     /// - Throws: An error if the permanent IDs could not be obtained.
+    @inlinable public func obtainPermanentIDs(for objects: NSManagedObject...) throws {
+        try obtainPermanentIDs(for: objects)
+    }
+
+    /// A function that obtains permanent IDs for the given objects in the context's execution context.
+    /// - Parameters objects: An array of NSManagedObject instances for which to obtain permanent IDs.
+    /// - Throws: An error if the permanent IDs could not be obtained.
     public func obtainPermanentIDs(for objects: [NSManagedObject]) throws {
         try executionContext.obtainPermanentIDs(for: objects)
     }
-    
+
     /// A function that obtains permanent IDs for the given objects in the context's execution context.
     /// - Parameters objects: An array of ManagedDriver instances for which to obtain permanent IDs.
     /// - Throws: An error if the permanent IDs could not be obtained.
-    public func obtainPermanentIDs<T: Entity>(for objects: T.Driver...) throws {
+    @inlinable public func obtainPermanentIDs<T: Entity>(for objects: T.Driver...) throws {
+        try obtainPermanentIDs(for: objects)
+    }
+
+    /// A function that obtains permanent IDs for the given objects in the context's execution context.
+    /// - Parameters objects: An array of ManagedDriver instances for which to obtain permanent IDs.
+    /// - Throws: An error if the permanent IDs could not be obtained.
+    public func obtainPermanentIDs<T: Entity>(for objects: [T.Driver]) throws {
         try executionContext.obtainPermanentIDs(for: objects.map(\.managedObject))
     }
 
