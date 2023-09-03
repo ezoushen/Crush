@@ -36,7 +36,7 @@ public class SessionContext {
     /// - Returns: The created managed object.
     public func create<T: Entity>(entity: T.Type) -> T.Driver {
         executionContext.performSync {
-            T.Driver(unsafe: ManagedObjectBase(entity: entity.entity(), insertInto: executionContext))
+            T.Driver(unsafe: EntityManagedObject(entity: entity.entity(), insertInto: executionContext))
         }
     }
 

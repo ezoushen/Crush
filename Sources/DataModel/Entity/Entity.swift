@@ -69,16 +69,16 @@ open class Entity {
         value: AutoreleasingUnsafeMutablePointer<AnyObject?>,
         forKey key: String) throws
     {
-        try (managedObject as? ManagedObjectBase)?.originalValidateValue(value, forKey: key)
+        try (managedObject as? EntityManagedObject)?.originalValidateValue(value, forKey: key)
     }
     @objc open dynamic class func validateForDelete(_ managedObject: NSManagedObject) throws {
-        try (managedObject as? ManagedObjectBase)?.originalValidateForDelete()
+        try (managedObject as? EntityManagedObject)?.originalValidateForDelete()
     }
     @objc open dynamic class func validateForInsert(_ managedObject: NSManagedObject) throws {
-        try (managedObject as? ManagedObjectBase)?.originalValidateForInsert()
+        try (managedObject as? EntityManagedObject)?.originalValidateForInsert()
     }
     @objc open dynamic class func validateForUpdate(_ managedObject: NSManagedObject) throws {
-        try (managedObject as? ManagedObjectBase)?.originalValidateForUpdate()
+        try (managedObject as? EntityManagedObject)?.originalValidateForUpdate()
     }
 
     func createEntityDescription(
@@ -109,7 +109,7 @@ open class Entity {
         description.name = Self.fetchKey
         description.isAbstract = abstraction != .concrete
         description.properties = properties
-        description.managedObjectClassName = NSStringFromClass(ManagedObjectBase.self)
+        description.managedObjectClassName = NSStringFromClass(EntityManagedObject.self)
 
         objc_setAssociatedObject(Self.self, &ENTITY_DESC_KEY, description, .OBJC_ASSOCIATION_RETAIN)
 
