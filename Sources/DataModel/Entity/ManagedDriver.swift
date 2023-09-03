@@ -118,6 +118,10 @@ public struct ManagedDriver<Entity: Crush.Entity>: ObjectDriver, ManagedStatus {
         ManagedRawDriver(unsafe: managedObject)
     }
 
+    @inlinable public var raw: Entity.RawDriver {
+        rawDriver()
+    }
+
     /// Casts the managed driver to the specified entity type.
     @inlinable public func cast<T: Crush.Entity>(to type: T.Type) -> T.Driver? {
         T.Driver(managedObject)
@@ -141,7 +145,7 @@ extension ManagedDriver {
             let mutableSet = managedObject.getMutableSet(key: key)
             return Property.Mapping.convert(managedValue: mutableSet)
         }
-        set {
+        nonmutating set {
             managedObject.setValue(
                 Property.PropertyType.convert(runtimeValue: newValue),
                 key: keyPath.propertyName)
@@ -159,7 +163,7 @@ extension ManagedDriver {
             let mutableOrderedSet = managedObject.getMutableOrderedSet(key: key)
             return Property.Mapping.convert(managedValue: mutableOrderedSet)
         }
-        set {
+        nonmutating set {
             managedObject.setValue(
                 Property.PropertyType.convert(runtimeValue: newValue),
                 key: keyPath.propertyName)
@@ -186,7 +190,7 @@ extension ManagedDriver {
         get {
             self[toMany: keyPath]
         }
-        set {
+        nonmutating set {
             self[toMany: keyPath] = newValue
         }
     }
@@ -209,7 +213,7 @@ extension ManagedDriver {
         get {
             self[toManyOrdered: keyPath]
         }
-        set {
+        nonmutating set {
             self[toManyOrdered: keyPath] = newValue
         }
     }
@@ -240,7 +244,7 @@ extension ManagedDriver {
         get {
             self[value: keyPath]
         }
-        set {
+        nonmutating set {
             managedObject.setValue(
                 Property.PropertyType.convert(runtimeValue: newValue),
                 key: keyPath.propertyName)
@@ -302,6 +306,18 @@ public struct ManagedRawDriver<Entity: Crush.Entity>: ObjectDriver {
 }
 
 extension ManagedRawDriver {
+    internal subscript<Property: Crush.Property>(
+        rawValue keyPath: KeyPath<Entity, Property>
+    ) -> Property.ManagedValue {
+        guard let managedValue: Property.PropertyType.ManagedValue =
+                managedObject.getValue(key: keyPath.propertyName) else {
+            return Property.PropertyType.defaultManagedValue
+        }
+        return managedValue
+    }
+}
+
+extension ManagedRawDriver {
     public subscript<Property: FetchedPropertyProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> Property.ManagedValue {
@@ -322,7 +338,7 @@ extension ManagedRawDriver {
         get {
             self[rawValue: keyPath]
         }
-        set {
+        nonmutating set {
             managedObject.setValue(newValue, key: keyPath.propertyName)
         }
     }
@@ -339,19 +355,9 @@ extension ManagedRawDriver {
         get {
             self[rawValue: keyPath]
         }
-        set {
+        nonmutating set {
             managedObject.setValue(newValue, key: keyPath.propertyName)
         }
-    }
-
-    internal subscript<Property: Crush.Property>(
-        rawValue keyPath: KeyPath<Entity, Property>
-    ) -> Property.ManagedValue {
-        guard let managedValue: Property.PropertyType.ManagedValue =
-                managedObject.getValue(key: keyPath.propertyName) else {
-            return Property.PropertyType.defaultManagedValue
-        }
-        return managedValue
     }
 }
 
