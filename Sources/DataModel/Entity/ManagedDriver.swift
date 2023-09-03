@@ -245,9 +245,6 @@ extension NSManagedObject {
     }
 }
 
-infix operator =>
-infix operator ~>
-
 public class DriverBase<Entity: Crush.Entity>: ObjectDriver, Hashable, CustomDebugStringConvertible {
     public let managedObject: NSManagedObject
     
@@ -330,14 +327,6 @@ public class ManagedDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectRunt
     @inlinable public func unsafeCast<T: Crush.Entity>(to entity: T.Type) -> T.Driver {
         T.Driver(unsafe: managedObject)
     }
-    
-    @inlinable public static func => <T: Crush.Entity>(lhs: Entity.Driver, rhs: T.Type) -> T.Driver {
-        lhs.unsafeCast(to: rhs)
-    }
-    
-    @inlinable public static func ~> <T: Crush.Entity>(lhs: Entity.Driver, rhs: T.Type) -> T.Driver? {
-        lhs.cast(to: rhs)
-    }
 }
 
 /// Like ``ManagedDriver``, but you can access raw data directly from `NSManagedObject` by this class.
@@ -373,14 +362,6 @@ public class ManagedRawDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectR
     @inlinable public func unsafeCast<T: Crush.Entity>(to entity: T.Type) -> T.RawDriver {
         T.RawDriver(unsafe: managedObject)
     }
-    
-    @inlinable public static func => <T: Crush.Entity>(lhs: Entity.RawDriver, rhs: T.Type) -> T.RawDriver {
-        lhs.unsafeCast(to: rhs)
-    }
-    
-    @inlinable public static func ~> <T: Crush.Entity>(lhs: Entity.RawDriver, rhs: T.Type) -> T.RawDriver? {
-        lhs.cast(to: rhs)
-    }
 }
 
 extension NSManagedObject {
@@ -393,12 +374,44 @@ extension NSManagedObject {
     @inlinable public func unsafeCast<T: Entity>(to type: T.Type) -> T.Driver {
         ManagedDriver(unsafe: self)
     }
-    
-    @inlinable public static func => <T: Crush.Entity>(lhs: NSManagedObject, rhs: T.Type) -> T.Driver {
-        lhs.unsafeCast(to: rhs)
-    }
-    
-    @inlinable public static func ~> <T: Crush.Entity>(lhs: NSManagedObject, rhs: T.Type) -> T.Driver? {
-        lhs.cast(to: rhs)
-    }
+}
+
+infix operator =>
+
+@inlinable public func => <T: Crush.Entity>(lhs: Entity.RawDriver, rhs: T.Type) -> T.RawDriver {
+    lhs.unsafeCast(to: rhs)
+}
+
+@inlinable public func => <T: Crush.Entity>(lhs: Entity.Driver, rhs: T.Type) -> T.Driver {
+    lhs.unsafeCast(to: rhs)
+}
+
+@inlinable public func => <T: Crush.Entity>(lhs: NSManagedObject, rhs: T.Type) -> T.Driver {
+    lhs.unsafeCast(to: rhs)
+}
+
+@inlinable public func => <T: Crush.Entity>(lhs: Entity.RawDriver?, rhs: T.Type) -> T.RawDriver? {
+    lhs?.unsafeCast(to: rhs)
+}
+
+@inlinable public func => <T: Crush.Entity>(lhs: Entity.Driver?, rhs: T.Type) -> T.Driver? {
+    lhs?.unsafeCast(to: rhs)
+}
+
+@inlinable public func => <T: Crush.Entity>(lhs: NSManagedObject?, rhs: T.Type) -> T.Driver? {
+    lhs?.unsafeCast(to: rhs)
+}
+
+infix operator ~>
+
+@inlinable public func ~> <T: Crush.Entity>(lhs: Entity.Driver?, rhs: T.Type) -> T.Driver? {
+    lhs?.cast(to: rhs)
+}
+
+@inlinable public func ~> <T: Crush.Entity>(lhs: Entity.RawDriver?, rhs: T.Type) -> T.RawDriver? {
+    lhs?.cast(to: rhs)
+}
+
+@inlinable public func ~> <T: Crush.Entity>(lhs: NSManagedObject?, rhs: T.Type) -> T.Driver? {
+    lhs?.cast(to: rhs)
 }
