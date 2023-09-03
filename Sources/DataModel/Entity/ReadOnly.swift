@@ -213,6 +213,18 @@ extension ReadOnly {
     }
 }
 
+@inlinable public func => <T: Crush.Entity, S: Crush.Entity>(lhs: S.ReadOnly, rhs: T.Type) -> T.ReadOnly {
+    lhs.unsafeCast(to: rhs)
+}
+
+@inlinable public func => <T: Crush.Entity, S: Crush.Entity>(lhs: S.ReadOnly?, rhs: T.Type) -> T.ReadOnly? {
+    lhs?.unsafeCast(to: rhs)
+}
+
+@inlinable public func ~> <T: Crush.Entity, S: Crush.Entity>(lhs: S.ReadOnly?, rhs: T.Type) -> T.ReadOnly? {
+    lhs?.cast(to: rhs)
+}
+
 public protocol ReadaleObject { }
 
 extension Entity: ReadaleObject { }
