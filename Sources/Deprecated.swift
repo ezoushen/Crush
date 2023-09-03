@@ -74,3 +74,6 @@ extension ManagableObject where Self: Entity {
     @available(*, deprecated, renamed: "Driver", message: "ManagedObject is obsolete, please use ManagedDriver instead.")
     public typealias Managed = ManagedDriver<Self>
 }
+
+@available(*, deprecated, renamed: "ManagedDriver", message: "ManagedObject is obsolete, please use ManagedDriver instead.")
+public typealias ManagedObject<T: Entity> = ManagedDriver<T>
