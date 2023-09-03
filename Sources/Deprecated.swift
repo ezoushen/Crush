@@ -26,7 +26,7 @@ extension TypedPredicate {
     }
 }
 
-extension DriverBase {
+extension ObjectDriver {
     @available(*, deprecated, renamed: "cast(to:)")
     @inlinable public func runtimeDriver<T: Crush.Entity>(entity: T.Type) -> T.Driver? {
         ManagedDriver(managedObject)

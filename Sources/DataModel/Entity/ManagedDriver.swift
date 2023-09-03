@@ -8,7 +8,7 @@
 import CoreData
 import Foundation
 
-public protocol ObjectDriver<Entity>: AnyObject {
+public protocol ObjectDriver<Entity>: Hashable, CustomDebugStringConvertible {
     associatedtype Entity: Crush.Entity
     
     var managedObject: NSManagedObject { get }
@@ -17,6 +17,119 @@ public protocol ObjectDriver<Entity>: AnyObject {
 }
 
 extension ObjectDriver {
+    func fireFault() {
+        managedObject.fireFault()
+    }
+
+    subscript<Property: Crush.Property>(
+        value keyPath: KeyPath<Entity, Property>
+    ) -> Property.RuntimeValue {
+        guard let managedValue: Property.PropertyType.ManagedValue =
+                managedObject.getValue(key: keyPath.propertyName) else {
+            return Property.PropertyType.defaultRuntimeValue
+        }
+        return Property.PropertyType.convert(managedValue: managedValue)
+    }
+}
+
+// MARK: Hasable implementation
+
+extension ObjectDriver {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.managedObject == rhs.managedObject
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(managedObject)
+    }
+}
+
+// MARK: CustomDebugStringConvertible implementation
+
+extension ObjectDriver {
+    public var debugDescription: String {
+        managedObject.debugDescription
+    }
+}
+
+extension NSManagedObject {
+    @inlinable
+    internal func getValue<T>(key: String) -> T? {
+        willAccessValue(forKey: key)
+        defer {
+            didAccessValue(forKey: key)
+        }
+        return primitiveValue(forKey: key) as? T
+    }
+
+    @inlinable
+    internal func setValue(_ value: Any?, key: String) {
+        willChangeValue(forKey: key)
+        defer {
+            didChangeValue(forKey: key)
+        }
+        value.isNil
+        ? setNilValueForKey(key)
+        : setPrimitiveValue(value, forKey: key)
+    }
+
+    @inlinable
+    internal func getMutableSet(key: String) -> NSMutableSet {
+        willAccessValue(forKey: key)
+        defer {
+            didAccessValue(forKey: key)
+        }
+        return mutableSetValue(forKey: key)
+    }
+
+    @inlinable
+    internal func getMutableOrderedSet(key: String) -> NSMutableOrderedSet {
+        willAccessValue(forKey: key)
+        defer {
+            didAccessValue(forKey: key)
+        }
+        return mutableOrderedSetValue(forKey: key)
+    }
+}
+
+/// Access `NSManagedObject` data flexibly, especially when dealing with inheritance relationships.
+///
+/// ## See Also
+/// - ``ManagedRawDriver``
+@dynamicMemberLookup
+public struct ManagedDriver<Entity: Crush.Entity>: ObjectDriver, ManagedStatus {
+    public let managedObject: NSManagedObject
+
+    public init?(_ managedObject: NSManagedObject) {
+        guard let type = managedObject.entity.entityType,
+              type is Entity.Type else { return nil }
+        self.managedObject = managedObject
+    }
+
+    public init(unsafe managedObject: NSManagedObject) {
+        self.managedObject = managedObject
+    }
+
+    @inlinable public func driver() -> Entity.Driver {
+        self
+    }
+
+    @inlinable public func rawDriver() -> Entity.RawDriver {
+        ManagedRawDriver(unsafe: managedObject)
+    }
+
+    /// Casts the managed driver to the specified entity type.
+    @inlinable public func cast<T: Crush.Entity>(to type: T.Type) -> T.Driver? {
+        T.Driver(managedObject)
+    }
+
+    /// Unsafely casts the managed driver to the specified entity type.
+    @inlinable public func unsafeCast<T: Crush.Entity>(to entity: T.Type) -> T.Driver {
+        T.Driver(unsafe: managedObject)
+    }
+}
+
+extension ManagedDriver {
     internal subscript<Property: RelationshipProtocol>(
         toMany keyPath: KeyPath<Entity, Property>
     ) -> MutableSet<ManagedDriver<Property.Destination>>
@@ -52,22 +165,9 @@ extension ObjectDriver {
                 key: keyPath.propertyName)
         }
     }
-
-    internal subscript<Property: Crush.Property>(
-        value keyPath: KeyPath<Entity, Property>
-    ) -> Property.RuntimeValue {
-        guard let managedValue: Property.PropertyType.ManagedValue =
-                managedObject.getValue(key: keyPath.propertyName) else {
-            return Property.PropertyType.defaultRuntimeValue
-        }
-        return Property.PropertyType.convert(managedValue: managedValue)
-    }
 }
 
-@dynamicMemberLookup
-public protocol ObjectRuntimeDriver<Entity>: ObjectDriver { }
-
-extension ObjectRuntimeDriver {
+extension ManagedDriver {
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> MutableSet<ManagedDriver<Property.Destination>>
@@ -119,7 +219,7 @@ extension ObjectRuntimeDriver {
     {
         managedObject[keyPath: keyPath]
     }
-    
+
     public subscript<Property: Crush.Property>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> Property.RuntimeValue {
@@ -148,10 +248,60 @@ extension ObjectRuntimeDriver {
     }
 }
 
+/// Like ``ManagedDriver``, but you can access raw data directly from `NSManagedObject` by this class.
+///
+/// Use this class for performance-sensitive code to avoid data wrapping and access read/write data directly.
+///
+/// Example:
+///
+/// ```swift
+/// enum Size: Int16, EnumerableAttributeType {
+///   case small, medium, large
+/// }
+///
+/// class MyEntity: Entity {
+///   @Default(.small)
+///   var size = Value.Enum<Size>("size")
+/// }
+/// let rawDriver = driver.raw
+/// print(rawDriver.size) // prints 0, not .small
+/// ```
+///
 @dynamicMemberLookup
-public protocol ObjectRawDriver: ObjectDriver { }
+public struct ManagedRawDriver<Entity: Crush.Entity>: ObjectDriver {
 
-extension ObjectRawDriver {
+    public let managedObject: NSManagedObject
+
+    public init?(_ managedObject: NSManagedObject) {
+        guard let type = managedObject.entity.entityType,
+              type is Entity.Type else { return nil }
+        self.managedObject = managedObject
+    }
+
+    public init(unsafe managedObject: NSManagedObject) {
+        self.managedObject = managedObject
+    }
+
+    @inlinable public func driver() -> Entity.Driver {
+        ManagedDriver(unsafe: managedObject)
+    }
+
+    @inlinable public func rawDriver() -> Entity.RawDriver {
+        self
+    }
+    
+    /// Casts the raw managed driver to the specified entity type.
+    @inlinable public func cast<T: Crush.Entity>(to type: T.Type) -> T.RawDriver? {
+        T.RawDriver(managedObject)
+    }
+
+    /// Unsafely casts the raw managed driver to the specified entity type.
+    @inlinable public func unsafeCast<T: Crush.Entity>(to entity: T.Type) -> T.RawDriver {
+        T.RawDriver(unsafe: managedObject)
+    }
+}
+
+extension ManagedRawDriver {
     public subscript<Property: FetchedPropertyProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
     ) -> Property.ManagedValue {
@@ -202,164 +352,6 @@ extension ObjectRawDriver {
             return Property.PropertyType.defaultManagedValue
         }
         return managedValue
-    }
-}
-
-extension NSManagedObject {
-    @inlinable
-    internal func getValue<T>(key: String) -> T? {
-        willAccessValue(forKey: key)
-        defer {
-            didAccessValue(forKey: key)
-        }
-        return primitiveValue(forKey: key) as? T
-    }
-
-    @inlinable
-    internal func setValue(_ value: Any?, key: String) {
-        willChangeValue(forKey: key)
-        defer {
-            didChangeValue(forKey: key)
-        }
-        value.isNil
-        ? setNilValueForKey(key)
-        : setPrimitiveValue(value, forKey: key)
-    }
-
-    @inlinable
-    internal func getMutableSet(key: String) -> NSMutableSet {
-        willAccessValue(forKey: key)
-        defer {
-            didAccessValue(forKey: key)
-        }
-        return mutableSetValue(forKey: key)
-    }
-
-    @inlinable
-    internal func getMutableOrderedSet(key: String) -> NSMutableOrderedSet {
-        willAccessValue(forKey: key)
-        defer {
-            didAccessValue(forKey: key)
-        }
-        return mutableOrderedSetValue(forKey: key)
-    }
-}
-
-public class DriverBase<Entity: Crush.Entity>: ObjectDriver, Hashable, CustomDebugStringConvertible {
-    public let managedObject: NSManagedObject
-    
-    public var debugDescription: String {
-        managedObject.debugDescription
-    }
-
-    public init?(_ managedObject: NSManagedObject) {
-        guard let type = managedObject.entity.entityType,
-              type is Entity.Type else { return nil }
-        self.managedObject = managedObject
-    }
-    
-    public static func == (lhs: DriverBase<Entity>, rhs: DriverBase<Entity>) -> Bool {
-        lhs.managedObject == rhs.managedObject
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(managedObject)
-    }
-
-    public init(unsafe managedObject: NSManagedObject) {
-        self.managedObject = managedObject
-    }
-
-    @inlinable public func driver() -> Entity.Driver {
-        ManagedDriver(unsafe: managedObject)
-    }
-
-    @inlinable public func rawDriver() -> Entity.RawDriver {
-        ManagedRawDriver(unsafe: managedObject)
-    }
-    
-    @inlinable public var raw: Entity.RawDriver {
-        rawDriver()
-    }
-    
-    func fireFault() {
-        managedObject.fireFault()
-    }
-}
-
-/// Access `NSManagedObject` data flexibly, especially when dealing with inheritance relationships.
-///
-/// This class provides a convenient way to access data in lifecycle functions, such as ``Entity/willSave(_:)``,
-/// when you have entities with inheritance relationships. It can be particularly useful when attempting to access data as a parent class.
-///  Consider the following example with three entity types: `Animal`, `Dog`, and `Cat`.
-///
-/// ```swift
-/// class Animal: Entity {
-///   @Optional
-///   var activeDate = Value.Date("activeDate")
-///
-///   override func willSave(_ managedObject: NSManagedObject) {
-///     // Use `ManagedDriver` to safely access the data.
-///     // ~> is the operator that equals `runtimeDriver(type: Animal.self)`
-///     guard let animal = managedObject ~> Animal.self else { return }
-///     animal.activeDate = Date()
-///   }
-/// }
-///
-/// class Dog: Animal { }
-/// class Cat: Animal { }
-/// ```
-///
-/// ## See Also
-/// - ``ManagedRawDriver``
-public class ManagedDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectRuntimeDriver, ManagedStatus {
-    @inlinable public override func driver() -> Entity.Driver {
-        self
-    }
-    
-    /// Casts the managed driver to the specified entity type.
-    @inlinable public func cast<T: Crush.Entity>(to type: T.Type) -> T.Driver? {
-        T.Driver(managedObject)
-    }
-
-    /// Unsafely casts the managed driver to the specified entity type.
-    @inlinable public func unsafeCast<T: Crush.Entity>(to entity: T.Type) -> T.Driver {
-        T.Driver(unsafe: managedObject)
-    }
-}
-
-/// Like ``ManagedDriver``, but you can access raw data directly from `NSManagedObject` by this class.
-///
-/// Use this class for performance-sensitive code to avoid data wrapping and access read/write data directly.
-///
-/// Example:
-///
-/// ```swift
-/// enum Size: Int16, EnumerableAttributeType {
-///   case small, medium, large
-/// }
-///
-/// class MyEntity: Entity {
-///   @Default(.small)
-///   var size = Value.Enum<Size>("size")
-/// }
-/// let rawDriver = driver.raw
-/// print(rawDriver.size) // prints 0, not .small
-/// ```
-///
-public class ManagedRawDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectRawDriver {
-    @inlinable public override func rawDriver() -> Entity.RawDriver {
-        self
-    }
-    
-    /// Casts the raw managed driver to the specified entity type.
-    @inlinable public func cast<T: Crush.Entity>(to type: T.Type) -> T.RawDriver? {
-        T.RawDriver(managedObject)
-    }
-
-    /// Unsafely casts the raw managed driver to the specified entity type.
-    @inlinable public func unsafeCast<T: Crush.Entity>(to entity: T.Type) -> T.RawDriver {
-        T.RawDriver(unsafe: managedObject)
     }
 }
 
