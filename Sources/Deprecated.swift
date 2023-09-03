@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 @available(*, deprecated, renamed: "EnumerableAttributeType")
 public typealias Enumerator = EnumerableAttributeType
@@ -47,7 +48,7 @@ extension DriverBase {
     }
 }
 
-extension ManagedObjectBase {
+extension NSManagedObject {
     @available(*, deprecated, renamed: "cast(to:)")
     @inlinable public func runtimeDriver<T: Crush.Entity>(entity: T.Type) -> T.Driver? {
         ManagedDriver(self)
