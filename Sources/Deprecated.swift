@@ -36,14 +36,36 @@ extension DriverBase {
         ManagedDriver(unsafe: managedObject)
     }
 
-    @available(*, deprecated, renamed: "cast(to:)")
+    @available(*, deprecated, renamed: "cast(to:)", message: "Please do type casting before converting it to a raw driver.")
     @inlinable public func rawDriver<T: Crush.Entity>(entity: T.Type) -> T.RawDriver? {
         ManagedRawDriver(managedObject)
     }
 
-    @available(*, deprecated, renamed: "cast(to:)")
+    @available(*, deprecated, renamed: "unsafeCast(to:)", message: "Please do type casting before converting it to a raw driver.")
     @inlinable public func unsafeRawDriver<T: Crush.Entity>(entity: T.Type) -> T.RawDriver {
         ManagedRawDriver(unsafe: managedObject)
+    }
+}
+
+extension ManagedObjectBase {
+    @available(*, deprecated, renamed: "cast(to:)")
+    @inlinable public func runtimeDriver<T: Crush.Entity>(entity: T.Type) -> T.Driver? {
+        ManagedDriver(self)
+    }
+
+    @available(*, deprecated, renamed: "unsafeCast(to:)")
+    @inlinable public func unsafeDriver<T: Crush.Entity>(entity: T.Type) -> T.Driver {
+        ManagedDriver(unsafe: self)
+    }
+
+    @available(*, deprecated, renamed: "cast(to:)", message: "Please cast the managed object to a driver and then convert it to a raw driver.")
+    @inlinable public func rawDriver<T: Crush.Entity>(entity: T.Type) -> T.RawDriver? {
+        ManagedRawDriver(self)
+    }
+
+    @available(*, deprecated, renamed: "unsafeCast(to:)", message: "Please cast the managed object to a driver and then convert it to a raw driver.")
+    @inlinable public func unsafeRawDriver<T: Crush.Entity>(entity: T.Type) -> T.RawDriver {
+        ManagedRawDriver(unsafe: self)
     }
 }
 
