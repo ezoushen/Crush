@@ -8,9 +8,7 @@
 import Combine
 import Foundation
 
-public protocol UnsafeSessionPropertyProtocol { }
-
-public protocol UnsafeSessionProperty: UnsafeSessionPropertyProtocol {
+public protocol UnsafeSessionProperty {
     associatedtype Entity: Crush.Entity
     associatedtype Safe
     func wrapped(in session: Session?) -> Safe
@@ -29,7 +27,6 @@ extension UnsafeSessionProperty {
     }
 }
 
-extension MutableSet: UnsafeSessionPropertyProtocol where Element: ObjectDriver { }
 extension MutableSet: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Entity = Element.Entity
     public typealias Safe = Set<Entity.ReadOnly>
@@ -44,7 +41,6 @@ extension MutableSet: UnsafeSessionProperty where Element: ObjectDriver {
     }
 }
 
-extension MutableOrderedSet: UnsafeSessionPropertyProtocol where Element: ObjectDriver { }
 extension MutableOrderedSet: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Entity = Element.Entity
     public typealias Safe = OrderedSet<Entity.ReadOnly>
@@ -59,7 +55,6 @@ extension MutableOrderedSet: UnsafeSessionProperty where Element: ObjectDriver {
     }
 }
 
-extension Array: UnsafeSessionPropertyProtocol where Element: ObjectDriver { }
 extension Array: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Entity = Element.Entity
     public typealias Safe = Array<Entity.ReadOnly>
@@ -74,7 +69,6 @@ extension Array: UnsafeSessionProperty where Element: ObjectDriver {
     }
 }
 
-extension Set: UnsafeSessionPropertyProtocol where Element: ObjectDriver { }
 extension Set: UnsafeSessionProperty where Element: ObjectDriver {
     public typealias Entity = Element.Entity
     public typealias Safe = Set<Entity.ReadOnly>
@@ -89,7 +83,6 @@ extension Set: UnsafeSessionProperty where Element: ObjectDriver {
     }
 }
 
-extension ReadOnly: UnsafeSessionPropertyProtocol { }
 extension ReadOnly: UnsafeSessionProperty {
     public typealias Safe = ReadOnly<Entity>
     public func wrapped(in session: Session?) -> ReadOnly<Entity> {
@@ -101,7 +94,6 @@ extension ReadOnly: UnsafeSessionProperty {
     }
 }
 
-extension Swift.Optional: UnsafeSessionPropertyProtocol where Wrapped: UnsafeSessionProperty { }
 extension Swift.Optional: UnsafeSessionProperty where Wrapped: UnsafeSessionProperty {
     public typealias Entity = Wrapped.Entity
     public typealias Safe = Wrapped.Safe?
@@ -122,8 +114,6 @@ extension ObjectDriver where Self: UnsafeSessionProperty {
     }
 }
 
-extension ManagedDriver: UnsafeSessionPropertyProtocol { }
 extension ManagedDriver: UnsafeSessionProperty { }
 
-extension ManagedRawDriver: UnsafeSessionPropertyProtocol { }
 extension ManagedRawDriver: UnsafeSessionProperty { }

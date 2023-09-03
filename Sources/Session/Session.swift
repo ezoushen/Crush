@@ -233,7 +233,7 @@ extension Session {
     /**
         Synchronously performs a block on the session's context, wrapped in an undoable and signed transaction.
 
-        After the block completes execution, the session will issue a warning if the returned value is an instance of `UnsafeSessionPropertyProtocol`.
+        After the block completes execution, the session will issue a warning if the returned value is an instance of `UnsafeSessionProperty`.
 
         - parameter name: A string representing the author name of the transaction.
         - parameter block: A closure that takes a `SessionContext` argument and returns a value of any type.
@@ -250,7 +250,7 @@ extension Session {
                 try block(context)
             }
         warning(
-            result is UnsafeSessionPropertyProtocol,
+            result is (any UnsafeSessionProperty),
             "Return an \(type(of: result)) is not recommended")
         context.resolveExecutionResultInUiContext()
         return result
