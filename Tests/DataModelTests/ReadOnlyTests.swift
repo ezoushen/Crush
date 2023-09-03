@@ -59,7 +59,7 @@ class ReadOnlyTests: XCTestCase {
     
     func test_readAttribute_shouldReturnUpdatedValue() {
         let entity: TestEntity.ReadOnly = container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             entity.integerValue = 10
             try! context.commit()
@@ -70,7 +70,7 @@ class ReadOnlyTests: XCTestCase {
     
     func test_readOrderedRelations_shouldReturnOrderedSet() {
         let entity: TestEntity.ReadOnly = container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             let entity2 = context.create(entity: TestEntity.self)
             entity.ordered.insert(entity2)
@@ -82,7 +82,7 @@ class ReadOnlyTests: XCTestCase {
     
     func test_readManyRelations_shouldReturnSet() {
         let entity: TestEntity.ReadOnly = container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             let entity2 = context.create(entity: TestEntity.self)
             entity.many.insert(entity2)
@@ -94,7 +94,7 @@ class ReadOnlyTests: XCTestCase {
     
     func test_readOneRelation_shouldReturnReadOnlyObject() {
         let entity: TestEntity.ReadOnly = container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             let entity2 = context.create(entity: TestEntity.self)
             entity.one = entity2
@@ -106,7 +106,7 @@ class ReadOnlyTests: XCTestCase {
     
     func test_readFetchProperty_shouldReturnObjects() {
         let entity: TestEntity.ReadOnly = container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             let entity2 = context.create(entity: TestEntity.self)
             entity2.integerValue = 0
@@ -118,7 +118,7 @@ class ReadOnlyTests: XCTestCase {
     
     func test_readFetchProperty_shouldReturnRawValue() {
         let entity: TestEntity.ReadOnly = container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             entity.enumValue = .value
             try! context.commit()
@@ -129,7 +129,7 @@ class ReadOnlyTests: XCTestCase {
 
     func createDefaultEntity(integerValue: Int16) -> TestEntity.ReadOnly {
         container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             entity.integerValue = integerValue
             try! context.commit()
@@ -140,7 +140,7 @@ class ReadOnlyTests: XCTestCase {
     @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
     func test_readDerivedAttribute_shouldReturnDerivedValue() {
         let entity: DerivedTestEntity.ReadOnly = container.startSession().sync {
-            context -> DerivedTestEntity.Managed in
+            context -> DerivedTestEntity.Driver in
             let entity = context.create(entity: DerivedTestEntity.self)
             entity.integerValue = 10
             try! context.commit()

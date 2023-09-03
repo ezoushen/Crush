@@ -345,10 +345,8 @@ extension DataContainer {
 
     /// Load the object by the given object ID
     public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> T.ReadOnly? {
-        guard let object = uiContext
-            .load(objectID: objectID, isFault: isFault) as? ManagedObject<T>
-        else { return nil }
-        return T.ReadOnly(object)
+        guard let object = uiContext.load(objectID: objectID, isFault: isFault) else { return nil }
+        return T.ReadOnly(object: object)
     }
 
     /// Load the objects by the given object IDs

@@ -34,17 +34,17 @@ public class SessionContext {
     /// Creates a managed object of the given entity type.
     /// - Parameter entity: The type of entity to create a managed object for.
     /// - Returns: The created managed object.
-    public func create<T: Entity>(entity: T.Type) -> ManagedObject<T> {
+    public func create<T: Entity>(entity: T.Type) -> T.Driver {
         executionContext.performSync {
-            ManagedObject<T>(context: executionContext)
+            T.Driver(unsafe: ManagedObjectBase(entity: entity.entity(), insertInto: executionContext))
         }
     }
 
     /// Deletes the given managed object.
     /// - Parameter object: The managed object to delete.
-    public func delete<T: Entity>(_ object: ManagedObject<T>) {
+    public func delete<T: Entity>(_ object: T.Driver) {
         executionContext.performSync {
-            executionContext.delete(object)
+            executionContext.delete(object.managedObject)
         }
     }
 
@@ -52,15 +52,16 @@ public class SessionContext {
     /// - Parameter objectID: The object ID of the managed object to load.
     /// - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
     /// - Returns: A `ManagedObject` instance of the specified entity type.
-    public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> ManagedObject<T>? {
-        executionContext.load(objectID: objectID, isFault: isFault) as? ManagedObject<T>
+    public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> T.Driver? {
+        guard let object = executionContext.load(objectID: objectID, isFault: isFault) else { return nil }
+        return T.Driver(object)
     }
 
     /// A public function to load a managed object of the specified entity type with the specified object ID.
     /// - Parameter objectID: The object ID of the managed object to load.
     /// - Parameter isFault: A boolean value indicating whether the loaded object should be turned into a fault object.
     /// - Returns: A `ManagedObject` instance of the specified entity type.
-    public func load<T: Entity>(objectIDs: [NSManagedObjectID], isFault: Bool = true) -> [ManagedObject<T>?] {
+    public func load<T: Entity>(objectIDs: [NSManagedObjectID], isFault: Bool = true) -> [T.Driver?] {
         objectIDs.map { load(objectID: $0, isFault: isFault) }
     }
 
@@ -80,21 +81,17 @@ public class SessionContext {
     /// Edits the given read-only object and returns a new managed object with the changes applied.
     /// - Parameter object: The read-only object to edit.
     /// - Returns: The edited managed object.
-    public func edit<T: Entity>(object: T.ReadOnly) -> ManagedObject<T> {
+    public func edit<T: Entity>(object: T.ReadOnly) -> T.Driver {
         executionContext.performSync {
-            executionContext.receive(runtimeObject: object.managedObject as! T.Managed)
+            T.Driver(unsafe: executionContext.receive(runtimeObject: object.managedObject))
         }
     }
 
     /// Edits the given array of read-only objects and returns an array of new managed objects with the changes applied.
     /// - Parameter objects: The read-only objects to edit.
     /// - Returns: The edited managed objects.
-    public func edit<T: Entity>(objects: [T.ReadOnly]) -> [ManagedObject<T>] {
-        objects.map { object in
-            executionContext.performSync {
-                executionContext.receive(runtimeObject: object.managedObject as! T.Managed)
-            }
-        }
+    public func edit<T: Entity>(objects: [T.ReadOnly]) -> [T.Driver] {
+        objects.map(edit(object:))
     }
 
     /// A function that obtains permanent IDs for the given objects in the context's execution context.
@@ -102,6 +99,13 @@ public class SessionContext {
     /// - Throws: An error if the permanent IDs could not be obtained.
     public func obtainPermanentIDs(for objects: [NSManagedObject]) throws {
         try executionContext.obtainPermanentIDs(for: objects)
+    }
+    
+    /// A function that obtains permanent IDs for the given objects in the context's execution context.
+    /// - Parameters objects: An array of ManagedDriver instances for which to obtain permanent IDs.
+    /// - Throws: An error if the permanent IDs could not be obtained.
+    public func obtainPermanentIDs<T: Entity>(for objects: T.Driver...) throws {
+        try executionContext.obtainPermanentIDs(for: objects.map(\.managedObject))
     }
 
     /// A function that processes any pending changes in the context's execution context.

@@ -44,6 +44,8 @@ extension EntityAbstraction: Comparable, Hashable, Equatable {
     }
 }
 
+private var ENTITY_DESC_KEY = 0
+
 open class Entity {
     internal static var registeredEntities: Set<ObjectIdentifier> = []
     internal static var propertyNamesByEntity: [ObjectIdentifier: [String]] = [:]
@@ -103,12 +105,13 @@ open class Entity {
             mirror: mirror,
             abstractionData: abstractionData,
             cache: cache)
-
-        description.userInfo?[UserInfoKey.entityClassName] = Self.entityCacheKey
-        description.managedObjectClassName = NSStringFromClass(ManagedObject<Self>.self)
+        description.userInfo?[UserInfoKey.entityClassName] = NSStringFromClass(Self.self)
         description.name = Self.fetchKey
         description.isAbstract = abstraction != .concrete
         description.properties = properties
+        description.managedObjectClassName = NSStringFromClass(ManagedObjectBase.self)
+
+        objc_setAssociatedObject(Self.self, &ENTITY_DESC_KEY, description, .OBJC_ASSOCIATION_RETAIN)
 
         setupIndexes(description: description)
         setupUniquenessConstraints(description: description)
@@ -141,12 +144,12 @@ extension Entity: Hashable {
 }
 
 extension Entity {
-    @inlinable public static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
-        Self.Managed.fetchRequest()
+    public static func entity() -> NSEntityDescription {
+        objc_getAssociatedObject(Self.self, &ENTITY_DESC_KEY) as! NSEntityDescription
     }
     
-    @inlinable public static func entity() -> NSEntityDescription {
-        Self.Managed.entity()
+    @inlinable public static func fetchRequest() -> NSFetchRequest<NSFetchRequestResult> {
+        NSFetchRequest(entityName: entity().name!)
     }
 
     @inlinable public static var fetchKey: String {
@@ -265,7 +268,6 @@ public protocol ManagableObject { }
 extension Entity: ManagableObject { }
 
 extension ManagableObject where Self: Entity {
-    public typealias Managed = ManagedObject<Self>
     public typealias Driver = ManagedDriver<Self>
     public typealias RawDriver = ManagedRawDriver<Self>
 }

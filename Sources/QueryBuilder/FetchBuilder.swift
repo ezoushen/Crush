@@ -95,15 +95,6 @@ where
         return self
     }
 
-    /// Prefetch attributes according to specified
-    public func prefetch<T: AttributeProtocol>(attribute: KeyPath<Target, T>) -> Self {
-        config.modify {
-            $0.propertiesToFetch.initializeIfNeeded()
-            $0.propertiesToFetch?.append(attribute.propertyName)
-        }
-        return self
-    }
-
     /// Prefetch related entities according to specified relationship
     public func prefetch<T: RelationshipProtocol>(relationship: KeyPath<Target, T>) -> Self {
         config.modify {
@@ -154,12 +145,6 @@ where
         select(keyPaths)
     }
 
-    /// Adds one or more `SelectPath` instances to the select clause.
-    /// - Parameter selectPaths: The `SelectPath` instances to add to the select clause.
-    public func select(_ selectPaths: SelectPath<Target>...) -> Self {
-        select(selectPaths)
-    }
-
     /// Adds an array of key paths to the select clause.
     /// - Parameter keyPaths: An array of key paths to add to the select clause.
     public func select(_ keyPaths: [PartialKeyPath<Target>]) -> Self {
@@ -171,14 +156,6 @@ where
         }
         return self
     }
-
-     /// Adds an array of `SelectPath` instances to the select clause.
-     /// - Parameter selectPaths: An array of `SelectPath` instances to add to the select clause.
-    public func select(_ selectPaths: [SelectPath<Target>]) -> Self {
-        config.modify { selectPaths.forEach($0.fetch(property:)) }
-        return self
-    }
-
     /// Sets the flag indicating whether the refetched objects should be refreshed.
     /// - Parameter flag: A boolean value indicating whether to refresh refetched objects. Default is true.
     /// - Returns: The FetchBuilder instance.
@@ -360,7 +337,7 @@ public class ExecutableFetchBuilder<Target: Entity, Received: Collection>:
         let objects: [NSManagedObject] = try! context.execute(request: request)
         if let predicate = config.postPredicate {
             let nsArray = objects as NSArray
-            return nsArray.filtered(using: predicate) as! [ManagedObject<Target>]
+            return nsArray.filtered(using: predicate) as! [NSManagedObject]
         }
         return objects
     }
@@ -386,7 +363,7 @@ public class ArrayExecutableFetchBuilder<Target: Entity, Result>:
 }
 
 public final class ManagedFetchBuilder<Target: Entity>:
-    ArrayExecutableFetchBuilder<Target, Target.Managed>
+    ArrayExecutableFetchBuilder<Target, Target.Driver>
 {
     /**
      Sets whether subentities should be included in the fetch request.
@@ -398,8 +375,8 @@ public final class ManagedFetchBuilder<Target: Entity>:
             ._includesSubentities(flag)
     }
     
-    override func wrap(object: NSManagedObject) -> ManagedObject<Target> {
-        context.receive(object as! Target.Managed)
+    override func wrap(object: NSManagedObject) -> Target.Driver {
+        Target.Driver(unsafe: context.receive(object))
     }
 
     /// Return immutable `ReadOnly<Target>` as fetch result rather than mutable object,
@@ -429,9 +406,9 @@ public class ObjectProxyFetchBuilder<Target: Entity, Received>:
 public final class DriverFetchBuilder<Target: Entity>:
     ObjectProxyFetchBuilder<Target, Target.Driver>
 {
-    override func wrap(object: NSManagedObject) -> ManagedDriver<Target> {
+    override func wrap(object: NSManagedObject) -> Target.Driver {
         let object = context.receive(object)
-        return object.unsafeDriver(entity: Target.self)
+        return object.unsafeCast(to: Target.self)
     }
 }
 

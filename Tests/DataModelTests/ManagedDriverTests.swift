@@ -40,7 +40,7 @@ class ManagedDriverTests: XCTestCase {
 
     override func setUp() {
         sut = container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             defer { try! context.commit() }
             return context.create(entity: TestEntity.self)
         }

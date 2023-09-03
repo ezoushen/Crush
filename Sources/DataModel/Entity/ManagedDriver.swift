@@ -19,7 +19,7 @@ public protocol ObjectDriver<Entity>: AnyObject {
 extension ObjectDriver {
     internal subscript<Property: RelationshipProtocol>(
         toMany keyPath: KeyPath<Entity, Property>
-    ) -> MutableSet<ManagedObject<Property.Destination>>
+    ) -> MutableSet<ManagedDriver<Property.Destination>>
     where
         Property.Mapping == ToMany<Property.Destination>
     {
@@ -37,7 +37,7 @@ extension ObjectDriver {
 
     internal subscript<Property: RelationshipProtocol>(
         toManyOrdered keyPath: KeyPath<Entity, Property>
-    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
+    ) -> MutableOrderedSet<ManagedDriver<Property.Destination>>
     where
         Property.Mapping == ToOrdered<Property.Destination>
     {
@@ -70,7 +70,7 @@ public protocol ObjectRuntimeDriver<Entity>: ObjectDriver { }
 extension ObjectRuntimeDriver {
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> MutableSet<ManagedObject<Property.Destination>>
+    ) -> MutableSet<ManagedDriver<Property.Destination>>
     where
         Property.Mapping == ToMany<Property.Destination>
     {
@@ -79,7 +79,7 @@ extension ObjectRuntimeDriver {
 
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: WritableKeyPath<Entity, Property>
-    ) -> MutableSet<ManagedObject<Property.Destination>>
+    ) -> MutableSet<ManagedDriver<Property.Destination>>
     where
         Property.Mapping == ToMany<Property.Destination>
     {
@@ -93,7 +93,7 @@ extension ObjectRuntimeDriver {
 
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
+    ) -> MutableOrderedSet<ManagedDriver<Property.Destination>>
     where
         Property.Mapping == ToOrdered<Property.Destination>
     {
@@ -102,7 +102,7 @@ extension ObjectRuntimeDriver {
 
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: WritableKeyPath<Entity, Property>
-    ) -> MutableOrderedSet<ManagedObject<Property.Destination>>
+    ) -> MutableOrderedSet<ManagedDriver<Property.Destination>>
     where
         Property.Mapping == ToOrdered<Property.Destination>
     {
@@ -179,20 +179,18 @@ extension ObjectRawDriver {
 
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: KeyPath<Entity, Property>
-    ) -> Property.RuntimeValue {
-        self[value: keyPath]
+    ) -> Property.ManagedValue {
+        self[rawValue: keyPath]
     }
 
     public subscript<Property: RelationshipProtocol>(
         dynamicMember keyPath: WritableKeyPath<Entity, Property>
-    ) -> Property.RuntimeValue {
+    ) -> Property.ManagedValue {
         get {
-            self[value: keyPath]
+            self[rawValue: keyPath]
         }
         set {
-            managedObject.setValue(
-                Property.PropertyType.convert(runtimeValue: newValue),
-                key: keyPath.propertyName)
+            managedObject.setValue(newValue, key: keyPath.propertyName)
         }
     }
 
@@ -247,21 +245,32 @@ extension NSManagedObject {
     }
 }
 
-public class DriverBase<Entity: Crush.Entity>: ObjectDriver {
+infix operator =>
+infix operator ~>
+
+public class DriverBase<Entity: Crush.Entity>: ObjectDriver, Hashable, CustomDebugStringConvertible {
     public let managedObject: NSManagedObject
+    
+    public var debugDescription: String {
+        managedObject.debugDescription
+    }
 
     public init?(_ managedObject: NSManagedObject) {
         guard let type = managedObject.entity.entityType,
               type is Entity.Type else { return nil }
         self.managedObject = managedObject
     }
+    
+    public static func == (lhs: DriverBase<Entity>, rhs: DriverBase<Entity>) -> Bool {
+        lhs.managedObject == rhs.managedObject
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(managedObject)
+    }
 
     public init(unsafe managedObject: NSManagedObject) {
         self.managedObject = managedObject
-    }
-
-    public func unwrap<T: Crush.Entity>(_ type: T.Type) -> T.Managed {
-        managedObject as! T.Managed
     }
 
     @inlinable public func driver() -> Entity.Driver {
@@ -270,6 +279,14 @@ public class DriverBase<Entity: Crush.Entity>: ObjectDriver {
 
     @inlinable public func rawDriver() -> Entity.RawDriver {
         ManagedRawDriver(unsafe: managedObject)
+    }
+    
+    @inlinable public var raw: Entity.RawDriver {
+        rawDriver()
+    }
+    
+    func fireFault() {
+        managedObject.fireFault()
     }
 }
 
@@ -285,13 +302,9 @@ public class DriverBase<Entity: Crush.Entity>: ObjectDriver {
 ///   var activeDate = Value.Date("activeDate")
 ///
 ///   override func willSave(_ managedObject: NSManagedObject) {
-///     // You cannot perform the following cast directly, as it may cause a crash.
-///     // `let animal = managedObject as! ManagedObject<Animal>`
-///
-///     // Instead, use `ManagedDriver` to safely access the data.
-///     guard let animal = ManagedDriver<Animal>(managedObject) else {
-///       return
-///     }
+///     // Use `ManagedDriver` to safely access the data.
+///     // ~> is the operator that equals `runtimeDriver(type: Animal.self)`
+///     guard let animal = managedObject ~> Animal.self else { return }
 ///     animal.activeDate = Date()
 ///   }
 /// }
@@ -306,6 +319,24 @@ public class DriverBase<Entity: Crush.Entity>: ObjectDriver {
 public class ManagedDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectRuntimeDriver, ManagedStatus {
     @inlinable public override func driver() -> Entity.Driver {
         self
+    }
+    
+    /// Casts the managed driver to the specified entity type.
+    @inlinable public func cast<T: Crush.Entity>(to type: T.Type) -> T.Driver? {
+        T.Driver(managedObject)
+    }
+
+    /// Unsafely casts the managed driver to the specified entity type.
+    @inlinable public func unsafeCast<T: Crush.Entity>(to entity: T.Type) -> T.Driver {
+        T.Driver(unsafe: managedObject)
+    }
+    
+    @inlinable public static func => <T: Crush.Entity>(lhs: Entity.Driver, rhs: T.Type) -> T.Driver {
+        lhs.unsafeCast(to: rhs)
+    }
+    
+    @inlinable public static func ~> <T: Crush.Entity>(lhs: Entity.Driver, rhs: T.Type) -> T.Driver? {
+        lhs.cast(to: rhs)
     }
 }
 
@@ -324,7 +355,7 @@ public class ManagedDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectRunt
 ///   @Default(.small)
 ///   var size = Value.Enum<Size>("size")
 /// }
-/// let rawDriver = managedObject.rawDriver()
+/// let rawDriver = driver.raw
 /// print(rawDriver.size) // prints 0, not .small
 /// ```
 ///
@@ -332,22 +363,42 @@ public class ManagedRawDriver<Entity: Crush.Entity>: DriverBase<Entity>, ObjectR
     @inlinable public override func rawDriver() -> Entity.RawDriver {
         self
     }
+    
+    /// Casts the raw managed driver to the specified entity type.
+    @inlinable public func cast<T: Crush.Entity>(to type: T.Type) -> T.RawDriver? {
+        T.RawDriver(managedObject)
+    }
+
+    /// Unsafely casts the raw managed driver to the specified entity type.
+    @inlinable public func unsafeCast<T: Crush.Entity>(to entity: T.Type) -> T.RawDriver {
+        T.RawDriver(unsafe: managedObject)
+    }
+    
+    @inlinable public static func => <T: Crush.Entity>(lhs: Entity.RawDriver, rhs: T.Type) -> T.RawDriver {
+        lhs.unsafeCast(to: rhs)
+    }
+    
+    @inlinable public static func ~> <T: Crush.Entity>(lhs: Entity.RawDriver, rhs: T.Type) -> T.RawDriver? {
+        lhs.cast(to: rhs)
+    }
 }
 
 extension NSManagedObject {
-    @inlinable public func runtimeDriver<T: Entity>(entity: T.Type) -> ManagedDriver<T>? {
+    /// Casts the managed driver to the specified entity type.
+    @inlinable public func cast<T: Entity>(to type: T.Type) -> T.Driver? {
         ManagedDriver(self)
     }
 
-    @inlinable public func unsafeDriver<T: Entity>(entity: T.Type) -> ManagedDriver<T> {
+    /// Unsafely casts the managed driver to the specified entity type.
+    @inlinable public func unsafeCast<T: Entity>(to type: T.Type) -> T.Driver {
         ManagedDriver(unsafe: self)
     }
-
-    @inlinable public func rawDriver<T: Entity>(entity: T.Type) -> ManagedRawDriver<T>? {
-        ManagedRawDriver(self)
+    
+    @inlinable public static func => <T: Crush.Entity>(lhs: NSManagedObject, rhs: T.Type) -> T.Driver {
+        lhs.unsafeCast(to: rhs)
     }
-
-    @inlinable public func unsafeRawDriver<T: Entity>(entity: T.Type) -> ManagedRawDriver<T> {
-        ManagedRawDriver(unsafe: self)
+    
+    @inlinable public static func ~> <T: Crush.Entity>(lhs: NSManagedObject, rhs: T.Type) -> T.Driver? {
+        lhs.cast(to: rhs)
     }
 }

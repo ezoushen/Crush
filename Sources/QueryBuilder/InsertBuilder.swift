@@ -12,7 +12,7 @@ struct InsertionConfig<Target: Entity> {
     var objects: [[String: Any]] = []
     let batch: Bool
 
-    var managedObjectHandler: ((ManagedObject<Target>) -> Bool)?
+    var managedObjectHandler: ((Target.Driver) -> Bool)?
     var dictionaryHandler: ((NSMutableDictionary) -> Bool)?
 }
 
@@ -23,7 +23,7 @@ extension InsertionConfig: RequestConfig {
             let managedObjectHandler = managedObjectHandler
         {
             let description = NSBatchInsertRequest(entity: entity, managedObjectHandler: {
-                managedObjectHandler($0 as! ManagedObject<Target>)
+                managedObjectHandler(Target.Driver(unsafe: $0))
             })
             description.resultType = .objectIDs
             return description
@@ -100,7 +100,7 @@ extension InsertBuilder {
 extension InsertBuilder {
     /// The batch insert request will keep inserting objects into the persistent store until the handler return true.
     public func objectHandler(
-        _ handler: @escaping (ManagedObject<Target>) -> Bool) -> any RequestExecutor<Received>
+        _ handler: @escaping (Target.Driver) -> Bool) -> any RequestExecutor<Received>
     {
         config.managedObjectHandler = handler
         return self
@@ -109,10 +109,10 @@ extension InsertBuilder {
     /// The batch insert request builder will insert all elements int the given source into the persistent store.
     public func objects<Source: Sequence>(
         from: Source,
-        handler: @escaping (Source.Element, ManagedObject<Target>) -> Void
+        handler: @escaping (Source.Element, Target.Driver) -> Void
     ) -> any RequestExecutor<Received> {
         var iterator = from.makeIterator()
-        return objectHandler { (object: ManagedObject<Target>) in
+        return objectHandler { (object: Target.Driver) in
             guard let element = iterator.next() else { return true }
             handler(element, object)
             return false

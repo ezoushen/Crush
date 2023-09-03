@@ -88,7 +88,7 @@ final class ManagedObjectTests: XCTestCase {
         TestEntity.awakeFromSnapshotEvents = nil
 
         sut = container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             defer { try! context.commit() }
             return context.create(entity: TestEntity.self)
         }
@@ -138,7 +138,7 @@ final class ManagedObjectTests: XCTestCase {
         container.startSession().sync { context in
             let entity = context.edit(object: sut)
             entity.fireFault()
-            context.executionContext.refresh(entity, mergeChanges: true)
+            context.executionContext.refresh(entity.managedObject, mergeChanges: true)
         }
         XCTAssertTrue(called)
     }
@@ -149,7 +149,7 @@ final class ManagedObjectTests: XCTestCase {
         container.startSession().sync { context in
             let entity = context.edit(object: sut)
             entity.fireFault()
-            context.executionContext.refresh(entity, mergeChanges: true)
+            context.executionContext.refresh(entity.managedObject, mergeChanges: true)
         }
         XCTAssertTrue(called)
     }

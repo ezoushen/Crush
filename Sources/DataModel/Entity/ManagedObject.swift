@@ -8,6 +8,14 @@
 import CoreData
 
 public class ManagedObjectBase: NSManagedObject {
+    
+    lazy var entityType: Entity.Type = {
+        guard let entityClassName = entity.userInfo?[UserInfoKey.entityClassName] as? String,
+              let entityType = NSClassFromString(entityClassName) as? Entity.Type
+        else { fatalError("Internal Error, please file a bug.") }
+        return entityType
+    }()
+    
     internal func originalValidateValue(_ value: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey: String) throws {
         try super.validateValue(value, forKey: forKey)
     }
@@ -23,135 +31,62 @@ public class ManagedObjectBase: NSManagedObject {
     internal func originalValidateForInsert() throws {
         try super.validateForInsert()
     }
-}
-
-/// A class that is responsible for data access.
-///
-/// It is used for creating, updating, or deleting data in the CoreData database. You should use `ManagedObject`
-/// when you need to modify the data within a `Session`'s sync or async callback block.
-///
-/// - Note: You should always access a `ManagedObject` within a `Session`'s callback block.
-///
-/// Examples:
-///
-///     try session.sync { context in
-///         let managedTodo = context.edit(object: todo)
-///         managedTodo.title = "new title"
-///         try context.commit()
-///     }
-///
-/// ## See Also
-/// - ``ManagedDriver``
-public class ManagedObject<Entity: Crush.Entity>: ManagedObjectBase, ObjectRuntimeDriver, ManagedStatus {
-    public typealias Entity = Entity
     
-    internal lazy var canTriggerEvent: Bool = {
-        managedObjectContext?.name?.hasPrefix(DefaultContextPrefix) != true
-    }()
-
-    @inlinable public var managedObject: NSManagedObject { self }
-
     public override func willSave() {
         super.willSave()
-        if canTriggerEvent {
-            Entity.willSave(self)
-        }
+        entityType.willSave(self)
     }
     
     public override func didSave() {
         super.didSave()
-        if canTriggerEvent {
-            Entity.didSave(self)
-        }
+        entityType.didSave(self)
     }
     
     public override func prepareForDeletion() {
         super.prepareForDeletion()
-        if canTriggerEvent {
-            Entity.prepareForDeletion(self)
-        }
+        entityType.prepareForDeletion(self)
     }
     
     public override func willTurnIntoFault() {
         super.willTurnIntoFault()
-        if canTriggerEvent {
-            Entity.willTurnIntoFault(self)
-        }
+        entityType.willTurnIntoFault(self)
     }
     
     public override func didTurnIntoFault() {
         super.didTurnIntoFault()
-        if canTriggerEvent {
-            Entity.didTurnIntoFault(self)
-        }
+        entityType.didTurnIntoFault(self)
     }
     
     public override func awakeFromFetch() {
         super.awakeFromFetch()
-        if canTriggerEvent {
-            Entity.awakeFromFetch(self)
-        }
+        entityType.awakeFromFetch(self)
     }
     
     public override func awakeFromInsert() {
         super.awakeFromInsert()
-        if canTriggerEvent {
-            Entity.awakeFromInsert(self)
-        }
+        entityType.awakeFromInsert(self)
     }
     
     public override func awake(fromSnapshotEvents flags: NSSnapshotEventType) {
         super.awake(fromSnapshotEvents: flags)
-        if canTriggerEvent {
-            Entity.awake(self, fromSnapshotEvents: flags)
-        }
+        entityType.awake(self, fromSnapshotEvents: flags)
     }
 
     public override func validateValue(
         _ value: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey key: String) throws
     {
-        if canTriggerEvent {
-            try Entity.validateValue(self, value: value, forKey: key)
-        } else {
-            try super.validateValue(value, forKey: key)
-        }
+        try entityType.validateValue(self, value: value, forKey: key)
     }
 
     public override func validateForDelete() throws {
-        if canTriggerEvent {
-            try Entity.validateForDelete(self)
-        } else {
-            try super.validateForDelete()
-        }
+        try entityType.validateForDelete(self)
     }
     
     public override func validateForInsert() throws {
-        if canTriggerEvent {
-            try Entity.validateForInsert(self)
-        } else {
-            try super.validateForInsert()
-        }
+        try entityType.validateForInsert(self)
     }
 
     public override func validateForUpdate() throws {
-        if canTriggerEvent {
-            try Entity.validateForUpdate(self)
-        } else {
-            try super.validateForUpdate()
-        }
-    }
-}
-
-extension ManagedObject {
-    @inlinable public func driver() -> ManagedDriver<Entity> {
-        ManagedDriver(unsafe: self)
-    }
-
-    @inlinable public func rawDriver() -> Entity.RawDriver {
-        ManagedRawDriver(unsafe: self)
-    }
-
-    @inlinable public var raw: Entity.RawDriver {
-        rawDriver()
+        try entityType.validateForUpdate(self)
     }
 }

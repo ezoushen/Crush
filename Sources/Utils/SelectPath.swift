@@ -50,7 +50,7 @@ public final class SelectPath<Entity: Crush.Entity>: Expressible, ExpressibleByS
     }
 
     private func resolveResultType(from path: String) -> NSAttributeType {
-        var desc = Entity.Managed.entity()
+        var desc = Entity.entity()
 
         for component in path.split(separator: ".") {
             let property = desc.propertiesByName[String(component)]

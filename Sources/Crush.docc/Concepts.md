@@ -14,9 +14,9 @@ There're some simple examples in <doc:QuickStart>.
 
 ### Concurrency management
 
-In `CoreData`, direct data access in `NSManagedObject` is not thread-safe. Thus, in `Crush`, data mutation is allowed only in limited contexts. To achieve this, two object types are introduced: `ManagedObject` and `ReadOnly`.
+In `CoreData`, direct data access in `NSManagedObject` is not thread-safe. Thus, in `Crush`, data mutation is allowed only in limited contexts. To achieve this, two object types are introduced: `ManagedDriver` and `ReadOnly`.
 
-- ``ManagedObject``: A subclass of `NSManagedObject` that is responsible for calling `CoreData` APIs.
+- ``ManagedDriver``: A class responsible for proxying `CoreData` API calls.
 - ``ReadOnly``: A class responsible for thread-safe data access of the managed object.
 
 With these two classes, we can guarantee thread-safe data access from any ``ReadOnly`` object (possibly reentrant safe). All managed objects should be used only in the callback block of ``Session/sync(name:block:)-831hn`` or ``Session/async(name:block:completion:)`` (and other sync and async methods provided in ``Session``).

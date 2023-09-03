@@ -110,9 +110,9 @@ extension Session {
         - Returns: The read-only representation of the entity if found; otherwise, nil.
     */
     public func load<T: Entity>(objectID: NSManagedObjectID, isFault: Bool = true) -> T.ReadOnly? {
-        guard let object = context.uiContext
-            .load(objectID: objectID, isFault: isFault) as? ManagedObject<T> else { return nil }
-        return T.ReadOnly(object)
+        guard let object = context.uiContext.load(objectID: objectID, isFault: isFault),
+              let driver = T.Driver(object) else { return nil }
+        return T.ReadOnly(driver)
     }
 
     /**

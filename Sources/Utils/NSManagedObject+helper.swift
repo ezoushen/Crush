@@ -39,7 +39,7 @@ extension NSManagedObjectContext {
 
 extension NSManagedObject {
     func fireFault() {
-        let description = Self.entity()
+        let description = entity
         let key = description.allAttributeKeys().first ??
                     description.allToOneRelationshipKeys().first ??
                     description.allToManyRelationshipKeys().first!

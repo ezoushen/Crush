@@ -42,7 +42,7 @@ class SessionTests: XCTestCase {
 
     func test_asyncReturnUnsafeProperty_shouldBeWrapped() async throws {
         let result: TestEntity.ReadOnly = try await container.startSession().asyncThrowing {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             entity.integerValue = 11
             try context.commit()
@@ -94,10 +94,10 @@ class SessionTests: XCTestCase {
     func test_sync_shouldReturnEntity() throws {
         var objectID: NSManagedObjectID?
         let result: TestEntity.ReadOnly = try container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             try context.commit()
-            try context.obtainPermanentIDs(for: [entity])
+            try context.obtainPermanentIDs(for: entity)
             objectID = entity.objectID
             return entity
         }

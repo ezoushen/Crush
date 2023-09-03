@@ -23,7 +23,7 @@ extension UnsafeSessionProperty {
         object: T, in session: Session?) -> ReadOnly<Entity> where T.Entity == Entity
     {
         guard let session = session else {
-            return ReadOnly(driver: object.driver())
+            return ReadOnly(object.driver())
         }
         return ReadOnly<T.Entity>(object: session.context.present(object.managedObject))
     }
@@ -121,9 +121,6 @@ extension ObjectDriver where Self: UnsafeSessionProperty {
         return wrap(object: self, in: session)
     }
 }
-
-extension ManagedObject: UnsafeSessionPropertyProtocol { }
-extension ManagedObject: UnsafeSessionProperty { }
 
 extension ManagedDriver: UnsafeSessionPropertyProtocol { }
 extension ManagedDriver: UnsafeSessionProperty { }

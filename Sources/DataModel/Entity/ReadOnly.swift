@@ -38,7 +38,7 @@ public struct ReadOnly<Entity: Crush.Entity> {
     ///     print(todo.raw.status) // 0
     @dynamicMemberLookup
     public struct Raw {
-        public typealias Driver = ManagedRawDriver<Entity>
+        public typealias Driver = Entity.RawDriver
 
         internal var managedObject: NSManagedObject { driver.managedObject }
         internal let driver: Driver
@@ -86,27 +86,22 @@ public struct ReadOnly<Entity: Crush.Entity> {
         }
     }
 
-    public typealias Driver = ManagedDriver<Entity>
+    public typealias Driver = Entity.Driver
 
     internal var managedObject: NSManagedObject { driver.managedObject }
-    internal let driver: ManagedDriver<Entity>
+    internal let driver: Entity.Driver
     internal let context: NSManagedObjectContext
 
     /// Wrap the `ReadOnly` object to `ReadOnly.Raw`
     public var raw: ReadOnly<Entity>.Raw {
         Raw(driver: driver.rawDriver())
     }
-
-    /// Wrap `Entity.Managed` object to `Entity.ReadOnly`
-    public init(_ value: ManagedObject<Entity>) {
-        self.init(driver: value.driver())
-    }
     
     internal init(object: NSManagedObject) {
-        self.init(driver: object.unsafeDriver(entity: Entity.self))
+        self.init(object.unsafeCast(to: Entity.self))
     }
     
-    internal init(driver: ManagedDriver<Entity>) {
+    public init(_ driver: Entity.Driver) {
         guard let context = driver.managedObject.managedObjectContext else {
             fatalError("Accessing stale object is dangerous")
         }
@@ -162,7 +157,7 @@ extension ReadOnly {
     }
 
     /// Read properties of `Entity.Driver` through dyncmic callable API.
-    public subscript<T>(dynamicMember keyPath: KeyPath<ManagedDriver<Entity>, T>) -> T {
+    public subscript<T>(dynamicMember keyPath: KeyPath<Entity.Driver, T>) -> T {
         driver[keyPath: keyPath]
     }
 }
@@ -204,6 +199,17 @@ extension ReadOnly: Equatable {
 extension ReadOnly: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(managedObject)
+    }
+}
+
+extension ReadOnly {
+    public func cast<T: Crush.Entity>(to type: T.Type) -> T.ReadOnly? {
+        guard let driver = managedObject.cast(to: type) else { return nil }
+        return T.ReadOnly(driver)
+    }
+    
+    public func unsafeCast<T: Crush.Entity>(to type: T.Type) -> T.ReadOnly {
+        T.ReadOnly(object: managedObject)
     }
 }
 

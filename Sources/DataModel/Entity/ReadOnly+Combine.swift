@@ -11,12 +11,12 @@ import Combine
 import CoreData
 
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-extension ManagedObject {
-    public struct KVOPublisher<T: Property>: Combine.Publisher {
+extension ManagedObjectBase {
+    public struct KVOPublisher<Entity: Crush.Entity, T: Property>: Combine.Publisher {
         public typealias Output = T.RuntimeValue
         public typealias Failure = Never
 
-        public let subject: ManagedDriver<Entity>
+        public let subject: Entity.Driver
         public let keyPath: KeyPath<Entity, T>
         public let options: NSKeyValueObservingOptions
 
@@ -122,8 +122,8 @@ extension ReadOnly {
     /// Please be aware that observing property changes requires the managed object not to be a fault. Thus, it'll fire the faulting object first if needed
     public func observe<Property: Crush.Property>(
         _ keyPath: KeyPath<Entity, Property>, options: NSKeyValueObservingOptions
-    ) -> ManagedObject<Entity>.KVOPublisher<Property> {
-        ManagedObject<Entity>.KVOPublisher<Property>(
+    ) -> ManagedObjectBase.KVOPublisher<Entity, Property> {
+        ManagedObjectBase.KVOPublisher<Entity, Property>(
             subject: driver, keyPath: keyPath, options: options)
     }
 
@@ -134,7 +134,7 @@ extension ReadOnly {
     where
         Property.RuntimeValue: UnsafeSessionProperty
     {
-        return ManagedObject<Entity>.KVOPublisher<Property>(
+        return ManagedObjectBase.KVOPublisher<Entity, Property>(
             subject: driver, keyPath: keyPath, options: options
         )
             .map { $0.wrapped() }

@@ -42,20 +42,31 @@ public protocol ToOneRelationMappingProtocol: RelationMapping { }
 public protocol ToManyRelationMappingProtocol: RelationMapping { }
 
 public struct ToOne<EntityType: Entity>: ToOneRelationMappingProtocol, PropertyType {
-    public typealias RuntimeValue = ManagedObject<EntityType>?
-    public typealias ManagedValue = ManagedObject<EntityType>?
+    public typealias RuntimeValue = EntityType.Driver?
+    public typealias ManagedValue = NSManagedObject?
     public typealias PredicateValue = NSObject
 
     public static var isOrdered: Bool { false }
     public static var maxCount: Int { 1 }
     public static var minCount: Int { 1 }
 
-    @inlinable public static var defaultManagedValue: ManagedObject<EntityType>? { nil }
-    @inlinable public static var defaultRuntimeValue: ManagedObject<EntityType>? { nil }
+    @inlinable public static var defaultManagedValue: NSManagedObject? { nil }
+    @inlinable public static var defaultRuntimeValue: EntityType.Driver? { nil }
+    
+    @inlinable
+    public static func convert(managedValue: NSManagedObject?) -> EntityType.Driver? {
+        guard let managedValue else { return nil }
+        return .init(managedValue)
+    }
+    
+    @inlinable
+    public static func convert(runtimeValue: EntityType.Driver?) -> NSManagedObject? {
+        runtimeValue?.managedObject
+    }
 }
 
 public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyType {
-    public typealias RuntimeValue = MutableSet<ManagedObject<EntityType>>
+    public typealias RuntimeValue = MutableSet<EntityType.Driver>
     public typealias ManagedValue = NSMutableSet
     public typealias PredicateValue = NSObject
 
@@ -63,13 +74,23 @@ public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, Propert
     public static var maxCount: Int { 0 }
     public static var minCount: Int { 0 }
     
-    @inlinable
+    @inline(__always)
     public static func convert(managedValue: ManagedValue) -> RuntimeValue {
-        return MutableSet(managedValue)
+        MutableSet(LazyMapMutableSet<NSManagedObject, EntityType.Driver>
+            .from(managedValue, from: {
+                ManagedDriver(unsafe: $0)
+            }, to: {
+                $0.managedObject
+            }))
     }
     
+    @inline(__always)
     public static func convert(runtimeValue: RuntimeValue) -> ManagedValue {
-        return runtimeValue.mutableSet
+        guard let mappedSet = runtimeValue.mutableSet
+                as? LazyMapMutableSet<NSManagedObject, EntityType.Driver> else {
+            return runtimeValue.mutableSet
+        }
+        return mappedSet.mutableSet
     }
 
     @inlinable public static var defaultManagedValue: ManagedValue { [] }
@@ -77,7 +98,7 @@ public struct ToMany<EntityType: Entity>: ToManyRelationMappingProtocol, Propert
 }
 
 public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, PropertyType {
-    public typealias RuntimeValue = MutableOrderedSet<ManagedObject<EntityType>>
+    public typealias RuntimeValue = MutableOrderedSet<EntityType.Driver>
     public typealias ManagedValue = NSMutableOrderedSet
     public typealias PredicateValue = NSObject
 
@@ -85,13 +106,23 @@ public struct ToOrdered<EntityType: Entity>: ToManyRelationMappingProtocol, Prop
     public static var maxCount: Int { 0 }
     public static var minCount: Int { 0 }
     
-    @inlinable
+    @inline(__always)
     public static func convert(managedValue: ManagedValue) -> RuntimeValue {
-        return MutableOrderedSet(managedValue)
+        MutableOrderedSet(LazyMapMutableOrderedSet<NSManagedObject, EntityType.Driver>
+            .from(managedValue, from: {
+                ManagedDriver(unsafe: $0)
+            }, to: {
+                $0.managedObject
+            }))
     }
     
+    @inline(__always)
     public static func convert(runtimeValue: RuntimeValue) -> ManagedValue {
-        return runtimeValue.orderedSet
+        guard let mappedSet = runtimeValue.orderedSet
+                as? LazyMapMutableOrderedSet<NSManagedObject, EntityType.Driver> else {
+            return runtimeValue.orderedSet
+        }
+        return mappedSet.mutableOrderedSet
     }
 
     @inlinable public static var defaultManagedValue: ManagedValue { [] }

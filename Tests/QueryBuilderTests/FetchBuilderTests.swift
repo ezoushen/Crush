@@ -93,6 +93,30 @@ class FetchBuilderRequestTests: XCTestCase {
         sut = suite.createFetchBuilder()
     }
     
+    func test_select_shouldUpdatePropertiesToFetch() {
+        let request = sut
+            .select(\.integerValue)
+            .config
+            .createFetchRequest()
+        XCTAssertTrue(request.propertiesToFetch?.contains(where: { ($0 as? String) == "integerValue"}) ?? false)
+    }
+    
+    func test_refreshRefetchObjects_shouldUpdateShouldRefreshRefetchedObjectsToTrue() {
+        let request = sut
+            .refreshRefetchedObjects(true)
+            .config
+            .createFetchRequest()
+        XCTAssertTrue(request.shouldRefreshRefetchedObjects)
+    }
+    
+    func test_refreshRefetchObjects_shouldUpdateShouldRefreshRefetchedObjectsToFalse() {
+        let request = sut
+            .refreshRefetchedObjects(false)
+            .config
+            .createFetchRequest()
+        XCTAssertFalse(request.shouldRefreshRefetchedObjects)
+    }
+    
     func test_request_limit_shouldUpdateFetchLimit() {
         let request = sut
             .limit(2)

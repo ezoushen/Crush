@@ -374,7 +374,7 @@ class PropertyCondiationOperatorsTests: XCTestCase {
 
     private func createObject() throws -> TestEntity.ReadOnly {
         try container.startSession().sync {
-            context -> TestEntity.Managed in
+            context -> TestEntity.Driver in
             let entity = context.create(entity: TestEntity.self)
             try context.commit()
             return entity

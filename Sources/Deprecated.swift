@@ -24,3 +24,30 @@ extension TypedPredicate {
         subquery(keyPath, predicate: predicate)
     }
 }
+
+extension DriverBase {
+    @available(*, deprecated, renamed: "cast(to:)")
+    @inlinable public func runtimeDriver<T: Crush.Entity>(entity: T.Type) -> T.Driver? {
+        ManagedDriver(managedObject)
+    }
+
+    @available(*, deprecated, renamed: "cast(to:)")
+    @inlinable public func unsafeDriver<T: Crush.Entity>(entity: T.Type) -> T.Driver {
+        ManagedDriver(unsafe: managedObject)
+    }
+
+    @available(*, deprecated, renamed: "cast(to:)")
+    @inlinable public func rawDriver<T: Crush.Entity>(entity: T.Type) -> T.RawDriver? {
+        ManagedRawDriver(managedObject)
+    }
+
+    @available(*, deprecated, renamed: "cast(to:)")
+    @inlinable public func unsafeRawDriver<T: Crush.Entity>(entity: T.Type) -> T.RawDriver {
+        ManagedRawDriver(unsafe: managedObject)
+    }
+}
+
+extension ManagableObject where Self: Entity {
+    @available(*, deprecated, renamed: "Driver", message: "ManagedObject is obsolete, please use ManagedDriver instead.")
+    public typealias Managed = ManagedDriver<Self>
+}

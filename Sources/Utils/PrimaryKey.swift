@@ -211,7 +211,7 @@ extension SessionContext: PrimaryKeyLoader, NSPersistentStoreCoordinatorHolder {
     /// let primaryKey = PrimaryKey<MyEntity>(1)
     /// let object = sessionContext.load(primaryKey: primaryKey)
     /// ```
-    public func load<T: Entity>(primaryKey pk: PrimaryKey<T>, isFault: Bool = true) -> T.Managed? {
+    public func load<T: Entity>(primaryKey pk: PrimaryKey<T>, isFault: Bool = true) -> T.Driver? {
         guard let id = _objectID(entityName: pk.entityName, incrementalID: pk.incrementalID)
         else { return nil }
         return load(objectID: id, isFault: isFault)
@@ -230,15 +230,8 @@ extension SessionContext: PrimaryKeyLoader, NSPersistentStoreCoordinatorHolder {
     /// let primaryKey2 = PrimaryKey<MyEntity>(2)
     /// let objects = sessionContext.load(primaryKeys: [primaryKey1, primaryKey2])
     /// ```
-    public func load<T: Entity>(primaryKeys pks: [PrimaryKey<T>], isFault: Bool = true) -> [T.Managed?] {
+    public func load<T: Entity>(primaryKeys pks: [PrimaryKey<T>], isFault: Bool = true) -> [T.Driver?] {
         pks.map { load(primaryKey: $0, isFault: isFault) }
-    }
-}
-
-extension ManagedObject {
-    /// The primary key of the managed object.
-    public var primaryKey: PrimaryKey<Entity>? {
-        PrimaryKey(objectID: objectID)
     }
 }
 
