@@ -11,9 +11,9 @@ import CoreData
 
 extension AnyKeyPath {
     fileprivate static var lock = UnfairLock()
-    fileprivate static var propertyNameCache: [ObjectIdentifier: String] = [:]
+    fileprivate static var propertyNameCache: [AnyHashable: String] = [:]
 
-    fileprivate var propertyNameCache: [ObjectIdentifier: String] {
+    fileprivate var propertyNameCache: [AnyHashable: String] {
         get { Self.propertyNameCache }
         set { Self.propertyNameCache = newValue }
     }
@@ -35,9 +35,10 @@ extension KeyPath where Root: Entity, Value: Property {
     var propertyName: String {
         Self.lock.lock()
         defer { Self.lock.unlock() }
-        return propertyNameCache[ObjectIdentifier(self)] ?? {
+        let key = AnyHashable(self)
+        return propertyNameCache[key] ?? {
             let name = Root()[keyPath: self].name
-            defer { propertyNameCache[ObjectIdentifier(self)] = name }
+            defer { propertyNameCache[key] = name }
             return name
         }()
     }
