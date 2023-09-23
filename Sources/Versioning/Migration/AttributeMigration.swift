@@ -126,6 +126,8 @@ public struct AddAttribute: AttributeMigration, AddPropertyMigration {
             description.versionHashModifier = hashModifier
             description.name = name!
             description.isOptional = isOptional
+            description.isTransient = isTransient
+            description.attributeType = attributeType
             description.derivationExpression = derivedExpression
             return description
         }

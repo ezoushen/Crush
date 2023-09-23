@@ -13,7 +13,7 @@ import XCTest
 
 class AddAttributeTests: XCTestCase {
     let sut = AddAttribute("name", type: StringAttributeType.self, isOptional: false, isTransient: true)
-    
+
     func test_createProperty_shouldSetName() {
         var store: [EntityMigrationCallback] = []
         let description = sut.createProperty(callbackStore: &store)
@@ -38,6 +38,46 @@ class AddAttributeTests: XCTestCase {
         var store: [EntityMigrationCallback] = []
         let description = sut.createProperty(callbackStore: &store)
         XCTAssertTrue(description is NSDerivedAttributeDescription)
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+    func test_createDerivedProperty_shouldSetName() {
+        let sut = AddAttribute("name", attributeType: .dateAttributeType, isOptional: false, derivedExpression: .dateNow())
+        var store: [EntityMigrationCallback] = []
+        let description = sut.createProperty(callbackStore: &store)
+        XCTAssertEqual(description.name, sut.name)
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+    func test_createDerivedProperty_shouldSetAttributeType() {
+        let sut = AddAttribute("name", attributeType: .dateAttributeType, isOptional: false, derivedExpression: .dateNow())
+        var store: [EntityMigrationCallback] = []
+        let description = sut.createProperty(callbackStore: &store) as! NSDerivedAttributeDescription
+        XCTAssertEqual(description.attributeType, .dateAttributeType)
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+    func test_createDerivedProperty_shouldSetIsOptional() {
+        let sut = AddAttribute("name", attributeType: .dateAttributeType, isOptional: false, derivedExpression: .dateNow())
+        var store: [EntityMigrationCallback] = []
+        let description = sut.createProperty(callbackStore: &store) as! NSDerivedAttributeDescription
+        XCTAssertEqual(description.isOptional, sut.isOptional)
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+    func test_createDerivedProperty_shouldSetIsTransient() {
+        let sut = AddAttribute("name", attributeType: .dateAttributeType, isOptional: false, derivedExpression: .dateNow())
+        var store: [EntityMigrationCallback] = []
+        let description = sut.createProperty(callbackStore: &store) as! NSDerivedAttributeDescription
+        XCTAssertEqual(description.isTransient, sut.isTransient)
+    }
+
+    @available(iOS 13.0, watchOS 6.0, macOS 10.15, tvOS 13.0, *)
+    func test_createDerivedProperty_shouldSetExpression() {
+        let sut = AddAttribute("name", attributeType: .dateAttributeType, isOptional: false, derivedExpression: .dateNow())
+        var store: [EntityMigrationCallback] = []
+        let description = sut.createProperty(callbackStore: &store) as! NSDerivedAttributeDescription
+        XCTAssertEqual(description.derivationExpression, NSExpression(format: "now()"))
     }
 
     func test_createProperty_shouldSetDefaultValue() {
