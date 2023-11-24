@@ -402,6 +402,8 @@ public struct UpdateEntity: EntityMigration {
                     propertyMapping.valueExpression = .relationshipMapping(from: sourceProperty.name, to: relationship.name)
                 }
                 relationshipMappings.append(propertyMapping)
+            case _ as NSFetchedPropertyDescription:
+                attributeMappings.append(propertyMapping)
             default:
                 throw MigrationModelingError.unknownDescriptionType
             }
