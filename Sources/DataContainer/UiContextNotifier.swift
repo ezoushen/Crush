@@ -367,25 +367,34 @@ class PersistentHistoryNotificationHandler: NotificationHandler {
 // MARK: User Info
 
 struct NSManagedObjectIDIterator: IteratorProtocol {
-    private var iterators: AnyIterator<AnyIterator<Any>>
+    private var iterators: AnyIterator<() -> AnyIterator<Any>>
     private var iterator: AnyIterator<Any>?
 
-    init<I: IteratorProtocol>(_ iterators: I) where I.Element == AnyIterator<Any> {
+    init<I: IteratorProtocol>(_ iterators: I) where I.Element == () -> AnyIterator<Any> {
         self.iterators = AnyIterator(iterators)
     }
 
     mutating func next() -> NSManagedObjectID? {
         if iterator == nil {
-            iterator = iterators.next()
+            iterator = iterators.next()?()
         }
-        return iterator?.next() as? NSManagedObjectID
+        if iterator == nil {
+            return nil
+        } else {
+            if let value = iterator?.next() as? NSManagedObjectID {
+                return value
+            } else {
+                iterator = nil
+                return next()
+            }
+        }
     }
 }
 
 class UserInfoMerger {
-    var insertedObjectIDIterators: [AnyIterator<Any>] = []
-    var updatedObjectIDIterators: [AnyIterator<Any>] = []
-    var deletedObjectIDIterators: [AnyIterator<Any>] = []
+    var insertedObjectIDIterators: [() -> AnyIterator<Any>] = []
+    var updatedObjectIDIterators: [() -> AnyIterator<Any>] = []
+    var deletedObjectIDIterators: [() -> AnyIterator<Any>] = []
 
     init(userInfo: [AnyHashable: Any]) {
         merge(userInfo: userInfo)
@@ -401,25 +410,25 @@ class UserInfoMerger {
         guard let userInfo = userInfo else { return }
 
         if let insertedObjectIDs = userInfo[AnyHashable(NSInsertedObjectIDsKey)] as? NSSet {
-            insertedObjectIDIterators.append(AnyIterator(insertedObjectIDs.makeIterator()))
+            insertedObjectIDIterators.append({AnyIterator(insertedObjectIDs.makeIterator())})
         }
         if let insertedObjects = userInfo[AnyHashable(NSInsertedObjectsKey)] as? NSSet {
-            insertedObjectIDIterators.append(AnyIterator(
-                insertedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+            insertedObjectIDIterators.append({AnyIterator(
+                insertedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator())})
         }
         if let updatedObjectIDs = userInfo[AnyHashable(NSUpdatedObjectIDsKey)] as? NSSet {
-            updatedObjectIDIterators.append(AnyIterator(updatedObjectIDs.makeIterator()))
+            updatedObjectIDIterators.append({AnyIterator(updatedObjectIDs.makeIterator())})
         }
         if let updatedObjects = userInfo[AnyHashable(NSUpdatedObjectsKey)] as? NSSet {
-            updatedObjectIDIterators.append(AnyIterator(
-                updatedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+            updatedObjectIDIterators.append({AnyIterator(
+                updatedObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator())})
         }
         if let deletedObjectIDs = userInfo[AnyHashable(NSDeletedObjectIDsKey)] as? NSSet {
-            deletedObjectIDIterators.append(AnyIterator(deletedObjectIDs.makeIterator()))
+            deletedObjectIDIterators.append({AnyIterator(deletedObjectIDs.makeIterator())})
         }
         if let deletdeObjects = userInfo[AnyHashable(NSDeletedObjectsKey)] as? NSSet {
-            deletedObjectIDIterators.append(AnyIterator(
-                deletdeObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator()))
+            deletedObjectIDIterators.append({AnyIterator(
+                    deletdeObjects.lazy.compactMap{ ($0 as? NSManagedObject)?.objectID }.makeIterator())})
         }
     }
 
