@@ -444,17 +444,22 @@ class UserInfoMerger {
 extension Entity {
     /// Check if user info received from ``DataContainer/uiContextDidRefresh`` has related changes against specified `Entity`s
     public static func hasChanges(
-        userInfo: [AnyHashable: Any], entities: [Entity.Type]) -> Bool
+        userInfo: [AnyHashable: Any], entities: [Entity.Type], changeTypes: Set<String> = [NSInsertedObjectIDsKey, NSUpdatedObjectIDsKey, NSDeletedObjectIDsKey]) -> Bool
     {
-        guard let inserted = userInfo[NSInsertedObjectIDsKey] as? AnySequence<NSManagedObjectID>,
-              let updated = userInfo[NSUpdatedObjectIDsKey] as? AnySequence<NSManagedObjectID>,
-              let deleted = userInfo[NSDeletedObjectIDsKey] as? AnySequence<NSManagedObjectID>
-        else { return false }
-
         let entityNames = Set(entities.map { $0.name })
-        
-        return inserted.contains { entityNames.contains($0.entity.name ?? "") } ||
-            updated.contains { entityNames.contains($0.entity.name ?? "") } ||
-            deleted.contains { entityNames.contains($0.entity.name ?? "") }
+        let targets = changeTypes.compactMap {
+            userInfo[$0] as? AnySequence<NSManagedObjectID>
+        }
+        guard targets.isEmpty == false else {
+            return userInfo.values.contains {
+                guard let subInfo = $0 as? [AnyHashable: Any] else { return false }
+                return hasChanges(userInfo: subInfo,
+                                  entities: entities,
+                                  changeTypes: changeTypes)
+            }
+        }
+        return targets.contains {
+            $0.contains { entityNames.contains($0.entity.name ?? "") }
+        }
     }
 }
