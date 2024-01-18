@@ -153,12 +153,12 @@ extension ReadOnly {
 
     /// Read properties of `NSManagedObject` through dyncmic callable API.
     public subscript<T>(dynamicMember keyPath: KeyPath<NSManagedObject, T>) -> T {
-        managedObject[keyPath: keyPath]
+        context.performSync { managedObject[keyPath: keyPath] }
     }
 
     /// Read properties of `Entity.Driver` through dyncmic callable API.
     public subscript<T>(dynamicMember keyPath: KeyPath<Entity.Driver, T>) -> T {
-        driver[keyPath: keyPath]
+        context.performSync { driver[keyPath: keyPath] }
     }
 }
 
@@ -170,7 +170,7 @@ extension ReadOnly: ManagedStatus {
     public func hasFault<Relationship: RelationshipProtocol>(
         forRelationship keyPath: KeyPath<Entity, Relationship>) -> Bool
     {
-        managedObject.hasFault(forRelationshipNamed: keyPath.propertyName)
+        context.performSync { managedObject.hasFault(forRelationshipNamed: keyPath.propertyName) }
     }
 
     public func changedValues() -> [String: Any] {
