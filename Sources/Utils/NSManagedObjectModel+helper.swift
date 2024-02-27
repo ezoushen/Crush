@@ -66,7 +66,7 @@ extension NSManagedObjectModel {
         copy.entities.forEach { $0.managedObjectClassName = nil }
         let data = try! NSKeyedArchiver
             .archivedData(withRootObject: copy, requiringSecureCoding: false)
-        try! data.write(to: url)
+        try! data.write(to: url, options: [.noFileProtection])
     }
 }
 
