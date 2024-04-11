@@ -50,23 +50,23 @@ extension NSManagedObjectModel {
         return model
     }
 
-    func save() {
-        save(name: version)
+    func save() throws {
+        try save(name: version)
     }
 
-    func save(name: String) {
+    func save(name: String) throws {
         let url = NSManagedObjectModel
             .managedobjectModelDirectory
             .appendingPathComponent(name)
-        return save(to: url)
+        return try save(to: url)
     }
 
-    func save(to url: URL) {
+    func save(to url: URL) throws {
         let copy = copy() as! NSManagedObjectModel
         copy.entities.forEach { $0.managedObjectClassName = nil }
-        let data = try! NSKeyedArchiver
+        let data = try NSKeyedArchiver
             .archivedData(withRootObject: copy, requiringSecureCoding: false)
-        try! data.write(to: url, options: [.noFileProtection])
+        try data.write(to: url, options: [.noFileProtection])
     }
 }
 

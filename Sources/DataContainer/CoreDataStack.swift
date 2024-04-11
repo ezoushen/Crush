@@ -78,7 +78,11 @@ public class CoreDataStack {
             completion($1)
         }
         NSPersistentStoreCoordinator.updateLastActiveModel(dataModel, in: storage)
-        dataModel.managedObjectModel.save()
+        do {
+            try dataModel.managedObjectModel.save()
+        } catch {
+            LogHandler.current.log(.error, "Save managed object model failed: \(error)")
+        }
     }
 
     internal func isLoaded(storage: Storage) -> Bool {
